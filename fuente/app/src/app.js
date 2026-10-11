@@ -11,7 +11,7 @@
     get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
   };
-  const DEF = { dist: 402.336, rollout_ft: 1, unidad: 'kmh', v_confirma_kmh: 50, t_confirma: 8, usar_acc: true, tema: 'auto', anim: true };
+  const DEF = { dist: 402.336, rollout_ft: 1, unidad: 'kmh', v_confirma_kmh: 50, t_confirma: 8, usar_acc: true, tema: 'auto', anim: true, fondo: 'combinado', velo: '0.78' };
   const S = Object.assign({}, DEF, LS.get('dragtrim.settings', {}));
   const guardarAjustes = () => LS.set('dragtrim.settings', S);
 
@@ -731,6 +731,46 @@
   seg('segDist', 'dist', Number);
   seg('segUnidad', 'unidad', String);
   seg('segTema', 'tema', String);
+  // ------------------------------------------------------------ fondos de pantalla (estilo sticker)
+  const FONDOS = [
+    { id: 'combinado', nombre: 'Combinado', acento: '#d4ff00' },
+    { id: 'combinado_rojo', nombre: 'Combinado rojo', acento: '#ff3d2e' },
+    { id: 'botella_nos', nombre: 'NOS', acento: '#ff3d2e' },
+    { id: 'neon', nombre: 'Neón', acento: '#d4ff00' },
+    { id: 'rojo', nombre: 'Rojo', acento: '#ff3d2e' },
+    { id: 'blanco_negro', nombre: 'Blanco y negro', acento: '#ffffff' },
+  ];
+  function aplicarFondo() {
+    const f = FONDOS.find((x) => x.id === S.fondo);
+    const raiz = document.documentElement;
+    if (f) {
+      raiz.setAttribute('data-fondo', f.id);
+      raiz.style.setProperty('--fondo-url', `url("fondos/${f.id}.webp")`);
+      raiz.style.setProperty('--acento', f.acento);
+      raiz.style.setProperty('--velo', S.velo);
+    } else {
+      raiz.removeAttribute('data-fondo');
+      raiz.style.removeProperty('--fondo-url'); raiz.style.removeProperty('--acento');
+    }
+  }
+  function pintarSelFondo() {
+    const cont = $('#selFondo');
+    cont.innerHTML = '';
+    for (const f of [{ id: 'ninguno', nombre: 'Sin fondo' }, ...FONDOS]) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.setAttribute('role', 'radio');
+      b.setAttribute('aria-checked', String((S.fondo || 'ninguno') === f.id));
+      b.innerHTML = f.id === 'ninguno' ? `<span class="fx-ninguno"></span><span>${f.nombre}</span>`
+        : `<img src="fondos/${f.id}_mini.webp" alt="" loading="lazy"><span>${f.nombre}</span>`;
+      b.onclick = () => { S.fondo = f.id; guardarAjustes(); aplicarFondo(); aplicarTema(); pintarSelFondo(); };
+      cont.appendChild(b);
+    }
+  }
+  seg('segVelo', 'velo', String);
+  $('#segVelo').addEventListener('click', aplicarFondo);
+  aplicarFondo();
+  pintarSelFondo();
+
   function aplicarTema() {
     document.documentElement.toggleAttribute('data-sin-anim', S.anim === false);
     if (S.tema === 'auto') document.documentElement.removeAttribute('data-theme');

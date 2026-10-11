@@ -76,4 +76,14 @@ icono(180).save(DIST / 'icon-180.png')
 icono(192).save(DIST / 'icon-192.png')
 icono(512).save(DIST / 'icon-512.png')
 icono(512, maskable=True).save(DIST / 'icon-maskable-512.png')
+
+# Fondos de pantalla: WebP ligeros (el original PNG pesa ~1.7 MB) + miniatura para Ajustes
+FONDOS_SRC = ROOT.parent / 'fondos'
+if FONDOS_SRC.exists():
+    (DIST / 'fondos').mkdir(exist_ok=True)
+    for png in sorted(FONDOS_SRC.glob('fondo_marcas_*.png')):
+        fid = png.stem.replace('fondo_marcas_', '')
+        im = Image.open(png).convert('RGB')
+        im.resize((1080, round(im.height * 1080 / im.width)), Image.LANCZOS).save(DIST / 'fondos' / f'{fid}.webp', quality=72, method=6)
+        im.resize((180, round(im.height * 180 / im.width)), Image.LANCZOS).save(DIST / 'fondos' / f'{fid}_mini.webp', quality=70, method=6)
 print('ok', sorted(os.listdir(DIST)), len(html), 'bytes html')

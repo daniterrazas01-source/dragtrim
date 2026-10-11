@@ -18,6 +18,7 @@
 </style>
 </head>
 <body>
+<div class="fondo" id="fondo" aria-hidden="true"></div>
 <header class="top">
   <div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>Drag Trim<span class="beta">beta</span></div>
   <div class="sensors" aria-label="Estado de sensores">
@@ -178,6 +179,18 @@
     <div class="field">
       <label class="toggle">Usar acelerómetro <input type="checkbox" id="inAcc"></label>
       <p class="hint" style="margin-top:6px">Combina GPS y acelerómetro para mayor precisión. Apágalo solo para comparar.</p>
+    </div>
+
+    <div class="field">
+      <span class="lab">Fondo de pantalla</span>
+      <p class="hint">El color de los botones cambia con el fondo. Durante una corrida el fondo se oscurece para que los números se lean bien.</p>
+      <div class="fondos" role="radiogroup" id="selFondo" aria-label="Fondo de pantalla"></div>
+      <span class="lab" style="margin-top:14px">Qué tanto se ve</span>
+      <div class="seg" role="radiogroup" id="segVelo" style="margin-top:8px">
+        <button role="radio" data-v="0.88">Poco</button>
+        <button role="radio" data-v="0.78">Medio</button>
+        <button role="radio" data-v="0.64">Mucho</button>
+      </div>
     </div>
 
     <div class="field">
