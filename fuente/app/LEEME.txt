@@ -1,0 +1,19 @@
+DRAG TRIM beta 0.2 - Medidor de 1/8 y 1/4 de milla
+
+Estos archivos son la app. Para usarla en el teléfono hay que publicarlos en
+un sitio con https:// (el GPS del navegador solo funciona así).
+
+Opción GitHub Pages (gratis, recomendada):
+ 1. Crea una cuenta en github.com y un repositorio público llamado "dragtrim".
+ 2. "Add file" > "Upload files": sube TODOS estos archivos (sin carpeta) y confirma.
+ 3. Settings > Pages > Source: "Deploy from a branch", rama "main", carpeta "/ (root)". Save.
+ 4. En 1-2 minutos queda en https://TU-USUARIO.github.io/dragtrim/
+
+Opción Netlify Drop:
+ 1. Entra a https://app.netlify.com/drop (mejor con cuenta gratuita).
+ 2. Arrastra el .zip o esta carpeta. Te da un enlace .netlify.app
+
+En el teléfono:
+ - Android: abre el enlace en Chrome > menú > "Instalar app" o "Agregar a pantalla principal".
+ - iPhone: abre el enlace en Safari > Compartir > "Agregar a inicio".
+ - Ábrela una vez con internet; después funciona sin conexión.

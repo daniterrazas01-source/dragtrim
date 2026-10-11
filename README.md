@@ -8,4 +8,4 @@ No da la salida: solo mide. El arranque se detecta solo.
 - Android: abrir en Chrome → menú ⋮ → "Instalar app".
 - iPhone: abrir en Safari → Compartir → "Agregar a inicio".
 
-`fuente/app` tiene el código de la app y `fuente/matlab` el script para MATLAB Mobile (mismo algoritmo).
+`fuente/app` tiene el código de la app, `fuente/matlab` el script para MATLAB Mobile (mismo algoritmo) y `fuente/pruebas` las pruebas. El contexto completo del proyecto está en `CLAUDE.md`.
