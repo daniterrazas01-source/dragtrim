@@ -261,6 +261,109 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   .big { font-size: 68px; }
 }
 
+/* ============================================================ Fondos de pantalla: estilo sticker
+   Se activa con data-fondo en <html>. El fondo va fijo detrás de todo con un velo oscuro
+   (--velo) para que el texto se lea en el sol; en una corrida el velo sube. */
+.fondo { display: none; }
+:root[data-fondo] {
+  --sticker: #ffffff; --tinta: #0e0e0f;
+  --asphalt: #0e0e0f; --surface: rgba(16, 16, 18, .93); --surface-2: rgba(38, 38, 42, .94);
+  --line: rgba(255, 255, 255, .24); --chalk: #ffffff; --chalk-dim: #c8c8c8;
+  --amber: var(--acento); --velo-color: 10, 10, 11;
+  color-scheme: dark;
+}
+:root[data-fondo][data-theme="light"] {
+  --sticker: #0e0e0f; --tinta: #ffffff;
+  --asphalt: #f2f2ef; --surface: rgba(255, 255, 255, .94); --surface-2: rgba(234, 234, 230, .95);
+  --line: rgba(0, 0, 0, .22); --chalk: #0e0e0f; --chalk-dim: #4a4a4a; --velo-color: 244, 244, 240;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: light) {
+  :root[data-fondo]:not([data-theme]) {
+    --sticker: #0e0e0f; --tinta: #ffffff;
+    --asphalt: #f2f2ef; --surface: rgba(255, 255, 255, .94); --surface-2: rgba(234, 234, 230, .95);
+    --line: rgba(0, 0, 0, .22); --chalk: #0e0e0f; --chalk-dim: #4a4a4a; --velo-color: 244, 244, 240;
+    color-scheme: light;
+  }
+}
+:root[data-fondo] { background: var(--asphalt); }
+:root[data-fondo] body { background: transparent; }
+:root[data-fondo] .fondo {
+  display: block; position: fixed; inset: 0; z-index: -1;
+  background: var(--asphalt) var(--fondo-url) center / cover no-repeat;
+}
+:root[data-fondo] .fondo::after {
+  content: ""; position: absolute; inset: 0;
+  background: rgba(var(--velo-color), var(--velo, .78)); transition: background-color .4s;
+}
+:root[data-fondo] body.sesion .fondo::after { background: rgba(var(--velo-color), .92); }
+
+/* Paneles = stickers: borde recortado y sombra */
+:root[data-fondo] :is(.status, .field, .howto, .kpis, .chart, .quality, .msg, .proximo, .seg) {
+  border: 2px solid var(--sticker); box-shadow: 0 4px 0 rgba(0, 0, 0, .55);
+}
+:root[data-fondo] :is(.status, .kpis) { background: var(--sticker); gap: 2px; }
+:root[data-fondo] .field .seg { box-shadow: none; border-width: 1.5px; }
+:root[data-fondo] .proximo { background: var(--surface); border-style: dashed; }
+:root[data-fondo] .msg { border-left-width: 2px; }
+:root[data-fondo] .hist button { background: var(--surface); border-radius: 12px; margin: 8px 0; padding: 12px 14px; border: 2px solid var(--sticker); }
+:root[data-fondo] .hist li { border-top: 0; }
+:root[data-fondo] .empty { background: var(--surface); border-radius: 12px; padding: 16px; }
+
+/* Textos sueltos sobre el fondo: siempre con panel detrás */
+:root[data-fondo] .view > p.muted { background: var(--surface); padding: 10px 14px; border-radius: 12px; }
+:root[data-fondo] .beta-tag { background: var(--acento); color: #0e0e0f; border-color: #0e0e0f; }
+
+/* Títulos y logo = etiqueta pegada, ligeramente chueca */
+:root[data-fondo] h2 {
+  display: inline-block; background: var(--sticker); color: var(--tinta);
+  font: italic 900 28px/1.05 var(--num); padding: 6px 14px 7px; border-radius: 8px;
+  transform: rotate(-1.5deg); box-shadow: 0 4px 0 rgba(0, 0, 0, .55); margin: 14px 0 16px;
+}
+:root[data-fondo] h3 { display: inline-block; background: var(--surface); padding: 4px 10px; border-radius: 6px; }
+:root[data-fondo] .brand { font-style: italic; font-weight: 900; }
+:root[data-fondo] .top .brand {
+  background: var(--sticker); color: var(--tinta); padding: 6px 10px 7px; border-radius: 8px;
+  transform: rotate(-2deg); box-shadow: 0 3px 0 rgba(0, 0, 0, .55);
+}
+:root[data-fondo] .brand .beta { background: var(--acento); color: #0e0e0f; transform: rotate(4deg); box-shadow: 0 0 0 2px var(--tinta); }
+:root[data-fondo] .sensors { background: var(--surface); padding: 5px 9px; border-radius: 99px; border: 1.5px solid var(--line); }
+:root[data-fondo] .ses-title { font-style: italic; font-weight: 900; }
+
+/* Botones = sticker de color */
+:root[data-fondo] .primary, :root[data-fondo] .primary.go {
+  background: var(--acento); color: #0e0e0f; border: 3px solid #0e0e0f;
+  box-shadow: 0 0 0 3px var(--sticker), 0 6px 0 3px rgba(0, 0, 0, .55);
+  font-style: italic; font-weight: 900; font-size: 20px; margin-top: 16px;
+}
+:root[data-fondo] .ghost { background: var(--surface); border: 2px solid var(--sticker); font-weight: 700; box-shadow: 0 4px 0 rgba(0, 0, 0, .5); }
+:root[data-fondo] .danger { background: var(--surface); border-width: 2px; }
+:root[data-fondo] .seg button[aria-checked="true"], :root[data-fondo] .seg::before { background: var(--acento); color: #0e0e0f; }
+:root[data-fondo] .seg button[aria-checked="true"] { color: #0e0e0f; }
+:root[data-fondo] .tabs { background: rgba(10, 10, 11, .94); border-top: 2px solid var(--sticker); }
+:root[data-fondo][data-theme="light"] .tabs { background: rgba(255, 255, 255, .96); }
+:root[data-fondo] .tabs button[aria-current="page"] { font-style: italic; font-weight: 900; }
+:root[data-fondo] .track { background: var(--surface); border: 2px solid var(--sticker); }
+:root[data-fondo] .slip { box-shadow: 0 0 0 3px var(--sticker), 0 8px 0 3px rgba(0, 0, 0, .55); transform: rotate(-.6deg); }
+
+/* Práctica: el fondo se asoma detrás del árbol */
+:root[data-fondo] .pt { background: rgba(10, 10, 11, .84); }
+:root[data-fondo] .pt-lane { box-shadow: 0 0 0 3px #ffffff, 0 6px 0 3px rgba(0, 0, 0, .6); }
+:root[data-fondo] .pt-zone { background: rgba(20, 20, 22, .9); border: 2px solid #ffffff; }
+:root[data-fondo] .pt-zone.held { background: color-mix(in srgb, var(--acento) 24%, #0e0e0f); border-color: var(--acento); }
+:root[data-fondo] .pt-x { background: rgba(20, 20, 22, .9); border: 2px solid #ffffff; }
+
+/* Selector de fondos */
+.fondos { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; margin-top: 4px; }
+.fondos button { background: none; border: 0; padding: 0; color: var(--chalk-dim); font-size: 12px; text-align: center; cursor: pointer; }
+.fondos img, .fondos .fx-ninguno {
+  display: block; width: 100%; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 10px;
+  border: 2px solid var(--line); margin-bottom: 4px; background: var(--surface-2);
+}
+.fondos .fx-ninguno { background: repeating-linear-gradient(135deg, var(--surface-2) 0 8px, var(--surface) 8px 16px); }
+.fondos button[aria-checked="true"] { color: var(--chalk); font-weight: 700; }
+.fondos button[aria-checked="true"] :is(img, .fx-ninguno) { border: 3px solid var(--acento, var(--amber)); box-shadow: 0 0 0 2px var(--chalk); }
+
 /* ============================================================ Animaciones
    Solo transform/opacity (no cargan el teléfono). Reglas:
    - Las luces del semáforo de Práctica (.pb) encienden AL INSTANTE: nunca ponerles transición,
@@ -387,6 +490,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 </style>
 </head>
 <body>
+<div class="fondo" id="fondo" aria-hidden="true"></div>
 <header class="top">
   <div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>Drag Trim<span class="beta">beta</span></div>
   <div class="sensors" aria-label="Estado de sensores">
@@ -547,6 +651,18 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
     <div class="field">
       <label class="toggle">Usar acelerómetro <input type="checkbox" id="inAcc"></label>
       <p class="hint" style="margin-top:6px">Combina GPS y acelerómetro para mayor precisión. Apágalo solo para comparar.</p>
+    </div>
+
+    <div class="field">
+      <span class="lab">Fondo de pantalla</span>
+      <p class="hint">El color de los botones cambia con el fondo. Durante una corrida el fondo se oscurece para que los números se lean bien.</p>
+      <div class="fondos" role="radiogroup" id="selFondo" aria-label="Fondo de pantalla"></div>
+      <span class="lab" style="margin-top:14px">Qué tanto se ve</span>
+      <div class="seg" role="radiogroup" id="segVelo" style="margin-top:8px">
+        <button role="radio" data-v="0.88">Poco</button>
+        <button role="radio" data-v="0.78">Medio</button>
+        <button role="radio" data-v="0.64">Mucho</button>
+      </div>
     </div>
 
     <div class="field">
@@ -1290,7 +1406,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = 'beta 0.3.2';
+  const APP_VERSION = 'beta 0.4';
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -1299,7 +1415,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
     get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
   };
-  const DEF = { dist: 402.336, rollout_ft: 1, unidad: 'kmh', v_confirma_kmh: 50, t_confirma: 8, usar_acc: true, tema: 'auto', anim: true };
+  const DEF = { dist: 402.336, rollout_ft: 1, unidad: 'kmh', v_confirma_kmh: 50, t_confirma: 8, usar_acc: true, tema: 'auto', anim: true, fondo: 'combinado', velo: '0.78' };
   const S = Object.assign({}, DEF, LS.get('dragtrim.settings', {}));
   const guardarAjustes = () => LS.set('dragtrim.settings', S);
 
@@ -2019,6 +2135,46 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   seg('segDist', 'dist', Number);
   seg('segUnidad', 'unidad', String);
   seg('segTema', 'tema', String);
+  // ------------------------------------------------------------ fondos de pantalla (estilo sticker)
+  const FONDOS = [
+    { id: 'combinado', nombre: 'Combinado', acento: '#d4ff00' },
+    { id: 'combinado_rojo', nombre: 'Combinado rojo', acento: '#ff3d2e' },
+    { id: 'botella_nos', nombre: 'NOS', acento: '#ff3d2e' },
+    { id: 'neon', nombre: 'Neón', acento: '#d4ff00' },
+    { id: 'rojo', nombre: 'Rojo', acento: '#ff3d2e' },
+    { id: 'blanco_negro', nombre: 'Blanco y negro', acento: '#ffffff' },
+  ];
+  function aplicarFondo() {
+    const f = FONDOS.find((x) => x.id === S.fondo);
+    const raiz = document.documentElement;
+    if (f) {
+      raiz.setAttribute('data-fondo', f.id);
+      raiz.style.setProperty('--fondo-url', `url("fondos/${f.id}.webp")`);
+      raiz.style.setProperty('--acento', f.acento);
+      raiz.style.setProperty('--velo', S.velo);
+    } else {
+      raiz.removeAttribute('data-fondo');
+      raiz.style.removeProperty('--fondo-url'); raiz.style.removeProperty('--acento');
+    }
+  }
+  function pintarSelFondo() {
+    const cont = $('#selFondo');
+    cont.innerHTML = '';
+    for (const f of [{ id: 'ninguno', nombre: 'Sin fondo' }, ...FONDOS]) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.setAttribute('role', 'radio');
+      b.setAttribute('aria-checked', String((S.fondo || 'ninguno') === f.id));
+      b.innerHTML = f.id === 'ninguno' ? `<span class="fx-ninguno"></span><span>${f.nombre}</span>`
+        : `<img src="fondos/${f.id}_mini.webp" alt="" loading="lazy"><span>${f.nombre}</span>`;
+      b.onclick = () => { S.fondo = f.id; guardarAjustes(); aplicarFondo(); aplicarTema(); pintarSelFondo(); };
+      cont.appendChild(b);
+    }
+  }
+  seg('segVelo', 'velo', String);
+  $('#segVelo').addEventListener('click', aplicarFondo);
+  aplicarFondo();
+  pintarSelFondo();
+
   function aplicarTema() {
     document.documentElement.toggleAttribute('data-sin-anim', S.anim === false);
     if (S.tema === 'auto') document.documentElement.removeAttribute('data-theme');

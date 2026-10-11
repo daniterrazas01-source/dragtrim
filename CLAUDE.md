@@ -51,6 +51,13 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
      que Daniel lo pida.
    - Más adelante: app nativa (Capacitor) para Play Store/App Store; GNSS externo.
 
+7. **Fondos de pantalla** (beta 0.4): 6 fondos sticker bomb que Daniel hizo (`fuente/fondos/*.png`,
+   el build los convierte a WebP en `fondos/`). Con fondo, la app usa estilo sticker: paneles con
+   borde blanco, títulos como etiqueta chueca, color principal según el fondo (neón / rojo / blanco).
+   Ajustes: elegir fondo o "Sin fondo" y qué tanto se ve (velo). Por defecto: Combinado, nivel medio.
+   En una corrida el velo sube a 0.92. Las luces del semáforo de Práctica no cambian.
+   Ojo: los stickers tienen marcas reales (NOS, Holley, JEGS…); para tiendas de apps habría que cambiarlas.
+
 ## Estructura
 
 ```
@@ -63,10 +70,11 @@ fuente/app/tools/build.py      junta todo en un index.html autocontenido + sw.js
 fuente/publicar.sh             build + copia a la raíz
 fuente/matlab/                 script MATLAB Mobile v2.3 (mismo algoritmo); Drag_tree_v2_unico.m = todo en un archivo
 fuente/pruebas/                pruebas (ver abajo)
+fuente/fondos/                 fondos originales (PNG); se publican como fondos/*.webp
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Versión actual: **beta 0.3.2** (animaciones en la interfaz, apagables en Ajustes),
+caché del service worker; cambiarlo fuerza la actualización). Versión actual: **beta 0.4** (fondos de pantalla estilo sticker; antes 0.3.2: animaciones apagables en Ajustes),
 algoritmo v2.3.
 
 Los zips exportados desde la app traen `drag_raw_gps_*.csv`, `drag_raw_acc_*.csv`,

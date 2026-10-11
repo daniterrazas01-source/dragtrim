@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw, ImageFilter
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC, DIST = ROOT / 'src', ROOT / 'dist'
 DIST.mkdir(exist_ok=True)
-VERSION = 'beta-0.3.2'
+VERSION = 'beta-0.4'
 
 html = (SRC / 'index.template.html').read_text(encoding='utf-8')
 html = html.replace('/*CSS*/', (SRC / 'style.css').read_text(encoding='utf-8'))
