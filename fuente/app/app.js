@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = 'beta 0.2';
+  const APP_VERSION = 'beta 0.3';
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 

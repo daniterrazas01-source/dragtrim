@@ -47,6 +47,10 @@
       <button id="btnSensores" class="primary">Activar sensores</button>
       <button id="btnArmar" class="primary go" hidden>Armar medición</button>
       <button id="btnDemo" class="ghost">Probar con una corrida simulada</button>
+      <div class="proximo">
+        <b>Medir con el semáforo real</b> <span class="beta-tag">en desarrollo</span>
+        <p>Grabar el árbol de la pista con la cámara para medir tu tiempo de reacción y registrarlo junto con la corrida.</p>
+      </div>
 
       <details class="howto">
         <summary>Antes de salir a la pista</summary>
@@ -71,6 +75,54 @@
       <button id="btnTerminar" class="ghost" hidden>Terminar corrida</button>
       <button id="btnCancelar" class="ghost">Cancelar</button>
     </div>
+  </section>
+
+  <!-- ============ PRÁCTICA ============ -->
+  <section id="vPractica" class="view" hidden>
+    <h2>Práctica de salida</h2>
+    <p class="muted">Un semáforo de arrancones para entrenar tu reacción, solo o contra alguien en el mismo teléfono.</p>
+
+    <div class="field">
+      <span class="lab">Modo</span>
+      <div class="seg" role="radiogroup" id="segPModo" style="margin-top:8px">
+        <button role="radio" data-v="solo">Solo</button>
+        <button role="radio" data-v="duelo">1 vs 1</button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="lab">Árbol</span>
+      <p class="hint">Pro: los tres ámbar encienden juntos y la verde 0.4 s después. Full: los ámbar bajan uno por uno cada 0.5 s.</p>
+      <div class="seg" role="radiogroup" id="segPArbol">
+        <button role="radio" data-v="pro">Pro .4</button>
+        <button role="radio" data-v="full">Full .5</button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="lab">Cómo sales</span>
+      <p class="hint">Soltar: mantén presionado para hacer stage y suelta con la verde, como un transbrake. Tocar: un toque para stage y otro para salir.</p>
+      <div class="seg" role="radiogroup" id="segPSalida">
+        <button role="radio" data-v="soltar">Soltar</button>
+        <button role="radio" data-v="tocar">Tocar</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="lab" for="inPRetraso">Retraso de tu auto</label>
+      <p class="hint">En pista el auto tarda en dejar el haz de stage después de que sueltas. Pon ese tiempo para practicar salir con el ámbar como en la pista. 0 = reacción pura.</p>
+      <div class="row"><input type="number" id="inPRetraso" min="0" max="0.5" step="0.01" inputmode="decimal"><span>s</span></div>
+    </div>
+
+    <button id="btnPractica" class="primary">Empezar práctica</button>
+
+    <h3>Tus salidas (modo solo)</h3>
+    <div class="kpis" style="margin-top:0">
+      <div><span>Mejor reacción</span><b id="psMejor">—</b></div>
+      <div><span>Promedio (últimas 20)</span><b id="psProm">—</b></div>
+      <div><span>Luces rojas</span><b id="psRojas">—</b></div>
+      <div><span>Últimas salidas</span><ul class="ps-ult" id="psUlt"></ul></div>
+    </div>
+    <p class="empty" id="psVacio">Aún no hay salidas. Empieza una práctica en modo solo.</p>
+    <p class="muted" style="font-size:13px;margin-top:14px">La pantalla del teléfono agrega unos milisegundos de retraso; úsalo para comparar tus propias salidas.</p>
+    <button id="btnPBorrar" class="danger">Borrar estadísticas</button>
   </section>
 
   <!-- ============ RESULTADO ============ -->
@@ -137,8 +189,40 @@
   </section>
 </main>
 
+<div class="pt" id="ptOverlay" hidden>
+  <div class="pt-top">
+    <button class="pt-x" id="ptCerrar" aria-label="Cerrar práctica">Cerrar</button>
+    <span id="ptTipo"></span>
+    <b id="ptScore" class="pt-score"></b>
+  </div>
+  <div class="pt-tree" aria-hidden="true">
+        <div class="pt-lane l">
+          <div class="pt-pair"><i class="pb s w" id="pt_l_pre1"></i><i class="pb s w" id="pt_l_pre2"></i></div>
+          <div class="pt-pair"><i class="pb s w" id="pt_l_stg1"></i><i class="pb s w" id="pt_l_stg2"></i></div>
+          <i class="pb y" id="pt_l_a0"></i><i class="pb y" id="pt_l_a1"></i><i class="pb y" id="pt_l_a2"></i>
+          <i class="pb g" id="pt_l_g"></i><i class="pb r" id="pt_l_r"></i>
+        </div>
+        <div class="pt-lane r">
+          <div class="pt-pair"><i class="pb s w" id="pt_r_pre1"></i><i class="pb s w" id="pt_r_pre2"></i></div>
+          <div class="pt-pair"><i class="pb s w" id="pt_r_stg1"></i><i class="pb s w" id="pt_r_stg2"></i></div>
+          <i class="pb y" id="pt_r_a0"></i><i class="pb y" id="pt_r_a1"></i><i class="pb y" id="pt_r_a2"></i>
+          <i class="pb g" id="pt_r_g"></i><i class="pb r" id="pt_r_r"></i>
+        </div>
+  </div>
+  <div class="pt-res">
+    <div class="l"><b class="pt-rtv" id="ptRt_l"></b><span id="ptLab_l"></span></div>
+    <div class="r"><b class="pt-rtv" id="ptRt_r"></b><span id="ptLab_r"></span></div>
+  </div>
+  <p class="pt-msg" id="ptMsg" aria-live="polite"></p>
+  <div class="pt-zones">
+    <div class="pt-zone l" id="ptZona_l"><span></span></div>
+    <div class="pt-zone r" id="ptZona_r"><span></span></div>
+  </div>
+</div>
+
 <nav class="tabs" aria-label="Secciones">
   <button data-view="vMedir" aria-current="page">Medir</button>
+  <button data-view="vPractica">Práctica</button>
   <button data-view="vHistorial">Historial</button>
   <button data-view="vAjustes">Ajustes</button>
 </nav>
@@ -148,6 +232,9 @@
 </script>
 <script>
 /*APP*/
+</script>
+<script>
+/*PRACTICA*/
 </script>
 </body>
 </html>
