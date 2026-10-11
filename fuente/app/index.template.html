@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Drag Trim</title>
+<meta name="description" content="Medidor de 1/8 y 1/4 de milla con GPS y acelerómetro del teléfono.">
+<meta name="theme-color" content="#24282c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Drag Trim">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+/*CSS*/
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>Drag Trim<span class="beta">beta</span></div>
+  <div class="sensors" aria-label="Estado de sensores">
+    <span id="chipGps" class="chip">GPS</span>
+    <span id="chipAcc" class="chip">Acel</span>
+    <span id="chipWake" class="chip" title="Pantalla siempre encendida">Pantalla</span>
+  </div>
+</header>
+
+<main>
+  <!-- ============ MEDIR ============ -->
+  <section id="vMedir" class="view">
+    <div id="medirIdle">
+      <div class="seg big" role="radiogroup" aria-label="Distancia" id="segDist">
+        <button role="radio" data-v="201.168">1/8 de milla</button>
+        <button role="radio" data-v="402.336">1/4 de milla</button>
+      </div>
+
+      <div class="status">
+        <div class="stat"><span class="k">Precisión GPS</span><span class="val" id="sPrec">—</span></div>
+        <div class="stat"><span class="k">Frecuencia GPS</span><span class="val" id="sHz">—</span></div>
+        <div class="stat"><span class="k">Velocidad</span><span class="val" id="sVel">—</span></div>
+        <div class="stat"><span class="k">Acelerómetro</span><span class="val" id="sAcel">—</span></div>
+      </div>
+      <p id="idleMsg" class="msg"></p>
+
+      <button id="btnSensores" class="primary">Activar sensores</button>
+      <button id="btnArmar" class="primary go" hidden>Armar medición</button>
+      <button id="btnDemo" class="ghost">Probar con una corrida simulada</button>
+
+      <details class="howto">
+        <summary>Antes de salir a la pista</summary>
+        <ul>
+          <li>Pon el teléfono en un soporte firme (parabrisas o tablero) con vista al cielo. La orientación no importa, pero no lo muevas durante la sesión.</li>
+          <li>Activa la ubicación precisa y apaga el ahorro de batería.</li>
+          <li>Deja la app abierta con la pantalla encendida. Si cambias de app o se bloquea la pantalla, el GPS se pausa.</li>
+          <li>La app no da la salida: arranca con el semáforo de la pista. Arma la medición cuando quieras, incluso antes del burnout; el arranque se detecta solo.</li>
+          <li>Las tablets solo-WiFi no tienen GPS y no sirven para medir.</li>
+        </ul>
+      </details>
+    </div>
+
+    <div id="medirSesion" hidden>
+      <p class="ses-title" id="sesTitulo" aria-live="polite">Esperando tu arranque</p>
+      <p class="ses-text" id="sesTexto">La app no da la salida: arranca con el semáforo de la pista. El burnout, la alineación y el stage se ignoran.</p>
+      <div class="big" id="liveMain">0<small>km/h</small></div>
+      <div class="mid" id="liveSub" hidden></div>
+      <p class="gpsline" id="gpsLine"></p>
+      <div class="track" id="track" hidden><div class="fill" id="trackFill"></div></div>
+      <ol class="log" id="eventLog"></ol>
+      <button id="btnTerminar" class="ghost" hidden>Terminar corrida</button>
+      <button id="btnCancelar" class="ghost">Cancelar</button>
+    </div>
+  </section>
+
+  <!-- ============ RESULTADO ============ -->
+  <section id="vResultado" class="view" hidden></section>
+
+  <!-- ============ HISTORIAL ============ -->
+  <section id="vHistorial" class="view" hidden>
+    <h2>Historial</h2>
+    <ul class="hist" id="histList"></ul>
+    <p class="empty" id="histEmpty">Todavía no hay corridas. Arma una medición en Medir o prueba la corrida simulada.</p>
+  </section>
+
+  <!-- ============ AJUSTES ============ -->
+  <section id="vAjustes" class="view" hidden>
+    <h2>Ajustes</h2>
+
+    <div class="field">
+      <label class="lab" for="inRollout">Rollout (punto inicial del cronómetro)</label>
+      <p class="hint">En pista el cronómetro arranca cuando la llanta deja el haz de stage, ~1 ft después del primer movimiento. Usa 1 ft para comparar con la boleta; 0 mide desde el primer movimiento. Si tu 60 ft sale siempre distinto al oficial, ajústalo y usa "Recalcular" en el historial.</p>
+      <div class="row">
+        <input type="number" id="inRollout" min="0" max="2" step="0.1" inputmode="decimal">
+        <span>ft</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="lab">Unidades de velocidad</span>
+      <div class="seg" role="radiogroup" id="segUnidad" style="margin-top:8px">
+        <button role="radio" data-v="kmh">km/h</button>
+        <button role="radio" data-v="mph">mph</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="lab">Arranque válido</span>
+      <p class="hint">Solo cuenta como arranque si, saliendo de detenido, llegas a esta velocidad en este tiempo. Así se ignoran el burnout y la alineación.</p>
+      <div class="row">
+        <input type="number" id="inVconf" min="20" max="120" step="5" inputmode="numeric" aria-label="Velocidad de confirmación en km/h">
+        <span>km/h en</span>
+        <input type="number" id="inTconf" min="3" max="20" step="1" inputmode="numeric" aria-label="Tiempo máximo en segundos">
+        <span>s</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="toggle">Usar acelerómetro <input type="checkbox" id="inAcc"></label>
+      <p class="hint" style="margin-top:6px">Combina GPS y acelerómetro para mayor precisión. Apágalo solo para comparar.</p>
+    </div>
+
+    <div class="field">
+      <span class="lab">Tema</span>
+      <p class="hint">"Claro" se lee mejor bajo el sol.</p>
+      <div class="seg" role="radiogroup" id="segTema">
+        <button role="radio" data-v="auto">Automático</button>
+        <button role="radio" data-v="light">Claro</button>
+        <button role="radio" data-v="dark">Oscuro</button>
+      </div>
+    </div>
+
+    <button id="btnInstalar" class="primary" hidden>Instalar app</button>
+    <p id="iosInstall" class="msg" hidden>Para instalarla en iPhone: abre en Safari, toca Compartir y luego "Agregar a inicio".</p>
+    <button id="btnBorrarHist" class="danger">Borrar todo el historial</button>
+    <p class="ver" id="verText"></p>
+  </section>
+</main>
+
+<nav class="tabs" aria-label="Secciones">
+  <button data-view="vMedir" aria-current="page">Medir</button>
+  <button data-view="vHistorial">Historial</button>
+  <button data-view="vAjustes">Ajustes</button>
+</nav>
+
+<script>
+/*CORE*/
+</script>
+<script>
+/*APP*/
+</script>
+</body>
+</html>
