@@ -6,8 +6,8 @@ autódromo con semáforo profesional. **Habla con él en español**, de forma cl
 técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro estás.
 
 - App publicada (GitHub Pages): https://daniterrazas01-source.github.io/dragtrim/
-- Repo: `daniterrazas01-source/dragtrim`. Pages sirve la raíz de la rama publicada; se hace
-  push a **`main` y a `gh-pages`** (no está claro cuál usa Pages; empujar a las dos).
+- Repo: `daniterrazas01-source/dragtrim`. Pages sirve la raíz de **`gh-pages`** (confirmado con el
+  flujo "pages build and deployment"); se hace push a `main` y a `gh-pages` para mantenerlas iguales.
 - Daniel ya la tiene instalada en su teléfono como app web (PWA). Las actualizaciones le llegan
   solas al abrirla con internet (service worker "red primero"). **Nunca pedirle desinstalar**:
   borraría su historial de corridas.
@@ -89,7 +89,8 @@ Las pruebas de navegador usan Playwright (Python) con el Chromium preinstalado y
 capturas en `fuente/pruebas/capturas/` (ignorado por git): revísalas antes de publicar.
 
 Publicar: `bash fuente/publicar.sh`, commit, `git push origin main` y `git push origin main:gh-pages`.
-Confirmar con WebFetch que la página cambió (el CDN tarda 1–3 min).
+Confirmar con WebFetch que la página cambió (el CDN tarda 1–3 min). Si github.io no es accesible desde
+el contenedor, confirmar que el flujo "pages build and deployment" del commit terminó en éxito.
 
 Reglas al cambiar el algoritmo: mantener `dragcore.js` y `drag_procesar.m` equivalentes,
 correr `mc.js`/`inicio.js`/`spike.js` antes y después, y regenerar `Drag_tree_v2_unico.m`
