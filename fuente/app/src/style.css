@@ -244,6 +244,126 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 @media (max-width: 360px) {
   .big { font-size: 68px; }
 }
-@media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; animation: none !important; }
+
+/* ============================================================ Animaciones
+   Solo transform/opacity (no cargan el teléfono). Reglas:
+   - Las luces del semáforo de Práctica (.pb) encienden AL INSTANTE: nunca ponerles transición,
+     falsearía la reacción.
+   - La pantalla de medición sigue neutral: nada parpadea ni parece una salida.
+   - Se apagan con "Animaciones" en Ajustes o con "reducir movimiento" del sistema. */
+:root { --ease-out: cubic-bezier(.22, 1, .36, 1); --ease-pop: cubic-bezier(.3, 1.5, .5, 1); }
+@keyframes entra { from { opacity: 0; transform: translateY(10px); } }
+@keyframes aparece { from { opacity: 0; } }
+@keyframes desliza { from { opacity: 0; transform: translateX(-12px); } }
+@keyframes pop { from { opacity: 0; transform: scale(.82); } }
+@keyframes imprime { from { clip-path: inset(0 0 100% 0); transform: translateY(-14px); } to { clip-path: inset(0); transform: none; } }
+@keyframes sello { 0% { opacity: 0; transform: rotate(-4deg) scale(2.4); } 55% { opacity: 1; transform: rotate(-4deg) scale(.9); } 100% { opacity: 1; transform: rotate(-4deg) scale(1); } }
+@keyframes traza { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+@keyframes enciende { from { background: var(--bulb-off); } }
+@keyframes ping { from { box-shadow: 0 0 0 0 currentColor; } to { box-shadow: 0 0 0 7px transparent; } }
+@keyframes sacude { 0%, 100% { transform: none; } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+
+/* Cambio de pestaña: el contenido entra en cascada */
+:where(.view:not(#vMedir), #medirIdle, #medirSesion) > * { animation: entra .34s var(--ease-out) both; }
+:where(.view, #medirIdle, #medirSesion) > :nth-child(2) { animation-delay: 35ms; }
+:where(.view, #medirIdle, #medirSesion) > :nth-child(3) { animation-delay: 70ms; }
+:where(.view, #medirIdle, #medirSesion) > :nth-child(4) { animation-delay: 105ms; }
+:where(.view, #medirIdle, #medirSesion) > :nth-child(5) { animation-delay: 140ms; }
+:where(.view, #medirIdle, #medirSesion) > :nth-child(6) { animation-delay: 175ms; }
+:where(.view, #medirIdle, #medirSesion) > :nth-child(7) { animation-delay: 210ms; }
+:where(.view, #medirIdle, #medirSesion) > :nth-child(n+8) { animation-delay: 240ms; }
+
+/* Logo: las luces se encienden una vez al abrir la app */
+.mark i { animation: enciende .25s ease-out both; }
+.mark i:nth-child(1) { animation-delay: .25s; }
+.mark i:nth-child(2) { animation-delay: .45s; }
+.mark i:nth-child(3) { animation-delay: .75s; }
+
+/* Sensores: el punto cambia de color suave y da un "ping" al conectarse */
+.chip { transition: color .3s; }
+.chip::before { transition: background-color .3s; }
+.chip.on::before { color: var(--green); animation: ping .7s ease-out; }
+
+/* Botones: respuesta al toque */
+.primary, .ghost, .danger, .seg button, .tabs button, .pt-x, .hist button {
+  transition: transform .14s var(--ease-out), background-color .2s, color .2s, opacity .2s, box-shadow .2s;
 }
+.primary:active:not(:disabled), .ghost:active, .danger:active, .pt-x:active { transform: scale(.97); }
+.seg button:active, .tabs button:active { transform: scale(.94); }
+.hist button:active { background: var(--surface); }
+.stat .val { transition: color .3s; }
+.msg:not(:empty) { animation: entra .3s var(--ease-out) both; }
+.howto[open] ul { animation: entra .3s var(--ease-out) both; }
+.howto summary { transition: color .2s; }
+
+/* Selector segmentado y pestañas: la marca se desliza a la opción elegida */
+@supports selector(:has(a)) {
+  .seg { position: relative; --i: 0; --n: 2; }
+  .seg:has(> button:nth-child(3)) { --n: 3; }
+  .seg:has(> button:nth-child(2)[aria-checked="true"]) { --i: 1; }
+  .seg:has(> button:nth-child(3)[aria-checked="true"]) { --i: 2; }
+  .seg::before {
+    content: ""; position: absolute; top: 4px; bottom: 4px; left: 4px; border-radius: 9px; background: var(--chalk);
+    width: calc((100% - 8px - (var(--n) - 1) * 4px) / var(--n));
+    transform: translateX(calc(var(--i) * (100% + 4px)));
+    transition: transform .32s var(--ease-out), opacity .2s;
+  }
+  .seg:not(:has(> button[aria-checked="true"]))::before { opacity: 0; }
+  .seg button { position: relative; z-index: 1; }
+  .seg button[aria-checked="true"] { background: transparent; }
+
+  .tabs { --i: 0; }
+  .tabs:has(> button:nth-child(2)[aria-current]) { --i: 1; }
+  .tabs:has(> button:nth-child(3)[aria-current]) { --i: 2; }
+  .tabs:has(> button:nth-child(4)[aria-current]) { --i: 3; }
+  .tabs::before {
+    content: ""; position: absolute; top: -1px; left: 0; width: 25%; height: 3px; background: var(--amber);
+    border-radius: 0 0 3px 3px; transform: translateX(calc(var(--i) * 100%)); transition: transform .34s var(--ease-out), opacity .2s;
+  }
+  .tabs:not(:has(> button[aria-current]))::before { opacity: 0; }
+  .tabs button[aria-current="page"] { box-shadow: none; }
+}
+
+/* Corrida en curso: hitos y bitácora */
+.track .tick span { transition: color .3s; }
+.track .tick.passed { animation: pop .4s var(--ease-pop); }
+.log li { animation: desliza .3s var(--ease-out) both; }
+
+/* Resultado: la boleta se "imprime", renglón por renglón, y luego cae el sello */
+#vResultado > .slip { animation: imprime .6s var(--ease-out) both; }
+.slip tr { animation: aparece .25s ease-out both; animation-delay: .3s; }
+.slip tr:nth-child(2) { animation-delay: .36s; }
+.slip tr:nth-child(3) { animation-delay: .42s; }
+.slip tr:nth-child(4) { animation-delay: .48s; }
+.slip tr:nth-child(5) { animation-delay: .54s; }
+.slip tr:nth-child(6) { animation-delay: .6s; }
+.slip tr:nth-child(n+7) { animation-delay: .66s; }
+.slip footer { animation: aparece .3s .6s ease-out both; }
+.stamp { animation: sello .45s .8s var(--ease-out) both; }
+.chart canvas { animation: traza .9s .35s cubic-bezier(.45, 0, .2, 1) both; }
+.avisos li { animation: desliza .3s var(--ease-out) both; }
+
+/* Historial */
+.hist li { animation: entra .3s var(--ease-out) both; }
+.hist li:nth-child(2) { animation-delay: 30ms; }
+.hist li:nth-child(3) { animation-delay: 60ms; }
+.hist li:nth-child(4) { animation-delay: 90ms; }
+.hist li:nth-child(5) { animation-delay: 120ms; }
+.hist li:nth-child(6) { animation-delay: 150ms; }
+.hist li:nth-child(n+7) { animation-delay: 180ms; }
+.ps-ult li { animation: pop .25s var(--ease-out) both; }
+
+/* Práctica: solo el resultado se anima, DESPUÉS de la salida */
+.pb { transition: none; animation: none; }
+.pt:not([hidden]) { animation: aparece .2s ease-out; }
+.pt-zone { transition: background-color .12s, border-color .12s, transform .12s var(--ease-out); }
+.pt-zone.held { transform: scale(.98); }
+.pt-rtv:not(:empty) { animation: pop .32s var(--ease-pop) both; }
+.pt-rtv.rojo:not(:empty) { animation: pop .32s var(--ease-pop) both, sacude .4s .3s ease-in-out; }
+.pt-res span:not(:empty) { animation: aparece .3s .12s ease-out both; }
+.pt-msg:not(:empty) { animation: pop .35s .15s var(--ease-pop) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  * , *::before, *::after { transition: none !important; animation: none !important; }
+}
+:root[data-sin-anim] *, :root[data-sin-anim] *::before, :root[data-sin-anim] *::after { transition: none !important; animation: none !important; }

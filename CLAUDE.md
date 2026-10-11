@@ -66,7 +66,7 @@ fuente/pruebas/                pruebas (ver abajo)
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Versión actual: **beta 0.3.1**,
+caché del service worker; cambiarlo fuerza la actualización). Versión actual: **beta 0.3.2** (animaciones en la interfaz, apagables en Ajustes),
 algoritmo v2.3.
 
 Los zips exportados desde la app traen `drag_raw_gps_*.csv`, `drag_raw_acc_*.csv`,

@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = 'beta 0.3.1';
+  const APP_VERSION = 'beta 0.3.2';
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -11,7 +11,7 @@
     get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
   };
-  const DEF = { dist: 402.336, rollout_ft: 1, unidad: 'kmh', v_confirma_kmh: 50, t_confirma: 8, usar_acc: true, tema: 'auto' };
+  const DEF = { dist: 402.336, rollout_ft: 1, unidad: 'kmh', v_confirma_kmh: 50, t_confirma: 8, usar_acc: true, tema: 'auto', anim: true };
   const S = Object.assign({}, DEF, LS.get('dragtrim.settings', {}));
   const guardarAjustes = () => LS.set('dragtrim.settings', S);
 
@@ -38,6 +38,28 @@
       d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
   };
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  // ------------------------------------------------------------ animaciones
+  const conAnim = () => S.anim !== false && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // Los números marcados con data-cnt cuentan desde 0 hasta su valor (solo es visual; el valor final es el mismo).
+  function contar(raiz, retraso = 250, dur = 750) {
+    if (!conAnim()) return;
+    for (const el of raiz.querySelectorAll('[data-cnt]')) {
+      const nodo = el.firstChild;
+      if (!nodo || nodo.nodeType !== 3) continue;
+      const txt = nodo.nodeValue, x = parseFloat(txt);
+      if (!isFin(x)) continue;
+      const dec = (txt.split('.')[1] || '').length;
+      nodo.nodeValue = (0).toFixed(dec);
+      const t0 = performance.now() + retraso;
+      const paso = (ahora) => {
+        const p = Math.min(1, Math.max(0, (ahora - t0) / dur));
+        nodo.nodeValue = p >= 1 ? txt : (x * (1 - Math.pow(1 - p, 3))).toFixed(dec);
+        if (p < 1 && nodo.isConnected) requestAnimationFrame(paso);
+      };
+      requestAnimationFrame(paso);
+    }
+  }
 
   // ------------------------------------------------------------ tiempo
   const T_ORIGIN = performance.timeOrigin || (Date.now() - performance.now());
@@ -474,12 +496,12 @@
           ${!run.completo ? '<span class="stamp">INCOMPLETA</span>' : ''}
         </div>
         <div class="kpis">
-          <div><span>Tiempo ${nombreDist(Df)}</span><b>${fmtT(et.t)}<small>s</small></b></div>
-          <div><span>Vel. de trampa</span><b>${fmtV(run.trampa_kmh)}<small>${velU()}</small></b></div>
-          <div><span>0–100 km/h</span><b>${isFin(run.t_0_100) ? run.t_0_100.toFixed(2) : '—'}<small>s</small></b></div>
-          <div><span>0–60 mph</span><b>${isFin(run.t_0_60mph) ? run.t_0_60mph.toFixed(2) : '—'}<small>s</small></b></div>
-          <div><span>Vel. máxima</span><b>${fmtV(run.est.v_max_kmh)}<small>${velU()}</small></b></div>
-          <div><span>G máxima</span><b>${run.est.a_max_g.toFixed(2)}<small>g</small></b></div>
+          <div><span>Tiempo ${nombreDist(Df)}</span><b data-cnt>${fmtT(et.t)}<small>s</small></b></div>
+          <div><span>Vel. de trampa</span><b data-cnt>${fmtV(run.trampa_kmh)}<small>${velU()}</small></b></div>
+          <div><span>0–100 km/h</span><b data-cnt>${isFin(run.t_0_100) ? run.t_0_100.toFixed(2) : '—'}<small>s</small></b></div>
+          <div><span>0–60 mph</span><b data-cnt>${isFin(run.t_0_60mph) ? run.t_0_60mph.toFixed(2) : '—'}<small>s</small></b></div>
+          <div><span>Vel. máxima</span><b data-cnt>${fmtV(run.est.v_max_kmh)}<small>${velU()}</small></b></div>
+          <div><span>G máxima</span><b data-cnt>${run.est.a_max_g.toFixed(2)}<small>g</small></b></div>
         </div>
         <div class="chart"><p>Velocidad (${velU()}) contra tiempo (s)</p><canvas id="cVel" aria-label="Velocidad contra tiempo"></canvas></div>
         <div class="chart"><p>Distancia (m) contra tiempo (s)</p><canvas id="cDist" aria-label="Distancia contra tiempo"></canvas></div>
@@ -510,7 +532,7 @@
     document.body.classList.toggle('sesion', !!enSesion);
     mostrarVista('vResultado', !enSesion ? 'vHistorial' : null);
     window.scrollTo(0, 0);
-    if (run.ok) requestAnimationFrame(() => graficas(run));
+    if (run.ok) { requestAnimationFrame(() => graficas(run)); contar(v); }
     const on = (id, fn) => { const b = document.getElementById(id); if (b) b.onclick = fn; };
     on('rNueva', () => { if (ses.demo) iniciarDemo(); else armar(); });
     on('rSalir', salirSesion);
@@ -710,6 +732,7 @@
   seg('segUnidad', 'unidad', String);
   seg('segTema', 'tema', String);
   function aplicarTema() {
+    document.documentElement.toggleAttribute('data-sin-anim', S.anim === false);
     if (S.tema === 'auto') document.documentElement.removeAttribute('data-theme');
     else document.documentElement.setAttribute('data-theme', S.tema);
     const meta = document.querySelector('meta[name="theme-color"]');
@@ -724,6 +747,9 @@
   inV.onchange = () => { const x = Math.min(120, Math.max(20, +inV.value || DEF.v_confirma_kmh)); S.v_confirma_kmh = x; inV.value = x; guardarAjustes(); };
   inT.onchange = () => { const x = Math.min(20, Math.max(3, +inT.value || DEF.t_confirma)); S.t_confirma = x; inT.value = x; guardarAjustes(); };
   inA.onchange = () => { S.usar_acc = inA.checked; guardarAjustes(); };
+  const inAn = $('#inAnim');
+  inAn.checked = S.anim !== false;
+  inAn.onchange = () => { S.anim = inAn.checked; guardarAjustes(); aplicarTema(); };
   $('#btnBorrarHist').onclick = async () => { if (confirm('¿Borrar todas las corridas guardadas?')) { await DB.borrarTodo(); pintarHistorial(); } };
   $('#verText').textContent = `Drag Trim ${APP_VERSION}, algoritmo v2.3 (mismo que el script de MATLAB).`;
 
