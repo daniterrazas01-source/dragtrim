@@ -355,6 +355,14 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
       </div>
     </div>
     <div class="field">
+      <span class="lab">Formato de la reacción</span>
+      <p class="hint">Boleta: como el ticket de pista, desde el último ámbar (perfecta 0.400 con Pro, 0.500 con Full). Desde la verde: la diferencia contra la verde (perfecta 0.000). Siempre verás los dos; aquí eliges cuál sale en grande.</p>
+      <div class="seg" role="radiogroup" id="segPFormato">
+        <button role="radio" data-v="boleta">Boleta (.400 / .500)</button>
+        <button role="radio" data-v="verde">Desde la verde (.000)</button>
+      </div>
+    </div>
+    <div class="field">
       <label class="lab" for="inPRetraso">Retraso de tu auto</label>
       <p class="hint">En pista el auto tarda en dejar el haz de stage después de que sueltas. Pon ese tiempo para practicar salir con el ámbar como en la pista. 0 = reacción pura.</p>
       <div class="row"><input type="number" id="inPRetraso" min="0" max="0.5" step="0.01" inputmode="decimal"><span>s</span></div>
@@ -362,7 +370,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 
     <button id="btnPractica" class="primary">Empezar práctica</button>
 
-    <h3>Tus salidas (modo solo)</h3>
+    <h3 id="psTitulo">Tus salidas (modo solo)</h3>
     <div class="kpis" style="margin-top:0">
       <div><span>Mejor reacción</span><b id="psMejor">—</b></div>
       <div><span>Promedio (últimas 20)</span><b id="psProm">—</b></div>
@@ -1157,7 +1165,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = 'beta 0.3';
+  const APP_VERSION = 'beta 0.3.1';
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -1922,7 +1930,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
   };
 
-  const P = Object.assign({ modo: 'solo', arbol: 'pro', salida: 'soltar', retraso: 0 }, LS.get('dragtrim.practica.cfg', {}));
+  const P = Object.assign({ modo: 'solo', arbol: 'pro', salida: 'soltar', retraso: 0, formato: 'boleta' }, LS.get('dragtrim.practica.cfg', {}));
   let hist = LS.get('dragtrim.practica.hist', []);
   const marcador = { l: 0, r: 0 };
   const guardarCfg = () => LS.set('dragtrim.practica.cfg', P);
@@ -1933,6 +1941,18 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
       ? { ambar: [[0, 0.4], [0, 0.4], [0, 0.4]], verde: 0.4 }
       : { ambar: [[0, 0.5], [0.5, 1.0], [1.0, 1.5]], verde: 1.5 };
   }
+
+  // Formatos de reacción:
+  //  boleta: como el ticket de pista, medido desde el último ámbar (perfecta .400 Pro / .500 Full)
+  //  verde:  diferencia contra la verde (perfecta .000)
+  const perfecta = (arbol) => (arbol === 'pro' ? 0.4 : 0.5);
+  function fmtRT(rt, arbol, formato) {
+    if (!isFin(rt)) return '—';
+    if (formato === 'boleta') return (rt + perfecta(arbol)).toFixed(3);
+    return (rt > 0 ? '+' : '') + rt.toFixed(3);
+  }
+  const otroFormato = () => (P.formato === 'boleta' ? 'verde' : 'boleta');
+  const nombreFormato = (f) => (f === 'boleta' ? 'boleta' : 'desde la verde');
 
   const nuevoCarril = () => ({ abajo: false, pid: null, preStage: false, staged: false, salio: false, tSalida: NaN, rt: NaN, rojo: false, timerStage: 0 });
   const st = { fase: 'cerrado', c: { l: nuevoCarril(), r: nuevoCarril() }, tArbol: NaN, tVerdePlan: NaN, tVerde: NaN, raf: 0, timers: [] };
@@ -2050,12 +2070,13 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
       const c = st.c[k];
       const rt = $(`#ptRt_${k}`), lab = $(`#ptLab_${k}`);
       if (!c.salio) { rt.textContent = '—'; lab.textContent = 'Sin salida'; res[k] = { orden: Infinity }; continue; }
+      const otro = isFin(c.rt) ? `${fmtRT(c.rt, P.arbol, otroFormato())} ${nombreFormato(otroFormato())}` : '';
       if (c.rojo) {
-        rt.textContent = isFin(c.rt) ? c.rt.toFixed(3) : 'ROJA';
-        lab.textContent = isFin(c.rt) ? 'Luz roja' : 'Luz roja: saliste antes del árbol';
+        rt.textContent = isFin(c.rt) ? fmtRT(c.rt, P.arbol, P.formato) : 'ROJA';
+        lab.textContent = isFin(c.rt) ? `Luz roja (${otro})` : 'Luz roja: saliste antes del árbol';
         res[k] = { rojo: true, t: c.tSalida };
       } else {
-        rt.textContent = c.rt.toFixed(3); lab.textContent = calificar(c.rt);
+        rt.textContent = fmtRT(c.rt, P.arbol, P.formato); lab.textContent = `${calificar(c.rt)} (${otro})`;
         res[k] = { orden: c.rt };
       }
       rt.className = 'pt-rtv' + (c.rojo ? ' rojo' : '');
@@ -2149,32 +2170,34 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 
   // ---------------------------------------------------------------- estadísticas
   function pintarStats() {
-    const ok = hist.filter((h) => !h.rojo && isFin(h.rt));
+    const delArbol = hist.filter((h) => h.arbol === P.arbol);
+    $('#psTitulo').textContent = `Tus salidas en modo solo, árbol ${P.arbol === 'pro' ? 'Pro .4' : 'Full .5'} (formato ${nombreFormato(P.formato)})`;
+    const ok = delArbol.filter((h) => !h.rojo && isFin(h.rt));
     const ult = ok.slice(-20);
     const prom = ult.length ? ult.reduce((s, h) => s + h.rt, 0) / ult.length : NaN;
     const mejor = ok.length ? Math.min(...ok.map((h) => h.rt)) : NaN;
-    const rojos = hist.filter((h) => h.rojo).length;
-    $('#psMejor').textContent = isFin(mejor) ? mejor.toFixed(3) : '—';
-    $('#psProm').textContent = isFin(prom) ? prom.toFixed(3) : '—';
-    $('#psRojas').textContent = hist.length ? `${rojos} de ${hist.length}` : '—';
+    const rojos = delArbol.filter((h) => h.rojo).length;
+    $('#psMejor').textContent = fmtRT(mejor, P.arbol, P.formato);
+    $('#psProm').textContent = fmtRT(prom, P.arbol, P.formato);
+    $('#psRojas').textContent = delArbol.length ? `${rojos} de ${delArbol.length}` : '—';
     const ul = $('#psUlt'); ul.innerHTML = '';
-    for (const h of hist.slice(-12).reverse()) {
+    for (const h of delArbol.slice(-12).reverse()) {
       const li = document.createElement('li');
-      li.textContent = h.rojo ? (isFin(h.rt) ? h.rt.toFixed(3) : 'roja') : h.rt.toFixed(3);
+      li.textContent = isFin(h.rt) ? fmtRT(h.rt, h.arbol, P.formato) : 'roja';
       if (h.rojo) li.className = 'rojo';
       ul.appendChild(li);
     }
-    $('#psVacio').hidden = hist.length > 0;
+    $('#psVacio').hidden = delArbol.length > 0;
   }
 
   // ---------------------------------------------------------------- ajustes de práctica
   function seg(id, key) {
     const el = document.getElementById(id);
     const pin = () => el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === P[key])));
-    el.querySelectorAll('button').forEach((b) => b.onclick = () => { P[key] = b.dataset.v; guardarCfg(); pin(); });
+    el.querySelectorAll('button').forEach((b) => b.onclick = () => { P[key] = b.dataset.v; guardarCfg(); pin(); pintarStats(); });
     pin();
   }
-  seg('segPModo', 'modo'); seg('segPArbol', 'arbol'); seg('segPSalida', 'salida');
+  seg('segPModo', 'modo'); seg('segPArbol', 'arbol'); seg('segPSalida', 'salida'); seg('segPFormato', 'formato');
   const inRet = $('#inPRetraso');
   inRet.value = P.retraso;
   inRet.onchange = () => {

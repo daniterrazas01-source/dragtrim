@@ -106,6 +106,14 @@
       </div>
     </div>
     <div class="field">
+      <span class="lab">Formato de la reacción</span>
+      <p class="hint">Boleta: como el ticket de pista, desde el último ámbar (perfecta 0.400 con Pro, 0.500 con Full). Desde la verde: la diferencia contra la verde (perfecta 0.000). Siempre verás los dos; aquí eliges cuál sale en grande.</p>
+      <div class="seg" role="radiogroup" id="segPFormato">
+        <button role="radio" data-v="boleta">Boleta (.400 / .500)</button>
+        <button role="radio" data-v="verde">Desde la verde (.000)</button>
+      </div>
+    </div>
+    <div class="field">
       <label class="lab" for="inPRetraso">Retraso de tu auto</label>
       <p class="hint">En pista el auto tarda en dejar el haz de stage después de que sueltas. Pon ese tiempo para practicar salir con el ámbar como en la pista. 0 = reacción pura.</p>
       <div class="row"><input type="number" id="inPRetraso" min="0" max="0.5" step="0.01" inputmode="decimal"><span>s</span></div>
@@ -113,7 +121,7 @@
 
     <button id="btnPractica" class="primary">Empezar práctica</button>
 
-    <h3>Tus salidas (modo solo)</h3>
+    <h3 id="psTitulo">Tus salidas (modo solo)</h3>
     <div class="kpis" style="margin-top:0">
       <div><span>Mejor reacción</span><b id="psMejor">—</b></div>
       <div><span>Promedio (últimas 20)</span><b id="psProm">—</b></div>
