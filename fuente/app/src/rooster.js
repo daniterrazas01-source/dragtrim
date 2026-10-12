@@ -141,10 +141,11 @@
 
   /**
    * Inverso (filas 20-23): caballos con un tiempo o una velocidad.
-   * {peso (lb), da (ft), dato: 'et18'|'v18'|'et14'|'v14', valor (s o mph)}
-   * -> {whp: en la llanta ese día, hp: al motor a nivel del mar (B21:B23), et14, v14 equivalentes}
-   * CORRECCIÓN: ya no se calcula desde el 60 ft (depende de la salida, no del motor) y se aceptan
-   * datos de 1/4 además de 1/8.
+   * {peso (lb), da (ft), dato: 'et18'|'v18'|'et14'|'v14', valor (s o mph), motor, nitro, boost}
+   * -> {whp: en la llanta ese día, hp: del motor (como se escriben arriba), et14, v14 equivalentes}
+   * Atmosférico = B21:B23 de la hoja. CORRECCIONES: ya no se calcula desde el 60 ft (depende de la
+   * salida, no del motor); se aceptan datos de 1/4; con nitro o turbo se despeja con el mismo modelo
+   * de la predicción (se resta el shot / se quita el boost), así la ida y vuelta da los mismos hp.
    */
   function caballosDesde(p) {
     let v14;
@@ -152,9 +153,13 @@
     else if (p.dato === 'v18') v14 = p.valor * K.V_14_18;
     else if (p.dato === 'et14') v14 = K.ETxMPH / p.valor;
     else v14 = p.valor;
-    if (!(v14 > 0 && p.peso > 0 && isFinite(v14))) return null;
+    if (!(v14 > 0 && p.peso > 0 && isFinite(v14) && factorDA(p.da) > 0)) return null;
     const w = p.peso * Math.pow(v14 / K.MPH, 3);
-    return { whp: w, hp: w / factorDA(p.da) / K.TREN, et14: K.ETxMPH / v14, v14 };
+    // whp es lineal en hp: whp = hp·porHp + extra
+    const porHp = whp(Object.assign({}, p, { hp: 1, nitro: 0 }), p.da);
+    const extra = p.motor === 'nitro' ? (p.nitro || 0) : 0;
+    if (!(porHp > 0)) return null;
+    return { whp: w, hp: (w - extra) / porHp, et14: K.ETxMPH / v14, v14 };
   }
 
   // ------------------------------------------------------------------ hoja exacta (para pruebas)

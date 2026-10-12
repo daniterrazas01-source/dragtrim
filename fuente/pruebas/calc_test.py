@@ -113,6 +113,11 @@ async def main():
             await escribe('#cDa', 8000)
             chk('8,000' in await pg.text_content('#cDaRes'), 'DA escrita a mano 8,000')
             chk(await pg.is_hidden('#cTempBox'), 'con DA a mano se oculta la temperatura')
+            chk(await pg.is_hidden('#cAltBox'), 'con DA a mano se ocultan pista y altura')
+            await escribe('#cDa', 74430)
+            chk('revisa' in await pg.text_content('#cDaRes') and (await tabla())[0][1] == '—' and await pg.text_content('#cMetaRes') == '—', 'DA absurda: aviso y sin números')
+            await pg.uncheck('#cDaSe'); await pg.select_option('#cPista', 'monterrey'); await pg.check('#cDaSe'); await pg.wait_for_timeout(100)
+            chk(await pg.input_value('#cDa') == str(round(await pg.evaluate("Rooster.densidadHoja(20,1440)"))), 'al marcar "Ya sé la DA" se llena con la de la pista elegida')
             await pg.uncheck('#cDaSe'); await pg.select_option('#cPista', 'villa'); await pg.wait_for_timeout(100)
 
             # 5) mph desde Ajustes
@@ -140,6 +145,7 @@ async def main():
             await pg.click('#cBtnAqui'); await pg.wait_for_function("!document.querySelector('#cTempTelBox').hidden", timeout=15000)
             est = await pg.text_content('#cEstado')
             chk('Sin internet' in est, f'aviso sin internet: {est!r}')
+            chk(await pg.input_value('#cTempTel') == '' and (await tabla())[0][1] == '—', 'sin internet la temperatura queda vacía y no hay tiempos hasta escribirla')
             await escribe('#cTempTel', 30)
             dg = await pg.evaluate("Math.round(Rooster.densidadReal(Rooster.presionISA_hPa(1555), 30, 0)).toLocaleString('es-MX')")
             chk(dg in await pg.text_content('#cDaRes'), f'DA con GPS y 30 °C: {dg}')
@@ -162,6 +168,17 @@ async def main():
             inv = await pg.text_content('#cInvRes')
             chk(f'{esp} hp' in inv, f'caballos con 1/8 a 132.4 km/h: {esp} — {inv!r}')
             await pg.screenshot(path=SH + 'calc_05_inverso.png', full_page=True)
+            await pg.click('.tabs button[data-view="vAjustes"]'); await pg.click('#segUnidad button[data-v="mph"]')
+            await pg.click('.tabs button[data-view="vCalc"]'); await pg.wait_for_timeout(500)
+            chk(await pg.input_value('#cInvVal') == '82.3' and f'{esp} hp' in await pg.text_content('#cInvRes'), 'al cambiar a mph la velocidad escrita se convierte (82.3 mph) y los caballos no cambian')
+            await pg.click('.tabs button[data-view="vAjustes"]'); await pg.click('#segUnidad button[data-v="kmh"]')
+            await pg.click('.tabs button[data-view="vCalc"]'); await pg.wait_for_timeout(500)
+            await pg.click('#segCMotor button[data-v="nitro"]'); await escribe('#cNitro', 100)
+            v14n = await pg.evaluate("(Rooster.predecir({peso:3100,hp:420,motor:'nitro',nitro:100,da:Rooster.densidadHoja(20,5100)}).pista.v14*1.60934).toFixed(1)")
+            await pg.click('#segCInvD button[data-v="4"]'); await escribe('#cInvVal', v14n)
+            inv = await pg.text_content('#cInvRes')
+            chk('≈ 420 hp' in inv and 'shot' in inv, f'nitro: ida y vuelta da 420 hp del motor: {inv!r}')
+            await pg.click('#segCMotor button[data-v="atmos"]')
 
             # 10) se guarda al recargar
             await escribe('#cHp', 500)

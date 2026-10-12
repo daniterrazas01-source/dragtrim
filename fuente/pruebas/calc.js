@@ -58,6 +58,18 @@ for (const c of V) {
 }
 const n2 = ok - n1;
 
+// 2b) ida y vuelta: con la velocidad o el tiempo que predice la tabla, el inverso regresa los mismos hp
+for (const m of [{ motor: 'atmos' }, { motor: 'nitro', nitro: 100 }, { motor: 'nitro', nitro: 250 }, { motor: 'turbo', boost: 8 }, { motor: 'turbo', boost: 20 }]) {
+  for (const da of [-1000, 1440, 7443, 9800]) {
+    const p = Object.assign({ peso: 3100, hp: 420, da }, m), r = R.predecir(p).pista;
+    for (const [dato, valor] of [['v14', r.v14], ['v18', r.v18], ['et14', r.et14], ['et18', r.et18]]) {
+      chk(`ida y vuelta ${m.motor} ${m.nitro || m.boost || ''} DA ${da} ${dato}`, R.caballosDesde(Object.assign({}, p, { dato, valor })).hp, 420);
+    }
+  }
+}
+// DA sin sentido: el inverso no inventa caballos
+if (R.caballosDesde({ peso: 3100, da: 40000, dato: 'v14', valor: 100, motor: 'atmos' }) === null) ok++; else { mal++; console.log('FALLA DA 40000 da caballos'); }
+
 // 3) densidad real
 for (const ft of [0, 1440, 4100, 4900, 5100, 5600, 8000]) {
   const m = ft / 3.28084, tIsa = 15 - 0.0019812 * ft;

@@ -18,7 +18,7 @@
     aire: 'manual', pista: 'villa', alt: 5100, temp: 20, daSe: false, da: 7443,
     peso: 3100, pesoU: 'lb', hp: 420, motor: 'atmos', nitro: 100, boost: 8,
     metaD: '4', metaT: 15, invD: '8', invDato: 'v', invVal: null,
-    lectura: null, tempTel: 25,
+    lectura: null, tempTel: null, invU: null,
   };
   const C = Object.assign({}, DEF, LS.get('dragtrim.calc', {}));
   const guardar = () => LS.set('dragtrim.calc', C);
@@ -45,8 +45,13 @@
   };
 
   // ------------------------------------------------------------------ condiciones del aire
-  /** DA vigente (ft) y de dónde sale, o null si falta información. */
+  /** DA vigente (ft) y de dónde sale; null si falta información; {fuera: true} si no tiene sentido. */
   function daActual() {
+    const d = daCruda();
+    if (d && !(d.da > -5000 && d.da < 20000)) return { fuera: true, da: d.da };
+    return d;
+  }
+  function daCruda() {
     if (C.aire === 'manual') {
       if (C.daSe) return isFin(C.da) ? { da: C.da, txt: 'la que escribiste' } : null;
       if (!isFin(C.alt) || !isFin(C.temp)) return null;
@@ -86,14 +91,13 @@
     const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + c.latitude.toFixed(2) + '&longitude=' + c.longitude.toFixed(2) +
       '&current=temperature_2m,relative_humidity_2m,surface_pressure&timezone=auto';
     let clima = null;
+    const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 10000);
     try {
-      const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 10000);
       const r = await fetch(url, { signal: ctl.signal, cache: 'no-store' });
-      clearTimeout(to);
-      const j = await r.json();
+      const j = await r.json();   // el límite de 10 s cubre también la lectura de la respuesta
       const cur = j && j.current;
       if (r.ok && cur && isFin(cur.temperature_2m) && isFin(cur.surface_pressure) && isFin(cur.relative_humidity_2m)) clima = { cur, elev: j.elevation };
-    } catch (e) { clima = null; }
+    } catch (e) { clima = null; } finally { clearTimeout(to); }
     btn.disabled = false;
     if (clima) {
       C.lectura = {
@@ -104,7 +108,10 @@
       estado('');
     } else if (isFin(altGps)) {
       C.lectura = { t: Date.now(), fuente: 'gps', alt: altGps, altDe: 'GPS' };
+      // La temperatura se pide de nuevo: no se usa una vieja ni una inventada.
+      C.tempTel = NaN; $('#cTempTel').value = '';
       estado('Sin internet: uso la altitud del GPS y la temperatura que escribas. Sin la presión y la humedad reales es menos exacta.');
+      setTimeout(() => $('#cTempTel').focus(), 50);
     } else {
       estado('No pude consultar el clima y el teléfono no dio la altitud. Revisa la señal o usa "Altura que yo elija".', true);
       return;
@@ -125,9 +132,9 @@
     }
     h += fila(`Altitud (${L.altDe})`, `${miles(L.alt)} m (${miles(L.alt * FT_M)} ft)`);
     const viejo = Date.now() - L.t > 3 * 3600 * 1000;
-    h += fila('Tomado', `${new Date(L.t).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}, ${hace(L.t)}${viejo ? ' · tómalo de nuevo' : ''}`);
+    h += fila('Tomado', `${new Date(L.t).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}, ${hace(L.t)}`);
     dl.innerHTML = h; dl.hidden = false;
-    dl.classList.toggle('viejo', viejo);
+    $('#cViejo').hidden = !viejo;
   }
 
   // ------------------------------------------------------------------ pintar todo
@@ -141,6 +148,7 @@
     $('#cPista').value = R.PISTAS.some((p) => p.id === C.pista) ? C.pista : 'otra';
     $('#cAltM').textContent = isFin(C.alt) ? `≈ ${miles(C.alt / FT_M)} m sobre el nivel del mar` : '';
     $('#cTempBox').hidden = C.daSe;
+    $('#cAltBox').hidden = C.daSe;
     $('#cDaBox').hidden = !C.daSe;
     $('#cNitroBox').hidden = C.motor !== 'nitro';
     $('#cBoostBox').hidden = C.motor !== 'turbo';
@@ -148,14 +156,21 @@
       ? (C.pesoU === 'kg' ? `= ${miles(C.peso * R.K.LB_KG)} lb` : `= ${miles(C.peso / R.K.LB_KG)} kg`) : '';
     pintarLectura();
 
-    const D = daActual();
+    let D = daActual();
     const daRes = $('#cDaRes');
-    const auto = { peso: pesoLb(), hp: C.hp, motor: C.motor, nitro: C.nitro, boost: C.boost, da: D ? D.da : NaN };
     if (!D) {
-      daRes.innerHTML = C.aire === 'tel' && !C.lectura ? 'Toca <b>Tomar condiciones de aquí</b> para calcular la densidad del aire.' : 'Faltan datos para calcular la densidad del aire.';
+      daRes.innerHTML = C.aire === 'tel' && !C.lectura ? 'Toca <b>Tomar condiciones de aquí</b> para calcular la altitud de densidad.'
+        : C.aire === 'tel' && C.lectura && C.lectura.fuente === 'gps' ? 'Escribe la temperatura del aire para calcular la altitud de densidad.'
+        : 'Faltan datos para calcular la altitud de densidad.';
+    } else if (D.fuera) {
+      daRes.innerHTML = `La altitud de densidad saldría <b>${miles(D.da)} ft</b>: revisa la altura, la temperatura o la DA que escribiste.`;
+      daRes.classList.add('err');
+      D = null;
     } else {
-      daRes.innerHTML = `Densidad del aire (DA) <b>≈ ${miles(D.da)} ft</b> · tu motor rinde <b>≈ ${fx(R.factorDA(D.da) * 100, 0)} %</b><small>${D.txt}</small>`;
+      daRes.innerHTML = `Altitud de densidad (DA) <b>≈ ${miles(D.da)} ft</b> · tu motor rinde <b>≈ ${fx(R.factorDA(D.da) * 100, 0)} %</b><small>${D.txt}</small>`;
     }
+    if (D || !daRes.innerHTML.startsWith('La altitud')) daRes.classList.remove('err');
+    const auto = { peso: pesoLb(), hp: C.hp, motor: C.motor, nitro: C.nitro, boost: C.boost, da: D ? D.da : NaN };
     $('#cPAmb').textContent = D ? `Presión del aire que usa la hoja para el turbo: ${fx(R.presionTabla(D.da), 2)} psi (a nivel del mar 14.70).` : '';
 
     // resultados
@@ -177,23 +192,32 @@
 
     // peso para un tiempo meta
     const metaRes = $('#cMetaRes');
-    if (r && isFin(C.metaT) && C.metaT > 0) {
-      const et14 = C.metaD === '8' ? C.metaT * R.K.ET_14_18 : C.metaT;
-      const lb = R.pesoParaET(auto, et14), dif = lb - auto.peso;
-      const difTxt = Math.abs(dif) < 1 ? 'igual que ahora' : `${miles(Math.abs(C.pesoU === 'kg' ? dif / R.K.LB_KG : dif))} ${C.pesoU} ${dif > 0 ? 'más' : 'menos'} que ahora`;
-      metaRes.innerHTML = `Deberías pesar <b>≈ ${fmtPeso(lb)}</b><small>${difTxt}</small>`;
+    const lbMeta = r && r.pista && isFin(C.metaT) && C.metaT > 0
+      ? R.pesoParaET(auto, C.metaD === '8' ? C.metaT * R.K.ET_14_18 : C.metaT) : NaN;
+    if (isFin(lbMeta) && lbMeta > 0) {
+      const dif = lbMeta - auto.peso, kg = C.pesoU === 'kg';
+      const difTxt = Math.abs(dif) < 1 ? 'igual que ahora' : `${miles(Math.abs(kg ? dif / R.K.LB_KG : dif))} ${C.pesoU} ${dif > 0 ? 'más' : 'menos'} que ahora`;
+      const otro = kg ? `${miles(lbMeta)} lb` : `${miles(lbMeta / R.K.LB_KG)} kg`;
+      metaRes.innerHTML = `Deberías pesar <b>≈ ${miles(kg ? lbMeta / R.K.LB_KG : lbMeta)} ${C.pesoU}</b><small>= ${otro} · ${difTxt}</small>`;
     } else metaRes.textContent = '—';
 
     // caballos con tu tiempo
     const esV = C.invDato === 'v';
+    // La velocidad escrita se guarda con su unidad: si cambió en Ajustes, se convierte (no se reinterpreta).
+    if (esV && isFin(C.invVal) && C.invU && C.invU !== u) {
+      C.invVal = u === 'mph' ? C.invVal / R.K.MI_KM : C.invVal * R.K.MI_KM;   // sin redondear: el resultado no brinca
+      $('#cInvVal').value = Math.round(C.invVal * 10) / 10; guardar();
+    }
+    C.invU = u;
     $('#cInvU').textContent = esV ? u : 's';
     $('#cInvLab').textContent = `${esV ? 'Velocidad' : 'Tiempo'} de ${C.invD === '8' ? '1/8' : '1/4'}`;
     const invRes = $('#cInvRes');
     if (D && isFin(C.invVal) && C.invVal > 0 && auto.peso > 0) {
       const dato = (esV ? 'v' : 'et') + (C.invD === '8' ? '18' : '14');
-      const x = R.caballosDesde({ peso: auto.peso, da: D.da, dato, valor: esV ? aMph(C.invVal) : C.invVal });
-      invRes.innerHTML = x
-        ? `<b>≈ ${miles(x.hp)} hp</b> del motor, a nivel del mar<small>≈ ${miles(x.whp)} hp en la llanta con estas condiciones</small>`
+      const x = R.caballosDesde(Object.assign({}, auto, { dato, valor: esV ? aMph(C.invVal) : C.invVal }));
+      const extra = C.motor === 'nitro' ? ` + shot de ${miles(C.nitro)}` : C.motor === 'turbo' ? ` con ${fx(C.boost, 0)} psi de boost` : '';
+      invRes.innerHTML = x && x.hp > 0
+        ? `<b>≈ ${miles(x.hp)} hp</b> del motor${extra}<small>Como se escriben arriba (al volante, a nivel del mar). ≈ ${miles(x.whp)} hp en la llanta con estas condiciones.</small>`
         : '—';
     } else invRes.textContent = '—';
   }
@@ -251,7 +275,8 @@
   daSe.checked = !!C.daSe;
   daSe.onchange = () => {
     C.daSe = daSe.checked;
-    if (C.daSe && isFin(C.alt) && isFin(C.temp) && !isFin(C.da)) { C.da = Math.round(R.densidadHoja(C.temp, C.alt)); $('#cDa').value = C.da; }
+    // Se llena con la DA de las condiciones elegidas, para corregirla con la del día.
+    if (C.daSe && isFin(C.alt) && isFin(C.temp)) { C.da = Math.round(R.densidadHoja(C.temp, C.alt)); $('#cDa').value = C.da; }
     guardar(); pintar();
   };
   $('#cBtnAqui').onclick = tomarAqui;

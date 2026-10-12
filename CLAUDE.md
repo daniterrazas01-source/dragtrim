@@ -69,6 +69,20 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    1.8 g al arrancar. Siguiente paso propuesto: más corridas con boleta y función "calibrar con boleta"
    (ajustar retraso GPS + rollout por teléfono usando varias corridas).
 
+9. **Calculadora "Rooster Racing"** (beta 0.5, pestaña **Calcular**): la hoja de Excel de Daniel
+   (`ROOSTER_RACING.xlsx`, no está en el repo) para **aproximar** tiempos con peso y caballos (no para
+   comprobar boletas). Fórmulas de Hale: ET 1/4 = 5.825·(lb/whp)^⅓, MPH = 234·(whp/lb)^⅓;
+   whp = hp·0.86·(1 − 0.03·DA/1000) (+ shot de nitro ya en la llanta); turbo: (hp + hp·boost/presión)·…;
+   1/8 = 1/4 ÷ 1.565 (tiempo) y ÷ 1.27 (velocidad); 60 ft = 0.145·ET; DA de la hoja =
+   ((T − (15 − 0.002·alt))·120 + alt)·1.075. Condiciones del aire: "En la pista (teléfono)" =
+   ubicación (redondeada ~1 km) + clima de Open-Meteo (presión, temperatura, humedad → DA real, sin
+   el ×1.075; sin internet: altitud del GPS + temperatura escrita) o "Altura que yo elija" (pistas de
+   la hoja: El Charco 5600, Villa 5100, Chihuahua 4900, Caldera 4100, Monterrey 1440 ft; u otra altura;
+   o la DA escrita). Correcciones contra el Excel (Daniel debe confirmarlas): 0-60 siempre en mph (la
+   hoja mezclaba km/h con el factor de mph), turbo con presión de la tabla a la DA (la hoja: 11.34 fijo),
+   sin caballos desde el 60 ft (la hoja usaba 0.141 al revés), el inverso resta nitro/boost.
+   `Rooster.hoja()` reproduce la hoja celda por celda (probado contra LibreOffice).
+
 ## Estructura
 
 ```
@@ -76,6 +90,8 @@ index.html, sw.js, manifest.webmanifest, icon-*.png   ← lo publicado (generado
 fuente/app/src/dragcore.js     algoritmo (procesar, DetectorVivo, simulador)
 fuente/app/src/app.js          interfaz: sensores, sesión, resultados, historial (IndexedDB), ajustes, exportar zip
 fuente/app/src/practica.js     simulador de semáforo
+fuente/app/src/rooster.js      fórmulas de la calculadora (hoja exacta + versión de la app)
+fuente/app/src/calculadora.js  pestaña Calcular
 fuente/app/src/index.template.html, style.css
 fuente/app/tools/build.py      junta todo en un index.html autocontenido + sw.js + íconos (sube VERSION al cambiar)
 fuente/publicar.sh             build + copia a la raíz
@@ -85,7 +101,7 @@ fuente/fondos/                 fondos originales (PNG); se publican como fondos/
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Versión actual: **beta 0.4** (fondos de pantalla estilo sticker; antes 0.3.2: animaciones apagables en Ajustes),
+caché del service worker; cambiarlo fuerza la actualización). Versión actual: **beta 0.5** (calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
 algoritmo v2.3.
 
 Los zips exportados desde la app traen `drag_raw_gps_*.csv`, `drag_raw_acc_*.csv`,
@@ -102,6 +118,8 @@ node spike.js       # robustez ante saltos del GPS
 python3 uitest.py demo   # app completa en Chromium headless (corrida simulada, historial, exportar, recalcular)
 python3 uitest.py real   # igual, pero con GPS/acelerómetro falsos a través de las APIs del navegador
 python3 pt_test.py       # simulador de semáforo (tiempos, rojas, 1 vs 1)
+node calc.js             # calculadora: hoja exacta vs LibreOffice (datos/rooster_vectores.json) + app
+python3 calc_test.py     # pestaña Calcular en Chromium (GPS y clima falsos, sin internet)
 python3 mcheck.py ../matlab/*.m   # revisión estructural de MATLAB (aquí no hay MATLAB/Octave)
 ```
 Las pruebas de navegador usan Playwright (Python) con el Chromium preinstalado y dejan

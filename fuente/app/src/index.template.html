@@ -147,10 +147,11 @@
       </div>
 
       <div id="cTel" class="c-sub">
-        <p class="hint">El teléfono toma tu ubicación y el clima de este momento (temperatura, presión y humedad) y calcula la densidad del aire real. Necesita internet; tu ubicación solo se usa para pedir el clima.</p>
+        <p class="hint">El teléfono toma tu ubicación y el clima de este momento (temperatura, presión y humedad) y calcula la altitud de densidad (DA) real. Necesita internet; tu ubicación solo se usa para pedir el clima.</p>
         <button class="ghost" id="cBtnAqui">Tomar condiciones de aquí</button>
         <p class="c-estado" id="cEstado" aria-live="polite"></p>
         <dl class="c-lectura" id="cLectura" hidden></dl>
+        <p class="c-viejo" id="cViejo" hidden>Estas condiciones tienen más de 3 horas: tócalo de nuevo.</p>
         <div id="cTempTelBox" hidden>
           <label class="lab" for="cTempTel">Temperatura del aire</label>
           <div class="row"><input type="number" id="cTempTel" inputmode="decimal" step="1"><span>°C</span></div>
@@ -158,17 +159,19 @@
       </div>
 
       <div id="cMan" class="c-sub">
-        <label class="lab" for="cPista">Pista</label>
-        <select id="cPista"></select>
-        <label class="lab" for="cAlt">Altura</label>
-        <div class="row"><input type="number" id="cAlt" inputmode="numeric" step="100"><span>ft</span></div>
-        <p class="hint" id="cAltM"></p>
+        <div id="cAltBox">
+          <label class="lab" for="cPista">Pista</label>
+          <select id="cPista"></select>
+          <label class="lab" for="cAlt">Altura</label>
+          <div class="row"><input type="number" id="cAlt" inputmode="numeric" step="100"><span>ft</span></div>
+          <p class="hint" id="cAltM"></p>
+        </div>
         <div id="cTempBox">
           <label class="lab" for="cTemp">Temperatura del aire</label>
           <div class="row"><input type="number" id="cTemp" inputmode="decimal" step="1"><span>°C</span></div>
         </div>
         <label class="toggle c-toggle">Ya sé la DA del día <input type="checkbox" id="cDaSe"></label>
-        <div class="row" id="cDaBox" hidden><input type="number" id="cDa" inputmode="numeric" step="100" aria-label="Densidad del aire (DA) en pies"><span>ft</span></div>
+        <div class="row" id="cDaBox" hidden><input type="number" id="cDa" inputmode="numeric" step="100" aria-label="Altitud de densidad (DA) en pies"><span>ft</span></div>
       </div>
       <p class="c-da" id="cDaRes" aria-live="polite"></p>
     </div>
@@ -247,8 +250,9 @@
         <li>Como tu hoja, con las fórmulas de Hale: tiempo de 1/4 = 5.825 × (peso ÷ caballos en la llanta)<sup>⅓</sup> y velocidad = 234 × (caballos en la llanta ÷ peso)<sup>⅓</sup>.</li>
         <li>Caballos en la llanta = los del motor × 0.86 (14 % de transmisión) × pérdida por altura (3 % por cada 1000 ft de DA). El nitro se suma ya en la llanta. Con turbo: caballos + caballos × boost ÷ presión del aire.</li>
         <li>1/8 = 1/4 ÷ 1.565 en tiempo y ÷ 1.27 en velocidad. 60 ft típico = 14.5 % del tiempo de 1/4.</li>
+        <li>DA = altitud de densidad: la altura a la que "se siente" el aire por la presión, la temperatura y la humedad. Entre más alta, menos rinde el motor.</li>
         <li>"Altura que yo elija" usa la fórmula de DA de tu hoja (con su ×1.075). "En la pista" calcula la DA real con la presión, la temperatura y la humedad del clima; suele salir más baja que la de la hoja (a 5100 ft y 20 °C: ≈ 6,830 contra 7,443 ft).</li>
-        <li>Cambios contra tu Excel: el 0–60 siempre se calcula en mph (en la hoja cambiaba casi 1 s al poner km/h); el turbo usa la presión del aire según la DA (la hoja la tenía fija en 11.34 psi, la de 7000 ft); y los caballos ya no se sacan del 60 ft.</li>
+        <li>Cambios contra tu Excel: el 0–60 siempre se calcula en mph (en la hoja cambiaba casi 1 s al poner km/h); el turbo usa la presión del aire según la DA (la hoja la tenía fija en 11.34 psi, la de 7000 ft); los caballos ya no se sacan del 60 ft; y en "Caballos con tu tiempo" se resta el nitro o el boost, para que dé los caballos del motor como los escribes arriba.</li>
       </ul>
     </details>
   </section>
