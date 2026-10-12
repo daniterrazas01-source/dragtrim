@@ -59,8 +59,8 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    Ojo: los stickers tienen marcas reales (NOS, Holley, JEGS…); para tiendas de apps habría que cambiarlas.
 
 8. **Primera prueba real** (11 oct 2026, autódromo, zip `dragtrim_20261011_143244`, rollout 0.5 ft):
-   boleta 60ft 2.650 / 201 m 9.339 @132.40 / 402 m 14.043 @ "1?1.72" (borroso; GPS máx 168 km/h,
-   probablemente 161.72) / RT 0.622. App: 2.653 / 9.476 @135.1 / 14.205 trampa 166.8 (+0.003/+0.137/+0.162).
+   boleta 60ft 2.650 / 201 m 9.339 @132.40 / 402 m 14.043 @ 181.71 km/h (confirmado por Daniel;
+   ojo: GPS Doppler y posición dicen ~166–169 km/h en la meta, ~8% menos; la de 1/8 sí coincide ±2%) / RT 0.622. App: 2.653 / 9.476 @135.1 / 14.205 trampa 166.8 (+0.003/+0.137/+0.162).
    Hallazgos: la distancia integrada coincide con la posición GPS (±2 m en 400 m); el retraso GPS
    estimado fue 0.52 s pero los parciales de la boleta sugieren ~0.9–1.0 s (el modelo deriva+escala
    absorbe parte con escala −0.29); rollout y retraso son casi intercambiables con una sola corrida
