@@ -134,6 +134,125 @@
     <button id="btnPBorrar" class="danger">Borrar estadísticas</button>
   </section>
 
+  <!-- ============ CALCULAR ============ -->
+  <section id="vCalc" class="view" hidden>
+    <h2>Calculadora</h2>
+    <p class="muted">Aproximación con las fórmulas de tu hoja Rooster Racing: con tu peso y tus caballos, más o menos qué tiempo harías. No son tiempos medidos.</p>
+
+    <div class="field">
+      <span class="lab">Condiciones del aire</span>
+      <div class="seg" role="radiogroup" aria-label="Condiciones del aire" id="segCAire" style="margin-top:8px">
+        <button role="radio" data-v="tel">En la pista (teléfono)</button>
+        <button role="radio" data-v="manual">Altura que yo elija</button>
+      </div>
+
+      <div id="cTel" class="c-sub">
+        <p class="hint">El teléfono toma tu ubicación y el clima de este momento (temperatura, presión y humedad) y calcula la densidad del aire real. Necesita internet; tu ubicación solo se usa para pedir el clima.</p>
+        <button class="ghost" id="cBtnAqui">Tomar condiciones de aquí</button>
+        <p class="c-estado" id="cEstado" aria-live="polite"></p>
+        <dl class="c-lectura" id="cLectura" hidden></dl>
+        <div id="cTempTelBox" hidden>
+          <label class="lab" for="cTempTel">Temperatura del aire</label>
+          <div class="row"><input type="number" id="cTempTel" inputmode="decimal" step="1"><span>°C</span></div>
+        </div>
+      </div>
+
+      <div id="cMan" class="c-sub">
+        <label class="lab" for="cPista">Pista</label>
+        <select id="cPista"></select>
+        <label class="lab" for="cAlt">Altura</label>
+        <div class="row"><input type="number" id="cAlt" inputmode="numeric" step="100"><span>ft</span></div>
+        <p class="hint" id="cAltM"></p>
+        <div id="cTempBox">
+          <label class="lab" for="cTemp">Temperatura del aire</label>
+          <div class="row"><input type="number" id="cTemp" inputmode="decimal" step="1"><span>°C</span></div>
+        </div>
+        <label class="toggle c-toggle">Ya sé la DA del día <input type="checkbox" id="cDaSe"></label>
+        <div class="row" id="cDaBox" hidden><input type="number" id="cDa" inputmode="numeric" step="100" aria-label="Densidad del aire (DA) en pies"><span>ft</span></div>
+      </div>
+      <p class="c-da" id="cDaRes" aria-live="polite"></p>
+    </div>
+
+    <div class="field">
+      <span class="lab">Tu auto</span>
+      <label class="lab" for="cPeso">Peso con piloto</label>
+      <div class="row">
+        <input type="number" id="cPeso" inputmode="decimal" step="10">
+        <div class="seg mini" role="radiogroup" aria-label="Unidad de peso" id="segCPesoU">
+          <button role="radio" data-v="lb">lb</button>
+          <button role="radio" data-v="kg">kg</button>
+        </div>
+      </div>
+      <p class="hint" id="cPesoOtro"></p>
+      <label class="lab" for="cHp">Caballos del motor</label>
+      <div class="row"><input type="number" id="cHp" inputmode="decimal" step="10"><span>hp</span></div>
+      <p class="hint">Al volante, sin contar el nitro ni el turbo. La hoja les quita 14 % por la transmisión.</p>
+      <span class="lab">Motor</span>
+      <div class="seg" role="radiogroup" aria-label="Tipo de motor" id="segCMotor">
+        <button role="radio" data-v="atmos">Atmosférico</button>
+        <button role="radio" data-v="nitro">Nitro</button>
+        <button role="radio" data-v="turbo">Turbo</button>
+      </div>
+      <div id="cNitroBox" class="c-sub">
+        <label class="lab" for="cNitro">Shot de nitro</label>
+        <div class="row"><input type="number" id="cNitro" inputmode="decimal" step="25"><span>hp</span></div>
+      </div>
+      <div id="cBoostBox" class="c-sub">
+        <label class="lab" for="cBoost">Boost (lo que marca el manómetro)</label>
+        <div class="row"><input type="number" id="cBoost" inputmode="decimal" step="1"><span>psi</span></div>
+        <p class="hint" id="cPAmb"></p>
+      </div>
+    </div>
+
+    <h3>Tiempo estimado</h3>
+    <div class="c-res">
+      <table class="c-tabla">
+        <thead><tr><th></th><th>En esta pista<small id="cColPista"></small></th><th>A nivel del mar</th></tr></thead>
+        <tbody id="cTabla"></tbody>
+      </table>
+    </div>
+    <p class="muted c-nota">≈ Para un auto con buena salida. El 60 ft y el 1/8 dependen mucho de llantas, suspensión y salida; la velocidad es lo que mejor sigue a los caballos.</p>
+
+    <div class="field">
+      <span class="lab">Peso para un tiempo meta</span>
+      <p class="hint">Con tus caballos y estas condiciones, cuánto debería pesar el auto para hacer este tiempo.</p>
+      <div class="seg" role="radiogroup" aria-label="Distancia de la meta" id="segCMetaD">
+        <button role="radio" data-v="8">1/8 de milla</button>
+        <button role="radio" data-v="4">1/4 de milla</button>
+      </div>
+      <div class="row" style="margin-top:10px"><input type="number" id="cMetaT" inputmode="decimal" step="0.1" aria-label="Tiempo meta en segundos"><span>s</span></div>
+      <p class="c-big" id="cMetaRes" aria-live="polite"></p>
+    </div>
+
+    <details class="howto c-inv">
+      <summary>Caballos con tu tiempo</summary>
+      <p class="hint">Al revés: con un tiempo o una velocidad, cuántos caballos tendría el motor. Usa el peso y las condiciones de arriba.</p>
+      <div class="seg" role="radiogroup" aria-label="Distancia" id="segCInvD">
+        <button role="radio" data-v="8">1/8</button>
+        <button role="radio" data-v="4">1/4</button>
+      </div>
+      <div class="seg" role="radiogroup" aria-label="Dato" id="segCInvDato" style="margin-top:8px">
+        <button role="radio" data-v="v">Velocidad</button>
+        <button role="radio" data-v="et">Tiempo</button>
+      </div>
+      <label class="lab" for="cInvVal" id="cInvLab" style="margin-top:10px">Velocidad</label>
+      <div class="row"><input type="number" id="cInvVal" inputmode="decimal" step="0.1"><span id="cInvU">km/h</span></div>
+      <p class="c-big" id="cInvRes" aria-live="polite"></p>
+      <p class="hint">Con la velocidad sale más confiable: el tiempo depende mucho de la salida.</p>
+    </details>
+
+    <details class="howto">
+      <summary>Cómo calcula</summary>
+      <ul>
+        <li>Como tu hoja, con las fórmulas de Hale: tiempo de 1/4 = 5.825 × (peso ÷ caballos en la llanta)<sup>⅓</sup> y velocidad = 234 × (caballos en la llanta ÷ peso)<sup>⅓</sup>.</li>
+        <li>Caballos en la llanta = los del motor × 0.86 (14 % de transmisión) × pérdida por altura (3 % por cada 1000 ft de DA). El nitro se suma ya en la llanta. Con turbo: caballos + caballos × boost ÷ presión del aire.</li>
+        <li>1/8 = 1/4 ÷ 1.565 en tiempo y ÷ 1.27 en velocidad. 60 ft típico = 14.5 % del tiempo de 1/4.</li>
+        <li>"Altura que yo elija" usa la fórmula de DA de tu hoja (con su ×1.075). "En la pista" calcula la DA real con la presión, la temperatura y la humedad del clima; suele salir más baja que la de la hoja (a 5100 ft y 20 °C: ≈ 6,830 contra 7,443 ft).</li>
+        <li>Cambios contra tu Excel: el 0–60 siempre se calcula en mph (en la hoja cambiaba casi 1 s al poner km/h); el turbo usa la presión del aire según la DA (la hoja la tenía fija en 11.34 psi, la de 7000 ft); y los caballos ya no se sacan del 60 ft.</li>
+      </ul>
+    </details>
+  </section>
+
   <!-- ============ RESULTADO ============ -->
   <section id="vResultado" class="view" hidden></section>
 
@@ -249,6 +368,7 @@
 <nav class="tabs" aria-label="Secciones">
   <button data-view="vMedir" aria-current="page">Medir</button>
   <button data-view="vPractica">Práctica</button>
+  <button data-view="vCalc">Calcular</button>
   <button data-view="vHistorial">Historial</button>
   <button data-view="vAjustes">Ajustes</button>
 </nav>
@@ -261,6 +381,12 @@
 </script>
 <script>
 /*PRACTICA*/
+</script>
+<script>
+/*ROOSTER*/
+</script>
+<script>
+/*CALC*/
 </script>
 </body>
 </html>

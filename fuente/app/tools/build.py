@@ -5,13 +5,15 @@ from PIL import Image, ImageDraw, ImageFilter
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC, DIST = ROOT / 'src', ROOT / 'dist'
 DIST.mkdir(exist_ok=True)
-VERSION = 'beta-0.4'
+VERSION = 'beta-0.5'
 
 html = (SRC / 'index.template.html').read_text(encoding='utf-8')
 html = html.replace('/*CSS*/', (SRC / 'style.css').read_text(encoding='utf-8'))
 html = html.replace('/*CORE*/', (SRC / 'dragcore.js').read_text(encoding='utf-8'))
 html = html.replace('/*APP*/', (SRC / 'app.js').read_text(encoding='utf-8'))
 html = html.replace('/*PRACTICA*/', (SRC / 'practica.js').read_text(encoding='utf-8'))
+html = html.replace('/*ROOSTER*/', (SRC / 'rooster.js').read_text(encoding='utf-8'))
+html = html.replace('/*CALC*/', (SRC / 'calculadora.js').read_text(encoding='utf-8'))
 (DIST / 'index.html').write_text(html, encoding='utf-8')
 
 manifest = {

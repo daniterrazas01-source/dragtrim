@@ -206,7 +206,7 @@ p { margin: 0 0 12px; }
 /* Navegación */
 .tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
   background: var(--surface); border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -261,6 +261,58 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   .big { font-size: 68px; }
 }
 
+/* ============================================================ Calculadora (Rooster Racing) */
+@media (max-width: 350px) { .tabs button { font-size: 13px; } }
+/* Encabezado en pantallas angostas: primero se compacta; si aun así no cabe (≤ ~365 px), los indicadores
+   bajan de línea en vez de ensanchar la página. */
+.top { flex-wrap: wrap; row-gap: 6px; }
+.top .sensors { margin-left: auto; }
+@media (max-width: 400px) {
+  .top { padding-left: 12px; padding-right: 12px; }
+  .sensors { gap: 7px; }
+  .chip { font-size: 11px; }
+}
+@media (max-width: 380px) {
+  .c-res { padding: 4px 8px; }
+  .c-tabla th, .c-tabla td { padding: 8px 2px; }
+  .c-tabla tbody th { font-size: 13px; }
+  .c-tabla td { font-size: 16px; }
+  .c-tabla tr.et td { font-size: 19px; }
+}
+.field > .lab:not(:first-child), .c-sub .lab, .howto .lab { display: block; font-weight: 600; margin: 14px 0 6px; }
+.field select { width: 100%; background: var(--asphalt); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 17px; }
+.c-sub { margin-top: 12px; }
+.c-sub > .ghost { margin-top: 0; }
+.seg.mini { flex: none; width: 120px; }
+.seg.mini button { padding: 10px 4px; }
+.c-toggle { margin-top: 16px; font-weight: 600; }
+#cDaBox { margin-top: 8px; }
+.c-estado { font-size: 14px; color: var(--chalk-dim); margin: 10px 0 0; }
+.c-estado:empty { display: none; }
+.c-estado.err { color: var(--red); }
+.c-lectura { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 14px; margin: 12px 0 0; font-size: 14px; }
+.c-lectura dt { color: var(--chalk-dim); }
+.c-lectura dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.c-lectura.viejo dd:last-child { color: var(--amber); }
+.c-da { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 15px; }
+.c-da b, .c-big b { font-variant-numeric: tabular-nums; }
+.c-da small, .c-big small { display: block; font-size: 13px; color: var(--chalk-dim); font-weight: 500; margin-top: 2px; }
+.c-res { background: var(--surface); border-radius: 14px; padding: 6px 12px; margin-bottom: 10px; overflow-x: auto; }
+.c-tabla { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.c-tabla th, .c-tabla td { padding: 9px 4px; border-top: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.c-tabla thead th { border-top: 0; font-size: 13px; font-weight: 600; color: var(--chalk-dim); vertical-align: bottom; white-space: normal; }
+.c-tabla thead small { display: block; font-weight: 500; }
+.c-tabla tbody th { text-align: left; font-weight: 500; color: var(--chalk-dim); font-size: 14px; white-space: normal; }
+.c-tabla td { font: 700 18px/1.1 var(--num); }
+.c-tabla tr.et td { font-size: 22px; color: var(--chalk); }
+.c-tabla tr.et th { color: var(--chalk); font-weight: 700; }
+.c-nota { font-size: 13px; }
+.c-big { margin: 12px 0 4px; font-size: 16px; }
+.c-big b { font: 700 24px/1.15 var(--num); }
+.c-inv .seg:first-of-type { margin-top: 4px; }
+.c-inv .c-big { margin-bottom: 10px; }
+.howto summary + * { margin-top: 2px; }
+
 /* ============================================================ Fondos de pantalla: estilo sticker
    Se activa con data-fondo en <html>. El fondo va fijo detrás de todo con un velo oscuro
    (--velo) para que el texto se lea en el sol; en una corrida el velo sube. */
@@ -299,7 +351,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 :root[data-fondo] body.sesion .fondo::after { background: rgba(var(--velo-color), .92); }
 
 /* Paneles = stickers: borde recortado y sombra */
-:root[data-fondo] :is(.status, .field, .howto, .kpis, .chart, .quality, .msg, .proximo, .seg) {
+:root[data-fondo] :is(.status, .field, .howto, .kpis, .chart, .quality, .msg, .proximo, .seg, .c-res) {
   border: 2px solid var(--sticker); box-shadow: 0 4px 0 rgba(0, 0, 0, .55);
 }
 :root[data-fondo] :is(.status, .kpis) { background: var(--sticker); gap: 2px; }
@@ -435,8 +487,9 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   .tabs:has(> button:nth-child(2)[aria-current]) { --i: 1; }
   .tabs:has(> button:nth-child(3)[aria-current]) { --i: 2; }
   .tabs:has(> button:nth-child(4)[aria-current]) { --i: 3; }
+  .tabs:has(> button:nth-child(5)[aria-current]) { --i: 4; }
   .tabs::before {
-    content: ""; position: absolute; top: -1px; left: 0; width: 25%; height: 3px; background: var(--amber);
+    content: ""; position: absolute; top: -1px; left: 0; width: 20%; height: 3px; background: var(--amber);
     border-radius: 0 0 3px 3px; transform: translateX(calc(var(--i) * 100%)); transition: transform .34s var(--ease-out), opacity .2s;
   }
   .tabs:not(:has(> button[aria-current]))::before { opacity: 0; }
@@ -606,6 +659,125 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
     <button id="btnPBorrar" class="danger">Borrar estadísticas</button>
   </section>
 
+  <!-- ============ CALCULAR ============ -->
+  <section id="vCalc" class="view" hidden>
+    <h2>Calculadora</h2>
+    <p class="muted">Aproximación con las fórmulas de tu hoja Rooster Racing: con tu peso y tus caballos, más o menos qué tiempo harías. No son tiempos medidos.</p>
+
+    <div class="field">
+      <span class="lab">Condiciones del aire</span>
+      <div class="seg" role="radiogroup" aria-label="Condiciones del aire" id="segCAire" style="margin-top:8px">
+        <button role="radio" data-v="tel">En la pista (teléfono)</button>
+        <button role="radio" data-v="manual">Altura que yo elija</button>
+      </div>
+
+      <div id="cTel" class="c-sub">
+        <p class="hint">El teléfono toma tu ubicación y el clima de este momento (temperatura, presión y humedad) y calcula la densidad del aire real. Necesita internet; tu ubicación solo se usa para pedir el clima.</p>
+        <button class="ghost" id="cBtnAqui">Tomar condiciones de aquí</button>
+        <p class="c-estado" id="cEstado" aria-live="polite"></p>
+        <dl class="c-lectura" id="cLectura" hidden></dl>
+        <div id="cTempTelBox" hidden>
+          <label class="lab" for="cTempTel">Temperatura del aire</label>
+          <div class="row"><input type="number" id="cTempTel" inputmode="decimal" step="1"><span>°C</span></div>
+        </div>
+      </div>
+
+      <div id="cMan" class="c-sub">
+        <label class="lab" for="cPista">Pista</label>
+        <select id="cPista"></select>
+        <label class="lab" for="cAlt">Altura</label>
+        <div class="row"><input type="number" id="cAlt" inputmode="numeric" step="100"><span>ft</span></div>
+        <p class="hint" id="cAltM"></p>
+        <div id="cTempBox">
+          <label class="lab" for="cTemp">Temperatura del aire</label>
+          <div class="row"><input type="number" id="cTemp" inputmode="decimal" step="1"><span>°C</span></div>
+        </div>
+        <label class="toggle c-toggle">Ya sé la DA del día <input type="checkbox" id="cDaSe"></label>
+        <div class="row" id="cDaBox" hidden><input type="number" id="cDa" inputmode="numeric" step="100" aria-label="Densidad del aire (DA) en pies"><span>ft</span></div>
+      </div>
+      <p class="c-da" id="cDaRes" aria-live="polite"></p>
+    </div>
+
+    <div class="field">
+      <span class="lab">Tu auto</span>
+      <label class="lab" for="cPeso">Peso con piloto</label>
+      <div class="row">
+        <input type="number" id="cPeso" inputmode="decimal" step="10">
+        <div class="seg mini" role="radiogroup" aria-label="Unidad de peso" id="segCPesoU">
+          <button role="radio" data-v="lb">lb</button>
+          <button role="radio" data-v="kg">kg</button>
+        </div>
+      </div>
+      <p class="hint" id="cPesoOtro"></p>
+      <label class="lab" for="cHp">Caballos del motor</label>
+      <div class="row"><input type="number" id="cHp" inputmode="decimal" step="10"><span>hp</span></div>
+      <p class="hint">Al volante, sin contar el nitro ni el turbo. La hoja les quita 14 % por la transmisión.</p>
+      <span class="lab">Motor</span>
+      <div class="seg" role="radiogroup" aria-label="Tipo de motor" id="segCMotor">
+        <button role="radio" data-v="atmos">Atmosférico</button>
+        <button role="radio" data-v="nitro">Nitro</button>
+        <button role="radio" data-v="turbo">Turbo</button>
+      </div>
+      <div id="cNitroBox" class="c-sub">
+        <label class="lab" for="cNitro">Shot de nitro</label>
+        <div class="row"><input type="number" id="cNitro" inputmode="decimal" step="25"><span>hp</span></div>
+      </div>
+      <div id="cBoostBox" class="c-sub">
+        <label class="lab" for="cBoost">Boost (lo que marca el manómetro)</label>
+        <div class="row"><input type="number" id="cBoost" inputmode="decimal" step="1"><span>psi</span></div>
+        <p class="hint" id="cPAmb"></p>
+      </div>
+    </div>
+
+    <h3>Tiempo estimado</h3>
+    <div class="c-res">
+      <table class="c-tabla">
+        <thead><tr><th></th><th>En esta pista<small id="cColPista"></small></th><th>A nivel del mar</th></tr></thead>
+        <tbody id="cTabla"></tbody>
+      </table>
+    </div>
+    <p class="muted c-nota">≈ Para un auto con buena salida. El 60 ft y el 1/8 dependen mucho de llantas, suspensión y salida; la velocidad es lo que mejor sigue a los caballos.</p>
+
+    <div class="field">
+      <span class="lab">Peso para un tiempo meta</span>
+      <p class="hint">Con tus caballos y estas condiciones, cuánto debería pesar el auto para hacer este tiempo.</p>
+      <div class="seg" role="radiogroup" aria-label="Distancia de la meta" id="segCMetaD">
+        <button role="radio" data-v="8">1/8 de milla</button>
+        <button role="radio" data-v="4">1/4 de milla</button>
+      </div>
+      <div class="row" style="margin-top:10px"><input type="number" id="cMetaT" inputmode="decimal" step="0.1" aria-label="Tiempo meta en segundos"><span>s</span></div>
+      <p class="c-big" id="cMetaRes" aria-live="polite"></p>
+    </div>
+
+    <details class="howto c-inv">
+      <summary>Caballos con tu tiempo</summary>
+      <p class="hint">Al revés: con un tiempo o una velocidad, cuántos caballos tendría el motor. Usa el peso y las condiciones de arriba.</p>
+      <div class="seg" role="radiogroup" aria-label="Distancia" id="segCInvD">
+        <button role="radio" data-v="8">1/8</button>
+        <button role="radio" data-v="4">1/4</button>
+      </div>
+      <div class="seg" role="radiogroup" aria-label="Dato" id="segCInvDato" style="margin-top:8px">
+        <button role="radio" data-v="v">Velocidad</button>
+        <button role="radio" data-v="et">Tiempo</button>
+      </div>
+      <label class="lab" for="cInvVal" id="cInvLab" style="margin-top:10px">Velocidad</label>
+      <div class="row"><input type="number" id="cInvVal" inputmode="decimal" step="0.1"><span id="cInvU">km/h</span></div>
+      <p class="c-big" id="cInvRes" aria-live="polite"></p>
+      <p class="hint">Con la velocidad sale más confiable: el tiempo depende mucho de la salida.</p>
+    </details>
+
+    <details class="howto">
+      <summary>Cómo calcula</summary>
+      <ul>
+        <li>Como tu hoja, con las fórmulas de Hale: tiempo de 1/4 = 5.825 × (peso ÷ caballos en la llanta)<sup>⅓</sup> y velocidad = 234 × (caballos en la llanta ÷ peso)<sup>⅓</sup>.</li>
+        <li>Caballos en la llanta = los del motor × 0.86 (14 % de transmisión) × pérdida por altura (3 % por cada 1000 ft de DA). El nitro se suma ya en la llanta. Con turbo: caballos + caballos × boost ÷ presión del aire.</li>
+        <li>1/8 = 1/4 ÷ 1.565 en tiempo y ÷ 1.27 en velocidad. 60 ft típico = 14.5 % del tiempo de 1/4.</li>
+        <li>"Altura que yo elija" usa la fórmula de DA de tu hoja (con su ×1.075). "En la pista" calcula la DA real con la presión, la temperatura y la humedad del clima; suele salir más baja que la de la hoja (a 5100 ft y 20 °C: ≈ 6,830 contra 7,443 ft).</li>
+        <li>Cambios contra tu Excel: el 0–60 siempre se calcula en mph (en la hoja cambiaba casi 1 s al poner km/h); el turbo usa la presión del aire según la DA (la hoja la tenía fija en 11.34 psi, la de 7000 ft); y los caballos ya no se sacan del 60 ft.</li>
+      </ul>
+    </details>
+  </section>
+
   <!-- ============ RESULTADO ============ -->
   <section id="vResultado" class="view" hidden></section>
 
@@ -721,6 +893,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 <nav class="tabs" aria-label="Secciones">
   <button data-view="vMedir" aria-current="page">Medir</button>
   <button data-view="vPractica">Práctica</button>
+  <button data-view="vCalc">Calcular</button>
   <button data-view="vHistorial">Historial</button>
   <button data-view="vAjustes">Ajustes</button>
 </nav>
@@ -1406,7 +1579,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = 'beta 0.4';
+  const APP_VERSION = 'beta 0.5';
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -2520,6 +2693,477 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   if (tab) tab.addEventListener('click', pintarStats);
   pintarStats();
   window.__practica = { st, P, hist: () => hist, marcador };   // para pruebas
+})();
+
+</script>
+<script>
+/* rooster.js — Fórmulas de la calculadora "ROOSTER RACING" de Daniel (hoja de Excel, Hoja1).
+ *
+ * Dos capas:
+ *   Rooster.hoja(celdas)  reproduce la hoja EXACTAMENTE, con sus errores (se prueba celda por celda
+ *                         contra la hoja recalculada en LibreOffice: fuente/pruebas/calc.js).
+ *   Rooster.predecir, pesoParaET, caballosDesde, densidad*   lo que usa la app: las mismas fórmulas
+ *                         con los errores claros corregidos (ver "CORRECCIÓN").
+ *
+ * Unidades internas (las de la hoja): peso lb, potencia hp, temperatura °C, altitud y DA en pies,
+ * presión y boost en psi, velocidad en mph. La interfaz convierte al mostrar.
+ * Sin dependencias; queda en window.Rooster y en module.exports (para probar en Node).
+ */
+(function (root) {
+  'use strict';
+
+  const K = {
+    ET: 5.825,            // Hale/Huntington: ET 1/4 = 5.825 · (lb/hp)^(1/3)
+    MPH: 234,             // Hale/Huntington: MPH 1/4 = 234 · (hp/lb)^(1/3)
+    ETxMPH: 1363.05,      // = 5.825 · 234
+    TREN: 0.86,           // 14 % de pérdida en la transmisión (motor -> llanta)
+    PERDIDA_PIE: 0.03 / 1000, // 3 % de potencia por cada 1000 ft de DA
+    SESENTA: 0.145,       // 60 ft típico = 0.145 · ET 1/4 (auto con buena salida)
+    ET_14_18: 1.565,      // ET 1/4 = ET 1/8 · 1.565
+    V_14_18: 1.27,        // velocidad 1/4 = velocidad 1/8 · 1.27
+    MI_KM: 1.60934,
+    P_MAR: 14.696,        // psi al nivel del mar
+    LB_KG: 2.20462442018378,
+  };
+
+  // Tabla AH109:AI141 de la hoja: altitud (ft) -> presión del aire (psi), atmósfera estándar.
+  const TABLA_PRESION = [
+    [-5000, 17.55], [-4000, 16.95], [-3000, 16.36], [-2000, 15.79], [-1000, 15.24], [-500, 14.96],
+    [0, 14.7], [500, 14.43], [1000, 14.17], [1500, 13.92], [2000, 13.66], [2500, 13.42],
+    [3000, 13.17], [3500, 12.93], [4000, 12.69], [4500, 12.46], [5000, 12.23], [6000, 11.78],
+    [7000, 11.34], [8000, 10.92], [9000, 10.51], [10000, 10.11], [15000, 8.29], [20000, 6.75],
+    [25000, 5.45], [30000, 4.36], [35000, 3.46], [40000, 2.72], [45000, 2.14], [50000, 1.68],
+    [55000, 1.32], [60000, 1.04], [65000, 0.82],
+  ];
+
+  // Tabla N2:O6 de la hoja: pistas y su elevación (ft).
+  const PISTAS = [
+    { id: 'charco', nombre: 'El Charco', ft: 5600 },
+    { id: 'villa', nombre: 'Villa', ft: 5100 },
+    { id: 'chihuahua', nombre: 'Chihuahua', ft: 4900 },
+    { id: 'caldera', nombre: 'Caldera', ft: 4100 },
+    { id: 'monterrey', nombre: 'Monterrey', ft: 1440 },
+  ];
+
+  const cbrt = (x) => Math.pow(x, 1 / 3);
+
+  // ------------------------------------------------------------------ piezas de la hoja
+  /** C3: densidad de altitud (ft) con temperatura (°C) y altitud de la pista (ft). Incluye el ×1.075 de la hoja. */
+  function densidadHoja(tempC, altFt) {
+    return (((tempC - (15 - (2 / 1000 * altFt))) * 120) + altFt) * 1.075;
+  }
+  /** Fracción de potencia que queda a esa DA: 1 − 0.03/1000 · DA. */
+  const factorDA = (da) => 1 - K.PERDIDA_PIE * da;
+  /** Hale: ET 1/4 (s) y velocidad 1/4 (mph) con peso (lb) y potencia en la llanta (hp). */
+  const etHale = (peso, whp) => cbrt((peso / whp) * Math.pow(K.ET, 3));
+  const mphHale = (peso, whp) => cbrt((whp / peso) * Math.pow(K.MPH, 3));
+  /** F7/J7: 0-60 "de la hoja". v18 entra en la unidad que muestra la hoja (km/h si B1=1) pero se pasa
+   *  a m/s con el factor de mph: ese es el error. Con v18 en mph da el tiempo a 60 mph. */
+  const cero60 = (et18, v18) => (26.8223 / ((201.1675 - (v18 * 0.447038888888889)) / (0.5 * et18 * et18))) * 0.915;
+
+  /** Interpola la tabla AH:AI (psi a una altitud en ft). */
+  function presionTabla(ft) {
+    const T = TABLA_PRESION;
+    if (!(ft > T[0][0])) return T[0][1];
+    for (let i = 1; i < T.length; i++) {
+      if (ft <= T[i][0]) {
+        const [x0, y0] = T[i - 1], [x1, y1] = T[i];
+        return y0 + (y1 - y0) * (ft - x0) / (x1 - x0);
+      }
+    }
+    return T[T.length - 1][1];
+  }
+
+  // ------------------------------------------------------------------ densidad del aire real
+  /** Presión estándar (hPa) a una altitud (m). */
+  const presionISA_hPa = (m) => 1013.25 * Math.pow(1 - 2.25577e-5 * m, 5.25588);
+  /**
+   * Densidad de altitud real (ft) con presión de la estación (hPa), temperatura (°C) y humedad (%).
+   * Densidad del aire seco + vapor; luego la altitud estándar con esa densidad (fórmula del NWS).
+   * No lleva el ×1.075 de la hoja.
+   */
+  function densidadReal(presion_hPa, tempC, humedad) {
+    const Tk = tempC + 273.15;
+    const es = 6.1078 * Math.pow(10, (7.5 * tempC) / (tempC + 237.3));
+    const e = Math.max(0, Math.min(100, humedad || 0)) / 100 * es;
+    const rho = ((presion_hPa - e) * 100) / (287.058 * Tk) + (e * 100) / (461.495 * Tk);
+    return (44.3308 - 42.2665 * Math.pow(rho, 0.234969)) * 1000 * 3.28084;
+  }
+
+  // ------------------------------------------------------------------ lo que usa la app
+  /** Una columna de resultados (en esta pista o a nivel del mar) a partir de la potencia en la llanta. */
+  function columna(peso, whp) {
+    if (!(peso > 0 && whp > 0)) return null;
+    const et14 = etHale(peso, whp), v14 = mphHale(peso, whp);
+    const et18 = et14 / K.ET_14_18, v18 = v14 / K.V_14_18;
+    return {
+      whp, et14, v14, et18, v18,
+      sesenta: et14 * K.SESENTA,
+      cero60: cero60(et18, v18), // CORRECCIÓN: siempre con la velocidad en mph (como la hoja con B1=0)
+    };
+  }
+
+  /**
+   * Potencia en la llanta según el tipo de motor (fórmulas de la hoja).
+   *  atmos/nitro: hp·0.86·f + nitro   (filas 1-8; el nitro se suma ya en la llanta, como la hoja)
+   *  turbo: (hp + hp/pAmb·boost)·f·0.86   (filas 11-17)
+   * CORRECCIÓN: pAmb ya no es 11.34 fijo: es la presión de la tabla de la hoja a la DA del momento
+   * (11.34 = 7000 ft, el criterio de la hoja); a nivel del mar 14.696. Así, con boost 0 da igual que atmosférico.
+   */
+  function whp(p, da) {
+    const f = da === null ? 1 : factorDA(da);
+    if (p.motor === 'turbo') {
+      const pAmb = da === null ? K.P_MAR : presionTabla(da);
+      return (p.hp + p.hp / pAmb * (p.boost || 0)) * f * K.TREN;
+    }
+    return p.hp * K.TREN * f + (p.motor === 'nitro' ? (p.nitro || 0) : 0);
+  }
+
+  /**
+   * Predicción: {peso (lb), hp (al motor), motor: 'atmos'|'nitro'|'turbo', nitro (hp), boost (psi), da (ft)}
+   * -> {pista: columna, mar: columna, rinde (fracción), pAmb (psi, turbo)}
+   */
+  function predecir(p) {
+    return {
+      pista: columna(p.peso, whp(p, p.da)),
+      mar: columna(p.peso, whp(p, null)),
+      rinde: factorDA(p.da),
+      pAmb: presionTabla(p.da),
+    };
+  }
+
+  /** C8: peso (lb) para hacer una ET 1/4 meta con esa potencia y DA. (La hoja: whp·(ET/5.825)^3.) */
+  function pesoParaET(p, et14) {
+    const w = whp(p, p.da);
+    return w > 0 && et14 > 0 ? w * Math.pow(et14 / K.ET, 3) : NaN;
+  }
+
+  /**
+   * Inverso (filas 20-23): caballos con un tiempo o una velocidad.
+   * {peso (lb), da (ft), dato: 'et18'|'v18'|'et14'|'v14', valor (s o mph)}
+   * -> {whp: en la llanta ese día, hp: al motor a nivel del mar (B21:B23), et14, v14 equivalentes}
+   * CORRECCIÓN: ya no se calcula desde el 60 ft (depende de la salida, no del motor) y se aceptan
+   * datos de 1/4 además de 1/8.
+   */
+  function caballosDesde(p) {
+    let v14;
+    if (p.dato === 'et18') v14 = K.ETxMPH / (p.valor * K.ET_14_18);
+    else if (p.dato === 'v18') v14 = p.valor * K.V_14_18;
+    else if (p.dato === 'et14') v14 = K.ETxMPH / p.valor;
+    else v14 = p.valor;
+    if (!(v14 > 0 && p.peso > 0 && isFinite(v14))) return null;
+    const w = p.peso * Math.pow(v14 / K.MPH, 3);
+    return { whp: w, hp: w / factorDA(p.da) / K.TREN, et14: K.ETxMPH / v14, v14 };
+  }
+
+  // ------------------------------------------------------------------ hoja exacta (para pruebas)
+  /** Evalúa la hoja con sus celdas de entrada y devuelve {celda: valor}, igual que Excel/LibreOffice. */
+  function hoja(e) {
+    const B1 = e.B1, B11 = e.B11, kmh = (v, u) => (u === 1 ? v * 1.60934 : v);
+    const C3 = densidadHoja(e.A6, e.A8), f3 = factorDA(C3);
+    const colA = (w) => {
+      const et = etHale(e.A3, w), v = kmh(mphHale(e.A3, w), B1);
+      return { D: et * 0.145, E: et, F: v, G: e.A3 / Math.pow(et / 5.825, 3), E5: et / 1.565, F5: v / 1.27 };
+    };
+    const d = colA((e.B3 * 0.86) * f3 + (e.C6 || 0)), n = colA((e.B3 * 0.86) + (e.C6 || 0));
+    const hb = e.B13 + (e.B13 / 11.34 * (e.A17 || 0)), hbm = e.B13 + (e.B13 / 14.696 * (e.A17 || 0));
+    const g14 = hb * factorDA(e.C13) * 0.86, e14 = etHale(e.A13, g14), i14 = etHale(e.A13, hbm * 0.86);
+    const f14 = B11 === 1 ? mphHale(e.A13, g14) * 1.60934 : cbrt((g14 / e.A13 + (e.C26 || 0)) * Math.pow(234, 3));
+    const o = {
+      F2: B1 === 1 ? '1/4 Km/H' : '1/4 MPH', J2: B1 === 1 ? '1/4 Km/H' : '1/4 MPH',
+      F13: B11 === 1 ? '1/4 Km/H' : '1/4 MPH',
+      C3, D3: d.D, E3: d.E, F3: d.F, G3: d.G, H3: n.D, I3: n.E, J3: n.F, K3: n.G,
+      E5: d.E5, F5: d.F5, I5: n.E5, J5: n.F5,
+      F7: cero60(d.E5, d.F5), J7: cero60(n.E5, n.F5),
+      C8: ((((e.B3 * 0.86) * f3) + (e.C6 || 0)) * Math.pow(e.B8 / 5.825, 3)),
+      D14: e14 * 0.145, E14: e14, F14: f14, G14: g14,
+      H14: i14 * 0.145, I14: i14, J14: kmh(mphHale(e.A13, hbm * 0.86), B11), K14: hbm * 0.86,
+      A15: e.A13 / K.LB_KG,
+    };
+    const fila = (f, C, D, E) => {
+      o['C' + f] = C; o['D' + f] = D; o['E' + f] = E; o['F' + f] = D * 1.565; o['G' + f] = E * 1.27;
+      o['B' + f] = (e.A3 * Math.pow((E * 1.27) / 234, 3)) / f3 / 0.86;
+    };
+    let D = (e.C21 / 0.141) / 1.565; fila(21, e.C21, D, ((1363.05 / D) / 1.565) / 1.27);
+    D = e.D22; fila(22, (D * 1.565) * 0.141, D, ((1363.05 / D) / 1.565) / 1.27);
+    D = ((1363.05 / e.E23) / 1.565) / 1.27; fila(23, (D * 1.565) * 0.141, D, e.E23);
+    return o;
+  }
+
+  const api = {
+    K, TABLA_PRESION, PISTAS,
+    densidadHoja, densidadReal, presionISA_hPa, presionTabla, factorDA, etHale, mphHale, cero60,
+    predecir, pesoParaET, caballosDesde, hoja,
+  };
+  root.Rooster = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+</script>
+<script>
+/* calculadora.js — Pestaña "Calcular": aproximaciones con la hoja Rooster Racing (fórmulas en rooster.js).
+ * Condiciones del aire de dos formas: "En la pista (teléfono)" = ubicación + clima del momento
+ * (densidad del aire real), o "Altura que yo elija" = pista guardada o altura escrita + temperatura
+ * (fórmula de la hoja). Todo se guarda en el teléfono (localStorage 'dragtrim.calc'). */
+(function () {
+  'use strict';
+  const R = window.Rooster;
+  const $ = (s) => document.querySelector(s);
+  const isFin = Number.isFinite;
+  const LS = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
+  };
+  const FT_M = 3.28084;
+
+  // Valores iniciales = los de la hoja de Daniel (3100 lb, 420 hp, Villa 5100 ft, 20 °C, meta 15.00 s).
+  const DEF = {
+    aire: 'manual', pista: 'villa', alt: 5100, temp: 20, daSe: false, da: 7443,
+    peso: 3100, pesoU: 'lb', hp: 420, motor: 'atmos', nitro: 100, boost: 8,
+    metaD: '4', metaT: 15, invD: '8', invDato: 'v', invVal: null,
+    lectura: null, tempTel: 25,
+  };
+  const C = Object.assign({}, DEF, LS.get('dragtrim.calc', {}));
+  const guardar = () => LS.set('dragtrim.calc', C);
+
+  // ------------------------------------------------------------------ formato
+  const unidadVel = () => (LS.get('dragtrim.settings', {}).unidad === 'mph' ? 'mph' : 'km/h');
+  const deMph = (v) => (unidadVel() === 'mph' ? v : v * R.K.MI_KM);
+  const aMph = (v) => (unidadVel() === 'mph' ? v : v / R.K.MI_KM);
+  const miles = (x) => (isFin(x) ? Math.round(x).toLocaleString('es-MX') : '—');
+  const fx = (x, d) => (isFin(x) ? x.toFixed(d) : '—');
+  const num = (el) => { const x = parseFloat(String(el.value).replace(',', '.')); return isFin(x) ? x : NaN; };
+  const pesoLb = () => (C.pesoU === 'kg' ? C.peso * R.K.LB_KG : C.peso);
+  const fmtPeso = (lb) => {
+    if (!isFin(lb)) return '—';
+    const kg = lb / R.K.LB_KG;
+    return C.pesoU === 'kg' ? `${miles(kg)} kg (${miles(lb)} lb)` : `${miles(lb)} lb (${miles(kg)} kg)`;
+  };
+  const hace = (t) => {
+    const min = Math.round((Date.now() - t) / 60000);
+    if (min < 1) return 'hace un momento';
+    if (min < 60) return `hace ${min} min`;
+    const h = Math.floor(min / 60);
+    return h < 24 ? `hace ${h} h ${min % 60} min` : 'hace más de un día';
+  };
+
+  // ------------------------------------------------------------------ condiciones del aire
+  /** DA vigente (ft) y de dónde sale, o null si falta información. */
+  function daActual() {
+    if (C.aire === 'manual') {
+      if (C.daSe) return isFin(C.da) ? { da: C.da, txt: 'la que escribiste' } : null;
+      if (!isFin(C.alt) || !isFin(C.temp)) return null;
+      return { da: R.densidadHoja(C.temp, C.alt), txt: `fórmula de tu hoja, ${miles(C.alt)} ft y ${fx(C.temp, 0)} °C` };
+    }
+    const L = C.lectura;
+    if (!L) return null;
+    if (L.fuente === 'clima') return { da: R.densidadReal(L.presion, L.temp, L.humedad), txt: 'clima de tu ubicación' };
+    if (!isFin(C.tempTel)) return null;
+    return { da: R.densidadReal(R.presionISA_hPa(L.alt), C.tempTel, 0), txt: 'altitud del GPS y tu temperatura' };
+  }
+
+  function estado(txt, err) { const e = $('#cEstado'); e.textContent = txt || ''; e.classList.toggle('err', !!err); }
+
+  async function tomarAqui() {
+    const btn = $('#cBtnAqui');
+    if (!('geolocation' in navigator) || !window.isSecureContext) {
+      estado('Este navegador no deja leer la ubicación aquí. Abre la app desde su enlace https:// o usa "Altura que yo elija".', true);
+      return;
+    }
+    btn.disabled = true;
+    estado('Buscando tu ubicación…');
+    let pos;
+    try {
+      pos = await new Promise((ok, mal) => navigator.geolocation.getCurrentPosition(ok, mal, { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 }));
+    } catch (e) {
+      btn.disabled = false;
+      estado(e && e.code === 1
+        ? 'No hay permiso para usar la ubicación. Actívalo para Drag Trim en los ajustes del teléfono, o usa "Altura que yo elija".'
+        : 'No pude obtener tu ubicación. Intenta de nuevo con vista al cielo, o usa "Altura que yo elija".', true);
+      return;
+    }
+    const c = pos.coords;
+    const altGps = isFin(c.altitude) && c.altitude !== null ? c.altitude : NaN;
+    estado('Consultando el clima de este momento…');
+    // Solo se manda la ubicación redondeada (~1 km) al servicio del clima.
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + c.latitude.toFixed(2) + '&longitude=' + c.longitude.toFixed(2) +
+      '&current=temperature_2m,relative_humidity_2m,surface_pressure&timezone=auto';
+    let clima = null;
+    try {
+      const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 10000);
+      const r = await fetch(url, { signal: ctl.signal, cache: 'no-store' });
+      clearTimeout(to);
+      const j = await r.json();
+      const cur = j && j.current;
+      if (r.ok && cur && isFin(cur.temperature_2m) && isFin(cur.surface_pressure) && isFin(cur.relative_humidity_2m)) clima = { cur, elev: j.elevation };
+    } catch (e) { clima = null; }
+    btn.disabled = false;
+    if (clima) {
+      C.lectura = {
+        t: Date.now(), fuente: 'clima', temp: clima.cur.temperature_2m, presion: clima.cur.surface_pressure,
+        humedad: clima.cur.relative_humidity_2m,
+        alt: isFin(altGps) ? altGps : clima.elev, altDe: isFin(altGps) ? 'GPS' : 'mapa',
+      };
+      estado('');
+    } else if (isFin(altGps)) {
+      C.lectura = { t: Date.now(), fuente: 'gps', alt: altGps, altDe: 'GPS' };
+      estado('Sin internet: uso la altitud del GPS y la temperatura que escribas. Sin la presión y la humedad reales es menos exacta.');
+    } else {
+      estado('No pude consultar el clima y el teléfono no dio la altitud. Revisa la señal o usa "Altura que yo elija".', true);
+      return;
+    }
+    guardar(); pintar();
+  }
+
+  function pintarLectura() {
+    const L = C.lectura, dl = $('#cLectura');
+    $('#cTempTelBox').hidden = !(L && L.fuente === 'gps');
+    if (!L) { dl.hidden = true; return; }
+    const fila = (k, v) => `<dt>${k}</dt><dd>${v}</dd>`;
+    let h = '';
+    if (L.fuente === 'clima') {
+      h += fila('Temperatura', `${fx(L.temp, 1)} °C`);
+      h += fila('Presión del aire', `${fx(L.presion, 0)} hPa (${fx(L.presion * 0.0145038, 2)} psi)`);
+      h += fila('Humedad', `${fx(L.humedad, 0)} %`);
+    }
+    h += fila(`Altitud (${L.altDe})`, `${miles(L.alt)} m (${miles(L.alt * FT_M)} ft)`);
+    const viejo = Date.now() - L.t > 3 * 3600 * 1000;
+    h += fila('Tomado', `${new Date(L.t).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}, ${hace(L.t)}${viejo ? ' · tómalo de nuevo' : ''}`);
+    dl.innerHTML = h; dl.hidden = false;
+    dl.classList.toggle('viejo', viejo);
+  }
+
+  // ------------------------------------------------------------------ pintar todo
+  function pintar() {
+    // selectores
+    for (const [id, key] of [['segCAire', 'aire'], ['segCPesoU', 'pesoU'], ['segCMotor', 'motor'], ['segCMetaD', 'metaD'], ['segCInvD', 'invD'], ['segCInvDato', 'invDato']]) {
+      document.getElementById(id).querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === C[key])));
+    }
+    $('#cTel').hidden = C.aire !== 'tel';
+    $('#cMan').hidden = C.aire !== 'manual';
+    $('#cPista').value = R.PISTAS.some((p) => p.id === C.pista) ? C.pista : 'otra';
+    $('#cAltM').textContent = isFin(C.alt) ? `≈ ${miles(C.alt / FT_M)} m sobre el nivel del mar` : '';
+    $('#cTempBox').hidden = C.daSe;
+    $('#cDaBox').hidden = !C.daSe;
+    $('#cNitroBox').hidden = C.motor !== 'nitro';
+    $('#cBoostBox').hidden = C.motor !== 'turbo';
+    $('#cPesoOtro').textContent = isFin(C.peso) && C.peso > 0
+      ? (C.pesoU === 'kg' ? `= ${miles(C.peso * R.K.LB_KG)} lb` : `= ${miles(C.peso / R.K.LB_KG)} kg`) : '';
+    pintarLectura();
+
+    const D = daActual();
+    const daRes = $('#cDaRes');
+    const auto = { peso: pesoLb(), hp: C.hp, motor: C.motor, nitro: C.nitro, boost: C.boost, da: D ? D.da : NaN };
+    if (!D) {
+      daRes.innerHTML = C.aire === 'tel' && !C.lectura ? 'Toca <b>Tomar condiciones de aquí</b> para calcular la densidad del aire.' : 'Faltan datos para calcular la densidad del aire.';
+    } else {
+      daRes.innerHTML = `Densidad del aire (DA) <b>≈ ${miles(D.da)} ft</b> · tu motor rinde <b>≈ ${fx(R.factorDA(D.da) * 100, 0)} %</b><small>${D.txt}</small>`;
+    }
+    $('#cPAmb').textContent = D ? `Presión del aire que usa la hoja para el turbo: ${fx(R.presionTabla(D.da), 2)} psi (a nivel del mar 14.70).` : '';
+
+    // resultados
+    const r = D && auto.peso > 0 && auto.hp > 0 ? R.predecir(auto) : null;
+    const u = unidadVel();
+    $('#cColPista').textContent = D ? `DA ${miles(D.da)} ft` : '';
+    const filas = [
+      ['1/4 tiempo', (c) => `${fx(c.et14, 2)} s`],
+      [`1/4 velocidad`, (c) => `${fx(deMph(c.v14), 1)} ${u}`],
+      ['1/8 tiempo', (c) => `${fx(c.et18, 2)} s`],
+      ['1/8 velocidad', (c) => `${fx(deMph(c.v18), 1)} ${u}`],
+      ['60 ft típico', (c) => `${fx(c.sesenta, 2)} s`],
+      ['0–60 mph', (c) => `${fx(c.cero60, 2)} s`],
+      ['Caballos en la llanta', (c) => `${miles(c.whp)} hp`],
+    ];
+    const celda = (c, f) => (c && isFin(c.et14) ? '≈ ' + f(c) : '—');
+    $('#cTabla').innerHTML = filas.map(([k, f], i) =>
+      `<tr${i === 0 ? ' class="et"' : ''}><th scope="row">${k}</th><td>${celda(r && r.pista, f)}</td><td>${celda(r && r.mar, f)}</td></tr>`).join('');
+
+    // peso para un tiempo meta
+    const metaRes = $('#cMetaRes');
+    if (r && isFin(C.metaT) && C.metaT > 0) {
+      const et14 = C.metaD === '8' ? C.metaT * R.K.ET_14_18 : C.metaT;
+      const lb = R.pesoParaET(auto, et14), dif = lb - auto.peso;
+      const difTxt = Math.abs(dif) < 1 ? 'igual que ahora' : `${miles(Math.abs(C.pesoU === 'kg' ? dif / R.K.LB_KG : dif))} ${C.pesoU} ${dif > 0 ? 'más' : 'menos'} que ahora`;
+      metaRes.innerHTML = `Deberías pesar <b>≈ ${fmtPeso(lb)}</b><small>${difTxt}</small>`;
+    } else metaRes.textContent = '—';
+
+    // caballos con tu tiempo
+    const esV = C.invDato === 'v';
+    $('#cInvU').textContent = esV ? u : 's';
+    $('#cInvLab').textContent = `${esV ? 'Velocidad' : 'Tiempo'} de ${C.invD === '8' ? '1/8' : '1/4'}`;
+    const invRes = $('#cInvRes');
+    if (D && isFin(C.invVal) && C.invVal > 0 && auto.peso > 0) {
+      const dato = (esV ? 'v' : 'et') + (C.invD === '8' ? '18' : '14');
+      const x = R.caballosDesde({ peso: auto.peso, da: D.da, dato, valor: esV ? aMph(C.invVal) : C.invVal });
+      invRes.innerHTML = x
+        ? `<b>≈ ${miles(x.hp)} hp</b> del motor, a nivel del mar<small>≈ ${miles(x.whp)} hp en la llanta con estas condiciones</small>`
+        : '—';
+    } else invRes.textContent = '—';
+  }
+
+  // ------------------------------------------------------------------ controles
+  function seg(id, key, extra) {
+    document.getElementById(id).querySelectorAll('button').forEach((b) => {
+      b.onclick = () => { if (extra) extra(b.dataset.v); C[key] = b.dataset.v; guardar(); pintar(); };
+    });
+  }
+  function campo(id, key, despues) {
+    const el = document.getElementById(id);
+    el.value = isFin(C[key]) ? C[key] : '';
+    el.addEventListener('input', () => { C[key] = num(el); if (despues) despues(); guardar(); pintar(); });
+  }
+
+  const selP = $('#cPista');
+  selP.innerHTML = R.PISTAS.map((p) => `<option value="${p.id}">${p.nombre} · ${p.ft.toLocaleString('es-MX')} ft</option>`).join('') +
+    '<option value="otra">Otra altura</option>';
+  selP.onchange = () => {
+    C.pista = selP.value;
+    const p = R.PISTAS.find((x) => x.id === C.pista);
+    if (p) { C.alt = p.ft; $('#cAlt').value = p.ft; }
+    else $('#cAlt').focus();
+    guardar(); pintar();
+  };
+  seg('segCAire', 'aire');
+  seg('segCMotor', 'motor');
+  seg('segCMetaD', 'metaD');
+  seg('segCInvD', 'invD');
+  seg('segCInvDato', 'invDato', (v) => {
+    if (v !== C.invDato) { C.invVal = null; $('#cInvVal').value = ''; }
+  });
+  seg('segCPesoU', 'pesoU', (v) => {
+    // Al cambiar de unidad el peso sigue siendo el mismo: se convierte el número.
+    if (v !== C.pesoU && isFin(C.peso)) {
+      C.peso = Math.round(v === 'kg' ? C.peso / R.K.LB_KG : C.peso * R.K.LB_KG);
+      $('#cPeso').value = C.peso;
+    }
+  });
+  campo('cAlt', 'alt', () => {
+    const p = R.PISTAS.find((x) => x.ft === C.alt);
+    C.pista = p ? p.id : 'otra';
+  });
+  campo('cTemp', 'temp');
+  campo('cDa', 'da');
+  campo('cTempTel', 'tempTel');
+  campo('cPeso', 'peso');
+  campo('cHp', 'hp');
+  campo('cNitro', 'nitro');
+  campo('cBoost', 'boost');
+  campo('cMetaT', 'metaT');
+  campo('cInvVal', 'invVal');
+  const daSe = $('#cDaSe');
+  daSe.checked = !!C.daSe;
+  daSe.onchange = () => {
+    C.daSe = daSe.checked;
+    if (C.daSe && isFin(C.alt) && isFin(C.temp) && !isFin(C.da)) { C.da = Math.round(R.densidadHoja(C.temp, C.alt)); $('#cDa').value = C.da; }
+    guardar(); pintar();
+  };
+  $('#cBtnAqui').onclick = tomarAqui;
+
+  // Al entrar a la pestaña se repinta (la unidad de velocidad pudo cambiar en Ajustes; "hace X min").
+  const tab = document.querySelector('.tabs button[data-view="vCalc"]');
+  if (tab) tab.addEventListener('click', pintar);
+  pintar();
+  window.__calc = { C, pintar, daActual };   // para pruebas
 })();
 
 </script>
