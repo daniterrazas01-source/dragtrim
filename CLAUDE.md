@@ -70,7 +70,7 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    (ajustar retraso GPS + rollout por teléfono usando varias corridas).
 
 9. **Calculadora "Rooster Racing"** (beta 0.5, pestaña **Calcular**): la hoja de Excel de Daniel
-   (`ROOSTER_RACING.xlsx`, no está en el repo) para **aproximar** tiempos con peso y caballos (no para
+   (`archivo/originales/ROOSTER_RACING.xlsx`) para **aproximar** tiempos con peso y caballos (no para
    comprobar boletas). Fórmulas de Hale: ET 1/4 = 5.825·(lb/whp)^⅓, MPH = 234·(whp/lb)^⅓;
    whp = hp·0.86·(1 − 0.03·DA/1000) (+ shot de nitro ya en la llanta); turbo: (hp + hp·boost/presión)·…;
    1/8 = 1/4 ÷ 1.565 (tiempo) y ÷ 1.27 (velocidad); 60 ft = 0.145·ET; DA de la hoja =
@@ -106,6 +106,8 @@ fuente/publicar.sh             build + copia a la raíz
 fuente/matlab/                 script MATLAB Mobile v2.3 (mismo algoritmo); Drag_tree_v2_unico.m = todo en un archivo
 fuente/pruebas/                pruebas (ver abajo)
 fuente/fondos/                 fondos originales (PNG); se publican como fondos/*.webp
+archivo/                       respaldo: originales/ (archivos de Daniel sin tocar, p. ej. ROOSTER_RACING.xlsx)
+                               y versiones/ (index.html de cada versión publicada); ver archivo/LEEME.md
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
@@ -134,6 +136,7 @@ Las pruebas de navegador usan Playwright (Python) con el Chromium preinstalado y
 capturas en `fuente/pruebas/capturas/` (ignorado por git): revísalas antes de publicar.
 
 Publicar: `bash fuente/publicar.sh`, commit, `git push origin main` y `git push origin main:gh-pages`.
+Agregar la copia de la versión a `archivo/versiones/` (ver archivo/LEEME.md).
 Confirmar con WebFetch que la página cambió (el CDN tarda 1–3 min). Si github.io no es accesible desde
 el contenedor, confirmar que el flujo "pages build and deployment" del commit terminó en éxito.
 
