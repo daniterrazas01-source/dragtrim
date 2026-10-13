@@ -88,6 +88,8 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
     historial), las claves de almacenamiento `dragtrim.*`, la base IndexedDB 'dragtrim' ni los nombres
     de los zips exportados. En iPhone el nombre bajo el ícono queda como se instaló ("Drag Trim"):
     **no pedirle reinstalar** para cambiarlo (borraría el historial).
+    Daniel decidió (13 oct) dejar así los íconos de sus dos dispositivos ("Drag Trim"); no proponer
+    respaldar/reinstalar para cambiarlo. Instalaciones nuevas ya salen como "Drag Tree".
 
 ## Estructura
 
