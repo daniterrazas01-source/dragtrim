@@ -1,6 +1,6 @@
 {
-  "name": "Drag Trim",
-  "short_name": "Drag Trim",
+  "name": "Drag Tree",
+  "short_name": "Drag Tree",
   "description": "Medidor de 1/8 y 1/4 de milla con GPS y acelerómetro.",
   "lang": "es",
   "start_url": "./",

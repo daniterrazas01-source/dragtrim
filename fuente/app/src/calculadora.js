@@ -80,7 +80,7 @@
     } catch (e) {
       btn.disabled = false;
       estado(e && e.code === 1
-        ? 'No hay permiso para usar la ubicación. Actívalo para Drag Trim en los ajustes del teléfono, o usa "Altura que yo elija".'
+        ? 'No hay permiso para usar la ubicación. Actívalo para Drag Tree en los ajustes del teléfono, o usa "Altura que yo elija".'
         : 'No pude obtener tu ubicación. Intenta de nuevo con vista al cielo, o usa "Altura que yo elija".', true);
       return;
     }

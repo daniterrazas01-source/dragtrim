@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw, ImageFilter
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC, DIST = ROOT / 'src', ROOT / 'dist'
 DIST.mkdir(exist_ok=True)
-VERSION = 'beta-0.5'
+VERSION = 'beta-0.5.1'
 
 html = (SRC / 'index.template.html').read_text(encoding='utf-8')
 html = html.replace('/*CSS*/', (SRC / 'style.css').read_text(encoding='utf-8'))
@@ -17,7 +17,7 @@ html = html.replace('/*CALC*/', (SRC / 'calculadora.js').read_text(encoding='utf
 (DIST / 'index.html').write_text(html, encoding='utf-8')
 
 manifest = {
-    "name": "Drag Trim", "short_name": "Drag Trim",
+    "name": "Drag Tree", "short_name": "Drag Tree",
     "description": "Medidor de 1/8 y 1/4 de milla con GPS y acelerómetro.",
     "lang": "es", "start_url": "./", "scope": "./", "display": "standalone",
     "orientation": "portrait", "background_color": "#24282c", "theme_color": "#24282c",

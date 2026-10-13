@@ -1,8 +1,8 @@
-/* app.js — Interfaz de Drag Trim beta */
+/* app.js — Interfaz de Drag Tree beta */
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = 'beta 0.5';
+  const APP_VERSION = 'beta 0.5.1';
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -486,7 +486,7 @@
       const fila = (k, val) => `<dt>${k}</dt><dd>${val}</dd>`;
       v.innerHTML = `
         <div class="slip">
-          <header><b>DRAG TRIM</b><span>${esc(fechaCorta(run.fecha))} &nbsp; ${Df < 300 ? '1/8 MI' : '1/4 MI'}</span></header>
+          <header><b>DRAG TREE</b><span>${esc(fechaCorta(run.fecha))} &nbsp; ${Df < 300 ? '1/8 MI' : '1/4 MI'}</span></header>
           <table>
             <tr class="hd"><td></td><td>TIEMPO</td><td>${velU().toUpperCase()}</td></tr>
             ${filas}
@@ -681,7 +681,7 @@
     const blob = zip(files), nombre = `dragtrim_${st}.zip`;
     try {
       const file = new File([blob], nombre, { type: 'application/zip' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Drag Trim ' + st }); return; }
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Drag Tree ' + st }); return; }
     } catch (e) { if (e && e.name === 'AbortError') return; }
     const url = URL.createObjectURL(blob), aEl = document.createElement('a');
     aEl.href = url; aEl.download = nombre; document.body.appendChild(aEl); aEl.click(); aEl.remove();
@@ -791,7 +791,7 @@
   inAn.checked = S.anim !== false;
   inAn.onchange = () => { S.anim = inAn.checked; guardarAjustes(); aplicarTema(); };
   $('#btnBorrarHist').onclick = async () => { if (confirm('¿Borrar todas las corridas guardadas?')) { await DB.borrarTodo(); pintarHistorial(); } };
-  $('#verText').textContent = `Drag Trim ${APP_VERSION}, algoritmo v2.3 (mismo que el script de MATLAB).`;
+  $('#verText').textContent = `Drag Tree ${APP_VERSION}, algoritmo v2.3 (mismo que el script de MATLAB).`;
 
   $('#btnSensores').onclick = activarSensores;
   $('#btnArmar').onclick = () => {

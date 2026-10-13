@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Drag Trim</title>
+<title>Drag Tree</title>
 <meta name="description" content="Medidor de 1/8 y 1/4 de milla con GPS y acelerómetro del teléfono.">
 <meta name="theme-color" content="#24282c">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Drag Trim">
+<meta name="apple-mobile-web-app-title" content="Drag Tree">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
@@ -550,7 +550,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 <body>
 <div class="fondo" id="fondo" aria-hidden="true"></div>
 <header class="top">
-  <div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>Drag Trim<span class="beta">beta</span></div>
+  <div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>Drag Tree<span class="beta">beta</span></div>
   <div class="sensors" aria-label="Estado de sensores">
     <span id="chipGps" class="chip">GPS</span>
     <span id="chipAcc" class="chip">Acel</span>
@@ -908,7 +908,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 </nav>
 
 <script>
-/* dragcore.js — Algoritmo del medidor Drag Trim (port de drag_procesar.m v2.2)
+/* dragcore.js — Algoritmo del medidor Drag Tree (port de drag_procesar.m v2.2)
  * Funciona en navegador (window.DragCore) y en Node (module.exports).
  * Unidades: tiempo [s], velocidad [m/s], distancia [m], aceleración [m/s^2].
  */
@@ -1584,11 +1584,11 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 
 </script>
 <script>
-/* app.js — Interfaz de Drag Trim beta */
+/* app.js — Interfaz de Drag Tree beta */
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = 'beta 0.5';
+  const APP_VERSION = 'beta 0.5.1';
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -2072,7 +2072,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
       const fila = (k, val) => `<dt>${k}</dt><dd>${val}</dd>`;
       v.innerHTML = `
         <div class="slip">
-          <header><b>DRAG TRIM</b><span>${esc(fechaCorta(run.fecha))} &nbsp; ${Df < 300 ? '1/8 MI' : '1/4 MI'}</span></header>
+          <header><b>DRAG TREE</b><span>${esc(fechaCorta(run.fecha))} &nbsp; ${Df < 300 ? '1/8 MI' : '1/4 MI'}</span></header>
           <table>
             <tr class="hd"><td></td><td>TIEMPO</td><td>${velU().toUpperCase()}</td></tr>
             ${filas}
@@ -2267,7 +2267,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
     const blob = zip(files), nombre = `dragtrim_${st}.zip`;
     try {
       const file = new File([blob], nombre, { type: 'application/zip' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Drag Trim ' + st }); return; }
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Drag Tree ' + st }); return; }
     } catch (e) { if (e && e.name === 'AbortError') return; }
     const url = URL.createObjectURL(blob), aEl = document.createElement('a');
     aEl.href = url; aEl.download = nombre; document.body.appendChild(aEl); aEl.click(); aEl.remove();
@@ -2377,7 +2377,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   inAn.checked = S.anim !== false;
   inAn.onchange = () => { S.anim = inAn.checked; guardarAjustes(); aplicarTema(); };
   $('#btnBorrarHist').onclick = async () => { if (confirm('¿Borrar todas las corridas guardadas?')) { await DB.borrarTodo(); pintarHistorial(); } };
-  $('#verText').textContent = `Drag Trim ${APP_VERSION}, algoritmo v2.3 (mismo que el script de MATLAB).`;
+  $('#verText').textContent = `Drag Tree ${APP_VERSION}, algoritmo v2.3 (mismo que el script de MATLAB).`;
 
   $('#btnSensores').onclick = activarSensores;
   $('#btnArmar').onclick = () => {
@@ -2997,7 +2997,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
     } catch (e) {
       btn.disabled = false;
       estado(e && e.code === 1
-        ? 'No hay permiso para usar la ubicación. Actívalo para Drag Trim en los ajustes del teléfono, o usa "Altura que yo elija".'
+        ? 'No hay permiso para usar la ubicación. Actívalo para Drag Tree en los ajustes del teléfono, o usa "Altura que yo elija".'
         : 'No pude obtener tu ubicación. Intenta de nuevo con vista al cielo, o usa "Altura que yo elija".', true);
       return;
     }

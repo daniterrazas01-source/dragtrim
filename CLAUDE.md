@@ -1,4 +1,4 @@
-# Drag Trim — contexto del proyecto
+# Drag Tree (antes Drag Trim) — contexto del proyecto
 
 Medidor de tiempos de arrancones (1/8 y 1/4 de milla) con el GPS y el acelerómetro del
 teléfono, más un simulador de semáforo para practicar la salida. El dueño (Daniel) corre en
@@ -83,6 +83,12 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    sin caballos desde el 60 ft (la hoja usaba 0.141 al revés), el inverso resta nitro/boost.
    `Rooster.hoja()` reproduce la hoja celda por celda (probado contra LibreOffice).
 
+10. **Nombre: Drag Tree** (0.5.1). Solo cambió lo que se ve (título, logo, boleta, manifest, Ajustes).
+    A propósito NO cambiaron: la URL/repo `dragtrim` (cambiarla perdería la app instalada y su
+    historial), las claves de almacenamiento `dragtrim.*`, la base IndexedDB 'dragtrim' ni los nombres
+    de los zips exportados. En iPhone el nombre bajo el ícono queda como se instaló ("Drag Trim"):
+    **no pedirle reinstalar** para cambiarlo (borraría el historial).
+
 ## Estructura
 
 ```
@@ -101,7 +107,7 @@ fuente/fondos/                 fondos originales (PNG); se publican como fondos/
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Versión actual: **beta 0.5** (calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
+caché del service worker; cambiarlo fuerza la actualización). Versión actual: **beta 0.5.1** (nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
 algoritmo v2.3.
 
 Los zips exportados desde la app traen `drag_raw_gps_*.csv`, `drag_raw_acc_*.csv`,

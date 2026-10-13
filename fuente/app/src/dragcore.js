@@ -1,4 +1,4 @@
-/* dragcore.js — Algoritmo del medidor Drag Trim (port de drag_procesar.m v2.2)
+/* dragcore.js — Algoritmo del medidor Drag Tree (port de drag_procesar.m v2.2)
  * Funciona en navegador (window.DragCore) y en Node (module.exports).
  * Unidades: tiempo [s], velocidad [m/s], distancia [m], aceleración [m/s^2].
  */
