@@ -250,7 +250,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
    (máscaras que genera build.py); sin fondo, un resplandor detrás del árbol. */
 .pt-brillo { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
 .pt > :not(.pt-brillo) { position: relative; z-index: 1; }
-.ptg { position: absolute; inset: 0; opacity: 0; transition: opacity .35s ease-out; will-change: opacity; }
+.ptg { position: absolute; inset: 0; opacity: 0; transition: opacity .08s ease-out; will-change: opacity; }
 .ptg > i { position: absolute; inset: 0; }
 .ptg.izq { clip-path: inset(0 50% 0 0); }
 .ptg.der { clip-path: inset(0 0 0 50%); }

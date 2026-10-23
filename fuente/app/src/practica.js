@@ -32,7 +32,7 @@
   const otroFormato = () => (P.formato === 'boleta' ? 'verde' : 'boleta');
   const nombreFormato = (f) => (f === 'boleta' ? 'boleta' : 'desde la verde');
 
-  const nuevoCarril = () => ({ abajo: false, pid: null, preStage: false, staged: false, salio: false, tSalida: NaN, rt: NaN, rojo: false, timerStage: 0 });
+  const nuevoCarril = () => ({ abajo: false, pid: null, preStage: false, staged: false, salio: false, tSalida: NaN, rt: NaN, rojo: false, timerStage: 0, brillo: false });
   const st = { fase: 'cerrado', c: { l: nuevoCarril(), r: nuevoCarril() }, tArbol: NaN, tVerdePlan: NaN, tVerde: NaN, raf: 0, timers: [] };
   const activos = () => (P.modo === 'solo' ? ['l'] : ['l', 'r']);
 
@@ -40,7 +40,7 @@
   function despues(ms, fn) { st.timers.push(setTimeout(fn, ms)); }
 
   // ---------------------------------------------------------------- fondo que responde a la reacción
-  // Solo se enciende en el resultado, nunca antes ni durante el árbol (no debe dar pistas de la salida).
+  // Se enciende en cuanto ese carril sale (ya con su tiempo calculado), nunca antes: no da pistas de la verde.
   // Verde: más brillo entre más cerca de la perfecta (.000 desde la verde = .400 Pro / .500 Full).
   // Rojo: luz roja, o reacción lenta.
   function intensidad(c) {
@@ -145,6 +145,7 @@
       c.rojo = c.rt < 0;
     }
     pintar(performance.now());
+    brillo(k, ...intensidad(c)); c.brillo = true;   // al instante, con el tiempo ya medido
     if (activos().every((x) => st.c[x].salio)) {
       if (st.fase === 'espera') { limpiarTimers(); finRonda(); }
       else despues(400, finRonda);
@@ -180,7 +181,7 @@
       }
       rt.className = 'pt-rtv' + (c.rojo ? ' rojo' : '');
     }
-    for (const k of activos()) brillo(k, ...intensidad(st.c[k]));
+    for (const k of activos()) if (!st.c[k].brillo) brillo(k, ...intensidad(st.c[k]));
     if (P.modo === 'solo') {
       const c = st.c.l;
       if (c.salio) {

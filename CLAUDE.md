@@ -104,16 +104,18 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
     datos de Safari y los del ícono son distintos: por eso la guía dice usar siempre el ícono.
     Se corrigió la barra de pestañas ilegible con el teléfono en modo claro y tema Automático (venía de 0.4).
 
-12. **Práctica con fondo que responde** (0.5.3): en el resultado (nunca antes ni durante el árbol, para no
-    dar pistas) se encienden los stickers del fondo: verdes según qué tan cerca de la perfecta
+12. **Práctica con fondo que responde** (0.5.3): **en cuanto ese carril sale** (con su tiempo ya medido;
+    nunca antes, para no dar pistas de la verde; transición 0.08 s) se encienden logos del fondo: verdes según qué tan cerca de la perfecta
     (v = (1 − rt/0.200)^1.3; rt desde la verde, .000 = .400 Pro/.500 Full), rojos con luz roja o reacción
     lenta (r = (rt − 0.250)/0.250). Se apaga al hacer stage otra vez. 1 vs 1: cada mitad con su carril.
-    build.py genera `fondos/<id>_brillo_{verde,rojo}.webp`: en Combinado, Combinado rojo y Botella NOS
-    recorta solo los stickers de ese color; en **Neón, Blanco y negro y el verde de Rojo** usa logos de
-    marcas **elegidos a mano** (pedido de Daniel: que se prendan logos sueltos, no todo el fondo), en
-    `fuente/fondos/brillo/` (lista LOGOS en `hacer_mascaras.py`; correrlo regenera los PNG). Fuerza
-    máxima por fondo según cuánto cubren (0.15/cobertura, inyectada en app.js como BRILLO); brillo_test
-    revisa que ningún fondo prenda más del 16 % de la pantalla. Sin fondo: resplandor
+    Qué se prende: `fuente/fondos/brillo/<fondo>-<color>.png`, generados por `hacer_mascaras.py`:
+    los stickers que ya son de ese color (Combinado, Combinado rojo, Botella NOS y el rojo de Rojo) +
+    logos de marcas **elegidos a mano** en la lista LOGOS (Neón, Blanco y negro y el verde de Rojo: logos
+    sueltos, no todo el fondo; y en los 6 fondos **3 logos chicos + 2 grandes extra por color**, p. ej.
+    la botella de NOS completa en rojo). Para cambiar marcas: editar LOGOS y correr el script.
+    build.py los convierte en `fondos/<id>_brillo_{verde,rojo}.webp` (si falta el PNG, recorta solo
+    por color). Fuerza máxima por fondo = min(1, 0.20/cobertura), inyectada en app.js como BRILLO;
+    brillo_test revisa que cada color cubra 4–22 % de la pantalla y que brille 0.12 s después de soltar. Sin fondo: resplandor
     detrás del árbol. Las luces del árbol siguen sin transición; pt_test da los mismos tiempos.
 
 ```

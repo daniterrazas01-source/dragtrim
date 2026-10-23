@@ -106,7 +106,7 @@ if FONDOS_SRC.exists():
         rojo = y(color, ImageChops.lighter(banda(h, 0, 13), banda(h, 241, 255)))   # ≤ 18° o ≥ 340°
         blanco = Image.new('L', chico.size, 255)
         for nombre, m in (('verde', verde), ('rojo', rojo)):
-            elegida = FONDOS_SRC / 'brillo' / f'{fid}_{nombre}.png'   # logos elegidos a mano (fondos/brillo/hacer_mascaras.py)
+            elegida = FONDOS_SRC / 'brillo' / f'{fid}-{nombre}.png'   # logos elegidos a mano (fondos/brillo/hacer_mascaras.py)
             if elegida.exists():
                 m = Image.open(elegida).convert('L').resize(chico.size, Image.NEAREST)
             elif ImageStat.Stat(m).mean[0] / 255 < 0.01:
@@ -114,7 +114,7 @@ if FONDOS_SRC.exists():
                 m = claros if ImageStat.Stat(claros).mean[0] / 255 >= 0.01 else color
             # entre más pantalla cubra la forma, menos brilla (si no, se pinta todo y no se lee el tiempo)
             cubre = ImageStat.Stat(m).mean[0] / 255
-            BRILLO.setdefault(fid, {})[nombre] = round(min(1.0, 0.15 / max(cubre, 1e-6)), 2)
+            BRILLO.setdefault(fid, {})[nombre] = round(min(1.0, 0.20 / max(cubre, 1e-6)), 2)
             m = m.filter(ImageFilter.GaussianBlur(0.8))
             Image.merge('RGBA', (blanco, blanco, blanco, m)).save(DIST / 'fondos' / f'{fid}_brillo_{nombre}.webp', quality=70, alpha_quality=60, method=6)
 # Fuerza máxima del brillo de cada fondo en Práctica (la usa app.js)
