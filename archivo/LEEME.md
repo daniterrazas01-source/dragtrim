@@ -31,7 +31,7 @@ podría mezclar ajustes.
 | `drag_beta_0.4.html` | beta 0.4 | 093a6f2 | Fondos de pantalla estilo sticker |
 | `drag_beta_0.5.html` | beta 0.5 | 090b946 | Calculadora Rooster Racing (pestaña Calcular) |
 | `drag_beta_0.5.1.html` | beta 0.5.1 | 2a5ec18 | Nombre nuevo: Drag Tree |
-| `drag_beta_0.5.2.html` | beta 0.5.2 | (este commit) | Guía para instalar en iPhone, iPad y Android; calculadora con 1320 lb y 308 hp |
+| `drag_beta_0.5.2.html` | beta 0.5.2 | 702fe15 | Guía para instalar en iPhone, iPad y Android; calculadora con 1320 lb y 308 hp |
 
 El código fuente editable de cada versión está en `fuente/` de ese commit:
 `git checkout <commit>` o, en GitHub, "Browse files" en el commit.
