@@ -104,7 +104,7 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
     datos de Safari y los del ícono son distintos: por eso la guía dice usar siempre el ícono.
     Se corrigió la barra de pestañas ilegible con el teléfono en modo claro y tema Automático (venía de 0.4).
 
-12. **Práctica con fondo que responde** (0.5.3): **en cuanto ese carril sale** (con su tiempo ya medido;
+12. **Práctica con fondo que responde** (0.5.3, publicada 23 oct 2026): **en cuanto ese carril sale** (con su tiempo ya medido;
     nunca antes, para no dar pistas de la verde; transición 0.08 s) se encienden logos del fondo: verdes según qué tan cerca de la perfecta
     (v = (1 − rt/0.200)^1.3; rt desde la verde, .000 = .400 Pro/.500 Full), rojos con luz roja o reacción
     lenta (r = (rt − 0.250)/0.250). Se apaga al hacer stage otra vez. 1 vs 1: cada mitad con su carril.
