@@ -245,6 +245,30 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   .big { font-size: 68px; }
 }
 
+/* ============================================================ Práctica: fondo que responde a la reacción
+   Solo cambia en el resultado (practica.js). Con fondo sticker se encienden los stickers verdes o rojos
+   (máscaras que genera build.py); sin fondo, un resplandor detrás del árbol. */
+.pt-brillo { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+.pt > :not(.pt-brillo) { position: relative; z-index: 1; }
+.ptg { position: absolute; inset: 0; opacity: 0; transition: opacity .35s ease-out; will-change: opacity; }
+.ptg > i { position: absolute; inset: 0; }
+.ptg.izq { clip-path: inset(0 50% 0 0); }
+.ptg.der { clip-path: inset(0 0 0 50%); }
+.pt.solo .ptg.izq { clip-path: none; }
+.pt.solo .ptg.der { display: none; }
+.ptg.v > i { background: radial-gradient(ellipse 70% 50% at 50% 42%, rgba(54, 212, 107, .6), rgba(54, 212, 107, .12) 55%, transparent 75%); }
+.ptg.r > i { background: radial-gradient(ellipse 70% 50% at 50% 42%, rgba(240, 69, 58, .65), rgba(240, 69, 58, .14) 55%, transparent 75%); }
+:root[data-fondo] .ptg.v { filter: drop-shadow(0 0 10px rgba(54, 212, 107, .9)); }
+:root[data-fondo] .ptg.r { filter: drop-shadow(0 0 10px rgba(240, 69, 58, .9)); }
+:root[data-fondo] .ptg > i { -webkit-mask: var(--m) center / cover no-repeat; mask: var(--m) center / cover no-repeat; }
+:root[data-fondo] .ptg.v > i { --m: var(--brillo-verde); background: #5dff95; opacity: var(--brillo-v-max, 1); }
+:root[data-fondo] .ptg.r > i { --m: var(--brillo-rojo); background: #ff5446; opacity: var(--brillo-r-max, 1); }
+/* el tiempo de reacción siempre se lee, aunque el fondo brille */
+:root[data-fondo] .pt-res > div:has(.pt-rtv:not(:empty)) { background: rgba(10, 10, 11, .72); border-radius: 14px; padding: 4px 8px 6px; margin: 0 4px; }
+.pt-rtv, .pt-res span, .pt-msg { text-shadow: 0 1px 3px rgba(0, 0, 0, .9); }
+@keyframes ptg-pulso { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.7); } }
+.ptg.perfecta > i { animation: ptg-pulso .45s ease-in-out 3; }
+
 /* ============================================================ Guía de instalación */
 .guia .guia-pasos { font-size: 15px; }
 .guia .guia-pasos p { margin: 6px 0 8px; }

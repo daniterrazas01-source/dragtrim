@@ -1,11 +1,11 @@
 """Arma dist/: index.html autocontenido + manifest + service worker + íconos."""
 import json, os, pathlib
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageStat
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC, DIST = ROOT / 'src', ROOT / 'dist'
 DIST.mkdir(exist_ok=True)
-VERSION = 'beta-0.5.2'
+VERSION = 'beta-0.5.3'
 
 html = (SRC / 'index.template.html').read_text(encoding='utf-8')
 html = html.replace('/*CSS*/', (SRC / 'style.css').read_text(encoding='utf-8'))
@@ -14,7 +14,6 @@ html = html.replace('/*APP*/', (SRC / 'app.js').read_text(encoding='utf-8'))
 html = html.replace('/*PRACTICA*/', (SRC / 'practica.js').read_text(encoding='utf-8'))
 html = html.replace('/*ROOSTER*/', (SRC / 'rooster.js').read_text(encoding='utf-8'))
 html = html.replace('/*CALC*/', (SRC / 'calculadora.js').read_text(encoding='utf-8'))
-(DIST / 'index.html').write_text(html, encoding='utf-8')
 
 manifest = {
     "name": "Drag Tree", "short_name": "Drag Tree",
@@ -81,6 +80,7 @@ icono(512, maskable=True).save(DIST / 'icon-maskable-512.png')
 
 # Fondos de pantalla: WebP ligeros (el original PNG pesa ~1.7 MB) + miniatura para Ajustes
 FONDOS_SRC = ROOT.parent / 'fondos'
+BRILLO = {}
 if FONDOS_SRC.exists():
     (DIST / 'fondos').mkdir(exist_ok=True)
     for png in sorted(FONDOS_SRC.glob('fondo_marcas_*.png')):
@@ -88,4 +88,33 @@ if FONDOS_SRC.exists():
         im = Image.open(png).convert('RGB')
         im.resize((1080, round(im.height * 1080 / im.width)), Image.LANCZOS).save(DIST / 'fondos' / f'{fid}.webp', quality=72, method=6)
         im.resize((180, round(im.height * 180 / im.width)), Image.LANCZOS).save(DIST / 'fondos' / f'{fid}_mini.webp', quality=70, method=6)
+        # Práctica: formas de los stickers verdes y rojos del fondo, para encenderlos según la reacción.
+        # Si el fondo no tiene ese color, se usan sus stickers blancos (se tiñen en la app).
+        chico = im.resize((540, round(im.height * 540 / im.width)), Image.LANCZOS)
+        h, s, v = chico.convert('HSV').split()
+        def banda(canal, lo, hi):
+            return canal.point(lambda x: 255 if lo <= x <= hi else 0)
+        def y(*ms):
+            out = ms[0]
+            for m in ms[1:]:
+                out = ImageChops.multiply(out, m)
+            return out
+        color = y(banda(s, 115, 255), banda(v, 89, 255))             # saturación > 45 %, brillo > 35 %
+        claros = y(banda(v, 204, 255), banda(s, 0, 51))               # blancos de los stickers
+        verde = y(color, banda(h, 39, 120))                           # 55°–170°
+        rojo = y(color, ImageChops.lighter(banda(h, 0, 13), banda(h, 241, 255)))   # ≤ 18° o ≥ 340°
+        blanco = Image.new('L', chico.size, 255)
+        for nombre, m in (('verde', verde), ('rojo', rojo)):
+            if ImageStat.Stat(m).mean[0] / 255 < 0.01:
+                # sin ese color: los stickers blancos; y si tampoco hay blancos (Neón), todos los de color
+                m = claros if ImageStat.Stat(claros).mean[0] / 255 >= 0.01 else color
+            # entre más pantalla cubra la forma, menos brilla (si no, se pinta todo y no se lee el tiempo)
+            cubre = ImageStat.Stat(m).mean[0] / 255
+            BRILLO.setdefault(fid, {})[nombre] = round(min(1.0, 0.15 / max(cubre, 1e-6)), 2)
+            m = m.filter(ImageFilter.GaussianBlur(0.8))
+            Image.merge('RGBA', (blanco, blanco, blanco, m)).save(DIST / 'fondos' / f'{fid}_brillo_{nombre}.webp', quality=70, alpha_quality=60, method=6)
+# Fuerza máxima del brillo de cada fondo en Práctica (la usa app.js)
+html = html.replace('{"__BRILLO__": 1}', json.dumps(BRILLO, sort_keys=True))
+(DIST / 'index.html').write_text(html, encoding='utf-8')
+print('brillo por fondo:', BRILLO)
 print('ok', sorted(os.listdir(DIST)), len(html), 'bytes html')

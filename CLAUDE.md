@@ -104,7 +104,14 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
     datos de Safari y los del ícono son distintos: por eso la guía dice usar siempre el ícono.
     Se corrigió la barra de pestañas ilegible con el teléfono en modo claro y tema Automático (venía de 0.4).
 
-## Estructura
+12. **Práctica con fondo que responde** (0.5.3): en el resultado (nunca antes ni durante el árbol, para no
+    dar pistas) se encienden los stickers del fondo: verdes según qué tan cerca de la perfecta
+    (v = (1 − rt/0.200)^1.3; rt desde la verde, .000 = .400 Pro/.500 Full), rojos con luz roja o reacción
+    lenta (r = (rt − 0.250)/0.250). Se apaga al hacer stage otra vez. 1 vs 1: cada mitad con su carril.
+    build.py genera `fondos/<id>_brillo_{verde,rojo}.webp` (formas de los stickers de ese color; si el
+    fondo no tiene ese color, sus stickers blancos, y si tampoco, todos los de color) y una fuerza máxima
+    por fondo según cuánto cubren (0.15/cobertura, inyectada en app.js como BRILLO). Sin fondo: resplandor
+    detrás del árbol. Las luces del árbol siguen sin transición; pt_test da los mismos tiempos.
 
 ```
 index.html, sw.js, manifest.webmanifest, icon-*.png   ← lo publicado (generado, no editar a mano)
@@ -124,7 +131,7 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Versión actual: **beta 0.5.2** (guía para instalar y compartir; 0.5.1: nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
+caché del service worker; cambiarlo fuerza la actualización). Versión actual: **beta 0.5.3** (fondo de Práctica que responde a la reacción; 0.5.2: guía para instalar; 0.5.1: nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
 algoritmo v2.3.
 
 Los zips exportados desde la app traen `drag_raw_gps_*.csv`, `drag_raw_acc_*.csv`,
@@ -143,6 +150,7 @@ python3 uitest.py real   # igual, pero con GPS/acelerómetro falsos a través de
 python3 pt_test.py       # simulador de semáforo (tiempos, rojas, 1 vs 1)
 node calc.js             # calculadora: hoja exacta vs LibreOffice (datos/rooster_vectores.json) + app
 python3 calc_test.py     # pestaña Calcular en Chromium (GPS y clima falsos, sin internet)
+python3 brillo_test.py   # Práctica: brillo verde/rojo por fondo y que no cambie durante el árbol
 python3 instalar_test.py # guía de instalación por teléfono/navegador, iPad vertical/horizontal, contraste de pestañas
 python3 mcheck.py ../matlab/*.m   # revisión estructural de MATLAB (aquí no hay MATLAB/Octave)
 ```

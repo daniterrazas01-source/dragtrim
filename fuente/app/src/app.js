@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = 'beta 0.5.2';
+  const APP_VERSION = 'beta 0.5.3';
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -740,17 +740,24 @@
     { id: 'rojo', nombre: 'Rojo', acento: '#ff3d2e' },
     { id: 'blanco_negro', nombre: 'Blanco y negro', acento: '#ffffff' },
   ];
+  // Fuerza máxima del brillo de Práctica por fondo: build.py la calcula según cuánto cubren los stickers.
+  const BRILLO = {"__BRILLO__": 1};
   function aplicarFondo() {
     const f = FONDOS.find((x) => x.id === S.fondo);
     const raiz = document.documentElement;
     if (f) {
       raiz.setAttribute('data-fondo', f.id);
       raiz.style.setProperty('--fondo-url', `url("fondos/${f.id}.webp")`);
+      raiz.style.setProperty('--brillo-verde', `url("fondos/${f.id}_brillo_verde.webp")`);
+      raiz.style.setProperty('--brillo-rojo', `url("fondos/${f.id}_brillo_rojo.webp")`);
+      const bf = BRILLO[f.id] || {};
+      raiz.style.setProperty('--brillo-v-max', String(bf.verde || 1));
+      raiz.style.setProperty('--brillo-r-max', String(bf.rojo || 1));
       raiz.style.setProperty('--acento', f.acento);
       raiz.style.setProperty('--velo', S.velo);
     } else {
       raiz.removeAttribute('data-fondo');
-      raiz.style.removeProperty('--fondo-url'); raiz.style.removeProperty('--acento');
+      for (const v of ['--fondo-url', '--acento', '--brillo-verde', '--brillo-rojo', '--brillo-v-max', '--brillo-r-max']) raiz.style.removeProperty(v);
     }
   }
   function pintarSelFondo() {

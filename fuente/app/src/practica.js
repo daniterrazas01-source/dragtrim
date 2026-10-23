@@ -39,8 +39,29 @@
   function limpiarTimers() { st.timers.forEach(clearTimeout); st.timers = []; cancelAnimationFrame(st.raf); st.raf = 0; }
   function despues(ms, fn) { st.timers.push(setTimeout(fn, ms)); }
 
+  // ---------------------------------------------------------------- fondo que responde a la reacción
+  // Solo se enciende en el resultado, nunca antes ni durante el árbol (no debe dar pistas de la salida).
+  // Verde: más brillo entre más cerca de la perfecta (.000 desde la verde = .400 Pro / .500 Full).
+  // Rojo: luz roja, o reacción lenta.
+  function intensidad(c) {
+    if (!c.salio) return [0, 0, false];
+    if (c.rojo || !isFin(c.rt)) return [0, 1, false];
+    const v = Math.pow(Math.max(0, 1 - c.rt / 0.200), 1.3);       // .000 → 1, .050 → .69, .100 → .41, .200 → 0
+    const r = Math.min(1, Math.max(0, (c.rt - 0.250) / 0.250));   // .250 → 0, .375 → .5, .500 → 1
+    return [v, r, c.rt < 0.010];
+  }
+  function brillo(k, v, r, perfecta) {
+    const gv = document.getElementById(`ptBv_${k}`), gr = document.getElementById(`ptBr_${k}`);
+    if (!gv || !gr) return;
+    gv.style.opacity = (0.92 * v).toFixed(3);
+    gr.style.opacity = (0.92 * r).toFixed(3);
+    gv.classList.remove('perfecta');
+    if (perfecta) { void gv.offsetWidth; gv.classList.add('perfecta'); }
+  }
+
   function reiniciar() {
     limpiarTimers();
+    for (const k of ['l', 'r']) brillo(k, 0, 0, false);
     for (const k of ['l', 'r']) { clearTimeout(st.c[k].timerStage); st.c[k] = nuevoCarril(); }
     st.fase = 'idle'; st.tArbol = NaN; st.tVerdePlan = NaN; st.tVerde = NaN;
     $('#ptMsg').textContent = '';
@@ -159,6 +180,7 @@
       }
       rt.className = 'pt-rtv' + (c.rojo ? ' rojo' : '');
     }
+    for (const k of activos()) brillo(k, ...intensidad(st.c[k]));
     if (P.modo === 'solo') {
       const c = st.c.l;
       if (c.salio) {
