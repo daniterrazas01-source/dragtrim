@@ -85,6 +85,8 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    hoja mezclaba km/h con el factor de mph), turbo con presión de la tabla a la DA (la hoja: 11.34 fijo),
    sin caballos desde el 60 ft (la hoja usaba 0.141 al revés), el inverso resta nitro/boost.
    `Rooster.hoja()` reproduce la hoja celda por celda (probado contra LibreOffice).
+   Valores de inicio (0.5.2, guiño personal de Daniel): **1320 lb y 308 hp** (la hoja traía 3100/420;
+   quien tenía guardados exactamente 3100/420 pasa a los nuevos). Condiciones de inicio: Villa 5100 ft, 20 °C.
 
 10. **Nombre: Drag Tree** (0.5.1). Solo cambió lo que se ve (título, logo, boleta, manifest, Ajustes).
     A propósito NO cambiaron: la URL/repo `dragtrim` (cambiarla perdería la app instalada y su
@@ -94,9 +96,9 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
     Daniel decidió (13 oct) dejar así los íconos de sus dos dispositivos ("Drag Trim"); no proponer
     respaldar/reinstalar para cambiarlo. Instalaciones nuevas ya salen como "Drag Tree".
 
-11. **Compartir con amigos** (0.5.2): guía de instalación en Medir (solo en teléfono, si no está instalada;
-    "Ahora no" la oculta: `dragtrim.guiaOculta`) y en Ajustes ("Instalar y compartir" + botón Compartir
-    con el enlace). Detecta iPhone/iPad Safari (Compartir → Agregar a inicio; iPad: arriba a la derecha),
+11. **Instalar en teléfonos de amigos** (0.5.2): guía de instalación en Medir (solo en teléfono, si no está instalada;
+    "Ahora no" la oculta: `dragtrim.guiaOculta`) y en Ajustes ("Instalar la app"). **Sin botón de
+    compartir, a propósito**: Daniel quiere pasar el enlace él mismo para tener control. Detecta iPhone/iPad Safari (Compartir → Agregar a inicio; iPad: arriba a la derecha),
     Chrome/Edge en iOS, navegadores dentro de Instagram/Facebook/TikTok (pide "Abrir en el navegador"),
     Android Chrome (botón Instalar con beforeinstallprompt, o menú ⋮) y Samsung Internet. En iOS los
     datos de Safari y los del ícono son distintos: por eso la guía dice usar siempre el ícono.

@@ -253,7 +253,6 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 .guia-ico { display: inline-block; font-weight: 700; }
 .guia-acciones { display: grid; grid-template-columns: 1fr; gap: 0; }
 .guia-acciones .ghost { margin-top: 8px; padding: 10px 16px; }
-.guia-link { margin: 10px 0 0; word-break: break-all; }
 #guiaMedir { margin-bottom: 14px; }
 
 /* ============================================================ Calculadora (Rooster Racing) */

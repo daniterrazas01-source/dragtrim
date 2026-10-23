@@ -1,0 +1,3283 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Drag Tree</title>
+<meta name="description" content="Medidor de 1/8 y 1/4 de milla con GPS y acelerómetro del teléfono.">
+<meta name="theme-color" content="#24282c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Drag Tree">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root {
+  --asphalt: #24282c;
+  --surface: #2f3439;
+  --surface-2: #383e44;
+  --line: #4a5158;
+  --chalk: #eceee9;
+  --chalk-dim: #a5abb0;
+  --amber: #ffb020;
+  --green: #36d46b;
+  --red: #f0453a;
+  --bulb-off: #3c4247;
+  --bulb-white: #fff3c9;
+  --paper: #f7f7f2;
+  --ink: #2f3236;
+  --ink-dim: #6d7276;
+  --focus: #7cc4ff;
+  --num: "Avenir Next Condensed", "sans-serif-condensed", "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "Courier New", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --asphalt: #eef0ec; --surface: #ffffff; --surface-2: #e2e5e1; --line: #c4c9cc;
+    --chalk: #16191c; --chalk-dim: #565c62; --bulb-off: #cfd3d5; --amber: #e09000;
+    --green: #12a548; --red: #d9271c; --focus: #0b63c4; color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --asphalt: #eef0ec; --surface: #ffffff; --surface-2: #e2e5e1; --line: #c4c9cc;
+  --chalk: #16191c; --chalk-dim: #565c62; --bulb-off: #cfd3d5; --amber: #e09000;
+  --green: #12a548; --red: #d9271c; --focus: #0b63c4; color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--asphalt); color: var(--chalk);
+  font: 16px/1.45 var(--body);
+  min-height: 100dvh;
+  padding: env(safe-area-inset-top) 0 calc(64px + env(safe-area-inset-bottom));
+  -webkit-tap-highlight-color: transparent;
+}
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+.top {
+  display: flex; align-items: center; justify-content: space-between;
+  max-width: 560px; margin: 0 auto; padding: 12px 16px 6px;
+}
+.brand { font: 700 22px/1 var(--num); letter-spacing: .01em; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.brand .beta { font: 600 12px/1 var(--body); color: var(--asphalt); background: var(--amber); padding: 3px 6px; border-radius: 4px; }
+.mark { display: inline-grid; gap: 3px; }
+.mark i { display: block; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
+.mark i:last-child { background: var(--green); }
+.sensors { display: flex; gap: 10px; }
+.chip {
+  font-size: 12px; color: var(--chalk-dim);
+  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+}
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--bulb-off); }
+.chip.on { color: var(--chalk); }
+.chip.on::before { background: var(--green); }
+.chip.warn::before { background: var(--amber); }
+.chip.bad::before { background: var(--red); }
+
+main { max-width: 560px; margin: 0 auto; padding: 0 16px; }
+.view { padding-top: 8px; }
+h2 { font: 700 28px/1.1 var(--num); margin: 10px 0 14px; }
+h3 { font: 600 17px/1.2 var(--body); margin: 26px 0 10px; }
+p { margin: 0 0 12px; }
+.muted { color: var(--chalk-dim); }
+
+/* Controles */
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--surface); border-radius: 12px; padding: 4px; gap: 4px; }
+.seg button { border: 0; background: transparent; padding: 12px 6px; border-radius: 9px; font-weight: 600; color: var(--chalk-dim); cursor: pointer; }
+.seg button[aria-checked="true"] { background: var(--chalk); color: var(--asphalt); }
+.seg.big button { font: 700 22px/1 var(--num); padding: 16px 6px; }
+
+.primary, .ghost, .danger {
+  display: block; width: 100%; border-radius: 14px; padding: 18px 16px; margin-top: 12px; cursor: pointer;
+  font-weight: 700; font-size: 18px;
+}
+.primary { background: var(--amber); color: #1d1a12; border: 0; }
+.primary.go { background: var(--green); color: #0d2414; }
+.primary:disabled { opacity: .45; }
+.ghost { background: transparent; border: 1px solid var(--line); color: var(--chalk); font-weight: 600; font-size: 16px; padding: 14px 16px; }
+.danger { background: transparent; border: 1px solid var(--red); color: var(--red); font-weight: 600; font-size: 16px; padding: 14px 16px; }
+
+.status { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border-radius: 14px; overflow: hidden; margin: 16px 0 4px; }
+.stat { background: var(--surface); padding: 12px 14px; }
+.stat .k { display: block; font-size: 13px; color: var(--chalk-dim); }
+.stat .val { display: block; font: 700 26px/1.15 var(--num); font-variant-numeric: tabular-nums; }
+.stat .val.good { color: var(--green); }
+.stat .val.meh { color: var(--amber); }
+.stat .val.bad { color: var(--red); }
+
+.msg { margin: 12px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--surface); border-left: 4px solid var(--amber); }
+.msg:empty { display: none; }
+.msg.err { border-left-color: var(--red); }
+
+.howto { margin-top: 20px; background: var(--surface); border-radius: 14px; padding: 4px 16px; }
+.howto summary { padding: 12px 0; font-weight: 600; cursor: pointer; }
+.howto ul { margin: 0 0 14px; padding-left: 20px; }
+.howto li { margin-bottom: 8px; }
+
+/* Sesión */
+.ses-title { font: 700 40px/1.05 var(--num); margin: 10px 0 10px; }
+.ses-text { color: var(--chalk-dim); margin-bottom: 16px; }
+.big { font: 700 84px/0.95 var(--num); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.big small { font: 600 20px/1 var(--body); color: var(--chalk-dim); margin-left: 6px; letter-spacing: 0; }
+.mid { font: 700 46px/1 var(--num); font-variant-numeric: tabular-nums; margin-top: 8px; }
+.mid small { font: 600 18px/1 var(--body); color: var(--chalk-dim); margin-left: 6px; }
+.gpsline { font-size: 14px; color: var(--chalk-dim); margin-top: 10px; }
+
+.track { position: relative; height: 14px; border-radius: 7px; background: var(--surface); margin: 22px 0 30px; }
+.track .fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 7px; background: var(--green); transition: width .25s linear; }
+.track .tick { position: absolute; top: -4px; width: 2px; height: 22px; background: var(--line); }
+.track .tick span { position: absolute; top: 24px; left: 50%; transform: translateX(-50%); font-size: 11px; color: var(--chalk-dim); white-space: nowrap; }
+.track .tick.passed { background: var(--green); }
+.track .tick.passed span { color: var(--chalk); font-weight: 600; }
+
+.log { list-style: none; margin: 18px 0 0; padding: 0; font-size: 14px; color: var(--chalk-dim); }
+.log li { padding: 8px 0; border-top: 1px solid var(--line); }
+.log li.red { color: var(--red); }
+.log li.green { color: var(--green); font-weight: 600; }
+
+/* Boleta (time slip) */
+.slip {
+  background: var(--paper); color: var(--ink); font-family: var(--mono); border-radius: 4px;
+  padding: 18px 18px 14px; margin: 6px auto 0; max-width: 360px;
+  box-shadow: 0 1px 0 rgba(0,0,0,.25), 0 10px 24px rgba(0,0,0,.25);
+  -webkit-mask: radial-gradient(circle at 8px 0, transparent 5px, #000 5.5px) -8px 0 / 16px 100% repeat-x;
+          mask: radial-gradient(circle at 8px 0, transparent 5px, #000 5.5px) -8px 0 / 16px 100% repeat-x;
+}
+.slip header { text-align: center; border-bottom: 1px dashed var(--ink-dim); padding-bottom: 10px; margin-bottom: 8px; }
+.slip header b { display: block; font-size: 17px; letter-spacing: .12em; }
+.slip header span { font-size: 13px; color: var(--ink-dim); }
+.slip table { width: 100%; border-collapse: collapse; font-size: 16px; font-variant-numeric: tabular-nums; }
+.slip td { padding: 4px 0; }
+.slip td:nth-child(2), .slip td:nth-child(3) { text-align: right; }
+.slip td:nth-child(3) { color: var(--ink-dim); font-size: 14px; }
+.slip tr.et td { font-size: 22px; font-weight: 700; padding-top: 8px; border-top: 1px dashed var(--ink-dim); }
+.slip tr.et td:nth-child(3) { font-size: 16px; color: var(--ink); }
+.slip tr.na td { color: #a6a9ab; }
+.slip tr.hd td { font-size: 12px; color: var(--ink-dim); padding-bottom: 2px; }
+.slip footer { margin-top: 10px; border-top: 1px dashed var(--ink-dim); padding-top: 8px; font-size: 13px; color: var(--ink-dim); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.stamp { display: inline-block; border: 2px solid var(--red); color: var(--red); font: 700 12px/1 var(--body); padding: 3px 6px; border-radius: 4px; transform: rotate(-4deg); margin-top: 6px; }
+
+.kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border-radius: 14px; overflow: hidden; margin-top: 18px; }
+.kpis div { background: var(--surface); padding: 12px 14px; }
+.kpis span { display: block; font-size: 13px; color: var(--chalk-dim); }
+.kpis b { font: 700 26px/1.15 var(--num); font-variant-numeric: tabular-nums; }
+.kpis b small { font: 500 14px var(--body); color: var(--chalk-dim); margin-left: 4px; }
+
+.chart { background: var(--surface); border-radius: 14px; padding: 12px 10px 6px; margin-top: 12px; }
+.chart p { margin: 0 4px 6px; font-weight: 600; font-size: 14px; }
+.chart canvas { width: 100%; height: 190px; display: block; }
+
+.quality { background: var(--surface); border-radius: 14px; padding: 6px 14px; margin-top: 12px; }
+.quality dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 14px; margin: 8px 0; font-size: 14px; }
+.quality dt { color: var(--chalk-dim); }
+.quality dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.avisos { list-style: none; padding: 0; margin: 4px 0 10px; font-size: 14px; }
+.avisos li { padding: 8px 10px; border-left: 3px solid var(--amber); background: var(--surface-2); border-radius: 6px; margin-top: 6px; }
+
+.actions { display: grid; gap: 0; margin: 10px 0 20px; }
+
+/* Historial */
+.hist { list-style: none; margin: 0; padding: 0; }
+.hist li { border-top: 1px solid var(--line); }
+.hist button { width: 100%; background: none; border: 0; padding: 14px 2px; display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; text-align: left; cursor: pointer; }
+.hist .et { font: 700 30px/1 var(--num); font-variant-numeric: tabular-nums; grid-row: span 2; align-self: center; text-align: right; }
+.hist .when { font-weight: 600; }
+.hist .sub { font-size: 13px; color: var(--chalk-dim); }
+.empty { padding: 30px 0; color: var(--chalk-dim); }
+
+/* Ajustes */
+.field { background: var(--surface); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+.field > label, .field > .lab { display: block; font-weight: 600; margin-bottom: 4px; }
+.field .hint { font-size: 13px; color: var(--chalk-dim); margin: 0 0 10px; }
+.field .row { display: flex; gap: 10px; align-items: center; }
+.field input[type=number] { width: 100%; background: var(--asphalt); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 18px; }
+.field .row span { color: var(--chalk-dim); white-space: nowrap; }
+.field > label.toggle, .toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; }
+.toggle input { width: 26px; height: 26px; accent-color: var(--green); }
+.ver { font-size: 13px; color: var(--chalk-dim); margin: 18px 0; }
+
+/* Navegación */
+.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  background: var(--surface); border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tabs button { background: none; border: 0; padding: 14px 2px 16px; font-size: 15px; font-weight: 600; color: var(--chalk-dim); cursor: pointer; }
+.tabs button[aria-current="page"] { color: var(--chalk); box-shadow: inset 0 3px 0 var(--amber); }
+body.sesion .tabs { display: none; }
+body.sesion { padding-bottom: env(safe-area-inset-bottom); }
+
+/* Próximamente */
+.proximo { margin-top: 14px; border: 1px dashed var(--line); border-radius: 14px; padding: 12px 14px; color: var(--chalk-dim); }
+.proximo b { color: var(--chalk); }
+.proximo p { margin: 6px 0 0; font-size: 14px; }
+.beta-tag { font-size: 12px; font-weight: 600; color: var(--amber); border: 1px solid var(--amber); border-radius: 4px; padding: 1px 5px; margin-left: 4px; }
+
+/* Práctica: estadísticas */
+.ps-ult { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 8px; font: 600 15px/1.3 var(--num); font-variant-numeric: tabular-nums; }
+.ps-ult li.rojo { color: var(--red); }
+
+/* Práctica: semáforo a pantalla completa */
+body.practica { overflow: hidden; }
+body.practica .tabs, body.practica .top, body.practica main { display: none; }
+.pt {
+  position: fixed; inset: 0; z-index: 20; background: #141618; color: #eceee9;
+  display: grid; grid-template-rows: auto 1fr auto auto minmax(150px, 30vh);
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none;
+}
+.pt-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; font-size: 14px; color: #a5abb0; }
+.pt-x { background: none; border: 1px solid #4a5158; color: #eceee9; border-radius: 10px; padding: 8px 14px; font-weight: 600; }
+.pt-score { font: 700 24px/1 var(--num); color: #eceee9; min-width: 60px; text-align: right; }
+.pt-tree { display: flex; justify-content: center; align-items: center; gap: 18px; min-height: 0; }
+.pt-lane { display: grid; justify-items: center; gap: min(1.4vh, 10px); background: #0b0c0d; padding: 12px 12px; border-radius: 16px; box-shadow: inset 0 0 0 2px #050606; }
+.pt-pair { display: flex; gap: 8px; }
+.pb { display: block; width: min(8.2vh, 64px); height: min(8.2vh, 64px); border-radius: 50%; background: #26292c; box-shadow: inset 0 -4px 0 rgba(0,0,0,.45); }
+.pb.s { width: min(3.2vh, 24px); height: min(3.2vh, 24px); }
+.pb.w.on { background: #fff3c9; box-shadow: 0 0 12px 2px rgba(255,243,201,.6); }
+.pb.y.on { background: #ffb020; box-shadow: 0 0 20px 5px rgba(255,176,32,.6); }
+.pb.g.on { background: #36d46b; box-shadow: 0 0 24px 7px rgba(54,212,107,.6); }
+.pb.r.on { background: #f0453a; box-shadow: 0 0 24px 7px rgba(240,69,58,.65); }
+.pt-res { display: grid; grid-template-columns: 1fr 1fr; text-align: center; padding: 6px 10px 0; min-height: 64px; }
+.pt-res span { display: block; font-size: 14px; color: #a5abb0; }
+.pt-rtv { display: block; font: 700 40px/1.05 var(--num); font-variant-numeric: tabular-nums; }
+.pt-rtv.rojo { color: #f0453a; }
+.pt-msg { text-align: center; font-weight: 600; margin: 4px 12px; min-height: 1.4em; }
+.pt-zones { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; }
+.pt-zone { border-radius: 18px; background: #24282c; border: 2px solid #3a3f44; display: flex; align-items: center; justify-content: center; text-align: center; padding: 10px; font: 700 20px/1.2 var(--num); cursor: pointer; }
+.pt-zone.held { background: #3a2f12; border-color: #ffb020; }
+.pt.solo .pt-lane.r, .pt.solo .pt-res .r, .pt.solo .pt-zone.r { display: none; }
+.pt.solo .pt-zones, .pt.solo .pt-res { grid-template-columns: 1fr; }
+
+@media (max-width: 360px) {
+  .big { font-size: 68px; }
+}
+
+/* ============================================================ Guía de instalación */
+.guia .guia-pasos { font-size: 15px; }
+.guia .guia-pasos p { margin: 6px 0 8px; }
+.guia .guia-pasos ol { margin: 6px 0 8px; padding-left: 22px; }
+.guia .guia-pasos li { margin-bottom: 6px; }
+.guia-ico { display: inline-block; font-weight: 700; }
+.guia-acciones { display: grid; grid-template-columns: 1fr; gap: 0; }
+.guia-acciones .ghost { margin-top: 8px; padding: 10px 16px; }
+#guiaMedir { margin-bottom: 14px; }
+
+/* ============================================================ Calculadora (Rooster Racing) */
+@media (max-width: 350px) { .tabs button { font-size: 13px; } }
+/* Encabezado en pantallas angostas: primero se compacta; si aun así no cabe (≤ ~365 px), los indicadores
+   bajan de línea en vez de ensanchar la página. */
+.top { flex-wrap: wrap; row-gap: 6px; }
+.top .sensors { margin-left: auto; }
+@media (max-width: 400px) {
+  .sensors { gap: 7px; }
+  .chip { font-size: 11px; }
+}
+@media (max-width: 385px) { .top { padding-left: 12px; padding-right: 12px; } }
+@media (max-width: 380px) {
+  .c-res { padding: 4px 8px; }
+  .c-tabla th, .c-tabla td { padding: 8px 2px; }
+  .c-tabla tbody th { font-size: 13px; }
+  .c-tabla td { font-size: 16px; }
+  .c-tabla tr.et td { font-size: 19px; }
+}
+.field > .lab:not(:first-child), .c-sub .lab, .howto .lab { display: block; font-weight: 600; margin: 14px 0 6px; }
+.field select { width: 100%; background: var(--asphalt); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 17px; }
+.c-sub { margin-top: 12px; }
+.c-sub > .ghost { margin-top: 0; }
+.seg.mini { flex: none; width: 120px; }
+.seg.mini button { padding: 10px 4px; }
+.c-toggle { margin-top: 16px; font-weight: 600; }
+#cDaBox { margin-top: 8px; }
+.c-estado { font-size: 14px; color: var(--chalk-dim); margin: 10px 0 0; }
+.c-estado:empty { display: none; }
+.c-estado.err { color: var(--red); }
+.c-lectura { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 12px 0 0; font-size: 14px; }
+.c-lectura dt { color: var(--chalk-dim); }
+.c-lectura dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.c-viejo { margin: 10px 0 0; padding: 8px 10px; border-radius: 8px; border: 2px solid var(--red); color: var(--chalk); font-size: 14px; font-weight: 600; }
+.c-da.err { color: var(--red); }
+.c-da { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 15px; }
+.c-da b, .c-big b { font-variant-numeric: tabular-nums; }
+.c-da small, .c-big small { display: block; font-size: 13px; color: var(--chalk-dim); font-weight: 500; margin-top: 2px; }
+.c-res { background: var(--surface); border-radius: 14px; padding: 6px 12px; margin-bottom: 10px; overflow-x: auto; }
+.c-tabla { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.c-tabla th, .c-tabla td { padding: 9px 4px; border-top: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.c-tabla thead th { border-top: 0; font-size: 13px; font-weight: 600; color: var(--chalk-dim); vertical-align: bottom; white-space: normal; }
+.c-tabla thead small { display: block; font-weight: 500; }
+.c-tabla tbody th { text-align: left; font-weight: 500; color: var(--chalk-dim); font-size: 14px; white-space: normal; }
+.c-tabla td { font: 700 18px/1.1 var(--num); }
+.c-tabla tr.et td { font-size: 22px; color: var(--chalk); }
+.c-tabla tr.et th { color: var(--chalk); font-weight: 700; }
+.c-nota { font-size: 13px; }
+.c-big { margin: 12px 0 4px; font-size: 16px; }
+.c-big b { font: 700 24px/1.15 var(--num); }
+.c-inv .seg:first-of-type { margin-top: 4px; }
+.c-inv .c-big { margin-bottom: 10px; }
+.c-inv summary + * { margin-top: 2px; }
+.c-inv .hint { font-size: 13px; color: var(--chalk-dim); margin: 0 0 10px; }
+.c-inv .row { display: flex; gap: 10px; align-items: center; }
+.c-inv .row span { color: var(--chalk-dim); white-space: nowrap; }
+.c-inv input[type=number] { width: 100%; background: var(--asphalt); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 18px; }
+
+/* ============================================================ Fondos de pantalla: estilo sticker
+   Se activa con data-fondo en <html>. El fondo va fijo detrás de todo con un velo oscuro
+   (--velo) para que el texto se lea en el sol; en una corrida el velo sube. */
+.fondo { display: none; }
+:root[data-fondo] {
+  --sticker: #ffffff; --tinta: #0e0e0f;
+  --asphalt: #0e0e0f; --surface: rgba(16, 16, 18, .93); --surface-2: rgba(38, 38, 42, .94);
+  --line: rgba(255, 255, 255, .24); --chalk: #ffffff; --chalk-dim: #c8c8c8;
+  --amber: var(--acento); --velo-color: 10, 10, 11;
+  color-scheme: dark;
+}
+:root[data-fondo][data-theme="light"] {
+  --sticker: #0e0e0f; --tinta: #ffffff;
+  --asphalt: #f2f2ef; --surface: rgba(255, 255, 255, .94); --surface-2: rgba(234, 234, 230, .95);
+  --line: rgba(0, 0, 0, .22); --chalk: #0e0e0f; --chalk-dim: #4a4a4a; --velo-color: 244, 244, 240;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: light) {
+  :root[data-fondo]:not([data-theme]) {
+    --sticker: #0e0e0f; --tinta: #ffffff;
+    --asphalt: #f2f2ef; --surface: rgba(255, 255, 255, .94); --surface-2: rgba(234, 234, 230, .95);
+    --line: rgba(0, 0, 0, .22); --chalk: #0e0e0f; --chalk-dim: #4a4a4a; --velo-color: 244, 244, 240;
+    color-scheme: light;
+  }
+}
+:root[data-fondo] { background: var(--asphalt); }
+:root[data-fondo] body { background: transparent; }
+:root[data-fondo] .fondo {
+  display: block; position: fixed; inset: 0; z-index: -1;
+  background: var(--asphalt) var(--fondo-url) center / cover no-repeat;
+}
+:root[data-fondo] .fondo::after {
+  content: ""; position: absolute; inset: 0;
+  background: rgba(var(--velo-color), var(--velo, .78)); transition: background-color .4s;
+}
+:root[data-fondo] body.sesion .fondo::after { background: rgba(var(--velo-color), .92); }
+
+/* Paneles = stickers: borde recortado y sombra */
+:root[data-fondo] :is(.status, .field, .howto, .kpis, .chart, .quality, .msg, .proximo, .seg, .c-res) {
+  border: 2px solid var(--sticker); box-shadow: 0 4px 0 rgba(0, 0, 0, .55);
+}
+:root[data-fondo] :is(.status, .kpis) { background: var(--sticker); gap: 2px; }
+:root[data-fondo] .field .seg { box-shadow: none; border-width: 1.5px; }
+:root[data-fondo] .proximo { background: var(--surface); border-style: dashed; }
+:root[data-fondo] .msg { border-left-width: 2px; }
+:root[data-fondo] .hist button { background: var(--surface); border-radius: 12px; margin: 8px 0; padding: 12px 14px; border: 2px solid var(--sticker); }
+:root[data-fondo] .hist li { border-top: 0; }
+:root[data-fondo] .empty { background: var(--surface); border-radius: 12px; padding: 16px; }
+
+/* Textos sueltos sobre el fondo: siempre con panel detrás */
+:root[data-fondo] .view > p.muted { background: var(--surface); padding: 10px 14px; border-radius: 12px; }
+:root[data-fondo] .beta-tag { background: var(--acento); color: #0e0e0f; border-color: #0e0e0f; }
+
+/* Títulos y logo = etiqueta pegada, ligeramente chueca */
+:root[data-fondo] h2 {
+  display: inline-block; background: var(--sticker); color: var(--tinta);
+  font: italic 900 28px/1.05 var(--num); padding: 6px 14px 7px; border-radius: 8px;
+  transform: rotate(-1.5deg); box-shadow: 0 4px 0 rgba(0, 0, 0, .55); margin: 14px 0 16px;
+}
+:root[data-fondo] h3 { display: inline-block; background: var(--surface); padding: 4px 10px; border-radius: 6px; }
+:root[data-fondo] .brand { font-style: italic; font-weight: 900; }
+:root[data-fondo] .top .brand {
+  background: var(--sticker); color: var(--tinta); padding: 6px 10px 7px; border-radius: 8px;
+  transform: rotate(-2deg); box-shadow: 0 3px 0 rgba(0, 0, 0, .55);
+}
+:root[data-fondo] .brand .beta { background: var(--acento); color: #0e0e0f; transform: rotate(4deg); box-shadow: 0 0 0 2px var(--tinta); }
+:root[data-fondo] .sensors { background: var(--surface); padding: 5px 9px; border-radius: 99px; border: 1.5px solid var(--line); }
+:root[data-fondo] .ses-title { font-style: italic; font-weight: 900; }
+
+/* Botones = sticker de color */
+:root[data-fondo] .primary, :root[data-fondo] .primary.go {
+  background: var(--acento); color: #0e0e0f; border: 3px solid #0e0e0f;
+  box-shadow: 0 0 0 3px var(--sticker), 0 6px 0 3px rgba(0, 0, 0, .55);
+  font-style: italic; font-weight: 900; font-size: 20px; margin-top: 16px;
+}
+:root[data-fondo] .ghost { background: var(--surface); border: 2px solid var(--sticker); font-weight: 700; box-shadow: 0 4px 0 rgba(0, 0, 0, .5); }
+:root[data-fondo] .danger { background: var(--surface); border-width: 2px; }
+:root[data-fondo] .seg button[aria-checked="true"], :root[data-fondo] .seg::before { background: var(--acento); color: #0e0e0f; }
+:root[data-fondo] .seg button[aria-checked="true"] { color: #0e0e0f; }
+:root[data-fondo] .tabs { background: rgba(10, 10, 11, .94); border-top: 2px solid var(--sticker); }
+:root[data-fondo][data-theme="light"] .tabs { background: rgba(255, 255, 255, .96); }
+@media (prefers-color-scheme: light) { :root[data-fondo]:not([data-theme]) .tabs { background: rgba(255, 255, 255, .96); } }
+:root[data-fondo] .tabs button[aria-current="page"] { font-style: italic; font-weight: 900; }
+:root[data-fondo] .track { background: var(--surface); border: 2px solid var(--sticker); }
+:root[data-fondo] .slip { box-shadow: 0 0 0 3px var(--sticker), 0 8px 0 3px rgba(0, 0, 0, .55); transform: rotate(-.6deg); }
+
+/* Práctica: el fondo se asoma detrás del árbol */
+:root[data-fondo] .pt { background: rgba(10, 10, 11, .84); }
+:root[data-fondo] .pt-lane { box-shadow: 0 0 0 3px #ffffff, 0 6px 0 3px rgba(0, 0, 0, .6); }
+:root[data-fondo] .pt-zone { background: rgba(20, 20, 22, .9); border: 2px solid #ffffff; }
+:root[data-fondo] .pt-zone.held { background: color-mix(in srgb, var(--acento) 24%, #0e0e0f); border-color: var(--acento); }
+:root[data-fondo] .pt-x { background: rgba(20, 20, 22, .9); border: 2px solid #ffffff; }
+
+/* Selector de fondos */
+.fondos { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; margin-top: 4px; }
+.fondos button { background: none; border: 0; padding: 0; color: var(--chalk-dim); font-size: 12px; text-align: center; cursor: pointer; }
+.fondos img, .fondos .fx-ninguno {
+  display: block; width: 100%; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 10px;
+  border: 2px solid var(--line); margin-bottom: 4px; background: var(--surface-2);
+}
+.fondos .fx-ninguno { background: repeating-linear-gradient(135deg, var(--surface-2) 0 8px, var(--surface) 8px 16px); }
+.fondos button[aria-checked="true"] { color: var(--chalk); font-weight: 700; }
+.fondos button[aria-checked="true"] :is(img, .fx-ninguno) { border: 3px solid var(--acento, var(--amber)); box-shadow: 0 0 0 2px var(--chalk); }
+
+/* ============================================================ Animaciones
+   Solo transform/opacity (no cargan el teléfono). Reglas:
+   - Las luces del semáforo de Práctica (.pb) encienden AL INSTANTE: nunca ponerles transición,
+     falsearía la reacción.
+   - La pantalla de medición sigue neutral: nada parpadea ni parece una salida.
+   - Se apagan con "Animaciones" en Ajustes o con "reducir movimiento" del sistema. */
+:root { --ease-out: cubic-bezier(.22, 1, .36, 1); --ease-pop: cubic-bezier(.3, 1.5, .5, 1); }
+@keyframes entra { from { opacity: 0; transform: translateY(10px); } }
+@keyframes aparece { from { opacity: 0; } }
+@keyframes desliza { from { opacity: 0; transform: translateX(-12px); } }
+@keyframes pop { from { opacity: 0; transform: scale(.82); } }
+@keyframes imprime { from { clip-path: inset(0 0 100% 0); transform: translateY(-14px); } to { clip-path: inset(0); transform: none; } }
+@keyframes sello { 0% { opacity: 0; transform: rotate(-4deg) scale(2.4); } 55% { opacity: 1; transform: rotate(-4deg) scale(.9); } 100% { opacity: 1; transform: rotate(-4deg) scale(1); } }
+@keyframes traza { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+@keyframes enciende { from { background: var(--bulb-off); } }
+@keyframes ping { from { box-shadow: 0 0 0 0 currentColor; } to { box-shadow: 0 0 0 7px transparent; } }
+@keyframes sacude { 0%, 100% { transform: none; } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+
+/* Cambio de pestaña: el contenido entra en cascada */
+:where(.view:not(#vMedir), #medirIdle, #medirSesion) > * { animation: entra .34s var(--ease-out) both; }
+:where(.view, #medirIdle, #medirSesion) > :nth-child(2) { animation-delay: 35ms; }
+:where(.view, #medirIdle, #medirSesion) > :nth-child(3) { animation-delay: 70ms; }
+:where(.view, #medirIdle, #medirSesion) > :nth-child(4) { animation-delay: 105ms; }
+:where(.view, #medirIdle, #medirSesion) > :nth-child(5) { animation-delay: 140ms; }
+:where(.view, #medirIdle, #medirSesion) > :nth-child(6) { animation-delay: 175ms; }
+:where(.view, #medirIdle, #medirSesion) > :nth-child(7) { animation-delay: 210ms; }
+:where(.view, #medirIdle, #medirSesion) > :nth-child(n+8) { animation-delay: 240ms; }
+
+/* Logo: las luces se encienden una vez al abrir la app */
+.mark i { animation: enciende .25s ease-out both; }
+.mark i:nth-child(1) { animation-delay: .25s; }
+.mark i:nth-child(2) { animation-delay: .45s; }
+.mark i:nth-child(3) { animation-delay: .75s; }
+
+/* Sensores: el punto cambia de color suave y da un "ping" al conectarse */
+.chip { transition: color .3s; }
+.chip::before { transition: background-color .3s; }
+.chip.on::before { color: var(--green); animation: ping .7s ease-out; }
+
+/* Botones: respuesta al toque */
+.primary, .ghost, .danger, .seg button, .tabs button, .pt-x, .hist button {
+  transition: transform .14s var(--ease-out), background-color .2s, color .2s, opacity .2s, box-shadow .2s;
+}
+.primary:active:not(:disabled), .ghost:active, .danger:active, .pt-x:active { transform: scale(.97); }
+.seg button:active, .tabs button:active { transform: scale(.94); }
+.hist button:active { background: var(--surface); }
+.stat .val { transition: color .3s; }
+.msg:not(:empty) { animation: entra .3s var(--ease-out) both; }
+.howto[open] ul { animation: entra .3s var(--ease-out) both; }
+.howto summary { transition: color .2s; }
+
+/* Selector segmentado y pestañas: la marca se desliza a la opción elegida */
+@supports selector(:has(a)) {
+  .seg { position: relative; --i: 0; --n: 2; }
+  .seg:has(> button:nth-child(3)) { --n: 3; }
+  .seg:has(> button:nth-child(2)[aria-checked="true"]) { --i: 1; }
+  .seg:has(> button:nth-child(3)[aria-checked="true"]) { --i: 2; }
+  .seg::before {
+    content: ""; position: absolute; top: 4px; bottom: 4px; left: 4px; border-radius: 9px; background: var(--chalk);
+    width: calc((100% - 8px - (var(--n) - 1) * 4px) / var(--n));
+    transform: translateX(calc(var(--i) * (100% + 4px)));
+    transition: transform .32s var(--ease-out), opacity .2s;
+  }
+  .seg:not(:has(> button[aria-checked="true"]))::before { opacity: 0; }
+  .seg button { position: relative; z-index: 1; }
+  .seg button[aria-checked="true"] { background: transparent; }
+
+  .tabs { --i: 0; }
+  .tabs:has(> button:nth-child(2)[aria-current]) { --i: 1; }
+  .tabs:has(> button:nth-child(3)[aria-current]) { --i: 2; }
+  .tabs:has(> button:nth-child(4)[aria-current]) { --i: 3; }
+  .tabs:has(> button:nth-child(5)[aria-current]) { --i: 4; }
+  .tabs::before {
+    content: ""; position: absolute; top: -1px; left: 0; width: 20%; height: 3px; background: var(--amber);
+    border-radius: 0 0 3px 3px; transform: translateX(calc(var(--i) * 100%)); transition: transform .34s var(--ease-out), opacity .2s;
+  }
+  .tabs:not(:has(> button[aria-current]))::before { opacity: 0; }
+  .tabs button[aria-current="page"] { box-shadow: none; }
+}
+
+/* Corrida en curso: hitos y bitácora */
+.track .tick span { transition: color .3s; }
+.track .tick.passed { animation: pop .4s var(--ease-pop); }
+.log li { animation: desliza .3s var(--ease-out) both; }
+
+/* Resultado: la boleta se "imprime", renglón por renglón, y luego cae el sello */
+#vResultado > .slip { animation: imprime .6s var(--ease-out) both; }
+.slip tr { animation: aparece .25s ease-out both; animation-delay: .3s; }
+.slip tr:nth-child(2) { animation-delay: .36s; }
+.slip tr:nth-child(3) { animation-delay: .42s; }
+.slip tr:nth-child(4) { animation-delay: .48s; }
+.slip tr:nth-child(5) { animation-delay: .54s; }
+.slip tr:nth-child(6) { animation-delay: .6s; }
+.slip tr:nth-child(n+7) { animation-delay: .66s; }
+.slip footer { animation: aparece .3s .6s ease-out both; }
+.stamp { animation: sello .45s .8s var(--ease-out) both; }
+.chart canvas { animation: traza .9s .35s cubic-bezier(.45, 0, .2, 1) both; }
+.avisos li { animation: desliza .3s var(--ease-out) both; }
+
+/* Historial */
+.hist li { animation: entra .3s var(--ease-out) both; }
+.hist li:nth-child(2) { animation-delay: 30ms; }
+.hist li:nth-child(3) { animation-delay: 60ms; }
+.hist li:nth-child(4) { animation-delay: 90ms; }
+.hist li:nth-child(5) { animation-delay: 120ms; }
+.hist li:nth-child(6) { animation-delay: 150ms; }
+.hist li:nth-child(n+7) { animation-delay: 180ms; }
+.ps-ult li { animation: pop .25s var(--ease-out) both; }
+
+/* Práctica: solo el resultado se anima, DESPUÉS de la salida */
+.pb { transition: none; animation: none; }
+.pt:not([hidden]) { animation: aparece .2s ease-out; }
+.pt-zone { transition: background-color .12s, border-color .12s, transform .12s var(--ease-out); }
+.pt-zone.held { transform: scale(.98); }
+.pt-rtv:not(:empty) { animation: pop .32s var(--ease-pop) both; }
+.pt-rtv.rojo:not(:empty) { animation: pop .32s var(--ease-pop) both, sacude .4s .3s ease-in-out; }
+.pt-res span:not(:empty) { animation: aparece .3s .12s ease-out both; }
+.pt-msg:not(:empty) { animation: pop .35s .15s var(--ease-pop) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  * , *::before, *::after { transition: none !important; animation: none !important; }
+}
+:root[data-sin-anim] *, :root[data-sin-anim] *::before, :root[data-sin-anim] *::after { transition: none !important; animation: none !important; }
+
+</style>
+</head>
+<body>
+<div class="fondo" id="fondo" aria-hidden="true"></div>
+<header class="top">
+  <div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>Drag Tree<span class="beta">beta</span></div>
+  <div class="sensors" aria-label="Estado de sensores">
+    <span id="chipGps" class="chip">GPS</span>
+    <span id="chipAcc" class="chip">Acel</span>
+    <span id="chipWake" class="chip" title="Pantalla siempre encendida">Pantalla</span>
+  </div>
+</header>
+
+<main>
+  <!-- ============ MEDIR ============ -->
+  <section id="vMedir" class="view">
+    <div id="medirIdle">
+      <div class="field guia" id="guiaMedir" hidden>
+        <span class="lab">Instala Drag Tree en tu teléfono</span>
+        <div class="guia-pasos"></div>
+        <div class="guia-acciones">
+          <button class="primary" data-instalar hidden>Instalar app</button>
+          <button class="ghost" id="guiaOcultar">Ahora no</button>
+        </div>
+      </div>
+      <div class="seg big" role="radiogroup" aria-label="Distancia" id="segDist">
+        <button role="radio" data-v="201.168">1/8 de milla</button>
+        <button role="radio" data-v="402.336">1/4 de milla</button>
+      </div>
+
+      <div class="status">
+        <div class="stat"><span class="k">Precisión GPS</span><span class="val" id="sPrec">—</span></div>
+        <div class="stat"><span class="k">Frecuencia GPS</span><span class="val" id="sHz">—</span></div>
+        <div class="stat"><span class="k">Velocidad</span><span class="val" id="sVel">—</span></div>
+        <div class="stat"><span class="k">Acelerómetro</span><span class="val" id="sAcel">—</span></div>
+      </div>
+      <p id="idleMsg" class="msg"></p>
+
+      <button id="btnSensores" class="primary">Activar sensores</button>
+      <button id="btnArmar" class="primary go" hidden>Armar medición</button>
+      <button id="btnDemo" class="ghost">Probar con una corrida simulada</button>
+      <div class="proximo">
+        <b>Medir con el semáforo real</b> <span class="beta-tag">en desarrollo</span>
+        <p>Grabar el árbol de la pista con la cámara para medir tu tiempo de reacción y registrarlo junto con la corrida.</p>
+      </div>
+
+      <details class="howto">
+        <summary>Antes de salir a la pista</summary>
+        <ul>
+          <li>Pon el teléfono en un soporte firme (parabrisas o tablero) con vista al cielo. La orientación no importa, pero no lo muevas durante la sesión.</li>
+          <li>Activa la ubicación precisa y apaga el ahorro de batería.</li>
+          <li>Deja la app abierta con la pantalla encendida. Si cambias de app o se bloquea la pantalla, el GPS se pausa.</li>
+          <li>La app no da la salida: arranca con el semáforo de la pista. Arma la medición cuando quieras, incluso antes del burnout; el arranque se detecta solo.</li>
+          <li>Las tablets solo-WiFi no tienen GPS y no sirven para medir.</li>
+        </ul>
+      </details>
+    </div>
+
+    <div id="medirSesion" hidden>
+      <p class="ses-title" id="sesTitulo" aria-live="polite">Esperando tu arranque</p>
+      <p class="ses-text" id="sesTexto">La app no da la salida: arranca con el semáforo de la pista. El burnout, la alineación y el stage se ignoran.</p>
+      <div class="big" id="liveMain">0<small>km/h</small></div>
+      <div class="mid" id="liveSub" hidden></div>
+      <p class="gpsline" id="gpsLine"></p>
+      <div class="track" id="track" hidden><div class="fill" id="trackFill"></div></div>
+      <ol class="log" id="eventLog"></ol>
+      <button id="btnTerminar" class="ghost" hidden>Terminar corrida</button>
+      <button id="btnCancelar" class="ghost">Cancelar</button>
+    </div>
+  </section>
+
+  <!-- ============ PRÁCTICA ============ -->
+  <section id="vPractica" class="view" hidden>
+    <h2>Práctica de salida</h2>
+    <p class="muted">Un semáforo de arrancones para entrenar tu reacción, solo o contra alguien en el mismo teléfono.</p>
+
+    <div class="field">
+      <span class="lab">Modo</span>
+      <div class="seg" role="radiogroup" id="segPModo" style="margin-top:8px">
+        <button role="radio" data-v="solo">Solo</button>
+        <button role="radio" data-v="duelo">1 vs 1</button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="lab">Árbol</span>
+      <p class="hint">Pro: los tres ámbar encienden juntos y la verde 0.4 s después. Full: los ámbar bajan uno por uno cada 0.5 s.</p>
+      <div class="seg" role="radiogroup" id="segPArbol">
+        <button role="radio" data-v="pro">Pro .4</button>
+        <button role="radio" data-v="full">Full .5</button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="lab">Cómo sales</span>
+      <p class="hint">Soltar: mantén presionado para hacer stage y suelta con la verde, como un transbrake. Tocar: un toque para stage y otro para salir.</p>
+      <div class="seg" role="radiogroup" id="segPSalida">
+        <button role="radio" data-v="soltar">Soltar</button>
+        <button role="radio" data-v="tocar">Tocar</button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="lab">Formato de la reacción</span>
+      <p class="hint">Boleta: como el ticket de pista, desde el último ámbar (perfecta 0.400 con Pro, 0.500 con Full). Desde la verde: la diferencia contra la verde (perfecta 0.000). Siempre verás los dos; aquí eliges cuál sale en grande.</p>
+      <div class="seg" role="radiogroup" id="segPFormato">
+        <button role="radio" data-v="boleta">Boleta (.400 / .500)</button>
+        <button role="radio" data-v="verde">Desde la verde (.000)</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="lab" for="inPRetraso">Retraso de tu auto</label>
+      <p class="hint">En pista el auto tarda en dejar el haz de stage después de que sueltas. Pon ese tiempo para practicar salir con el ámbar como en la pista. 0 = reacción pura.</p>
+      <div class="row"><input type="number" id="inPRetraso" min="0" max="0.5" step="0.01" inputmode="decimal"><span>s</span></div>
+    </div>
+
+    <button id="btnPractica" class="primary">Empezar práctica</button>
+
+    <h3 id="psTitulo">Tus salidas (modo solo)</h3>
+    <div class="kpis" style="margin-top:0">
+      <div><span>Mejor reacción</span><b id="psMejor">—</b></div>
+      <div><span>Promedio (últimas 20)</span><b id="psProm">—</b></div>
+      <div><span>Luces rojas</span><b id="psRojas">—</b></div>
+      <div><span>Últimas salidas</span><ul class="ps-ult" id="psUlt"></ul></div>
+    </div>
+    <p class="empty" id="psVacio">Aún no hay salidas. Empieza una práctica en modo solo.</p>
+    <p class="muted" style="font-size:13px;margin-top:14px">La pantalla del teléfono agrega unos milisegundos de retraso; úsalo para comparar tus propias salidas.</p>
+    <button id="btnPBorrar" class="danger">Borrar estadísticas</button>
+  </section>
+
+  <!-- ============ CALCULAR ============ -->
+  <section id="vCalc" class="view" hidden>
+    <h2>Calculadora</h2>
+    <p class="muted">Aproximación con las fórmulas de tu hoja Rooster Racing: con tu peso y tus caballos, más o menos qué tiempo harías. No son tiempos medidos.</p>
+
+    <div class="field">
+      <span class="lab">Condiciones del aire</span>
+      <div class="seg" role="radiogroup" aria-label="Condiciones del aire" id="segCAire" style="margin-top:8px">
+        <button role="radio" data-v="tel">En la pista (teléfono)</button>
+        <button role="radio" data-v="manual">Altura que yo elija</button>
+      </div>
+
+      <div id="cTel" class="c-sub">
+        <p class="hint">El teléfono toma tu ubicación y el clima de este momento (temperatura, presión y humedad) y calcula la altitud de densidad (DA) real. Necesita internet; tu ubicación solo se usa para pedir el clima.</p>
+        <button class="ghost" id="cBtnAqui">Tomar condiciones de aquí</button>
+        <p class="c-estado" id="cEstado" aria-live="polite"></p>
+        <dl class="c-lectura" id="cLectura" hidden></dl>
+        <p class="c-viejo" id="cViejo" hidden>Estas condiciones tienen más de 3 horas: tócalo de nuevo.</p>
+        <div id="cTempTelBox" hidden>
+          <label class="lab" for="cTempTel">Temperatura del aire</label>
+          <div class="row"><input type="number" id="cTempTel" inputmode="decimal" step="1"><span>°C</span></div>
+        </div>
+      </div>
+
+      <div id="cMan" class="c-sub">
+        <div id="cAltBox">
+          <label class="lab" for="cPista">Pista</label>
+          <select id="cPista"></select>
+          <label class="lab" for="cAlt">Altura</label>
+          <div class="row"><input type="number" id="cAlt" inputmode="numeric" step="100"><span>ft</span></div>
+          <p class="hint" id="cAltM"></p>
+        </div>
+        <div id="cTempBox">
+          <label class="lab" for="cTemp">Temperatura del aire</label>
+          <div class="row"><input type="number" id="cTemp" inputmode="decimal" step="1"><span>°C</span></div>
+        </div>
+        <label class="toggle c-toggle">Ya sé la DA del día <input type="checkbox" id="cDaSe"></label>
+        <div class="row" id="cDaBox" hidden><input type="number" id="cDa" inputmode="numeric" step="100" aria-label="Altitud de densidad (DA) en pies"><span>ft</span></div>
+      </div>
+      <p class="c-da" id="cDaRes" aria-live="polite"></p>
+    </div>
+
+    <div class="field">
+      <span class="lab">Tu auto</span>
+      <label class="lab" for="cPeso">Peso con piloto</label>
+      <div class="row">
+        <input type="number" id="cPeso" inputmode="decimal" step="10">
+        <div class="seg mini" role="radiogroup" aria-label="Unidad de peso" id="segCPesoU">
+          <button role="radio" data-v="lb">lb</button>
+          <button role="radio" data-v="kg">kg</button>
+        </div>
+      </div>
+      <p class="hint" id="cPesoOtro"></p>
+      <label class="lab" for="cHp">Caballos del motor</label>
+      <div class="row"><input type="number" id="cHp" inputmode="decimal" step="10"><span>hp</span></div>
+      <p class="hint">Al volante, sin contar el nitro ni el turbo. La hoja les quita 14 % por la transmisión.</p>
+      <span class="lab">Motor</span>
+      <div class="seg" role="radiogroup" aria-label="Tipo de motor" id="segCMotor">
+        <button role="radio" data-v="atmos">Atmosférico</button>
+        <button role="radio" data-v="nitro">Nitro</button>
+        <button role="radio" data-v="turbo">Turbo</button>
+      </div>
+      <div id="cNitroBox" class="c-sub">
+        <label class="lab" for="cNitro">Shot de nitro</label>
+        <div class="row"><input type="number" id="cNitro" inputmode="decimal" step="25"><span>hp</span></div>
+      </div>
+      <div id="cBoostBox" class="c-sub">
+        <label class="lab" for="cBoost">Boost (lo que marca el manómetro)</label>
+        <div class="row"><input type="number" id="cBoost" inputmode="decimal" step="1"><span>psi</span></div>
+        <p class="hint" id="cPAmb"></p>
+      </div>
+    </div>
+
+    <h3>Tiempo estimado</h3>
+    <div class="c-res">
+      <table class="c-tabla">
+        <thead><tr><th></th><th>En esta pista<small id="cColPista"></small></th><th>A nivel del mar</th></tr></thead>
+        <tbody id="cTabla"></tbody>
+      </table>
+    </div>
+    <p class="muted c-nota">≈ Para un auto con buena salida. El 60 ft y el 1/8 dependen mucho de llantas, suspensión y salida; la velocidad es lo que mejor sigue a los caballos.</p>
+
+    <div class="field">
+      <span class="lab">Peso para un tiempo meta</span>
+      <p class="hint">Con tus caballos y estas condiciones, cuánto debería pesar el auto para hacer este tiempo.</p>
+      <div class="seg" role="radiogroup" aria-label="Distancia de la meta" id="segCMetaD">
+        <button role="radio" data-v="8">1/8 de milla</button>
+        <button role="radio" data-v="4">1/4 de milla</button>
+      </div>
+      <div class="row" style="margin-top:10px"><input type="number" id="cMetaT" inputmode="decimal" step="0.1" aria-label="Tiempo meta en segundos"><span>s</span></div>
+      <p class="c-big" id="cMetaRes" aria-live="polite"></p>
+    </div>
+
+    <details class="howto c-inv">
+      <summary>Caballos con tu tiempo</summary>
+      <p class="hint">Al revés: con un tiempo o una velocidad, cuántos caballos tendría el motor. Usa el peso y las condiciones de arriba.</p>
+      <div class="seg" role="radiogroup" aria-label="Distancia" id="segCInvD">
+        <button role="radio" data-v="8">1/8</button>
+        <button role="radio" data-v="4">1/4</button>
+      </div>
+      <div class="seg" role="radiogroup" aria-label="Dato" id="segCInvDato" style="margin-top:8px">
+        <button role="radio" data-v="v">Velocidad</button>
+        <button role="radio" data-v="et">Tiempo</button>
+      </div>
+      <label class="lab" for="cInvVal" id="cInvLab" style="margin-top:10px">Velocidad</label>
+      <div class="row"><input type="number" id="cInvVal" inputmode="decimal" step="0.1"><span id="cInvU">km/h</span></div>
+      <p class="c-big" id="cInvRes" aria-live="polite"></p>
+      <p class="hint">Con la velocidad sale más confiable: el tiempo depende mucho de la salida.</p>
+    </details>
+
+    <details class="howto">
+      <summary>Cómo calcula</summary>
+      <ul>
+        <li>Como tu hoja, con las fórmulas de Hale: tiempo de 1/4 = 5.825 × (peso ÷ caballos en la llanta)<sup>⅓</sup> y velocidad = 234 × (caballos en la llanta ÷ peso)<sup>⅓</sup>.</li>
+        <li>Caballos en la llanta = los del motor × 0.86 (14 % de transmisión) × pérdida por altura (3 % por cada 1000 ft de DA). El nitro se suma ya en la llanta. Con turbo: caballos + caballos × boost ÷ presión del aire.</li>
+        <li>1/8 = 1/4 ÷ 1.565 en tiempo y ÷ 1.27 en velocidad. 60 ft típico = 14.5 % del tiempo de 1/4.</li>
+        <li>DA = altitud de densidad: la altura a la que "se siente" el aire por la presión, la temperatura y la humedad. Entre más alta, menos rinde el motor.</li>
+        <li>"Altura que yo elija" usa la fórmula de DA de tu hoja (con su ×1.075). "En la pista" calcula la DA real con la presión, la temperatura y la humedad del clima; suele salir más baja que la de la hoja (a 5100 ft y 20 °C: ≈ 6,830 contra 7,443 ft).</li>
+        <li>Cambios contra tu Excel: el 0–60 siempre se calcula en mph (en la hoja cambiaba casi 1 s al poner km/h); el turbo usa la presión del aire según la DA (la hoja la tenía fija en 11.34 psi, la de 7000 ft); los caballos ya no se sacan del 60 ft; y en "Caballos con tu tiempo" se resta el nitro o el boost, para que dé los caballos del motor como los escribes arriba.</li>
+      </ul>
+    </details>
+  </section>
+
+  <!-- ============ RESULTADO ============ -->
+  <section id="vResultado" class="view" hidden></section>
+
+  <!-- ============ HISTORIAL ============ -->
+  <section id="vHistorial" class="view" hidden>
+    <h2>Historial</h2>
+    <ul class="hist" id="histList"></ul>
+    <p class="empty" id="histEmpty">Todavía no hay corridas. Arma una medición en Medir o prueba la corrida simulada.</p>
+  </section>
+
+  <!-- ============ AJUSTES ============ -->
+  <section id="vAjustes" class="view" hidden>
+    <h2>Ajustes</h2>
+
+    <div class="field">
+      <label class="lab" for="inRollout">Rollout (punto inicial del cronómetro)</label>
+      <p class="hint">En pista el cronómetro arranca cuando la llanta deja el haz de stage, ~1 ft después del primer movimiento. Usa 1 ft para comparar con la boleta; 0 mide desde el primer movimiento. Si tu 60 ft sale siempre distinto al oficial, ajústalo y usa "Recalcular" en el historial.</p>
+      <div class="row">
+        <input type="number" id="inRollout" min="0" max="2" step="0.1" inputmode="decimal">
+        <span>ft</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="lab">Unidades de velocidad</span>
+      <div class="seg" role="radiogroup" id="segUnidad" style="margin-top:8px">
+        <button role="radio" data-v="kmh">km/h</button>
+        <button role="radio" data-v="mph">mph</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="lab">Arranque válido</span>
+      <p class="hint">Solo cuenta como arranque si, saliendo de detenido, llegas a esta velocidad en este tiempo. Así se ignoran el burnout y la alineación.</p>
+      <div class="row">
+        <input type="number" id="inVconf" min="20" max="120" step="5" inputmode="numeric" aria-label="Velocidad de confirmación en km/h">
+        <span>km/h en</span>
+        <input type="number" id="inTconf" min="3" max="20" step="1" inputmode="numeric" aria-label="Tiempo máximo en segundos">
+        <span>s</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="toggle">Usar acelerómetro <input type="checkbox" id="inAcc"></label>
+      <p class="hint" style="margin-top:6px">Combina GPS y acelerómetro para mayor precisión. Apágalo solo para comparar.</p>
+    </div>
+
+    <div class="field">
+      <span class="lab">Fondo de pantalla</span>
+      <p class="hint">El color de los botones cambia con el fondo. Durante una corrida el fondo se oscurece para que los números se lean bien.</p>
+      <div class="fondos" role="radiogroup" id="selFondo" aria-label="Fondo de pantalla"></div>
+      <span class="lab" style="margin-top:14px">Qué tanto se ve</span>
+      <div class="seg" role="radiogroup" id="segVelo" style="margin-top:8px">
+        <button role="radio" data-v="0.88">Poco</button>
+        <button role="radio" data-v="0.78">Medio</button>
+        <button role="radio" data-v="0.64">Mucho</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="lab">Tema</span>
+      <p class="hint">"Claro" se lee mejor bajo el sol.</p>
+      <div class="seg" role="radiogroup" id="segTema">
+        <button role="radio" data-v="auto">Automático</button>
+        <button role="radio" data-v="light">Claro</button>
+        <button role="radio" data-v="dark">Oscuro</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="toggle">Animaciones <input type="checkbox" id="inAnim"></label>
+      <p class="hint" style="margin-top:6px">Transiciones suaves en la app. Las luces del semáforo de Práctica siempre encienden al instante, sin efectos.</p>
+    </div>
+
+    <div class="field guia" id="guiaAjustes">
+      <span class="lab">Instalar la app</span>
+      <div class="guia-pasos"></div>
+      <button class="primary" data-instalar hidden>Instalar app</button>
+    </div>
+    <button id="btnBorrarHist" class="danger">Borrar todo el historial</button>
+    <p class="ver" id="verText"></p>
+  </section>
+</main>
+
+<div class="pt" id="ptOverlay" hidden>
+  <div class="pt-top">
+    <button class="pt-x" id="ptCerrar" aria-label="Cerrar práctica">Cerrar</button>
+    <span id="ptTipo"></span>
+    <b id="ptScore" class="pt-score"></b>
+  </div>
+  <div class="pt-tree" aria-hidden="true">
+        <div class="pt-lane l">
+          <div class="pt-pair"><i class="pb s w" id="pt_l_pre1"></i><i class="pb s w" id="pt_l_pre2"></i></div>
+          <div class="pt-pair"><i class="pb s w" id="pt_l_stg1"></i><i class="pb s w" id="pt_l_stg2"></i></div>
+          <i class="pb y" id="pt_l_a0"></i><i class="pb y" id="pt_l_a1"></i><i class="pb y" id="pt_l_a2"></i>
+          <i class="pb g" id="pt_l_g"></i><i class="pb r" id="pt_l_r"></i>
+        </div>
+        <div class="pt-lane r">
+          <div class="pt-pair"><i class="pb s w" id="pt_r_pre1"></i><i class="pb s w" id="pt_r_pre2"></i></div>
+          <div class="pt-pair"><i class="pb s w" id="pt_r_stg1"></i><i class="pb s w" id="pt_r_stg2"></i></div>
+          <i class="pb y" id="pt_r_a0"></i><i class="pb y" id="pt_r_a1"></i><i class="pb y" id="pt_r_a2"></i>
+          <i class="pb g" id="pt_r_g"></i><i class="pb r" id="pt_r_r"></i>
+        </div>
+  </div>
+  <div class="pt-res">
+    <div class="l"><b class="pt-rtv" id="ptRt_l"></b><span id="ptLab_l"></span></div>
+    <div class="r"><b class="pt-rtv" id="ptRt_r"></b><span id="ptLab_r"></span></div>
+  </div>
+  <p class="pt-msg" id="ptMsg" aria-live="polite"></p>
+  <div class="pt-zones">
+    <div class="pt-zone l" id="ptZona_l"><span></span></div>
+    <div class="pt-zone r" id="ptZona_r"><span></span></div>
+  </div>
+</div>
+
+<nav class="tabs" aria-label="Secciones">
+  <button data-view="vMedir" aria-current="page">Medir</button>
+  <button data-view="vPractica">Práctica</button>
+  <button data-view="vCalc">Calcular</button>
+  <button data-view="vHistorial">Historial</button>
+  <button data-view="vAjustes">Ajustes</button>
+</nav>
+
+<script>
+/* dragcore.js — Algoritmo del medidor Drag Tree (port de drag_procesar.m v2.2)
+ * Funciona en navegador (window.DragCore) y en Node (module.exports).
+ * Unidades: tiempo [s], velocidad [m/s], distancia [m], aceleración [m/s^2].
+ */
+(function (root) {
+  'use strict';
+
+  const G0 = 9.80665;
+
+  function defaultConfig() {
+    return {
+      version: 'beta 0.2 (algoritmo v2.3)',
+      rollout_ft: 1.0,
+      distancia_final: 402.336,
+      hitos: [
+        ['60 ft', 18.288],
+        ['330 ft', 100.584],
+        ['1/8 mi', 201.168],
+        ['1000 ft', 304.8],
+        ['1/4 mi', 402.336],
+      ],
+      dist_trampa_m: 20.1168,
+      v_baja: 1.0,
+      v_confirma: 50 / 3.6,
+      t_confirma: 8.0,
+      v_corrida: 3.0,
+      v_quieto: 0.5,
+      umbral_mov: 0.35,
+      t_inicio_busqueda: -Infinity,
+      usar_acc: true,
+      fs: 100,
+      suavizado_s: 0.10,
+      ventana_fwd_s: 1.5,
+      refinar_inicio: true,  // inicio por tangente + gravedad del reposo justo antes
+      reposo_s: 0.7,         // s de reposo (en stage) usados para medir la gravedad
+      pre_integracion_s: 0.2, // s antes del inicio desde donde se integra (auto aún quieto)
+      fusion: 'modelo',      // 'modelo': corrección suave ajustada a todo el GPS; 'puntos': pasa por cada lectura
+      peso_residuo: 0.5,     // en 'modelo', cuánto del residuo de cada lectura GPS se agrega
+      latencia_gps_s: NaN,   // NaN = estimar
+      latencia_max_s: 1.0,   // el navegador agrega algo de retraso al GPS
+      t_parada_s: 5,
+      margen_final_m: 15,
+      t_max_corrida: 60,
+    };
+  }
+
+  // ---------------------------------------------------------------- utilidades
+  const isFin = Number.isFinite;
+
+  function cruce(t, y, Y) {
+    for (let k = 0; k < y.length; k++) {
+      if (y[k] >= Y) {
+        if (k === 0) return t[0];
+        return t[k - 1] + (Y - y[k - 1]) / (y[k] - y[k - 1]) * (t[k] - t[k - 1]);
+      }
+    }
+    return NaN;
+  }
+
+  // Interpolación lineal de (xs, ys) en x; fuera de rango -> extremo (hold)
+  function interp1(xs, ys, x) {
+    const n = xs.length;
+    if (n === 0) return NaN;
+    if (x <= xs[0]) return ys[0];
+    if (x >= xs[n - 1]) return ys[n - 1];
+    let lo = 0, hi = n - 1;
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (xs[m] <= x) lo = m; else hi = m; }
+    const f = (x - xs[lo]) / (xs[hi] - xs[lo]);
+    return ys[lo] + f * (ys[hi] - ys[lo]);
+  }
+
+  // Interpolación de muchos puntos ordenados (más rápido)
+  function interpMany(xs, ys, xq) {
+    const out = new Float64Array(xq.length);
+    const n = xs.length;
+    let j = 0;
+    for (let i = 0; i < xq.length; i++) {
+      const x = xq[i];
+      if (x <= xs[0]) { out[i] = ys[0]; continue; }
+      if (x >= xs[n - 1]) { out[i] = ys[n - 1]; continue; }
+      while (j < n - 2 && xs[j + 1] <= x) j++;
+      while (j > 0 && xs[j] > x) j--;
+      const f = (x - xs[j]) / (xs[j + 1] - xs[j]);
+      out[i] = ys[j] + f * (ys[j + 1] - ys[j]);
+    }
+    return out;
+  }
+
+  function cumtrapz(t, y) {
+    const out = new Float64Array(t.length);
+    for (let i = 1; i < t.length; i++) out[i] = out[i - 1] + (y[i] + y[i - 1]) / 2 * (t[i] - t[i - 1]);
+    return out;
+  }
+
+  function median(arr) {
+    const a = Array.from(arr).filter(isFin).sort((p, q) => p - q);
+    if (!a.length) return NaN;
+    const m = a.length >> 1;
+    return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+  }
+
+  function stdev(arr) {
+    const n = arr.length;
+    if (n < 2) return 0;
+    let s = 0; for (const x of arr) s += x;
+    const mu = s / n; let q = 0;
+    for (const x of arr) q += (x - mu) * (x - mu);
+    return Math.sqrt(q / (n - 1));
+  }
+
+  // movmean de MATLAB (ventana centrada; k par: k/2 atrás, k/2-1 adelante)
+  function movmean(y, k) {
+    const n = y.length, out = new Float64Array(n);
+    const b = Math.floor(k / 2), f = (k % 2) ? Math.floor(k / 2) : k - b - 1;
+    const cs = new Float64Array(n + 1);
+    for (let i = 0; i < n; i++) cs[i + 1] = cs[i] + y[i];
+    for (let i = 0; i < n; i++) {
+      const lo = Math.max(0, i - b), hi = Math.min(n, i + f + 1);
+      out[i] = (cs[hi] - cs[lo]) / (hi - lo);
+    }
+    return out;
+  }
+
+  // PCHIP (igual que MATLAB / scipy PchipInterpolator)
+  function pchip(x, y, xq) {
+    const n = x.length;
+    const out = new Float64Array(xq.length);
+    if (n < 2) { out.fill(y[0]); return out; }
+    if (n === 2) return interpMany(x, y, xq);
+    const h = [], m = [];
+    for (let i = 0; i < n - 1; i++) { h.push(x[i + 1] - x[i]); m.push((y[i + 1] - y[i]) / h[i]); }
+    const d = new Float64Array(n);
+    for (let k = 1; k < n - 1; k++) {
+      if (m[k - 1] * m[k] <= 0) d[k] = 0;
+      else {
+        const w1 = 2 * h[k] + h[k - 1], w2 = h[k] + 2 * h[k - 1];
+        d[k] = (w1 + w2) / (w1 / m[k - 1] + w2 / m[k]);
+      }
+    }
+    const edge = (h0, h1, m0, m1) => {
+      let dd = ((2 * h0 + h1) * m0 - h0 * m1) / (h0 + h1);
+      if (Math.sign(dd) !== Math.sign(m0)) dd = 0;
+      else if (Math.sign(m0) !== Math.sign(m1) && Math.abs(dd) > Math.abs(3 * m0)) dd = 3 * m0;
+      return dd;
+    };
+    d[0] = edge(h[0], h[1], m[0], m[1]);
+    d[n - 1] = edge(h[n - 2], h[n - 3], m[n - 2], m[n - 3]);
+    let j = 0;
+    for (let i = 0; i < xq.length; i++) {
+      const xv = xq[i];
+      while (j < n - 2 && x[j + 1] <= xv) j++;
+      const hh = h[j], s = (xv - x[j]) / hh;
+      const h00 = (1 + 2 * s) * (1 - s) * (1 - s), h10 = s * (1 - s) * (1 - s);
+      const h01 = s * s * (3 - 2 * s), h11 = s * s * (s - 1);
+      out[i] = h00 * y[j] + h10 * hh * d[j] + h01 * y[j + 1] + h11 * hh * d[j + 1];
+    }
+    return out;
+  }
+
+  function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371000, r = Math.PI / 180;
+    const p1 = lat1 * r, p2 = lat2 * r, dp = (lat2 - lat1) * r, dl = (lon2 - lon1) * r;
+    const a = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function range(a, b, dt) {
+    const n = Math.floor((b - a) / dt + 1e-9) + 1;
+    const out = new Float64Array(Math.max(n, 0));
+    for (let i = 0; i < n; i++) out[i] = a + i * dt;
+    return out;
+  }
+
+  // ------------------------------------------------------------ detección
+  function buscarArranque(tG, vG, cfg) {
+    for (let kc = 0; kc < vG.length; kc++) {
+      if (!(vG[kc] >= cfg.v_confirma && tG[kc] >= cfg.t_inicio_busqueda)) continue;
+      let kb = -1;
+      for (let i = kc; i >= 0; i--) if (vG[i] <= cfg.v_baja) { kb = i; break; }
+      if (kb < 0 || tG[kb] < cfg.t_inicio_busqueda) continue;
+      if (tG[kc] - tG[kb] <= cfg.t_confirma) {
+        let iRun = kc;
+        for (let i = kb + 1; i <= kc; i++) if (vG[i] >= cfg.v_corrida) { iRun = i; break; }
+        return { iRun, iQ: kb };
+      }
+    }
+    return null;
+  }
+
+  function movimientosPrevios(tG, vG, iQ, cfg) {
+    let n = 0, vmax = 0, enMov = false, vm = 0;
+    for (let i = 0; i <= iQ; i++) {
+      if (tG[i] < cfg.t_inicio_busqueda) continue;
+      const mov = vG[i] > cfg.v_baja;
+      if (mov) { vm = enMov ? Math.max(vm, vG[i]) : vG[i]; enMov = true; }
+      if ((!mov || i === iQ) && enMov) {
+        if (vm >= cfg.v_corrida) { n++; vmax = Math.max(vmax, vm); }
+        enMov = false; vm = 0;
+      }
+    }
+    return { n, vmax };
+  }
+
+  function t0PorGps(tG, vG, iQ, iRun) {
+    let i1 = (iQ == null) ? iRun : iQ + 1;
+    i1 = Math.min(i1, tG.length - 2);
+    const t1 = tG[i1], v1 = vG[i1];
+    const acc = (vG[i1 + 1] - v1) / (tG[i1 + 1] - t1);
+    let t0 = acc > 0.5 ? t1 - v1 / acc : t1 - 0.5;
+    if (iQ != null) t0 = Math.max(t0, tG[iQ]);
+    return Math.min(t0, t1);
+  }
+
+  // Afina el instante de arranque:
+  //  - eje "adelante" alrededor del pico de aceleración
+  //  - inicio = donde la recta del frente de subida (20%-80% del pico) cruza cero
+  //  - gravedad = mediana del reposo justo antes de ese inicio (auto en stage)
+  // Se repite para que gravedad e inicio se ajusten entre sí.
+  function refinarInicio(tq, Af, g0, kPk, cfg) {
+    const fs = cfg.fs, n = tq.length;
+    let g = g0.slice(), tOn = NaN, u = null, aL = null;
+    for (let it = 0; it < 3; it++) {
+      const Dyn = [0, 1, 2].map(c => Af[c].map(x => x - g[c]));
+      const s = [0, 0, 0];
+      for (let i = Math.max(0, kPk - Math.round(0.2 * fs)); i <= Math.min(n - 1, kPk + fs); i++) { s[0] += Dyn[0][i]; s[1] += Dyn[1][i]; s[2] += Dyn[2][i]; }
+      const ns = Math.hypot(...s); if (!(ns > 0)) return null;
+      u = s.map(x => x / ns);
+      aL = new Float64Array(n);
+      for (let i = 0; i < n; i++) aL[i] = Dyn[0][i] * u[0] + Dyn[1][i] * u[1] + Dyn[2][i] * u[2];
+      let pk = -Infinity, kp = kPk;
+      for (let i = Math.max(0, kPk - Math.round(0.3 * fs)); i <= Math.min(n - 1, kPk + Math.round(0.3 * fs)); i++) if (aL[i] > pk) { pk = aL[i]; kp = i; }
+      if (!(pk > cfg.umbral_mov)) return null;
+      let k50 = -1;
+      for (let i = kp; i > 0; i--) if (aL[i - 1] < 0.5 * pk) { k50 = i; break; }
+      if (k50 < 0) return null;
+      let k20 = k50; while (k20 > 0 && aL[k20] >= 0.2 * pk) k20--;
+      let k80 = k50; while (k80 < kp && aL[k80] < 0.8 * pk) k80++;
+      let sx = 0, sy = 0, sxx = 0, sxy = 0, m = 0;
+      for (let i = k20; i <= k80; i++) { const x = tq[i] - tq[k50]; sx += x; sy += aL[i]; sxx += x * x; sxy += x * aL[i]; m++; }
+      const den = m * sxx - sx * sx;
+      const p1 = den > 0 ? (m * sxy - sx * sy) / den : 0, p0 = (sy - p1 * sx) / m;
+      tOn = p1 > 0 ? tq[k50] - p0 / p1 : tq[k20];
+      tOn = Math.min(Math.max(tOn, tq[k20] - 0.2), tq[k50]);
+      if (it === 2) break;
+      const w = [];
+      for (let i = 0; i < n; i++) if (tq[i] >= tOn - cfg.reposo_s && tq[i] <= tOn - 0.1) w.push(i);
+      if (w.length < 10) break;
+      g = [0, 1, 2].map(c => median(w.map(i => Af[c][i])));
+    }
+    return { t0: tOn, gvec: g, u, aL };
+  }
+
+  // Mínimos cuadrados sin término independiente: e ≈ p0*x1 + p1*x2
+  function mc2(x1, x2, e) {
+    let a = 0, b = 0, c = 0, d = 0, f = 0;
+    for (let i = 0; i < e.length; i++) { a += x1[i] * x1[i]; b += x1[i] * x2[i]; c += x2[i] * x2[i]; d += x1[i] * e[i]; f += x2[i] * e[i]; }
+    const det = a * c - b * b;
+    if (Math.abs(det) < 1e-12) return [a > 0 ? d / a : 0, 0];
+    return [(d * c - b * f) / det, (a * f - b * d) / det];
+  }
+
+  function estimarLatencia(tG, vG, t, vAcc, t0, tLim, lmax, modelo) {
+    let lag = 0, mejor = Infinity;
+    const tEnd = Math.min(t[t.length - 1], tLim);
+    for (let L = 0; L <= lmax + 1e-9; L += 0.02) {
+      if (modelo) {
+        const x1 = [], x2 = [], e = [];
+        for (let i = 0; i < tG.length; i++) {
+          const tg = tG[i] - L;
+          if (tg > t0 + 1e-3 && tg < tEnd) { const va = interp1(t, vAcc, tg); x1.push(tg - t0); x2.push(va); e.push(vG[i] - va); }
+        }
+        if (e.length < 4) continue;
+        const p = mc2(x1, x2, e);
+        let r = 0; for (let i = 0; i < e.length; i++) r += (e[i] - p[0] * x1[i] - p[1] * x2[i]) ** 2;
+        r /= e.length;
+        if (r < mejor) { mejor = r; lag = Math.round(L * 100) / 100; }
+        continue;
+      }
+      const tc = [0], ec = [0];
+      for (let i = 0; i < tG.length; i++) {
+        const tg = tG[i] - L;
+        if (tg > t[0] + 1e-3 && tg < tEnd) { tc.push(tg - t[0]); ec.push(vG[i] - interp1(t, vAcc, tg)); }
+      }
+      if (tc.length < 5) continue;
+      // recta por mínimos cuadrados
+      const n = tc.length; let sx = 0, sy = 0, sxx = 0, sxy = 0;
+      for (let i = 0; i < n; i++) { sx += tc[i]; sy += ec[i]; sxx += tc[i] * tc[i]; sxy += tc[i] * ec[i]; }
+      const den = n * sxx - sx * sx;
+      const p1 = den ? (n * sxy - sx * sy) / den : 0, p0 = (sy - p1 * sx) / n;
+      let r = 0; for (let i = 0; i < n; i++) r += (ec[i] - p0 - p1 * tc[i]) ** 2;
+      if (r < mejor) { mejor = r; lag = Math.round(L * 100) / 100; }
+    }
+    return lag;
+  }
+
+  // ------------------------------------------------------------ procesar
+  /**
+   * gps: {t:[], v:[], hacc?:[], lat?:[], lon?:[]}
+   * acc: {t:[], ax:[], ay:[], az:[]} o null
+   */
+  function procesar(gps, acc, cfgIn) {
+    const cfg = Object.assign(defaultConfig(), cfgIn || {});
+    const avisos = [];
+    const R = { ok: false, mensaje: '', avisos, cfg };
+    const dt = 1 / cfg.fs;
+
+    // 1) GPS: limpiar y ordenar
+    let idx = [];
+    for (let i = 0; i < gps.t.length; i++) if (isFin(gps.t[i]) && isFin(gps.v[i]) && gps.v[i] >= 0) idx.push(i);
+    idx.sort((a, b) => gps.t[a] - gps.t[b] || a - b);
+    idx = idx.filter((k, j) => j === 0 || gps.t[k] !== gps.t[idx[j - 1]]);
+    const pick = (arr) => idx.map(i => (arr && isFin(arr[i])) ? arr[i] : NaN);
+    const tG = idx.map(i => gps.t[i]), vG = idx.map(i => gps.v[i]);
+    const hG = pick(gps.hacc), latG = pick(gps.lat), lonG = pick(gps.lon);
+    if (tG.length < 3) { R.mensaje = 'Muy pocos datos de GPS.'; return R; }
+
+    const arr = buscarArranque(tG, vG, cfg);
+    if (!arr) {
+      let vm = 0; for (let i = 0; i < tG.length; i++) if (tG[i] >= cfg.t_inicio_busqueda) vm = Math.max(vm, vG[i]);
+      R.mensaje = `No se detectó un arranque: ningún movimiento llegó a ${Math.round(cfg.v_confirma * 3.6)} km/h ` +
+        `en menos de ${cfg.t_confirma} s desde detenido (vel. máxima registrada ${Math.round(vm * 3.6)} km/h).`;
+      return R;
+    }
+    const { iRun, iQ } = arr;
+    const tRun = tG[iRun], tQ = tG[iQ];
+    const prev = movimientosPrevios(tG, vG, iQ, cfg);
+    const t0g = t0PorGps(tG, vG, iQ, iRun);
+
+    // 2-4) Acelerómetro
+    let usarAcc = !!(cfg.usar_acc && acc && acc.t && acc.t.length >= 20);
+    let ruido = NaN, gvec = [NaN, NaN, NaN], u = [NaN, NaN, NaN], accHz = NaN;
+    let tq, aL, t0, tIni;
+    if (usarAcc) {
+      let ia = [];
+      for (let i = 0; i < acc.t.length; i++)
+        if (isFin(acc.t[i]) && isFin(acc.ax[i]) && isFin(acc.ay[i]) && isFin(acc.az[i])) ia.push(i);
+      ia.sort((a, b) => acc.t[a] - acc.t[b] || a - b);
+      ia = ia.filter((k, j) => j === 0 || acc.t[k] !== acc.t[ia[j - 1]]);
+      var tA = ia.map(i => acc.t[i]);
+      var A = [ia.map(i => acc.ax[i]), ia.map(i => acc.ay[i]), ia.map(i => acc.az[i])];
+      if (tA.length > 1) {
+        const d = []; for (let i = 1; i < tA.length; i++) d.push(tA[i] - tA[i - 1]);
+        accHz = 1 / median(d);
+      }
+      if (tA.length < 20 || tA[0] > tQ - 0.5 || tA[tA.length - 1] < tRun + 1.0) {
+        usarAcc = false; avisos.push('El acelerómetro no cubre el arranque; se usó solo GPS.');
+      }
+    }
+    let win;
+    if (usarAcc) {
+      // ¿reporta en g?
+      const pre = []; for (let i = 0; i < tA.length; i++) if (tA[i] <= tQ) pre.push(i);
+      const gm = Math.hypot(median(pre.map(i => A[0][i])), median(pre.map(i => A[1][i])), median(pre.map(i => A[2][i])));
+      if (gm < 3) {
+        for (let c = 0; c < 3; c++) A[c] = A[c].map(x => x * G0);
+        avisos.push('El acelerómetro reportaba en g; se convirtió a m/s².');
+      }
+      tq = range(Math.max(tA[0], tQ - 5), tA[tA.length - 1], dt);
+      const k = Math.max(1, Math.round(cfg.suavizado_s * cfg.fs));
+      var Af = [0, 1, 2].map(c => movmean(interpMany(tA, A[c], tq), k));
+      win = []; for (let i = 0; i < tq.length; i++) if (tq[i] >= tQ - 3 && tq[i] <= tQ - 1) win.push(i);
+      if (win.length < 0.3 * cfg.fs) { win = []; for (let i = 0; i < tq.length; i++) if (tq[i] <= tQ - 0.5) win.push(i); }
+      if (win.length < 10) { usarAcc = false; avisos.push('No hubo reposo suficiente para calibrar la gravedad; se usó solo GPS.'); }
+    }
+    if (usarAcc) {
+      gvec = [0, 1, 2].map(c => median(win.map(i => Af[c][i])));
+      const Dyn = [0, 1, 2].map(c => Af[c].map(x => x - gvec[c]));
+      const dmag = new Float64Array(tq.length);
+      for (let i = 0; i < tq.length; i++) dmag[i] = Math.hypot(Dyn[0][i], Dyn[1][i], Dyn[2][i]);
+      ruido = stdev(win.map(i => dmag[i]));
+      const gn = Math.hypot(...gvec);
+      if (Math.abs(gn - 9.81) > 1.0) avisos.push(`Gravedad medida rara (${gn.toFixed(2)} m/s²): ¿se movió el teléfono?`);
+      const umbral = Math.max(cfg.umbral_mov, 4 * ruido);
+      let kPk = -1, pk = -Infinity;
+      for (let i = 0; i < tq.length; i++) if (tq[i] >= tQ - 1 && tq[i] <= tRun && dmag[i] > pk) { pk = dmag[i]; kPk = i; }
+      if (kPk < 0 || pk < umbral) {
+        usarAcc = false; avisos.push('No se distinguió el arranque en el acelerómetro; se usó solo GPS.');
+      } else {
+        let k0 = kPk;
+        for (let i = kPk; i >= 0; i--) if (dmag[i] < umbral / 2) { k0 = i; break; }
+        t0 = tq[k0];
+        const s = [0, 0, 0]; let nf = 0;
+        for (let i = 0; i < tq.length; i++) if (tq[i] >= t0 && tq[i] <= t0 + cfg.ventana_fwd_s) { s[0] += Dyn[0][i]; s[1] += Dyn[1][i]; s[2] += Dyn[2][i]; nf++; }
+        const nu = Math.hypot(...s); u = s.map(x => x / nu);
+        aL = new Float64Array(tq.length);
+        for (let i = 0; i < tq.length; i++) aL[i] = Dyn[0][i] * u[0] + Dyn[1][i] * u[1] + Dyn[2][i] * u[2];
+        tIni = t0;
+        if (cfg.refinar_inicio) {
+          const ref = refinarInicio(tq, Af, gvec, kPk, cfg);
+          if (ref) { t0 = ref.t0; gvec = ref.gvec; u = ref.u; aL = ref.aL; tIni = Math.max(tq[0], t0 - cfg.pre_integracion_s); }
+          else avisos.push('No se pudo afinar el instante de arranque; se usó la detección básica.');
+        }
+        if (Math.abs(t0 - t0g) > 1.5) avisos.push(`El arranque del acelerómetro y el del GPS difieren ${(t0 - t0g).toFixed(1)} s.`);
+      }
+    }
+
+    // 5) Velocidad
+    let t, v, a, lag, metodo, descartadasGps = 0;
+    if (usarAcc) {
+      let i0 = 0; while (tq[i0] < tIni) i0++;
+      t = tq.slice(i0); a = aL.slice(i0);
+      const vAcc = cumtrapz(t, a);
+      const modelo = cfg.fusion === 'modelo';
+      lag = isFin(cfg.latencia_gps_s) ? cfg.latencia_gps_s
+        : estimarLatencia(tG, vG, t, vAcc, t0, t0 + 20, cfg.latencia_max_s, modelo);
+      const tc = [t[0]], ec = [0];
+      for (let i = 0; i < tG.length; i++) {
+        const tg = tG[i] - lag;
+        if (tg > t0 + 1e-3 && tg < t[t.length - 1]) { tc.push(tg); ec.push(vG[i] - interp1(t, vAcc, tg)); }
+      }
+      let c, tcM;
+      if (modelo && tc.length >= 4) {
+        // error = deriva lineal + error de escala (inclinación del auto, eje no perfecto)
+        let vc = tc.map(x => interp1(t, vAcc, x));
+        let x1 = tc.map(x => Math.max(x - t0, 0));
+        let p = mc2(x1, vc, ec);
+        // descartar lecturas GPS atípicas (saltos) y volver a ajustar
+        const r0 = ec.map((e, i) => e - p[0] * x1[i] - p[1] * vc[i]);
+        const lim = Math.max(0.5, 4 * 1.4826 * median(r0.map(Math.abs)));
+        const ok = r0.map((r, i) => i === 0 || Math.abs(r) <= lim);
+        const nOk = ok.filter(Boolean).length;
+        if (nOk >= 4 && nOk < ok.length) {
+          descartadasGps = ok.length - nOk;
+          const f = (arr) => arr.filter((_, i) => ok[i]);
+          tcM = f(tc); x1 = f(x1); vc = f(vc); const ecM = f(ec);
+          p = mc2(x1, vc, ecM);
+          ec.length = 0; ec.push(...ecM);
+        } else tcM = tc;
+        const res = ec.map((e, i) => (e - p[0] * x1[i] - p[1] * vc[i]) * cfg.peso_residuo);
+        res[0] = 0;
+        const r = interpMany(tcM, res, t);
+        c = new Float64Array(t.length);
+        for (let i = 0; i < t.length; i++) c[i] = p[0] * Math.max(t[i] - t0, 0) + p[1] * vAcc[i] + r[i];
+      } else {
+        c = interpMany(tc, ec, t);
+      }
+      v = new Float64Array(t.length);
+      for (let i = 0; i < t.length; i++) v[i] = Math.max(vAcc[i] + c[i], 0);
+      metodo = 'GPS + acelerómetro';
+    } else {
+      t0 = t0g;
+      const tc = [t0], vc = [0];
+      for (let i = 0; i < tG.length; i++) if (tG[i] > t0 + 1e-3) { tc.push(tG[i]); vc.push(vG[i]); }
+      t = range(t0, tc[tc.length - 1], dt);
+      v = pchip(tc, vc, t).map(x => Math.max(x, 0));
+      a = new Float64Array(t.length);
+      for (let i = 0; i < t.length; i++) {
+        if (i === 0) a[i] = (v[1] - v[0]) / dt;
+        else if (i === t.length - 1) a[i] = (v[i] - v[i - 1]) / dt;
+        else a[i] = (v[i + 1] - v[i - 1]) / (2 * dt);
+      }
+      lag = 0;
+      metodo = 'Solo GPS';
+    }
+
+    // 6) Distancia y rollout
+    const d = cumtrapz(t, v);
+    const ro = cfg.rollout_ft * 0.3048;
+    const tRo = ro > 0 ? cruce(t, d, ro) : t0;
+    if (!isFin(tRo)) { R.mensaje = 'El vehículo no avanzó ni el rollout.'; return R; }
+
+    // 7) Hitos
+    const hitos = cfg.hitos.map(([nombre, D]) => {
+      const tk = cruce(t, d, D);
+      return isFin(tk) ? { nombre, dist_m: D, t: tk - tRo, v_kmh: interp1(t, v, tk) * 3.6 }
+        : { nombre, dist_m: D, t: NaN, v_kmh: NaN };
+    });
+    const t_0_100 = cruce(t, v, 100 / 3.6) - t0;
+    const t_0_60mph = cruce(t, v, 26.8224) - t0;
+    const Df = cfg.distancia_final;
+    const tF1 = cruce(t, d, Df - cfg.dist_trampa_m);
+    let tFin = cruce(t, d, Df);
+    const trampa = cfg.dist_trampa_m / (tFin - tF1) * 3.6;
+    const completo = isFin(tFin);
+    if (!completo) tFin = t[t.length - 1];
+
+    // Estadísticas
+    let amax = -Infinity, asum = 0, an = 0, vmax = 0;
+    for (let i = 0; i < t.length; i++) {
+      vmax = Math.max(vmax, v[i]);
+      if (t[i] <= tFin) { amax = Math.max(amax, a[i]); asum += a[i]; an++; }
+    }
+    const est = {
+      tiempo_total: tFin - tRo,
+      distancia_total: d[d.length - 1],
+      v_max_kmh: vmax * 3.6,
+      a_max_g: amax / G0,
+      a_prom_g: an ? asum / an / G0 : NaN,
+    };
+
+    const dG = []; for (let i = 1; i < tG.length; i++) dG.push(tG[i] - tG[i - 1]);
+    const segH = []; let nSeg = 0;
+    for (let i = 0; i < tG.length; i++) if (tG[i] >= t0 && tG[i] <= tFin) { nSeg++; segH.push(hG[i]); }
+    const cal = {
+      metodo,
+      gps_hz: 1 / median(dG),
+      acc_hz: accHz,
+      n_gps_corrida: nSeg,
+      hacc_mediana_m: median(segH),
+      ruido_reposo: ruido,
+      g_medida: Math.hypot(...gvec),
+      latencia_gps_s: lag,
+      gps_descartadas: descartadasGps,
+      mov_ignorados: prev.n,
+      v_max_ignorado_kmh: prev.vmax * 3.6,
+      dist_pos_m: NaN,
+      dist_integrada_m: interp1(t, d, tFin),
+    };
+    if (latG.some(isFin)) {
+      const ok = []; for (let i = 0; i < tG.length; i++) if (isFin(latG[i]) && isFin(lonG[i])) ok.push(i);
+      const tt = ok.map(i => tG[i]), la = ok.map(i => latG[i]), lo = ok.map(i => lonG[i]);
+      if (tt.length > 1) cal.dist_pos_m = haversine(interp1(tt, la, t0), interp1(tt, lo, t0), interp1(tt, la, tFin), interp1(tt, lo, tFin));
+    }
+    if (cal.gps_hz < 2 && !usarAcc) avisos.push('GPS a ~1 Hz sin acelerómetro: los tiempos son solo aproximados.');
+    if (descartadasGps) avisos.push(`Se descartaron ${descartadasGps} lecturas GPS atípicas.`);
+    if (cal.hacc_mediana_m > 10) avisos.push(`Precisión GPS baja (${Math.round(cal.hacc_mediana_m)} m).`);
+
+    Object.assign(R, {
+      ok: true, mensaje: 'OK',
+      t: Array.from(t), v: Array.from(v), d: Array.from(d), a: Array.from(a),
+      t0, tRo, tFin, tQ, hitos, t_0_100, t_0_60mph, trampa_kmh: trampa, completo, est, calidad: cal,
+      gps: { t: tG.map(x => x - lag), v: vG.slice() },
+    });
+    return R;
+  }
+
+  // ------------------------------------------------------------ detección en vivo
+  // Misma regla que buscarArranque, lectura por lectura.
+  class DetectorVivo {
+    constructor(cfg) {
+      this.cfg = Object.assign(defaultConfig(), cfg || {});
+      this.fase = 'espera';
+      this.tPrev = NaN; this.vPrev = 0;
+      this.tBajo = NaN; this.dSeg = 0; this.vMaxSeg = 0;
+      this.dVivo = 0; this.tQuieto = 0; this.tConf = NaN; this.tArr = NaN;
+      this.hitosVivo = [];
+    }
+    // Devuelve una lista de eventos
+    feed(tN, vN) {
+      const c = this.cfg, ev = [];
+      if (!(tN > this.tPrev) && isFin(this.tPrev)) return ev;
+      vN = Math.max(vN, 0);
+      const dtg = isFin(this.tPrev) ? tN - this.tPrev : 0;
+      const paso = (vN + this.vPrev) / 2 * dtg;
+      if (this.fase === 'espera') {
+        if (vN <= c.v_baja) {
+          if (this.vMaxSeg >= c.v_corrida) ev.push({ tipo: 'ignorado', vmax: this.vMaxSeg, dist: this.dSeg });
+          this.tBajo = tN; this.dSeg = 0; this.vMaxSeg = 0;
+        } else if (isFin(this.tBajo)) {
+          this.dSeg += paso; this.vMaxSeg = Math.max(this.vMaxSeg, vN);
+          if (vN >= c.v_confirma && tN - this.tBajo <= c.t_confirma) {
+            this.fase = 'corrida'; this.dVivo = this.dSeg; this.tConf = tN; this.tArr = this.tBajo;
+            ev.push({ tipo: 'arranque', v: vN, dt: tN - this.tBajo, tBajo: this.tBajo });
+          }
+        }
+      } else if (this.fase === 'corrida') {
+        this.dVivo += paso;
+        for (const [nombre, D] of c.hitos) {
+          if (D <= c.distancia_final + 0.01 && this.dVivo >= D && !this.hitosVivo.includes(nombre)) {
+            this.hitosVivo.push(nombre); ev.push({ tipo: 'hito', nombre });
+          }
+        }
+        ev.push({ tipo: 'progreso', d: this.dVivo, v: vN });
+        if (this.dVivo >= c.distancia_final + c.margen_final_m) { this.fase = 'fin'; ev.push({ tipo: 'fin', motivo: 'meta' }); }
+        else {
+          this.tQuieto = vN <= c.v_quieto ? this.tQuieto + dtg : 0;
+          if (this.tQuieto >= c.t_parada_s) { this.fase = 'fin'; ev.push({ tipo: 'fin', motivo: 'detenido' }); }
+          else if (tN - this.tConf > c.t_max_corrida) { this.fase = 'fin'; ev.push({ tipo: 'fin', motivo: 'tiempo' }); }
+        }
+      }
+      this.tPrev = tN; this.vPrev = vN;
+      return ev;
+    }
+  }
+
+  // ------------------------------------------------------------ simulador
+  function mulberry32(seed) {
+    return function () {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  /** Sesión completa: reposo, burnout, salida, alineación, stage y arranque. */
+  function simularSesion(opts) {
+    const o = Object.assign({ gps_hz: 1, lag_gps: 0.25, seed: Date.now() & 0xffff, acc_hz: 60, stage_min: 0.8, stage_max: 3.0 }, opts || {});
+    const rnd = mulberry32(o.seed);
+    const randn = () => { let u = 0, w = 0; while (!u) u = rnd(); w = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * w); };
+    const dtS = 0.002, tMax = 90;
+    const aT = 4.5 + 2.5 * rnd(), Pm = 90 + 90 * rnd(), k = 3.5e-4, cr = 0.15;
+    const vC = [14, 26, 38, 50].map(x => x * (0.9 + 0.2 * rnd()));
+    const tB0 = 3, tB1 = tB0 + 3 + 2 * rnd(), vPull = (10 + 20 * rnd()) / 3.6;
+    // En pista: del stage al arranque pasan ~0.8-3 s (encendido del árbol + reacción)
+    const tStage = o.stage_min + (o.stage_max - o.stage_min) * rnd();
+    const tRampa = 0.05 + 0.25 * rnd();          // qué tan brusco aplica la tracción
+    const pitch = (0.1 + 0.5 * rnd()) * Math.PI / 180;   // "sentada" del auto por m/s^2
+    const ts = [0], xs = [0], vs = [0], as = [0];
+    let corte = -1, iC = 0, fase = 1, tF = 0, tPre = NaN, tStg0 = NaN, vi = 0, x = 0;
+    for (let tt = dtS; tt <= tMax; tt += dtS) {
+      let ai = 0;
+      switch (fase) {
+        case 1: ai = 0; if (tt >= tB1) fase = 2; break;
+        case 2: ai = 3; if (vi >= vPull) fase = 3; break;
+        case 3: ai = -4; if (vi <= 0) { fase = 4; tF = tt; } break;
+        case 4: ai = 0; if (tt >= tF + 2) fase = 5; break;
+        case 5: ai = 0.6; if (vi >= 0.8) { fase = 6; tF = tt; } break;
+        case 6: ai = 0; if (tt >= tF + 1.5) fase = 7; break;
+        case 7: ai = -0.8; if (vi <= 0) { fase = 8; tF = tt; } break;
+        case 8: ai = 0; if (tt >= tF + 1) fase = 9; break;
+        case 9: ai = 0.5; if (vi >= 0.5) { fase = 10; tF = tt; } break;
+        case 10: ai = 0; if (tt >= tF + 0.6) fase = 11; break;
+        case 11: ai = -0.8; if (vi <= 0) { fase = 12; tF = tt; tStg0 = tt; } break;
+        case 12: ai = 0; if (tt >= tF + tStage) { fase = 13; tPre = tt; } break;
+        default:
+          if (iC < 4 && vi >= vC[iC]) { corte = tt + 0.25; iC++; }
+          ai = tt < corte ? -cr - k * vi * vi : Math.min(aT * Math.min(1, (tt - tPre) / tRampa), Pm / Math.max(vi, 1)) - cr - k * vi * vi;
+      }
+      if (vi <= 0 && ai < 0) ai = 0;
+      const vn = Math.max(vi + ai * dtS, 0);
+      x += (vi + vn) / 2 * dtS; vi = vn;
+      ts.push(tt); xs.push(x); vs.push(vi); as.push(ai);
+      if (isFin(tPre) && tt > tPre + 30) break;
+    }
+    const T = ts[ts.length - 1];
+    const xL = interp1(ts, xs, tPre);
+    const xr = xs.map(q => q - xL);
+    const ro = 0.3048, tRo = cruce(ts, xr, ro);
+    const D = defaultConfig().hitos.map(h => h[1]);
+    const verdad = { t_arranque: tPre, t_ro_abs: tRo, t_hitos: D.map(Dj => cruce(ts, xr, Dj) - tRo), t_hitos_sin_ro: D.map(Dj => cruce(ts, xr, Dj) - tPre) };
+
+    // GPS
+    const gps = { t: [], v: [], hacc: [], lat: [], lon: [] };
+    const rumbo = 2 * Math.PI * rnd(), lat0 = 28.6, lon0 = -106.1;
+    for (let tg = 1 + rnd() / o.gps_hz; tg < T; tg += 1 / o.gps_hz) {
+      const vt = interp1(ts, vs, tg - o.lag_gps);
+      let vg = vt < 0.05 ? 0.15 * Math.abs(randn()) : Math.max(vt + 0.12 * randn(), 0);
+      const xg = interp1(ts, xs, tg);
+      gps.t.push(tg); gps.v.push(vg); gps.hacc.push(4);
+      gps.lat.push(lat0 + (xg * Math.cos(rumbo) + 1.5 * randn()) / 111320);
+      gps.lon.push(lon0 + (xg * Math.sin(rumbo) + 1.5 * randn()) / (111320 * Math.cos(lat0 * Math.PI / 180)));
+    }
+    // Acelerómetro en marco del teléfono (ángulo aleatorio)
+    const ang = [(rnd() - 0.5) * 2 * Math.PI, (rnd() - 0.5) * Math.PI / 2, (rnd() - 0.5) * Math.PI / 2];
+    const rz = q => [[Math.cos(q), -Math.sin(q), 0], [Math.sin(q), Math.cos(q), 0], [0, 0, 1]];
+    const ry = q => [[Math.cos(q), 0, Math.sin(q)], [0, 1, 0], [-Math.sin(q), 0, Math.cos(q)]];
+    const rx = q => [[1, 0, 0], [0, Math.cos(q), -Math.sin(q)], [0, Math.sin(q), Math.cos(q)]];
+    const mm = (P, Q) => P.map((r, i) => Q[0].map((_, j) => r.reduce((s, _, kk) => s + P[i][kk] * Q[kk][j], 0)));
+    const Rm = mm(mm(rz(ang[0]), ry(ang[1])), rx(ang[2]));
+    const bias = [0.15 * randn(), 0.15 * randn(), 0.15 * randn()];
+    const pend = (rnd() - 0.5) * 0.02 * G0;          // pendiente de la pista (±1%)
+    const bw = [0, 0, 0];                             // deriva lenta del sensor
+    const vib = [rnd(), rnd(), rnd()], ph = 2 * Math.PI * rnd();
+    const acc = { t: [], ax: [], ay: [], az: [] };
+    for (let ta = 0; ta <= T; ta += 1 / o.acc_hz) {
+      const aLv = interp1(ts, as, ta), th = pitch * aLv;
+      const f = [aLv - G0 * Math.sin(th) + (ta >= tPre ? pend : 0), 0.15 * randn(), G0 * Math.cos(th)];
+      for (let i = 0; i < 3; i++) bw[i] += 0.01 * Math.sqrt(1 / o.acc_hz) * randn();
+      let extra = 0.25;
+      if (ta >= tB0 && ta <= tB1) extra = 1.5;
+      else if (ta >= tStg0 && ta < tPre) extra = 0.6;
+      const s = 0.3 * Math.sin(2 * Math.PI * 31 * ta + ph);
+      const out = [0, 1, 2].map(i => Rm[i][0] * f[0] + Rm[i][1] * f[1] + Rm[i][2] * f[2] + bias[i] + bw[i] + 0.25 * randn() + (extra > 0.25 ? extra * randn() : 0) + s * vib[i]);
+      acc.t.push(ta); acc.ax.push(out[0]); acc.ay.push(out[1]); acc.az.push(out[2]);
+    }
+    return { gps, acc, verdad };
+  }
+
+  const api = { defaultConfig, procesar, DetectorVivo, simularSesion, cruce, interp1, haversine, G0 };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.DragCore = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* app.js — Interfaz de Drag Tree beta */
+(function () {
+  'use strict';
+  const C = window.DragCore;
+  const APP_VERSION = 'beta 0.5.2';
+  const $ = (s) => document.querySelector(s);
+  const isFin = Number.isFinite;
+
+  // ------------------------------------------------------------ ajustes
+  const LS = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
+  };
+  const DEF = { dist: 402.336, rollout_ft: 1, unidad: 'kmh', v_confirma_kmh: 50, t_confirma: 8, usar_acc: true, tema: 'auto', anim: true, fondo: 'combinado', velo: '0.78' };
+  const S = Object.assign({}, DEF, LS.get('dragtrim.settings', {}));
+  const guardarAjustes = () => LS.set('dragtrim.settings', S);
+
+  function cfgActual() {
+    return {
+      distancia_final: S.dist, rollout_ft: S.rollout_ft,
+      v_confirma: S.v_confirma_kmh / 3.6, t_confirma: S.t_confirma, usar_acc: S.usar_acc,
+    };
+  }
+
+  // ------------------------------------------------------------ formato
+  const fmtT = (t) => isFin(t) ? t.toFixed(3) : '—';
+  const velU = () => S.unidad === 'mph' ? 'mph' : 'km/h';
+  const velConv = (kmh) => S.unidad === 'mph' ? kmh / 1.609344 : kmh;
+  const fmtV = (kmh, dec = 1) => isFin(kmh) ? velConv(kmh).toFixed(dec) : '—';
+  const nombreDist = (d) => d < 300 ? '1/8 de milla' : '1/4 de milla';
+  const sello = (d) => {
+    const p = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+  };
+  const fechaCorta = (iso) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) + ', ' +
+      d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+  };
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  // ------------------------------------------------------------ animaciones
+  const conAnim = () => S.anim !== false && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // Los números marcados con data-cnt cuentan desde 0 hasta su valor (solo es visual; el valor final es el mismo).
+  function contar(raiz, retraso = 250, dur = 750) {
+    if (!conAnim()) return;
+    for (const el of raiz.querySelectorAll('[data-cnt]')) {
+      const nodo = el.firstChild;
+      if (!nodo || nodo.nodeType !== 3) continue;
+      const txt = nodo.nodeValue, x = parseFloat(txt);
+      if (!isFin(x)) continue;
+      const dec = (txt.split('.')[1] || '').length;
+      nodo.nodeValue = (0).toFixed(dec);
+      const t0 = performance.now() + retraso;
+      const paso = (ahora) => {
+        const p = Math.min(1, Math.max(0, (ahora - t0) / dur));
+        nodo.nodeValue = p >= 1 ? txt : (x * (1 - Math.pow(1 - p, 3))).toFixed(dec);
+        if (p < 1 && nodo.isConnected) requestAnimationFrame(paso);
+      };
+      requestAnimationFrame(paso);
+    }
+  }
+
+  // ------------------------------------------------------------ tiempo
+  const T_ORIGIN = performance.timeOrigin || (Date.now() - performance.now());
+  const nowS = () => performance.now() / 1000;
+
+  // ------------------------------------------------------------ buffers de sensores
+  const buf = { gps: null, acc: null };
+  function limpiarBuffers() {
+    buf.gps = { t: [], v: [], hacc: [], lat: [], lon: [] };
+    buf.acc = { t: [], ax: [], ay: [], az: [] };
+  }
+  limpiarBuffers();
+
+  function recortar(b, desde) {
+    let k = 0; while (k < b.t.length && b.t[k] < desde) k++;
+    if (k > 0) for (const key of Object.keys(b)) b[key].splice(0, k);
+  }
+
+  const sens = {
+    activo: false, fuente: 'real', watch: null, motion: false, wake: null,
+    ultGps: null, gpsDts: [], ultGpsRec: 0, accN: 0, accT0: NaN, accHz: NaN, ultAccRec: 0,
+    velDePos: false,
+  };
+
+  function pushGps(s) {
+    const b = buf.gps;
+    if (b.t.length && s.t <= b.t[b.t.length - 1]) return;
+    if (b.t.length) {
+      sens.gpsDts.push(s.t - b.t[b.t.length - 1]);
+      if (sens.gpsDts.length > 10) sens.gpsDts.shift();
+    }
+    b.t.push(s.t); b.v.push(s.v); b.hacc.push(s.hacc); b.lat.push(s.lat); b.lon.push(s.lon);
+    sens.ultGps = s; sens.ultGpsRec = nowS();
+    if (ses.fase !== 'corrida' && ses.fase !== 'procesando') recortar(b, s.t - 600);
+    alGps(s);
+  }
+
+  function pushAcc(t, x, y, z) {
+    const b = buf.acc;
+    if (b.t.length && t <= b.t[b.t.length - 1]) return;
+    b.t.push(t); b.ax.push(x); b.ay.push(y); b.az.push(z);
+    sens.accN++; sens.ultAccRec = nowS();
+    if (!isFin(sens.accT0)) sens.accT0 = t;
+    if (sens.accN >= 60) { sens.accHz = (sens.accN - 1) / (t - sens.accT0); sens.accN = 0; sens.accT0 = NaN; }
+    if (b.t.length % 600 === 0 && ses.fase !== 'corrida' && ses.fase !== 'procesando') recortar(b, t - 60);
+  }
+
+  // ---- GPS real
+  function onPosition(pos) {
+    if (sens.fuente !== 'real') return;
+    const c = pos.coords, rec = nowS();
+    let t = (pos.timestamp - T_ORIGIN) / 1000;
+    if (!(t <= rec + 0.3 && t >= rec - 3)) t = rec;  // marca de tiempo dudosa: usar la de llegada
+    const last = sens.ultGps;
+    if (last && t <= last.t) return;
+    let v = c.speed;
+    if (v == null || !isFin(v) || v < 0) {
+      // Sin velocidad del GPS: se estima con la posición; un salto menor que el
+      // error de posición se toma como detenido para no inventar movimiento.
+      v = 0;
+      if (last && t - last.t > 0.2) {
+        const dist = C.haversine(last.lat, last.lon, c.latitude, c.longitude);
+        if (dist > Math.max(2, 0.5 * c.accuracy)) v = dist / (t - last.t);
+      }
+      sens.velDePos = true;
+    }
+    pushGps({ t, v, hacc: c.accuracy, lat: c.latitude, lon: c.longitude });
+  }
+  function onGpsError(err) {
+    if (err.code === 1) {
+      mensaje('El permiso de ubicación está negado. Actívalo para este sitio en la configuración del navegador y recarga la página.', true);
+      $('#chipGps').className = 'chip bad';
+    } else if (err.code === 2) {
+      mensaje('No hay señal de ubicación. Sal al aire libre y revisa que la ubicación del teléfono esté encendida.', true);
+    }
+    // code 3 (timeout): se sigue esperando
+  }
+
+  // ---- Acelerómetro real
+  function onMotion(e) {
+    if (sens.fuente !== 'real') return;
+    const g = e.accelerationIncludingGravity;
+    if (!g || g.x == null) return;
+    const rec = nowS();
+    let t = e.timeStamp;
+    t = !t ? rec : (t > 1e11 ? (t - T_ORIGIN) / 1000 : t / 1000);
+    if (Math.abs(t - rec) > 2) t = rec;
+    sens.motion = true;
+    pushAcc(t, g.x, g.y, g.z);
+  }
+
+  async function pedirPantalla() {
+    try {
+      if ('wakeLock' in navigator && document.visibilityState === 'visible') {
+        sens.wake = await navigator.wakeLock.request('screen');
+        sens.wake.addEventListener('release', () => { sens.wake = null; chips(); });
+      }
+    } catch (e) { sens.wake = null; }
+    chips();
+  }
+
+  async function activarSensores() {
+    mensaje('');
+    // iOS: el permiso de movimiento debe pedirse primero, dentro del toque
+    let motionOk = true;
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+      try { motionOk = (await DeviceMotionEvent.requestPermission()) === 'granted'; } catch (e) { motionOk = false; }
+    }
+    if (!window.isSecureContext) {
+      mensaje('Para usar el GPS la app debe abrirse desde un enlace https://, no como archivo.', true);
+      return;
+    }
+    if (!('geolocation' in navigator)) { mensaje('Este navegador no tiene acceso a la ubicación.', true); return; }
+    if (motionOk && 'DeviceMotionEvent' in window) window.addEventListener('devicemotion', onMotion);
+    else if (!motionOk) mensaje('Sin permiso de movimiento: se medirá solo con GPS (menos preciso).');
+    sens.watch = navigator.geolocation.watchPosition(onPosition, onGpsError,
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
+    sens.activo = true;
+    pedirPantalla();
+    $('#btnSensores').hidden = true;
+    $('#btnArmar').hidden = false;
+    setTimeout(() => {
+      if (sens.activo && !sens.motion && sens.fuente === 'real' && !$('#idleMsg').textContent)
+        mensaje('No llegan datos del acelerómetro: se medirá solo con GPS (menos preciso).');
+    }, 4000);
+    tickEstado();
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      if (sens.activo) pedirPantalla();
+      if (ses.fase === 'espera' || ses.fase === 'corrida') {
+        if (ses.oculta) logEvento('La app estuvo en segundo plano: el GPS pudo pausarse.', 'red');
+      }
+    } else if (ses.fase === 'espera' || ses.fase === 'corrida') {
+      ses.oculta = true;
+    }
+  });
+
+  // ------------------------------------------------------------ estado en pantalla
+  function chips() {
+    const now = nowS();
+    const gpsVivo = sens.ultGps && now - sens.ultGpsRec < 4;
+    const prec = sens.ultGps ? sens.ultGps.hacc : NaN;
+    const g = $('#chipGps');
+    if (sens.fuente === 'demo') g.className = 'chip on';
+    else if (!sens.activo) g.className = 'chip';
+    else if (!gpsVivo) g.className = 'chip bad';
+    else g.className = 'chip ' + (prec <= 15 ? 'on' : 'warn');
+    const a = $('#chipAcc');
+    const accVivo = sens.ultAccRec > 0 && now - sens.ultAccRec < 2;
+    a.className = 'chip ' + (sens.fuente === 'demo' || accVivo ? 'on' : (sens.activo ? 'warn' : ''));
+    $('#chipWake').className = 'chip ' + (sens.wake ? 'on' : (sens.activo ? 'warn' : ''));
+  }
+
+  function tickEstado() {
+    chips();
+    if (ses.fase === 'idle') {
+      const s = sens.ultGps, vivo = s && nowS() - sens.ultGpsRec < 4;
+      const pe = $('#sPrec');
+      if (!sens.activo) { pe.textContent = '—'; pe.className = 'val'; }
+      else if (!s) { pe.textContent = 'buscando…'; pe.className = 'val meh'; }
+      else {
+        pe.textContent = `±${Math.round(s.hacc)} m`;
+        pe.className = 'val ' + (!vivo ? 'bad' : s.hacc <= 8 ? 'good' : s.hacc <= 15 ? 'meh' : 'bad');
+      }
+      const hz = sens.gpsDts.length ? 1 / median(sens.gpsDts) : NaN;
+      $('#sHz').textContent = isFin(hz) ? `${hz < 1.5 ? hz.toFixed(1) : Math.round(hz)} Hz` : '—';
+      $('#sVel').textContent = s ? `${fmtV(s.v * 3.6, 0)} ${velU()}` : '—';
+      const ae = $('#sAcel');
+      const accVivo = sens.ultAccRec > 0 && nowS() - sens.ultAccRec < 2;
+      ae.textContent = accVivo && isFin(sens.accHz) ? `${Math.round(sens.accHz)} Hz` : (sens.activo ? 'sin datos' : '—');
+      ae.className = 'val ' + (accVivo ? 'good' : (sens.activo ? 'meh' : ''));
+    }
+    if ((ses.fase === 'espera' || ses.fase === 'corrida') && sens.fuente === 'real') {
+      const s = sens.ultGps;
+      $('#gpsLine').textContent = s ? `GPS ±${Math.round(s.hacc)} m` + (nowS() - sens.ultGpsRec > 3 ? ', sin lecturas nuevas' : '') : 'Buscando GPS…';
+      if (ses.fase === 'corrida' && nowS() - sens.ultGpsRec > 8) finCorrida('sin GPS');
+    }
+  }
+  setInterval(tickEstado, 500);
+
+  function median(a) { const s = a.slice().sort((p, q) => p - q); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
+
+  function mensaje(txt, err) {
+    const m = $('#idleMsg'); m.textContent = txt || ''; m.className = 'msg' + (err ? ' err' : '');
+  }
+
+  // ------------------------------------------------------------ sesión
+  const ses = { fase: 'idle', det: null, demo: false, oculta: false, demoTimer: null, rojoTimer: null, ignorados: [] };
+
+
+  function logEvento(txt, cls) {
+    const li = document.createElement('li'); li.textContent = txt; if (cls) li.className = cls;
+    const log = $('#eventLog'); log.prepend(li);
+    while (log.children.length > 6) log.lastChild.remove();
+  }
+
+  function pintarPista() {
+    const tr = $('#track');
+    tr.querySelectorAll('.tick').forEach((e) => e.remove());
+    const Df = ses.det.cfg.distancia_final, tope = Df + ses.det.cfg.margen_final_m;
+    for (const [nombre, D] of ses.det.cfg.hitos) {
+      if (D > Df + 0.01) continue;
+      const tk = document.createElement('div'); tk.className = 'tick'; tk.dataset.n = nombre;
+      tk.style.left = (D / tope * 100) + '%';
+      tk.innerHTML = `<span>${esc(nombre)}</span>`;
+      tr.appendChild(tk);
+    }
+  }
+
+  function armar() {
+    ses.det = new C.DetectorVivo(cfgActual());
+    ses.fase = 'espera'; ses.oculta = false; ses.ignorados = [];
+    recortar(buf.gps, (buf.gps.t[buf.gps.t.length - 1] || 0) - 30);
+    recortar(buf.acc, (buf.acc.t[buf.acc.t.length - 1] || 0) - 30);
+    document.body.classList.add('sesion');
+    mostrarVista('vMedir');
+    $('#medirIdle').hidden = true; $('#medirSesion').hidden = false;
+    $('#sesTitulo').textContent = 'Esperando tu arranque';
+    $('#sesTexto').textContent = 'La app no da la salida: arranca con el semáforo de la pista. El burnout, la alineación y el stage se ignoran.';
+    $('#liveMain').innerHTML = `0<small>${velU()}</small>`;
+    $('#liveSub').hidden = true; $('#track').hidden = true; $('#trackFill').style.width = '0';
+    $('#btnTerminar').hidden = true; $('#btnCancelar').hidden = false;
+    $('#eventLog').innerHTML = ''; $('#gpsLine').textContent = ses.demo ? 'Corrida simulada' : '';
+    pintarPista();
+  }
+
+  function alGps(s) {
+    if (ses.fase !== 'espera' && ses.fase !== 'corrida') return;
+    const ev = ses.det.feed(s.t, s.v);
+    for (const e of ev) {
+      if (e.tipo === 'ignorado') {
+        ses.ignorados.push(e.vmax);
+        logEvento(`Movimiento ignorado (${fmtV(e.vmax * 3.6, 0)} ${velU()}, ${Math.round(e.dist)} m): no fue arranque.`);
+      } else if (e.tipo === 'arranque') {
+        ses.fase = 'corrida';
+        $('#sesTitulo').textContent = 'Corrida en curso';
+        $('#sesTexto').textContent = 'Arranque detectado. La medición termina sola al pasar la meta.';
+        $('#liveSub').hidden = false; $('#track').hidden = false; $('#btnTerminar').hidden = false;
+        logEvento(`Arranque detectado: ${fmtV(e.v * 3.6, 0)} ${velU()} a los ${e.dt.toFixed(1)} s.`);
+      } else if (e.tipo === 'hito') {
+        const tk = $(`#track .tick[data-n="${CSS.escape(e.nombre)}"]`); if (tk) tk.classList.add('passed');
+      } else if (e.tipo === 'fin') {
+        finCorrida(e.motivo);
+      }
+    }
+    if (ses.fase === 'corrida') {
+      const tope = ses.det.cfg.distancia_final + ses.det.cfg.margen_final_m;
+      $('#liveMain').innerHTML = `${Math.round(ses.det.dVivo)}<small>m</small>`;
+      $('#liveSub').innerHTML = `${fmtV(s.v * 3.6, 0)}<small>${velU()}</small>`;
+      $('#trackFill').style.width = Math.min(100, ses.det.dVivo / tope * 100) + '%';
+    } else if (ses.fase === 'espera') {
+      $('#liveMain').innerHTML = `${fmtV(s.v * 3.6, 0)}<small>${velU()}</small>`;
+    }
+  }
+
+  function finCorrida(motivo) {
+    if (ses.fase !== 'corrida') return;
+    ses.fase = 'procesando';
+    $('#sesTitulo').textContent = 'Calculando…';
+    $('#sesTexto').textContent = motivo === 'meta' ? 'Meta superada.' :
+      motivo === 'detenido' ? 'Vehículo detenido.' : motivo === 'sin GPS' ? 'Se perdió el GPS.' : 'Corrida terminada.';
+    setTimeout(finalizar, ses.demo ? 150 : 1200);   // juntar las últimas muestras
+  }
+
+  async function finalizar() {
+    pararDemo();
+    const cfg = Object.assign(cfgActual(), { t_inicio_busqueda: ses.det.tArr - 0.5 });
+    let R;
+    try { R = C.procesar(buf.gps, buf.acc, cfg); }
+    catch (err) { R = { ok: false, mensaje: 'Error al calcular: ' + err.message, avisos: [] }; }
+    if (R.ok) {   // los movimientos previos los cuenta el detector en vivo
+      R.calidad.mov_ignorados = ses.ignorados.length;
+      R.calidad.v_max_ignorado_kmh = ses.ignorados.length ? Math.max(...ses.ignorados) * 3.6 : 0;
+    }
+    if (sens.velDePos && !ses.demo) R.avisos.push('Tu navegador no entrega la velocidad GPS; se calculó con la posición (menos preciso).');
+    if (ses.oculta && !ses.demo) R.avisos.push('La app estuvo en segundo plano durante la sesión; puede faltar información.');
+    const run = construirRun(R, cfg);
+    await DB.put(run);
+    ses.fase = 'resultado';
+    mostrarResultado(run, true);
+  }
+
+  function construirRun(R, cfg) {
+    const ahora = new Date();
+    const t0ref = ses.det.tArr;
+    const g = buf.gps, a = buf.acc;
+    const gi = g.t.findIndex((x) => x >= t0ref - 20), ai = a.t.findIndex((x) => x >= t0ref - 8);
+    const sl = (b, i) => { const o = {}; for (const k of Object.keys(b)) o[k] = i < 0 ? [] : b[k].slice(i); return o; };
+    const run = {
+      id: ahora.getTime(), fecha: ahora.toISOString(), sello: sello(ahora), demo: ses.demo, app: APP_VERSION,
+      cfg, ok: R.ok, mensaje: R.mensaje, avisos: R.avisos || [],
+      raw: { gps: sl(g, gi), acc: sl(a, ai) },
+    };
+    aplicarR(run, R);
+    return run;
+  }
+
+  // Copia a la corrida los resultados de procesar()
+  function aplicarR(run, R) {
+    run.ok = R.ok; run.mensaje = R.mensaje; run.avisos = R.avisos || [];
+    if (!R.ok) return run;
+    const paso = 5, serie = { t: [], v: [], d: [], a: [] };
+    for (let i = 0; i < R.t.length; i += paso) {
+      serie.t.push(+(R.t[i] - R.tRo).toFixed(3)); serie.v.push(+(R.v[i] * 3.6).toFixed(2));
+      serie.d.push(+R.d[i].toFixed(2)); serie.a.push(+R.a[i].toFixed(3));
+    }
+    Object.assign(run, {
+      hitos: R.hitos, trampa_kmh: R.trampa_kmh, t_0_100: R.t_0_100, t_0_60mph: R.t_0_60mph,
+      completo: R.completo, est: R.est, calidad: R.calidad, serie, t_rollout: R.tRo - R.t0,
+      gpsPts: { t: R.gps.t.map((x) => +(x - R.tRo).toFixed(3)), v: R.gps.v.map((x) => +(x * 3.6).toFixed(2)) },
+    });
+    return run;
+  }
+
+  // Recalcula una corrida guardada con los ajustes actuales (rollout, arranque, acelerómetro)
+  async function recalcular(run) {
+    const cfg = Object.assign(cfgActual(), { distancia_final: run.cfg.distancia_final, t_inicio_busqueda: run.cfg.t_inicio_busqueda });
+    let R;
+    try { R = C.procesar(run.raw.gps, run.raw.acc, cfg); }
+    catch (err) { R = { ok: false, mensaje: 'Error al calcular: ' + err.message, avisos: [] }; }
+    const ign = run.calidad ? { n: run.calidad.mov_ignorados, v: run.calidad.v_max_ignorado_kmh } : null;
+    run.cfg = cfg;
+    aplicarR(run, R);
+    if (R.ok && ign) { run.calidad.mov_ignorados = ign.n; run.calidad.v_max_ignorado_kmh = ign.v; }
+    run.recalculada = new Date().toISOString();
+    await DB.put(run);
+    return run;
+  }
+
+  function salirSesion() {
+    pararDemo();
+    ses.fase = 'idle'; ses.demo = false;
+    document.body.classList.remove('sesion');
+    $('#medirIdle').hidden = false; $('#medirSesion').hidden = true;
+    if (sens.fuente === 'demo') { sens.fuente = 'real'; limpiarBuffers(); sens.ultGps = null; sens.gpsDts = []; }
+    mostrarVista('vMedir');
+  }
+
+  // ------------------------------------------------------------ demo
+  function iniciarDemo() {
+    const sim = C.simularSesion({ gps_hz: 1, lag_gps: 0.3, acc_hz: 60, seed: Math.floor(Math.random() * 1e6) });
+    sens.fuente = 'demo'; ses.demo = true;
+    limpiarBuffers(); sens.ultGps = null; sens.gpsDts = [];
+    armar();
+    const vel = 4; let tSim = 0, ig = 0, ia = 0;
+    ses.demoTimer = setInterval(() => {
+      tSim += 0.05 * vel;
+      while (ia < sim.acc.t.length && sim.acc.t[ia] <= tSim) { pushAcc(sim.acc.t[ia], sim.acc.ax[ia], sim.acc.ay[ia], sim.acc.az[ia]); ia++; }
+      while (ig < sim.gps.t.length && sim.gps.t[ig] <= tSim) {
+        pushGps({ t: sim.gps.t[ig], v: sim.gps.v[ig], hacc: sim.gps.hacc[ig], lat: sim.gps.lat[ig], lon: sim.gps.lon[ig] }); ig++;
+      }
+      if (ig >= sim.gps.t.length && ses.fase === 'corrida') finCorrida('tiempo');
+      if (ig >= sim.gps.t.length && ses.fase === 'espera') { pararDemo(); salirSesion(); }
+    }, 50);
+  }
+  function pararDemo() { if (ses.demoTimer) { clearInterval(ses.demoTimer); ses.demoTimer = null; } }
+
+  // ------------------------------------------------------------ almacenamiento (IndexedDB)
+  const DB = {
+    mem: [], db: null,
+    async abrir() {
+      if (this.db || !('indexedDB' in window)) return this.db;
+      this.db = await new Promise((res) => {
+        try {
+          const rq = indexedDB.open('dragtrim', 1);
+          rq.onupgradeneeded = () => rq.result.createObjectStore('runs', { keyPath: 'id' });
+          rq.onsuccess = () => res(rq.result);
+          rq.onerror = () => res(null);
+        } catch (e) { res(null); }
+      });
+      return this.db;
+    },
+    async tx(modo, fn) {
+      const db = await this.abrir();
+      if (!db) return null;
+      return new Promise((res) => {
+        try {
+          const t = db.transaction('runs', modo), st = t.objectStore('runs');
+          const rq = fn(st);
+          t.oncomplete = () => res(rq && rq.result); t.onerror = () => res(null);
+        } catch (e) { res(null); }
+      });
+    },
+    async put(run) {
+      const ok = await this.tx('readwrite', (st) => st.put(run));
+      if (ok == null) { this.mem = this.mem.filter((r) => r.id !== run.id); this.mem.push(run); }
+    },
+    async todos() {
+      const r = await this.tx('readonly', (st) => st.getAll());
+      return (r || this.mem).slice().sort((a, b) => b.id - a.id);
+    },
+    async borrar(id) { await this.tx('readwrite', (st) => st.delete(id)); this.mem = this.mem.filter((r) => r.id !== id); },
+    async borrarTodo() { await this.tx('readwrite', (st) => st.clear()); this.mem = []; },
+  };
+
+  // ------------------------------------------------------------ resultado
+  function etPrincipal(run) {
+    const h = (run.hitos || []).find((x) => Math.abs(x.dist_m - run.cfg.distancia_final) < 0.01);
+    return h || { t: NaN, v_kmh: NaN };
+  }
+
+  function mostrarResultado(run, enSesion) {
+    const v = $('#vResultado');
+    if (!run.ok) {
+      v.innerHTML = `<h2>Sin resultado</h2><p class="msg err">${esc(run.mensaje)}</p>
+        ${run.avisos.length ? `<ul class="avisos">${run.avisos.map((a) => `<li>${esc(a)}</li>`).join('')}</ul>` : ''}
+        <div class="actions">
+          ${enSesion ? '<button class="primary go" id="rNueva">Armar otra medición</button>' : ''}
+          <button class="ghost" id="rExport">Exportar datos crudos</button>
+          <button class="ghost" id="rRecalc">Recalcular con mis ajustes actuales</button>
+          ${enSesion ? '<button class="ghost" id="rSalir">Volver al inicio</button>' : '<button class="danger" id="rBorrar">Borrar</button>'}
+        </div>`;
+    } else {
+      const Df = run.cfg.distancia_final, et = etPrincipal(run);
+      const filas = run.hitos.filter((h) => h.dist_m <= Df + 0.01).map((h) => {
+        const corto = { '60 ft': "60'", '330 ft': "330'", '1/8 mi': '1/8', '1000 ft': "1000'", '1/4 mi': '1/4' }[h.nombre] || h.nombre;
+        const esEt = Math.abs(h.dist_m - Df) < 0.01;
+        const vel = esEt ? (isFin(run.trampa_kmh) ? run.trampa_kmh : h.v_kmh) : h.v_kmh;
+        return `<tr class="${esEt ? 'et' : ''}${isFin(h.t) ? '' : ' na'}"><td>${corto}</td><td>${fmtT(h.t)}</td><td>${isFin(vel) ? fmtV(vel, 2) : ''}</td></tr>`;
+      }).join('');
+      const c = run.calidad;
+      const fila = (k, val) => `<dt>${k}</dt><dd>${val}</dd>`;
+      v.innerHTML = `
+        <div class="slip">
+          <header><b>DRAG TREE</b><span>${esc(fechaCorta(run.fecha))} &nbsp; ${Df < 300 ? '1/8 MI' : '1/4 MI'}</span></header>
+          <table>
+            <tr class="hd"><td></td><td>TIEMPO</td><td>${velU().toUpperCase()}</td></tr>
+            ${filas}
+          </table>
+          <footer><span>ROLLOUT ${run.cfg.rollout_ft} FT</span><span>${esc(c.metodo.toUpperCase())}</span></footer>
+          ${run.demo ? '<span class="stamp">SIMULADA</span>' : ''}
+          ${!run.completo ? '<span class="stamp">INCOMPLETA</span>' : ''}
+        </div>
+        <div class="kpis">
+          <div><span>Tiempo ${nombreDist(Df)}</span><b data-cnt>${fmtT(et.t)}<small>s</small></b></div>
+          <div><span>Vel. de trampa</span><b data-cnt>${fmtV(run.trampa_kmh)}<small>${velU()}</small></b></div>
+          <div><span>0–100 km/h</span><b data-cnt>${isFin(run.t_0_100) ? run.t_0_100.toFixed(2) : '—'}<small>s</small></b></div>
+          <div><span>0–60 mph</span><b data-cnt>${isFin(run.t_0_60mph) ? run.t_0_60mph.toFixed(2) : '—'}<small>s</small></b></div>
+          <div><span>Vel. máxima</span><b data-cnt>${fmtV(run.est.v_max_kmh)}<small>${velU()}</small></b></div>
+          <div><span>G máxima</span><b data-cnt>${run.est.a_max_g.toFixed(2)}<small>g</small></b></div>
+        </div>
+        <div class="chart"><p>Velocidad (${velU()}) contra tiempo (s)</p><canvas id="cVel" aria-label="Velocidad contra tiempo"></canvas></div>
+        <div class="chart"><p>Distancia (m) contra tiempo (s)</p><canvas id="cDist" aria-label="Distancia contra tiempo"></canvas></div>
+        <div class="chart"><p>Fuerza G longitudinal contra tiempo (s)</p><canvas id="cG" aria-label="Fuerza G contra tiempo"></canvas></div>
+        <div class="quality">
+          <h3 style="margin-top:10px">Calidad de los datos</h3>
+          <dl>
+            ${fila('Método', esc(c.metodo))}
+            ${fila('GPS', `${c.gps_hz < 1.5 ? c.gps_hz.toFixed(1) : Math.round(c.gps_hz)} Hz, ${c.n_gps_corrida} lecturas`)}
+            ${fila('Precisión GPS', isFin(c.hacc_mediana_m) ? `±${c.hacc_mediana_m.toFixed(1)} m` : '—')}
+            ${fila('Retraso GPS', `${c.latencia_gps_s.toFixed(2)} s`)}
+            ${fila('Acelerómetro', isFin(c.acc_hz) ? `${Math.round(c.acc_hz)} Hz` : 'sin datos')}
+            ${isFin(c.ruido_reposo) ? fila('Vibración en reposo', `${c.ruido_reposo.toFixed(2)} m/s²`) : ''}
+            ${run.cfg.rollout_ft > 0 && isFin(run.t_rollout) ? fila(`Del primer movimiento a ${run.cfg.rollout_ft} ft`, `${run.t_rollout.toFixed(3)} s`) : ''}
+            ${fila('Movimientos ignorados', c.mov_ignorados ? `${c.mov_ignorados} (máx ${fmtV(c.v_max_ignorado_kmh, 0)} ${velU()})` : 'ninguno')}
+            ${isFin(c.dist_pos_m) ? fila('Distancia integrada / por posición', `${c.dist_integrada_m.toFixed(0)} m / ${c.dist_pos_m.toFixed(0)} m`) : ''}
+          </dl>
+          ${run.avisos.length ? `<ul class="avisos">${run.avisos.map((a) => `<li>${esc(a)}</li>`).join('')}</ul>` : ''}
+        </div>
+        <div class="actions">
+          ${enSesion ? '<button class="primary go" id="rNueva">Armar otra medición</button>' : ''}
+          <button class="ghost" id="rExport">Exportar datos</button>
+          <button class="ghost" id="rRecalc">Recalcular con mis ajustes actuales</button>
+          ${enSesion ? '<button class="ghost" id="rSalir">Volver al inicio</button>' : '<button class="danger" id="rBorrar">Borrar esta corrida</button>'}
+        </div>`;
+    }
+    $('#medirSesion').hidden = true;
+    document.body.classList.toggle('sesion', !!enSesion);
+    mostrarVista('vResultado', !enSesion ? 'vHistorial' : null);
+    window.scrollTo(0, 0);
+    if (run.ok) { requestAnimationFrame(() => graficas(run)); contar(v); }
+    const on = (id, fn) => { const b = document.getElementById(id); if (b) b.onclick = fn; };
+    on('rNueva', () => { if (ses.demo) iniciarDemo(); else armar(); });
+    on('rSalir', salirSesion);
+    on('rExport', () => exportar(run));
+    on('rRecalc', async () => {
+      const b = document.getElementById('rRecalc'); b.disabled = true; b.textContent = 'Recalculando…';
+      await recalcular(run);
+      mostrarResultado(run, enSesion);
+      const m = document.createElement('p'); m.className = 'msg';
+      m.textContent = `Recalculada con rollout ${run.cfg.rollout_ft} ft${run.cfg.usar_acc ? '' : ', solo GPS'}.`;
+      $('#vResultado').prepend(m);
+    });
+    on('rBorrar', async () => {
+      if (!confirm('¿Borrar esta corrida del historial?')) return;
+      await DB.borrar(run.id); mostrarVista('vHistorial'); pintarHistorial();
+    });
+    ses.ultimoRun = run;
+  }
+
+  // ------------------------------------------------------------ gráficas (canvas)
+  function nice(span, n) {
+    const raw = span / n, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p;
+    return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * p;
+  }
+  function chart(cv, series, opt) {
+    const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+    if (!W) return;
+    cv.width = W * dpr; cv.height = H * dpr;
+    const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+    const css = getComputedStyle(document.documentElement);
+    const cDim = css.getPropertyValue('--chalk-dim').trim(), cLine = css.getPropertyValue('--line').trim();
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    for (const s of series) for (let i = 0; i < s.x.length; i++) {
+      if (!isFin(s.x[i]) || !isFin(s.y[i])) continue;
+      x0 = Math.min(x0, s.x[i]); x1 = Math.max(x1, s.x[i]); y0 = Math.min(y0, s.y[i]); y1 = Math.max(y1, s.y[i]);
+    }
+    if (opt.y0 != null) y0 = Math.min(y0, opt.y0);
+    if (!(x1 > x0)) return;
+    if (!(y1 > y0)) y1 = y0 + 1;
+    const pad = { l: 40, r: 8, t: 8, b: 24 };
+    const sx = (x) => pad.l + (x - x0) / (x1 - x0) * (W - pad.l - pad.r);
+    const sy = (y) => H - pad.b - (y - y0) / (y1 - y0) * (H - pad.t - pad.b);
+    ctx.font = '11px system-ui, sans-serif'; ctx.fillStyle = cDim; ctx.strokeStyle = cLine; ctx.lineWidth = 1;
+    const dy = nice(y1 - y0, 4);
+    for (let y = Math.ceil(y0 / dy) * dy; y <= y1 + 1e-9; y += dy) {
+      ctx.beginPath(); ctx.moveTo(pad.l, sy(y)); ctx.lineTo(W - pad.r, sy(y)); ctx.stroke();
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText(+y.toFixed(2), pad.l - 6, sy(y));
+    }
+    const dx = nice(x1 - x0, 6);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (let x = Math.ceil(x0 / dx) * dx; x <= x1 + 1e-9; x += dx) ctx.fillText(String(+x.toFixed(1)), sx(x), H - pad.b + 6);
+    for (const s of series) {
+      ctx.strokeStyle = s.color; ctx.fillStyle = s.color; ctx.lineWidth = s.w || 2.2;
+      if (s.dots) {
+        for (let i = 0; i < s.x.length; i++) {
+          if (s.x[i] < x0 || s.x[i] > x1) continue;
+          ctx.beginPath(); ctx.arc(sx(s.x[i]), sy(s.y[i]), s.r || 3, 0, 2 * Math.PI); ctx.fill();
+        }
+      } else {
+        ctx.beginPath();
+        s.x.forEach((x, i) => { const px = sx(x), py = sy(s.y[i]); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+        ctx.stroke();
+      }
+    }
+    if (opt.marks) {
+      for (const m of opt.marks) {
+        const px = sx(m.x), py = sy(m.y);
+        ctx.fillStyle = opt.markColor; ctx.beginPath(); ctx.arc(px, py, 4.5, 0, 2 * Math.PI); ctx.fill();
+        ctx.fillStyle = cDim; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom'; ctx.fillText(m.label, px - 7, py - 3);
+      }
+    }
+  }
+  function graficas(run) {
+    const css = getComputedStyle(document.documentElement);
+    const amber = css.getPropertyValue('--amber').trim(), chalk = css.getPropertyValue('--chalk').trim(), green = css.getPropertyValue('--green').trim();
+    const s = run.serie, conv = (k) => velConv(k);
+    const xmax = Math.max(...s.t);
+    const gp = { x: [], y: [] };
+    run.gpsPts.t.forEach((t, i) => { if (t >= -1 && t <= xmax) { gp.x.push(t); gp.y.push(conv(run.gpsPts.v[i])); } });
+    chart($('#cVel'), [
+      { x: s.t, y: s.v.map(conv), color: amber },
+      { x: gp.x, y: gp.y, color: chalk, dots: true, r: 3 },
+    ], { y0: 0 });
+    const Df = run.cfg.distancia_final;
+    const marks = run.hitos.filter((h) => isFin(h.t) && h.dist_m <= Df + 0.01).map((h) => ({ x: h.t, y: h.dist_m, label: h.nombre }));
+    chart($('#cDist'), [{ x: s.t, y: s.d, color: amber }], { y0: 0, marks, markColor: green });
+    chart($('#cG'), [{ x: s.t, y: s.a.map((a) => a / C.G0), color: amber }], { y0: 0 });
+  }
+  window.addEventListener('resize', () => { if (!$('#vResultado').hidden && ses.ultimoRun && ses.ultimoRun.ok) graficas(ses.ultimoRun); });
+
+  // ------------------------------------------------------------ exportar (zip)
+  const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  function crc32(u8) { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+  function zip(files) {
+    const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+    for (const f of files) {
+      const name = enc.encode(f.name), data = enc.encode(f.text), crc = crc32(data);
+      const h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true);
+      h.setUint32(14, crc, true); h.setUint32(18, data.length, true); h.setUint32(22, data.length, true); h.setUint16(26, name.length, true);
+      parts.push(new Uint8Array(h.buffer), name, data);
+      const cd = new DataView(new ArrayBuffer(46));
+      cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true); cd.setUint16(8, 0x0800, true);
+      cd.setUint32(16, crc, true); cd.setUint32(20, data.length, true); cd.setUint32(24, data.length, true);
+      cd.setUint16(28, name.length, true); cd.setUint32(42, off, true);
+      central.push(new Uint8Array(cd.buffer), name);
+      off += 30 + name.length + data.length;
+    }
+    const cdSize = central.reduce((s, p) => s + p.length, 0);
+    const end = new DataView(new ArrayBuffer(22));
+    end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+    end.setUint32(12, cdSize, true); end.setUint32(16, off, true);
+    return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: 'application/zip' });
+  }
+  const csv = (cols, b) => {
+    const keys = Object.keys(cols), n = b[keys[0]].length, out = [Object.values(cols).join(',')];
+    for (let i = 0; i < n; i++) out.push(keys.map((k) => { const x = b[k][i]; return isFin(x) ? +x.toFixed(6) : 'NaN'; }).join(','));
+    return out.join('\n') + '\n';
+  };
+  function b64utf8(s) { const u = new TextEncoder().encode(s); let bin = ''; for (let i = 0; i < u.length; i += 0x8000) bin += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(bin); }
+
+  async function exportar(run) {
+    const st = run.sello;
+    const g = run.raw.gps, a = run.raw.acc;
+    const files = [
+      { name: `drag_raw_gps_${st}.csv`, text: csv({ t: 't_s', lat: 'lat', lon: 'lon', v: 'v_mps', hacc: 'hacc_m' }, g) },
+      { name: `drag_raw_acc_${st}.csv`, text: csv({ t: 't_s', ax: 'ax', ay: 'ay', az: 'az' }, a) },
+      { name: `drag_raw_meta_${st}.json`, text: JSON.stringify({ version: 'app ' + run.app, distancia_final: run.cfg.distancia_final, t_inicio_busqueda: run.cfg.t_inicio_busqueda, rollout_ft: run.cfg.rollout_ft, simulada: run.demo }) },
+    ];
+    if (run.ok) {
+      files.push({ name: `drag_trim_result_${st}.csv`, text: csv({ t: 'Tiempo_s', d: 'Distancia_m', v: 'Velocidad_kmh', a: 'AccLong_mps2' }, run.serie) });
+      const r = {};
+      const hk = { '60 ft': ['t_60ft', 'v_60ft'], '330 ft': ['t_101m', 'v_101m'], '1/8 mi': ['t_201m', 'v_201m'], '1000 ft': ['t_305m', 'v_305m'], '1/4 mi': ['t_1_4mi', 'v_1_4mi'] };
+      for (const h of run.hitos) { const k = hk[h.nombre]; if (k) { r[k[0]] = isFin(h.t) ? h.t : 0; r[k[1]] = isFin(h.v_kmh) ? h.v_kmh : 0; } }
+      r.t_1_8mi = r.t_201m; r.v_1_8mi = r.v_201m;
+      r.t_0_100 = isFin(run.t_0_100) ? run.t_0_100 : 0; r.t_0_60mph = isFin(run.t_0_60mph) ? run.t_0_60mph : 0;
+      r.trampa_kmh = isFin(run.trampa_kmh) ? run.trampa_kmh : 0; r.rollout_ft = run.cfg.rollout_ft;
+      const payload = {
+        tipo: 'drag_trim', version: 'app ' + run.app, fecha: run.fecha, completo: run.completo, resultados: r,
+        estadisticas: { tiempo_total: run.est.tiempo_total, distancia_total: run.est.distancia_total, v_max: run.est.v_max_kmh, a_max: run.est.a_max_g * C.G0, a_prom: run.est.a_prom_g * C.G0, g_max: run.est.a_max_g },
+        calidad: { metodo: run.calidad.metodo, gps_hz: run.calidad.gps_hz, hacc_m: run.calidad.hacc_mediana_m },
+        registro: { t: run.serie.t.filter((_, i) => i % 2 === 0), d: run.serie.d.filter((_, i) => i % 2 === 0), v: run.serie.v.filter((_, i) => i % 2 === 0), acc_long: run.serie.a.filter((_, i) => i % 2 === 0) },
+      };
+      files.push({ name: `DRAGPACK_dragtrim_${st}.txt`, text: `DRAGPACK|${b64utf8(JSON.stringify(payload))}|END` });
+    }
+    const blob = zip(files), nombre = `dragtrim_${st}.zip`;
+    try {
+      const file = new File([blob], nombre, { type: 'application/zip' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Drag Tree ' + st }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    const url = URL.createObjectURL(blob), aEl = document.createElement('a');
+    aEl.href = url; aEl.download = nombre; document.body.appendChild(aEl); aEl.click(); aEl.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+
+  // ------------------------------------------------------------ historial
+  async function pintarHistorial() {
+    const runs = await DB.todos(), ul = $('#histList');
+    ul.innerHTML = '';
+    $('#histEmpty').hidden = runs.length > 0;
+    for (const r of runs) {
+      const li = document.createElement('li'), b = document.createElement('button');
+      const et = r.ok ? etPrincipal(r) : null;
+      const sub = r.ok ? `${nombreDist(r.cfg.distancia_final)}, trampa ${fmtV(r.trampa_kmh, 0)} ${velU()}${r.demo ? ', simulada' : ''}${r.completo ? '' : ', incompleta'}`
+        : 'Sin resultado' + (r.demo ? ', simulada' : '');
+      b.innerHTML = `<span class="when">${esc(fechaCorta(r.fecha))}</span><span class="et">${r.ok ? fmtT(et.t) : '—'}</span><span class="sub">${esc(sub)}</span>`;
+      b.onclick = () => mostrarResultado(r, false);
+      li.appendChild(b); ul.appendChild(li);
+    }
+  }
+
+  // ------------------------------------------------------------ navegación
+  function mostrarVista(id, tabActivo) {
+    for (const v of document.querySelectorAll('.view')) v.hidden = v.id !== id;
+    const tab = tabActivo || id;
+    for (const b of document.querySelectorAll('.tabs button')) {
+      if (b.dataset.view === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    }
+  }
+  for (const b of document.querySelectorAll('.tabs button')) {
+    b.onclick = () => {
+      const v = b.dataset.view;
+      if (v === 'vMedir') { $('#medirIdle').hidden = false; $('#medirSesion').hidden = true; }
+      if (v === 'vHistorial') pintarHistorial();
+      mostrarVista(v); window.scrollTo(0, 0);
+    };
+  }
+
+  // ------------------------------------------------------------ controles
+  function seg(id, key, conv) {
+    const el = document.getElementById(id);
+    const pintar = () => el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(conv(b.dataset.v) === S[key])));
+    el.querySelectorAll('button').forEach((b) => b.onclick = () => { S[key] = conv(b.dataset.v); guardarAjustes(); pintar(); aplicarTema(); });
+    pintar();
+  }
+  seg('segDist', 'dist', Number);
+  seg('segUnidad', 'unidad', String);
+  seg('segTema', 'tema', String);
+  // ------------------------------------------------------------ fondos de pantalla (estilo sticker)
+  const FONDOS = [
+    { id: 'combinado', nombre: 'Combinado', acento: '#d4ff00' },
+    { id: 'combinado_rojo', nombre: 'Combinado rojo', acento: '#ff3d2e' },
+    { id: 'botella_nos', nombre: 'NOS', acento: '#ff3d2e' },
+    { id: 'neon', nombre: 'Neón', acento: '#d4ff00' },
+    { id: 'rojo', nombre: 'Rojo', acento: '#ff3d2e' },
+    { id: 'blanco_negro', nombre: 'Blanco y negro', acento: '#ffffff' },
+  ];
+  function aplicarFondo() {
+    const f = FONDOS.find((x) => x.id === S.fondo);
+    const raiz = document.documentElement;
+    if (f) {
+      raiz.setAttribute('data-fondo', f.id);
+      raiz.style.setProperty('--fondo-url', `url("fondos/${f.id}.webp")`);
+      raiz.style.setProperty('--acento', f.acento);
+      raiz.style.setProperty('--velo', S.velo);
+    } else {
+      raiz.removeAttribute('data-fondo');
+      raiz.style.removeProperty('--fondo-url'); raiz.style.removeProperty('--acento');
+    }
+  }
+  function pintarSelFondo() {
+    const cont = $('#selFondo');
+    cont.innerHTML = '';
+    for (const f of [{ id: 'ninguno', nombre: 'Sin fondo' }, ...FONDOS]) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.setAttribute('role', 'radio');
+      b.setAttribute('aria-checked', String((S.fondo || 'ninguno') === f.id));
+      b.innerHTML = f.id === 'ninguno' ? `<span class="fx-ninguno"></span><span>${f.nombre}</span>`
+        : `<img src="fondos/${f.id}_mini.webp" alt="" loading="lazy"><span>${f.nombre}</span>`;
+      b.onclick = () => { S.fondo = f.id; guardarAjustes(); aplicarFondo(); aplicarTema(); pintarSelFondo(); };
+      cont.appendChild(b);
+    }
+  }
+  seg('segVelo', 'velo', String);
+  $('#segVelo').addEventListener('click', aplicarFondo);
+  aplicarFondo();
+  pintarSelFondo();
+
+  function aplicarTema() {
+    document.documentElement.toggleAttribute('data-sin-anim', S.anim === false);
+    if (S.tema === 'auto') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', S.tema);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = getComputedStyle(document.documentElement).getPropertyValue('--asphalt').trim();
+  }
+  aplicarTema();
+  const inR = $('#inRollout');
+  inR.value = S.rollout_ft;
+  inR.onchange = () => { let x = parseFloat(String(inR.value).replace(',', '.')); if (!isFin(x)) x = DEF.rollout_ft; x = Math.round(Math.min(2, Math.max(0, x)) * 10) / 10; S.rollout_ft = x; inR.value = x; guardarAjustes(); };
+  const inV = $('#inVconf'), inT = $('#inTconf'), inA = $('#inAcc');
+  inV.value = S.v_confirma_kmh; inT.value = S.t_confirma; inA.checked = S.usar_acc;
+  inV.onchange = () => { const x = Math.min(120, Math.max(20, +inV.value || DEF.v_confirma_kmh)); S.v_confirma_kmh = x; inV.value = x; guardarAjustes(); };
+  inT.onchange = () => { const x = Math.min(20, Math.max(3, +inT.value || DEF.t_confirma)); S.t_confirma = x; inT.value = x; guardarAjustes(); };
+  inA.onchange = () => { S.usar_acc = inA.checked; guardarAjustes(); };
+  const inAn = $('#inAnim');
+  inAn.checked = S.anim !== false;
+  inAn.onchange = () => { S.anim = inAn.checked; guardarAjustes(); aplicarTema(); };
+  $('#btnBorrarHist').onclick = async () => { if (confirm('¿Borrar todas las corridas guardadas?')) { await DB.borrarTodo(); pintarHistorial(); } };
+  $('#verText').textContent = `Drag Tree ${APP_VERSION}, algoritmo v2.3 (mismo que el script de MATLAB).`;
+
+  $('#btnSensores').onclick = activarSensores;
+  $('#btnArmar').onclick = () => {
+    const s = sens.ultGps;
+    if (!s || nowS() - sens.ultGpsRec > 4) { mensaje('Todavía no hay señal GPS. Espera a que aparezca la precisión.', true); return; }
+    if (s.hacc > 15) mensaje(`Precisión GPS baja (±${Math.round(s.hacc)} m). Puedes medir, pero espera un poco si puedes.`);
+    else mensaje('');
+    armar();
+  };
+  $('#btnDemo').onclick = iniciarDemo;
+  $('#btnCancelar').onclick = () => { salirSesion(); };
+  $('#btnTerminar').onclick = () => finCorrida('manual');
+
+  // ------------------------------------------------------------ instalación (PWA)
+  // Sin botón de compartir a propósito: Daniel pasa el enlace en persona (0.5.2).
+  const ua = navigator.userAgent;
+  const P = {
+    ipad: /iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),
+    android: /Android/i.test(ua),
+    // navegadores dentro de otras apps (no pueden instalar)
+    enApp: /FBAN|FBAV|FB_IAB|Instagram|Line\/|Snapchat|TikTok|musical_ly|Twitter|LinkedInApp|GSA\//i.test(ua),
+    navIOS: /CriOS/.test(ua) ? 'Chrome' : /FxiOS/.test(ua) ? 'Firefox' : /EdgiOS/.test(ua) ? 'Edge' : /OPiOS/.test(ua) ? 'Opera' : 'Safari',
+    samsung: /SamsungBrowser/i.test(ua),
+  };
+  P.ios = /iP(hone|od)/.test(ua) || P.ipad;
+  P.movil = P.ios || P.android;
+  const instalada = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  let promptInstalar = null;
+
+  function pasosInstalar() {
+    const fin = '<p class="hint">Después ábrela siempre desde el ícono nuevo: así funciona sin internet y ahí se guardan tus corridas.</p>';
+    if (instalada) return '<p>Ya estás usando la app instalada.</p>';
+    if (P.enApp) return `<p>Estás viendo la app dentro de otra app (Instagram, Facebook…), y desde ahí no se puede instalar.</p>
+      <ol><li>Toca el menú <b>⋯</b> de esta pantalla.</li><li>Elige <b>Abrir en el navegador</b> (${P.ios ? 'Safari' : 'Chrome'}).</li><li>Ahí sigue los pasos para instalarla.</li></ol>`;
+    if (P.ios && P.navIOS === 'Safari') return `<ol>
+      <li>Toca <b>Compartir</b> <span class="guia-ico" aria-hidden="true">⎙</span> (el cuadro con la flecha hacia arriba) ${P.ipad ? 'arriba a la derecha' : 'en la barra de abajo'}. Si no lo ves, toca <b>⋯</b> y luego <b>Compartir</b>.</li>
+      <li>Desliza hacia abajo y toca <b>Agregar a inicio</b>.</li>
+      <li>Toca <b>Agregar</b>.</li></ol>
+      <p class="hint">Si no aparece "Agregar a inicio", abriste el enlace dentro de otra app (como WhatsApp): toca <b>Abrir en Safari</b> primero.</p>${fin}`;
+    if (P.ios && (P.navIOS === 'Chrome' || P.navIOS === 'Edge')) return `<ol>
+      <li>Toca <b>Compartir</b> <span class="guia-ico" aria-hidden="true">⎙</span> junto a la barra de la dirección.</li>
+      <li>Toca <b>Agregar a inicio</b> (si no aparece, toca <b>Más</b>).</li><li>Toca <b>Agregar</b>.</li></ol>
+      <p class="hint">Si tu iPhone no muestra esa opción, abre el enlace en <b>Safari</b>.</p>${fin}`;
+    if (P.ios) return `<p>Para instalarla, abre el enlace en <b>Safari</b> y ahí toca Compartir → <b>Agregar a inicio</b>.</p>${fin}`;
+    if (P.android && promptInstalar) return `<p>Toca <b>Instalar app</b> y confirma.</p>${fin}`;
+    if (P.android && P.samsung) return `<ol><li>Toca el menú <b>≡</b> abajo a la derecha.</li><li>Toca <b>Agregar página a</b> → <b>Pantalla de inicio</b>.</li></ol>${fin}`;
+    if (P.android) return `<ol><li>Toca el menú <b>⋮</b> arriba a la derecha de Chrome.</li><li>Toca <b>Instalar app</b> o <b>Agregar a pantalla principal</b>.</li><li>Confirma con <b>Instalar</b>.</li></ol>${fin}`;
+    return '<p>Abre este enlace en tu teléfono (iPhone, iPad o Android) para instalarla: necesita el GPS del teléfono.</p>';
+  }
+  function pintarGuia() {
+    const html = pasosInstalar();
+    document.querySelectorAll('.guia .guia-pasos').forEach((d) => { d.innerHTML = html; });
+    document.querySelectorAll('[data-instalar]').forEach((b) => { b.hidden = !promptInstalar || instalada; });
+    // En Medir solo se muestra la primera vez, en el teléfono y si no está instalada
+    $('#guiaMedir').hidden = instalada || !P.movil || LS.get('dragtrim.guiaOculta', false);
+  }
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); promptInstalar = e; pintarGuia(); });
+  window.addEventListener('appinstalled', () => { promptInstalar = null; LS.set('dragtrim.guiaOculta', true); pintarGuia(); });
+  document.querySelectorAll('[data-instalar]').forEach((b) => {
+    b.onclick = async () => {
+      if (!promptInstalar) return;
+      promptInstalar.prompt();
+      try { await promptInstalar.userChoice; } catch (e) { /* */ }
+      promptInstalar = null; pintarGuia();
+    };
+  });
+  $('#guiaOcultar').onclick = () => { LS.set('dragtrim.guiaOculta', true); pintarGuia(); };
+  pintarGuia();
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* la app funciona igual sin modo sin conexión */ });
+  }
+
+  if (!window.isSecureContext) mensaje('Abre la app desde su enlace https:// para poder usar el GPS. La corrida simulada sí funciona aquí.', true);
+  tickEstado();
+  window.__dragtrim = { S, buf, ses, sens, DB };   // para pruebas
+})();
+
+</script>
+<script>
+/* practica.js — Simulador de semáforo de arrancones (práctica de reacción) */
+(function () {
+  'use strict';
+  const $ = (s) => document.querySelector(s);
+  const isFin = Number.isFinite;
+  const LS = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
+  };
+
+  const P = Object.assign({ modo: 'solo', arbol: 'pro', salida: 'soltar', retraso: 0, formato: 'boleta' }, LS.get('dragtrim.practica.cfg', {}));
+  let hist = LS.get('dragtrim.practica.hist', []);
+  const marcador = { l: 0, r: 0 };
+  const guardarCfg = () => LS.set('dragtrim.practica.cfg', P);
+
+  // Secuencia del árbol (s desde que se activa): ámbar i encendido en [ini, fin), verde en `verde`
+  function secuencia() {
+    return P.arbol === 'pro'
+      ? { ambar: [[0, 0.4], [0, 0.4], [0, 0.4]], verde: 0.4 }
+      : { ambar: [[0, 0.5], [0.5, 1.0], [1.0, 1.5]], verde: 1.5 };
+  }
+
+  // Formatos de reacción:
+  //  boleta: como el ticket de pista, medido desde el último ámbar (perfecta .400 Pro / .500 Full)
+  //  verde:  diferencia contra la verde (perfecta .000)
+  const perfecta = (arbol) => (arbol === 'pro' ? 0.4 : 0.5);
+  function fmtRT(rt, arbol, formato) {
+    if (!isFin(rt)) return '—';
+    if (formato === 'boleta') return (rt + perfecta(arbol)).toFixed(3);
+    return (rt > 0 ? '+' : '') + rt.toFixed(3);
+  }
+  const otroFormato = () => (P.formato === 'boleta' ? 'verde' : 'boleta');
+  const nombreFormato = (f) => (f === 'boleta' ? 'boleta' : 'desde la verde');
+
+  const nuevoCarril = () => ({ abajo: false, pid: null, preStage: false, staged: false, salio: false, tSalida: NaN, rt: NaN, rojo: false, timerStage: 0 });
+  const st = { fase: 'cerrado', c: { l: nuevoCarril(), r: nuevoCarril() }, tArbol: NaN, tVerdePlan: NaN, tVerde: NaN, raf: 0, timers: [] };
+  const activos = () => (P.modo === 'solo' ? ['l'] : ['l', 'r']);
+
+  function limpiarTimers() { st.timers.forEach(clearTimeout); st.timers = []; cancelAnimationFrame(st.raf); st.raf = 0; }
+  function despues(ms, fn) { st.timers.push(setTimeout(fn, ms)); }
+
+  function reiniciar() {
+    limpiarTimers();
+    for (const k of ['l', 'r']) { clearTimeout(st.c[k].timerStage); st.c[k] = nuevoCarril(); }
+    st.fase = 'idle'; st.tArbol = NaN; st.tVerdePlan = NaN; st.tVerde = NaN;
+    $('#ptMsg').textContent = '';
+    for (const k of ['l', 'r']) { $(`#ptRt_${k}`).textContent = ''; $(`#ptLab_${k}`).textContent = ''; }
+    pintar(performance.now());
+  }
+
+  // ---------------------------------------------------------------- dibujo
+  function luz(id, on) { const e = document.getElementById(id); if (e) e.classList.toggle('on', !!on); }
+
+  function pintar(ahora) {
+    const sq = secuencia();
+    const el = isFin(st.tArbol) ? (ahora - st.tArbol) / 1000 : -1;
+    const arbolActivo = st.fase === 'arbol' || st.fase === 'resultado';
+    for (const k of ['l', 'r']) {
+      const c = st.c[k];
+      luz(`pt_${k}_pre1`, c.preStage && !c.salio); luz(`pt_${k}_pre2`, c.preStage && !c.salio);
+      luz(`pt_${k}_stg1`, c.staged && !c.salio); luz(`pt_${k}_stg2`, c.staged && !c.salio);
+      for (let i = 0; i < 3; i++) luz(`pt_${k}_a${i}`, arbolActivo && el >= sq.ambar[i][0] && el < sq.ambar[i][1]);
+      luz(`pt_${k}_g`, arbolActivo && el >= sq.verde && !c.rojo && activos().includes(k));
+      luz(`pt_${k}_r`, c.rojo);
+      const z = document.getElementById(`ptZona_${k}`);
+      z.classList.toggle('held', c.abajo || (P.salida === 'tocar' && c.staged && !c.salio));
+      z.querySelector('span').textContent = textoZona(c);
+    }
+  }
+
+  function textoZona(c) {
+    if (st.fase === 'resultado') return P.salida === 'soltar' ? 'Mantén para otra salida' : 'Toca para otra salida';
+    if (c.salio) return c.rojo ? 'Luz roja' : 'Salida';
+    if (c.staged) return P.salida === 'soltar' ? 'STAGED · suelta con la verde' : 'STAGED · toca con la verde';
+    if (c.preStage) return 'Pre-stage…';
+    return P.salida === 'soltar' ? 'Mantén presionado para hacer stage' : 'Toca para hacer stage';
+  }
+
+  function bucle(ts) {
+    const sq = secuencia();
+    // instante en que la verde se dibuja por primera vez (referencia del tiempo de reacción)
+    if (st.fase === 'arbol' && !isFin(st.tVerde) && ts >= st.tVerdePlan) st.tVerde = ts;
+    pintar(ts);
+    if (st.fase === 'arbol') st.raf = requestAnimationFrame(bucle);
+    else if (st.fase === 'resultado' && isFin(st.tArbol) && (ts - st.tArbol) / 1000 < sq.verde + 0.1) st.raf = requestAnimationFrame(bucle);
+  }
+
+  // ---------------------------------------------------------------- lógica
+  function hacerStage(k) {
+    const c = st.c[k];
+    c.preStage = true; pintar(performance.now());
+    c.timerStage = setTimeout(() => {
+      if (P.salida === 'soltar' && !c.abajo) return;
+      c.staged = true; pintar(performance.now()); revisarTodosStaged();
+    }, 300);
+  }
+
+  function revisarTodosStaged() {
+    if (st.fase !== 'idle') return;
+    if (!activos().every((k) => st.c[k].staged)) return;
+    st.fase = 'espera';
+    // como el arranque automático: el árbol baja tras un retraso aleatorio
+    despues(600 + Math.random() * 900, iniciarArbol);
+  }
+
+  function iniciarArbol() {
+    if (st.fase !== 'espera') return;
+    const sq = secuencia();
+    st.fase = 'arbol'; st.tArbol = performance.now(); st.tVerdePlan = st.tArbol + sq.verde * 1000; st.tVerde = NaN;
+    st.raf = requestAnimationFrame(bucle);
+    despues((sq.verde + 2.5) * 1000, finRonda);   // quien no salga en 2.5 s queda sin salida
+  }
+
+  function salida(k, ts) {
+    const c = st.c[k];
+    if (c.salio) return;
+    c.salio = true; c.abajo = false; c.tSalida = ts;
+    const tLlega = ts + P.retraso * 1000;   // el auto tarda en dejar el haz de stage
+    if (st.fase === 'espera' || st.fase === 'idle') {
+      c.rojo = true; c.rt = NaN;   // salió antes de que bajara el árbol
+    } else {
+      const ref = isFin(st.tVerde) && tLlega >= st.tVerde ? st.tVerde : st.tVerdePlan;
+      c.rt = (tLlega - ref) / 1000;
+      c.rojo = c.rt < 0;
+    }
+    pintar(performance.now());
+    if (activos().every((x) => st.c[x].salio)) {
+      if (st.fase === 'espera') { limpiarTimers(); finRonda(); }
+      else despues(400, finRonda);
+    }
+  }
+
+  function calificar(rt) {
+    if (rt < 0.010) return '¡Perfecta!';
+    if (rt < 0.050) return 'Muy buena';
+    if (rt < 0.100) return 'Buena';
+    if (rt < 0.200) return 'Regular';
+    return 'Lenta';
+  }
+
+  function finRonda() {
+    if (st.fase === 'resultado' || st.fase === 'cerrado') return;
+    const eraEspera = st.fase === 'espera';
+    st.fase = 'resultado';
+    st.timers.forEach(clearTimeout); st.timers = [];
+    const res = {};
+    for (const k of activos()) {
+      const c = st.c[k];
+      const rt = $(`#ptRt_${k}`), lab = $(`#ptLab_${k}`);
+      if (!c.salio) { rt.textContent = '—'; lab.textContent = 'Sin salida'; res[k] = { orden: Infinity }; continue; }
+      const otro = isFin(c.rt) ? `${fmtRT(c.rt, P.arbol, otroFormato())} ${nombreFormato(otroFormato())}` : '';
+      if (c.rojo) {
+        rt.textContent = isFin(c.rt) ? fmtRT(c.rt, P.arbol, P.formato) : 'ROJA';
+        lab.textContent = isFin(c.rt) ? `Luz roja (${otro})` : 'Luz roja: saliste antes del árbol';
+        res[k] = { rojo: true, t: c.tSalida };
+      } else {
+        rt.textContent = fmtRT(c.rt, P.arbol, P.formato); lab.textContent = `${calificar(c.rt)} (${otro})`;
+        res[k] = { orden: c.rt };
+      }
+      rt.className = 'pt-rtv' + (c.rojo ? ' rojo' : '');
+    }
+    if (P.modo === 'solo') {
+      const c = st.c.l;
+      if (c.salio) {
+        hist.push({ rt: isFin(c.rt) ? +c.rt.toFixed(4) : null, rojo: c.rojo, arbol: P.arbol, ret: P.retraso, f: Date.now() });
+        if (hist.length > 500) hist = hist.slice(-500);
+        LS.set('dragtrim.practica.hist', hist);
+      }
+      $('#ptMsg').textContent = '';
+    } else {
+      $('#ptMsg').textContent = ganador(res);
+      $('#ptScore').textContent = `${marcador.l} – ${marcador.r}`;
+    }
+    if (!eraEspera) st.raf = requestAnimationFrame(bucle); else pintar(performance.now());
+  }
+
+  // Reglas de pista: una luz roja pierde; si los dos dan roja, pierde el que salió primero.
+  function ganador(res) {
+    const L = res.l, R = res.r;
+    let g = null, txt = '';
+    if (L.rojo && R.rojo) { g = L.t > R.t ? 'l' : 'r'; txt = 'Las dos rojas: pierde quien salió primero.'; }
+    else if (L.rojo) { g = 'r'; txt = 'Izquierda dio luz roja.'; }
+    else if (R.rojo) { g = 'l'; txt = 'Derecha dio luz roja.'; }
+    else if (L.orden === Infinity && R.orden === Infinity) return 'Nadie salió.';
+    else if (L.orden === R.orden) return 'Empate.';
+    else {
+      g = L.orden < R.orden ? 'l' : 'r';
+      const dif = Math.abs(L.orden - R.orden);
+      txt = isFin(dif) ? `por ${dif.toFixed(3)} s.` : '';
+    }
+    marcador[g]++;
+    return `Gana ${g === 'l' ? 'izquierda' : 'derecha'} ${txt}`.trim();
+  }
+
+  // ---------------------------------------------------------------- toques
+  function abajo(k, e) {
+    e.preventDefault();
+    if (!activos().includes(k) || st.fase === 'cerrado') return;
+    if (st.fase === 'resultado') reiniciar();
+    const c = st.c[k];
+    if (P.salida === 'soltar') {
+      if (c.abajo || c.salio) return;
+      c.abajo = true; c.pid = e.pointerId;
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (er) { /* */ }
+      if (st.fase === 'idle') hacerStage(k);
+      pintar(performance.now());
+    } else {
+      if (!c.preStage && st.fase === 'idle') hacerStage(k);
+      else if (c.staged && !c.salio && (st.fase === 'espera' || st.fase === 'arbol')) salida(k, e.timeStamp || performance.now());
+    }
+  }
+  function arriba(k, e) {
+    if (P.salida !== 'soltar') return;
+    const c = st.c[k];
+    if (!c.abajo || c.pid !== e.pointerId) return;
+    c.abajo = false;
+    if (!c.staged) { clearTimeout(c.timerStage); c.preStage = false; pintar(performance.now()); return; }
+    if (st.fase === 'idle') { c.staged = false; c.preStage = false; pintar(performance.now()); return; }   // el otro carril aún no hacía stage
+    if (st.fase === 'espera' || st.fase === 'arbol') salida(k, e.timeStamp || performance.now());
+  }
+  for (const k of ['l', 'r']) {
+    const z = document.getElementById(`ptZona_${k}`);
+    z.addEventListener('pointerdown', (e) => abajo(k, e));
+    z.addEventListener('pointerup', (e) => arriba(k, e));
+    z.addEventListener('pointercancel', (e) => arriba(k, e));
+    z.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+
+  // ---------------------------------------------------------------- abrir / cerrar
+  let wake = null;
+  async function abrir() {
+    const ov = $('#ptOverlay');
+    ov.hidden = false; ov.classList.toggle('solo', P.modo === 'solo');
+    document.body.classList.add('practica');
+    $('#ptTipo').textContent = (P.arbol === 'pro' ? 'Árbol Pro .4' : 'Árbol Full .5') + (P.retraso > 0 ? `, auto ${P.retraso.toFixed(2)} s` : '');
+    $('#ptScore').hidden = P.modo === 'solo';
+    $('#ptScore').textContent = `${marcador.l} – ${marcador.r}`;
+    reiniciar();
+    try { if ('wakeLock' in navigator) wake = await navigator.wakeLock.request('screen'); } catch (e) { wake = null; }
+  }
+  function cerrar() {
+    st.fase = 'cerrado'; limpiarTimers();
+    $('#ptOverlay').hidden = true;
+    document.body.classList.remove('practica');
+    try { if (wake) wake.release(); } catch (e) { /* */ } wake = null;
+    pintarStats();
+  }
+
+  // ---------------------------------------------------------------- estadísticas
+  function pintarStats() {
+    const delArbol = hist.filter((h) => h.arbol === P.arbol);
+    $('#psTitulo').textContent = `Tus salidas en modo solo, árbol ${P.arbol === 'pro' ? 'Pro .4' : 'Full .5'} (formato ${nombreFormato(P.formato)})`;
+    const ok = delArbol.filter((h) => !h.rojo && isFin(h.rt));
+    const ult = ok.slice(-20);
+    const prom = ult.length ? ult.reduce((s, h) => s + h.rt, 0) / ult.length : NaN;
+    const mejor = ok.length ? Math.min(...ok.map((h) => h.rt)) : NaN;
+    const rojos = delArbol.filter((h) => h.rojo).length;
+    $('#psMejor').textContent = fmtRT(mejor, P.arbol, P.formato);
+    $('#psProm').textContent = fmtRT(prom, P.arbol, P.formato);
+    $('#psRojas').textContent = delArbol.length ? `${rojos} de ${delArbol.length}` : '—';
+    const ul = $('#psUlt'); ul.innerHTML = '';
+    for (const h of delArbol.slice(-12).reverse()) {
+      const li = document.createElement('li');
+      li.textContent = isFin(h.rt) ? fmtRT(h.rt, h.arbol, P.formato) : 'roja';
+      if (h.rojo) li.className = 'rojo';
+      ul.appendChild(li);
+    }
+    $('#psVacio').hidden = delArbol.length > 0;
+  }
+
+  // ---------------------------------------------------------------- ajustes de práctica
+  function seg(id, key) {
+    const el = document.getElementById(id);
+    const pin = () => el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === P[key])));
+    el.querySelectorAll('button').forEach((b) => b.onclick = () => { P[key] = b.dataset.v; guardarCfg(); pin(); pintarStats(); });
+    pin();
+  }
+  seg('segPModo', 'modo'); seg('segPArbol', 'arbol'); seg('segPSalida', 'salida'); seg('segPFormato', 'formato');
+  const inRet = $('#inPRetraso');
+  inRet.value = P.retraso;
+  inRet.onchange = () => {
+    let x = parseFloat(String(inRet.value).replace(',', '.'));
+    if (!isFin(x)) x = 0;
+    x = Math.round(Math.min(0.5, Math.max(0, x)) * 100) / 100;
+    P.retraso = x; inRet.value = x; guardarCfg();
+  };
+  $('#btnPractica').onclick = abrir;
+  $('#ptCerrar').onclick = cerrar;
+  $('#btnPBorrar').onclick = () => { if (confirm('¿Borrar tus estadísticas de práctica?')) { hist = []; LS.set('dragtrim.practica.hist', hist); pintarStats(); } };
+  const tab = document.querySelector('.tabs button[data-view="vPractica"]');
+  if (tab) tab.addEventListener('click', pintarStats);
+  pintarStats();
+  window.__practica = { st, P, hist: () => hist, marcador };   // para pruebas
+})();
+
+</script>
+<script>
+/* rooster.js — Fórmulas de la calculadora "ROOSTER RACING" de Daniel (hoja de Excel, Hoja1).
+ *
+ * Dos capas:
+ *   Rooster.hoja(celdas)  reproduce la hoja EXACTAMENTE, con sus errores (se prueba celda por celda
+ *                         contra la hoja recalculada en LibreOffice: fuente/pruebas/calc.js).
+ *   Rooster.predecir, pesoParaET, caballosDesde, densidad*   lo que usa la app: las mismas fórmulas
+ *                         con los errores claros corregidos (ver "CORRECCIÓN").
+ *
+ * Unidades internas (las de la hoja): peso lb, potencia hp, temperatura °C, altitud y DA en pies,
+ * presión y boost en psi, velocidad en mph. La interfaz convierte al mostrar.
+ * Sin dependencias; queda en window.Rooster y en module.exports (para probar en Node).
+ */
+(function (root) {
+  'use strict';
+
+  const K = {
+    ET: 5.825,            // Hale/Huntington: ET 1/4 = 5.825 · (lb/hp)^(1/3)
+    MPH: 234,             // Hale/Huntington: MPH 1/4 = 234 · (hp/lb)^(1/3)
+    ETxMPH: 1363.05,      // = 5.825 · 234
+    TREN: 0.86,           // 14 % de pérdida en la transmisión (motor -> llanta)
+    PERDIDA_PIE: 0.03 / 1000, // 3 % de potencia por cada 1000 ft de DA
+    SESENTA: 0.145,       // 60 ft típico = 0.145 · ET 1/4 (auto con buena salida)
+    ET_14_18: 1.565,      // ET 1/4 = ET 1/8 · 1.565
+    V_14_18: 1.27,        // velocidad 1/4 = velocidad 1/8 · 1.27
+    MI_KM: 1.60934,
+    P_MAR: 14.696,        // psi al nivel del mar
+    LB_KG: 2.20462442018378,
+  };
+
+  // Tabla AH109:AI141 de la hoja: altitud (ft) -> presión del aire (psi), atmósfera estándar.
+  const TABLA_PRESION = [
+    [-5000, 17.55], [-4000, 16.95], [-3000, 16.36], [-2000, 15.79], [-1000, 15.24], [-500, 14.96],
+    [0, 14.7], [500, 14.43], [1000, 14.17], [1500, 13.92], [2000, 13.66], [2500, 13.42],
+    [3000, 13.17], [3500, 12.93], [4000, 12.69], [4500, 12.46], [5000, 12.23], [6000, 11.78],
+    [7000, 11.34], [8000, 10.92], [9000, 10.51], [10000, 10.11], [15000, 8.29], [20000, 6.75],
+    [25000, 5.45], [30000, 4.36], [35000, 3.46], [40000, 2.72], [45000, 2.14], [50000, 1.68],
+    [55000, 1.32], [60000, 1.04], [65000, 0.82],
+  ];
+
+  // Tabla N2:O6 de la hoja: pistas y su elevación (ft).
+  const PISTAS = [
+    { id: 'charco', nombre: 'El Charco', ft: 5600 },
+    { id: 'villa', nombre: 'Villa', ft: 5100 },
+    { id: 'chihuahua', nombre: 'Chihuahua', ft: 4900 },
+    { id: 'caldera', nombre: 'Caldera', ft: 4100 },
+    { id: 'monterrey', nombre: 'Monterrey', ft: 1440 },
+  ];
+
+  const cbrt = (x) => Math.pow(x, 1 / 3);
+
+  // ------------------------------------------------------------------ piezas de la hoja
+  /** C3: densidad de altitud (ft) con temperatura (°C) y altitud de la pista (ft). Incluye el ×1.075 de la hoja. */
+  function densidadHoja(tempC, altFt) {
+    return (((tempC - (15 - (2 / 1000 * altFt))) * 120) + altFt) * 1.075;
+  }
+  /** Fracción de potencia que queda a esa DA: 1 − 0.03/1000 · DA. */
+  const factorDA = (da) => 1 - K.PERDIDA_PIE * da;
+  /** Hale: ET 1/4 (s) y velocidad 1/4 (mph) con peso (lb) y potencia en la llanta (hp). */
+  const etHale = (peso, whp) => cbrt((peso / whp) * Math.pow(K.ET, 3));
+  const mphHale = (peso, whp) => cbrt((whp / peso) * Math.pow(K.MPH, 3));
+  /** F7/J7: 0-60 "de la hoja". v18 entra en la unidad que muestra la hoja (km/h si B1=1) pero se pasa
+   *  a m/s con el factor de mph: ese es el error. Con v18 en mph da el tiempo a 60 mph. */
+  const cero60 = (et18, v18) => (26.8223 / ((201.1675 - (v18 * 0.447038888888889)) / (0.5 * et18 * et18))) * 0.915;
+
+  /** Interpola la tabla AH:AI (psi a una altitud en ft). */
+  function presionTabla(ft) {
+    const T = TABLA_PRESION;
+    if (!(ft > T[0][0])) return T[0][1];
+    for (let i = 1; i < T.length; i++) {
+      if (ft <= T[i][0]) {
+        const [x0, y0] = T[i - 1], [x1, y1] = T[i];
+        return y0 + (y1 - y0) * (ft - x0) / (x1 - x0);
+      }
+    }
+    return T[T.length - 1][1];
+  }
+
+  // ------------------------------------------------------------------ densidad del aire real
+  /** Presión estándar (hPa) a una altitud (m). */
+  const presionISA_hPa = (m) => 1013.25 * Math.pow(1 - 2.25577e-5 * m, 5.25588);
+  /**
+   * Densidad de altitud real (ft) con presión de la estación (hPa), temperatura (°C) y humedad (%).
+   * Densidad del aire seco + vapor; luego la altitud estándar con esa densidad (fórmula del NWS).
+   * No lleva el ×1.075 de la hoja.
+   */
+  function densidadReal(presion_hPa, tempC, humedad) {
+    const Tk = tempC + 273.15;
+    const es = 6.1078 * Math.pow(10, (7.5 * tempC) / (tempC + 237.3));
+    const e = Math.max(0, Math.min(100, humedad || 0)) / 100 * es;
+    const rho = ((presion_hPa - e) * 100) / (287.058 * Tk) + (e * 100) / (461.495 * Tk);
+    return (44.3308 - 42.2665 * Math.pow(rho, 0.234969)) * 1000 * 3.28084;
+  }
+
+  // ------------------------------------------------------------------ lo que usa la app
+  /** Una columna de resultados (en esta pista o a nivel del mar) a partir de la potencia en la llanta. */
+  function columna(peso, whp) {
+    if (!(peso > 0 && whp > 0)) return null;
+    const et14 = etHale(peso, whp), v14 = mphHale(peso, whp);
+    const et18 = et14 / K.ET_14_18, v18 = v14 / K.V_14_18;
+    return {
+      whp, et14, v14, et18, v18,
+      sesenta: et14 * K.SESENTA,
+      cero60: cero60(et18, v18), // CORRECCIÓN: siempre con la velocidad en mph (como la hoja con B1=0)
+    };
+  }
+
+  /**
+   * Potencia en la llanta según el tipo de motor (fórmulas de la hoja).
+   *  atmos/nitro: hp·0.86·f + nitro   (filas 1-8; el nitro se suma ya en la llanta, como la hoja)
+   *  turbo: (hp + hp/pAmb·boost)·f·0.86   (filas 11-17)
+   * CORRECCIÓN: pAmb ya no es 11.34 fijo: es la presión de la tabla de la hoja a la DA del momento
+   * (11.34 = 7000 ft, el criterio de la hoja); a nivel del mar 14.696. Así, con boost 0 da igual que atmosférico.
+   */
+  function whp(p, da) {
+    const f = da === null ? 1 : factorDA(da);
+    if (p.motor === 'turbo') {
+      const pAmb = da === null ? K.P_MAR : presionTabla(da);
+      return (p.hp + p.hp / pAmb * (p.boost || 0)) * f * K.TREN;
+    }
+    return p.hp * K.TREN * f + (p.motor === 'nitro' ? (p.nitro || 0) : 0);
+  }
+
+  /**
+   * Predicción: {peso (lb), hp (al motor), motor: 'atmos'|'nitro'|'turbo', nitro (hp), boost (psi), da (ft)}
+   * -> {pista: columna, mar: columna, rinde (fracción), pAmb (psi, turbo)}
+   */
+  function predecir(p) {
+    return {
+      pista: columna(p.peso, whp(p, p.da)),
+      mar: columna(p.peso, whp(p, null)),
+      rinde: factorDA(p.da),
+      pAmb: presionTabla(p.da),
+    };
+  }
+
+  /** C8: peso (lb) para hacer una ET 1/4 meta con esa potencia y DA. (La hoja: whp·(ET/5.825)^3.) */
+  function pesoParaET(p, et14) {
+    const w = whp(p, p.da);
+    return w > 0 && et14 > 0 ? w * Math.pow(et14 / K.ET, 3) : NaN;
+  }
+
+  /**
+   * Inverso (filas 20-23): caballos con un tiempo o una velocidad.
+   * {peso (lb), da (ft), dato: 'et18'|'v18'|'et14'|'v14', valor (s o mph), motor, nitro, boost}
+   * -> {whp: en la llanta ese día, hp: del motor (como se escriben arriba), et14, v14 equivalentes}
+   * Atmosférico = B21:B23 de la hoja. CORRECCIONES: ya no se calcula desde el 60 ft (depende de la
+   * salida, no del motor); se aceptan datos de 1/4; con nitro o turbo se despeja con el mismo modelo
+   * de la predicción (se resta el shot / se quita el boost), así la ida y vuelta da los mismos hp.
+   */
+  function caballosDesde(p) {
+    let v14;
+    if (p.dato === 'et18') v14 = K.ETxMPH / (p.valor * K.ET_14_18);
+    else if (p.dato === 'v18') v14 = p.valor * K.V_14_18;
+    else if (p.dato === 'et14') v14 = K.ETxMPH / p.valor;
+    else v14 = p.valor;
+    if (!(v14 > 0 && p.peso > 0 && isFinite(v14) && factorDA(p.da) > 0)) return null;
+    const w = p.peso * Math.pow(v14 / K.MPH, 3);
+    // whp es lineal en hp: whp = hp·porHp + extra
+    const porHp = whp(Object.assign({}, p, { hp: 1, nitro: 0 }), p.da);
+    const extra = p.motor === 'nitro' ? (p.nitro || 0) : 0;
+    if (!(porHp > 0)) return null;
+    return { whp: w, hp: (w - extra) / porHp, et14: K.ETxMPH / v14, v14 };
+  }
+
+  // ------------------------------------------------------------------ hoja exacta (para pruebas)
+  /** Evalúa la hoja con sus celdas de entrada y devuelve {celda: valor}, igual que Excel/LibreOffice. */
+  function hoja(e) {
+    const B1 = e.B1, B11 = e.B11, kmh = (v, u) => (u === 1 ? v * 1.60934 : v);
+    const C3 = densidadHoja(e.A6, e.A8), f3 = factorDA(C3);
+    const colA = (w) => {
+      const et = etHale(e.A3, w), v = kmh(mphHale(e.A3, w), B1);
+      return { D: et * 0.145, E: et, F: v, G: e.A3 / Math.pow(et / 5.825, 3), E5: et / 1.565, F5: v / 1.27 };
+    };
+    const d = colA((e.B3 * 0.86) * f3 + (e.C6 || 0)), n = colA((e.B3 * 0.86) + (e.C6 || 0));
+    const hb = e.B13 + (e.B13 / 11.34 * (e.A17 || 0)), hbm = e.B13 + (e.B13 / 14.696 * (e.A17 || 0));
+    const g14 = hb * factorDA(e.C13) * 0.86, e14 = etHale(e.A13, g14), i14 = etHale(e.A13, hbm * 0.86);
+    const f14 = B11 === 1 ? mphHale(e.A13, g14) * 1.60934 : cbrt((g14 / e.A13 + (e.C26 || 0)) * Math.pow(234, 3));
+    const o = {
+      F2: B1 === 1 ? '1/4 Km/H' : '1/4 MPH', J2: B1 === 1 ? '1/4 Km/H' : '1/4 MPH',
+      F13: B11 === 1 ? '1/4 Km/H' : '1/4 MPH',
+      C3, D3: d.D, E3: d.E, F3: d.F, G3: d.G, H3: n.D, I3: n.E, J3: n.F, K3: n.G,
+      E5: d.E5, F5: d.F5, I5: n.E5, J5: n.F5,
+      F7: cero60(d.E5, d.F5), J7: cero60(n.E5, n.F5),
+      C8: ((((e.B3 * 0.86) * f3) + (e.C6 || 0)) * Math.pow(e.B8 / 5.825, 3)),
+      D14: e14 * 0.145, E14: e14, F14: f14, G14: g14,
+      H14: i14 * 0.145, I14: i14, J14: kmh(mphHale(e.A13, hbm * 0.86), B11), K14: hbm * 0.86,
+      A15: e.A13 / K.LB_KG,
+    };
+    const fila = (f, C, D, E) => {
+      o['C' + f] = C; o['D' + f] = D; o['E' + f] = E; o['F' + f] = D * 1.565; o['G' + f] = E * 1.27;
+      o['B' + f] = (e.A3 * Math.pow((E * 1.27) / 234, 3)) / f3 / 0.86;
+    };
+    let D = (e.C21 / 0.141) / 1.565; fila(21, e.C21, D, ((1363.05 / D) / 1.565) / 1.27);
+    D = e.D22; fila(22, (D * 1.565) * 0.141, D, ((1363.05 / D) / 1.565) / 1.27);
+    D = ((1363.05 / e.E23) / 1.565) / 1.27; fila(23, (D * 1.565) * 0.141, D, e.E23);
+    return o;
+  }
+
+  const api = {
+    K, TABLA_PRESION, PISTAS,
+    densidadHoja, densidadReal, presionISA_hPa, presionTabla, factorDA, etHale, mphHale, cero60,
+    predecir, pesoParaET, caballosDesde, hoja,
+  };
+  root.Rooster = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+</script>
+<script>
+/* calculadora.js — Pestaña "Calcular": aproximaciones con la hoja Rooster Racing (fórmulas en rooster.js).
+ * Condiciones del aire de dos formas: "En la pista (teléfono)" = ubicación + clima del momento
+ * (densidad del aire real), o "Altura que yo elija" = pista guardada o altura escrita + temperatura
+ * (fórmula de la hoja). Todo se guarda en el teléfono (localStorage 'dragtrim.calc'). */
+(function () {
+  'use strict';
+  const R = window.Rooster;
+  const $ = (s) => document.querySelector(s);
+  const isFin = Number.isFinite;
+  const LS = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
+  };
+  const FT_M = 3.28084;
+
+  // Valores iniciales: el auto de Daniel (1320 lb, 308 hp, guiño personal) y las condiciones de su hoja
+  // (Villa 5100 ft, 20 °C, meta 15.00 s). La hoja original traía 3100 lb y 420 hp.
+  const DEF = {
+    aire: 'manual', pista: 'villa', alt: 5100, temp: 20, daSe: false, da: 7443,
+    peso: 1320, pesoU: 'lb', hp: 308, motor: 'atmos', nitro: 100, boost: 8,
+    metaD: '4', metaT: 15, invD: '8', invDato: 'v', invVal: null,
+    lectura: null, tempTel: null, invU: null,
+  };
+  const C = Object.assign({}, DEF, LS.get('dragtrim.calc', {}));
+  // Quien ya abrió la calculadora con los valores viejos de fábrica (3100 lb, 420 hp) sin cambiarlos, pasa a los nuevos.
+  if (C.peso === 3100 && C.pesoU === 'lb' && C.hp === 420) { C.peso = DEF.peso; C.hp = DEF.hp; }
+  const guardar = () => LS.set('dragtrim.calc', C);
+
+  // ------------------------------------------------------------------ formato
+  const unidadVel = () => (LS.get('dragtrim.settings', {}).unidad === 'mph' ? 'mph' : 'km/h');
+  const deMph = (v) => (unidadVel() === 'mph' ? v : v * R.K.MI_KM);
+  const aMph = (v) => (unidadVel() === 'mph' ? v : v / R.K.MI_KM);
+  const miles = (x) => (isFin(x) ? Math.round(x).toLocaleString('es-MX') : '—');
+  const fx = (x, d) => (isFin(x) ? x.toFixed(d) : '—');
+  const num = (el) => { const x = parseFloat(String(el.value).replace(',', '.')); return isFin(x) ? x : NaN; };
+  const pesoLb = () => (C.pesoU === 'kg' ? C.peso * R.K.LB_KG : C.peso);
+  const fmtPeso = (lb) => {
+    if (!isFin(lb)) return '—';
+    const kg = lb / R.K.LB_KG;
+    return C.pesoU === 'kg' ? `${miles(kg)} kg (${miles(lb)} lb)` : `${miles(lb)} lb (${miles(kg)} kg)`;
+  };
+  const hace = (t) => {
+    const min = Math.round((Date.now() - t) / 60000);
+    if (min < 1) return 'hace un momento';
+    if (min < 60) return `hace ${min} min`;
+    const h = Math.floor(min / 60);
+    return h < 24 ? `hace ${h} h ${min % 60} min` : 'hace más de un día';
+  };
+
+  // ------------------------------------------------------------------ condiciones del aire
+  /** DA vigente (ft) y de dónde sale; null si falta información; {fuera: true} si no tiene sentido. */
+  function daActual() {
+    const d = daCruda();
+    if (d && !(d.da > -5000 && d.da < 20000)) return { fuera: true, da: d.da };
+    return d;
+  }
+  function daCruda() {
+    if (C.aire === 'manual') {
+      if (C.daSe) return isFin(C.da) ? { da: C.da, txt: 'la que escribiste' } : null;
+      if (!isFin(C.alt) || !isFin(C.temp)) return null;
+      return { da: R.densidadHoja(C.temp, C.alt), txt: `fórmula de tu hoja, ${miles(C.alt)} ft y ${fx(C.temp, 0)} °C` };
+    }
+    const L = C.lectura;
+    if (!L) return null;
+    if (L.fuente === 'clima') return { da: R.densidadReal(L.presion, L.temp, L.humedad), txt: 'clima de tu ubicación' };
+    if (!isFin(C.tempTel)) return null;
+    return { da: R.densidadReal(R.presionISA_hPa(L.alt), C.tempTel, 0), txt: 'altitud del GPS y tu temperatura' };
+  }
+
+  function estado(txt, err) { const e = $('#cEstado'); e.textContent = txt || ''; e.classList.toggle('err', !!err); }
+
+  async function tomarAqui() {
+    const btn = $('#cBtnAqui');
+    if (!('geolocation' in navigator) || !window.isSecureContext) {
+      estado('Este navegador no deja leer la ubicación aquí. Abre la app desde su enlace https:// o usa "Altura que yo elija".', true);
+      return;
+    }
+    btn.disabled = true;
+    estado('Buscando tu ubicación…');
+    let pos;
+    try {
+      pos = await new Promise((ok, mal) => navigator.geolocation.getCurrentPosition(ok, mal, { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 }));
+    } catch (e) {
+      btn.disabled = false;
+      estado(e && e.code === 1
+        ? 'No hay permiso para usar la ubicación. Actívalo para Drag Tree en los ajustes del teléfono, o usa "Altura que yo elija".'
+        : 'No pude obtener tu ubicación. Intenta de nuevo con vista al cielo, o usa "Altura que yo elija".', true);
+      return;
+    }
+    const c = pos.coords;
+    const altGps = isFin(c.altitude) && c.altitude !== null ? c.altitude : NaN;
+    estado('Consultando el clima de este momento…');
+    // Solo se manda la ubicación redondeada (~1 km) al servicio del clima.
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + c.latitude.toFixed(2) + '&longitude=' + c.longitude.toFixed(2) +
+      '&current=temperature_2m,relative_humidity_2m,surface_pressure&timezone=auto';
+    let clima = null;
+    const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 10000);
+    try {
+      const r = await fetch(url, { signal: ctl.signal, cache: 'no-store' });
+      const j = await r.json();   // el límite de 10 s cubre también la lectura de la respuesta
+      const cur = j && j.current;
+      if (r.ok && cur && isFin(cur.temperature_2m) && isFin(cur.surface_pressure) && isFin(cur.relative_humidity_2m)) clima = { cur, elev: j.elevation };
+    } catch (e) { clima = null; } finally { clearTimeout(to); }
+    btn.disabled = false;
+    if (clima) {
+      C.lectura = {
+        t: Date.now(), fuente: 'clima', temp: clima.cur.temperature_2m, presion: clima.cur.surface_pressure,
+        humedad: clima.cur.relative_humidity_2m,
+        alt: isFin(altGps) ? altGps : clima.elev, altDe: isFin(altGps) ? 'GPS' : 'mapa',
+      };
+      estado('');
+    } else if (isFin(altGps)) {
+      C.lectura = { t: Date.now(), fuente: 'gps', alt: altGps, altDe: 'GPS' };
+      // La temperatura se pide de nuevo: no se usa una vieja ni una inventada.
+      C.tempTel = NaN; $('#cTempTel').value = '';
+      estado('Sin internet: uso la altitud del GPS y la temperatura que escribas. Sin la presión y la humedad reales es menos exacta.');
+      setTimeout(() => $('#cTempTel').focus(), 50);
+    } else {
+      estado('No pude consultar el clima y el teléfono no dio la altitud. Revisa la señal o usa "Altura que yo elija".', true);
+      return;
+    }
+    guardar(); pintar();
+  }
+
+  function pintarLectura() {
+    const L = C.lectura, dl = $('#cLectura');
+    $('#cTempTelBox').hidden = !(L && L.fuente === 'gps');
+    if (!L) { dl.hidden = true; return; }
+    const fila = (k, v) => `<dt>${k}</dt><dd>${v}</dd>`;
+    let h = '';
+    if (L.fuente === 'clima') {
+      h += fila('Temperatura', `${fx(L.temp, 1)} °C`);
+      h += fila('Presión del aire', `${fx(L.presion, 0)} hPa (${fx(L.presion * 0.0145038, 2)} psi)`);
+      h += fila('Humedad', `${fx(L.humedad, 0)} %`);
+    }
+    h += fila(`Altitud (${L.altDe})`, `${miles(L.alt)} m (${miles(L.alt * FT_M)} ft)`);
+    const viejo = Date.now() - L.t > 3 * 3600 * 1000;
+    h += fila('Tomado', `${new Date(L.t).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}, ${hace(L.t)}`);
+    dl.innerHTML = h; dl.hidden = false;
+    $('#cViejo').hidden = !viejo;
+  }
+
+  // ------------------------------------------------------------------ pintar todo
+  function pintar() {
+    // selectores
+    for (const [id, key] of [['segCAire', 'aire'], ['segCPesoU', 'pesoU'], ['segCMotor', 'motor'], ['segCMetaD', 'metaD'], ['segCInvD', 'invD'], ['segCInvDato', 'invDato']]) {
+      document.getElementById(id).querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === C[key])));
+    }
+    $('#cTel').hidden = C.aire !== 'tel';
+    $('#cMan').hidden = C.aire !== 'manual';
+    $('#cPista').value = R.PISTAS.some((p) => p.id === C.pista) ? C.pista : 'otra';
+    $('#cAltM').textContent = isFin(C.alt) ? `≈ ${miles(C.alt / FT_M)} m sobre el nivel del mar` : '';
+    $('#cTempBox').hidden = C.daSe;
+    $('#cAltBox').hidden = C.daSe;
+    $('#cDaBox').hidden = !C.daSe;
+    $('#cNitroBox').hidden = C.motor !== 'nitro';
+    $('#cBoostBox').hidden = C.motor !== 'turbo';
+    $('#cPesoOtro').textContent = isFin(C.peso) && C.peso > 0
+      ? (C.pesoU === 'kg' ? `= ${miles(C.peso * R.K.LB_KG)} lb` : `= ${miles(C.peso / R.K.LB_KG)} kg`) : '';
+    pintarLectura();
+
+    let D = daActual();
+    const daRes = $('#cDaRes');
+    if (!D) {
+      daRes.innerHTML = C.aire === 'tel' && !C.lectura ? 'Toca <b>Tomar condiciones de aquí</b> para calcular la altitud de densidad.'
+        : C.aire === 'tel' && C.lectura && C.lectura.fuente === 'gps' ? 'Escribe la temperatura del aire para calcular la altitud de densidad.'
+        : 'Faltan datos para calcular la altitud de densidad.';
+    } else if (D.fuera) {
+      daRes.innerHTML = `La altitud de densidad saldría <b>${miles(D.da)} ft</b>: revisa la altura, la temperatura o la DA que escribiste.`;
+      daRes.classList.add('err');
+      D = null;
+    } else {
+      daRes.innerHTML = `Altitud de densidad (DA) <b>≈ ${miles(D.da)} ft</b> · tu motor rinde <b>≈ ${fx(R.factorDA(D.da) * 100, 0)} %</b><small>${D.txt}</small>`;
+    }
+    if (D || !daRes.innerHTML.startsWith('La altitud')) daRes.classList.remove('err');
+    const auto = { peso: pesoLb(), hp: C.hp, motor: C.motor, nitro: C.nitro, boost: C.boost, da: D ? D.da : NaN };
+    $('#cPAmb').textContent = D ? `Presión del aire que usa la hoja para el turbo: ${fx(R.presionTabla(D.da), 2)} psi (a nivel del mar 14.70).` : '';
+
+    // resultados
+    const r = D && auto.peso > 0 && auto.hp > 0 ? R.predecir(auto) : null;
+    const u = unidadVel();
+    $('#cColPista').textContent = D ? `DA ${miles(D.da)} ft` : '';
+    const filas = [
+      ['1/4 tiempo', (c) => `${fx(c.et14, 2)} s`],
+      [`1/4 velocidad`, (c) => `${fx(deMph(c.v14), 1)} ${u}`],
+      ['1/8 tiempo', (c) => `${fx(c.et18, 2)} s`],
+      ['1/8 velocidad', (c) => `${fx(deMph(c.v18), 1)} ${u}`],
+      ['60 ft típico', (c) => `${fx(c.sesenta, 2)} s`],
+      ['0–60 mph', (c) => `${fx(c.cero60, 2)} s`],
+      ['Caballos en la llanta', (c) => `${miles(c.whp)} hp`],
+    ];
+    const celda = (c, f) => (c && isFin(c.et14) ? '≈ ' + f(c) : '—');
+    $('#cTabla').innerHTML = filas.map(([k, f], i) =>
+      `<tr${i === 0 ? ' class="et"' : ''}><th scope="row">${k}</th><td>${celda(r && r.pista, f)}</td><td>${celda(r && r.mar, f)}</td></tr>`).join('');
+
+    // peso para un tiempo meta
+    const metaRes = $('#cMetaRes');
+    const lbMeta = r && r.pista && isFin(C.metaT) && C.metaT > 0
+      ? R.pesoParaET(auto, C.metaD === '8' ? C.metaT * R.K.ET_14_18 : C.metaT) : NaN;
+    if (isFin(lbMeta) && lbMeta > 0) {
+      const dif = lbMeta - auto.peso, kg = C.pesoU === 'kg';
+      const difTxt = Math.abs(dif) < 1 ? 'igual que ahora' : `${miles(Math.abs(kg ? dif / R.K.LB_KG : dif))} ${C.pesoU} ${dif > 0 ? 'más' : 'menos'} que ahora`;
+      const otro = kg ? `${miles(lbMeta)} lb` : `${miles(lbMeta / R.K.LB_KG)} kg`;
+      metaRes.innerHTML = `Deberías pesar <b>≈ ${miles(kg ? lbMeta / R.K.LB_KG : lbMeta)} ${C.pesoU}</b><small>= ${otro} · ${difTxt}</small>`;
+    } else metaRes.textContent = '—';
+
+    // caballos con tu tiempo
+    const esV = C.invDato === 'v';
+    // La velocidad escrita se guarda con su unidad: si cambió en Ajustes, se convierte (no se reinterpreta).
+    if (esV && isFin(C.invVal) && C.invU && C.invU !== u) {
+      C.invVal = u === 'mph' ? C.invVal / R.K.MI_KM : C.invVal * R.K.MI_KM;   // sin redondear: el resultado no brinca
+      $('#cInvVal').value = Math.round(C.invVal * 10) / 10; guardar();
+    }
+    C.invU = u;
+    $('#cInvU').textContent = esV ? u : 's';
+    $('#cInvLab').textContent = `${esV ? 'Velocidad' : 'Tiempo'} de ${C.invD === '8' ? '1/8' : '1/4'}`;
+    const invRes = $('#cInvRes');
+    if (D && isFin(C.invVal) && C.invVal > 0 && auto.peso > 0) {
+      const dato = (esV ? 'v' : 'et') + (C.invD === '8' ? '18' : '14');
+      const x = R.caballosDesde(Object.assign({}, auto, { dato, valor: esV ? aMph(C.invVal) : C.invVal }));
+      const extra = C.motor === 'nitro' ? ` + shot de ${miles(C.nitro)}` : C.motor === 'turbo' ? ` con ${fx(C.boost, 0)} psi de boost` : '';
+      invRes.innerHTML = x && x.hp > 0
+        ? `<b>≈ ${miles(x.hp)} hp</b> del motor${extra}<small>Como se escriben arriba (al volante, a nivel del mar). ≈ ${miles(x.whp)} hp en la llanta con estas condiciones.</small>`
+        : '—';
+    } else invRes.textContent = '—';
+  }
+
+  // ------------------------------------------------------------------ controles
+  function seg(id, key, extra) {
+    document.getElementById(id).querySelectorAll('button').forEach((b) => {
+      b.onclick = () => { if (extra) extra(b.dataset.v); C[key] = b.dataset.v; guardar(); pintar(); };
+    });
+  }
+  function campo(id, key, despues) {
+    const el = document.getElementById(id);
+    el.value = isFin(C[key]) ? C[key] : '';
+    el.addEventListener('input', () => { C[key] = num(el); if (despues) despues(); guardar(); pintar(); });
+  }
+
+  const selP = $('#cPista');
+  selP.innerHTML = R.PISTAS.map((p) => `<option value="${p.id}">${p.nombre} · ${p.ft.toLocaleString('es-MX')} ft</option>`).join('') +
+    '<option value="otra">Otra altura</option>';
+  selP.onchange = () => {
+    C.pista = selP.value;
+    const p = R.PISTAS.find((x) => x.id === C.pista);
+    if (p) { C.alt = p.ft; $('#cAlt').value = p.ft; }
+    else $('#cAlt').focus();
+    guardar(); pintar();
+  };
+  seg('segCAire', 'aire');
+  seg('segCMotor', 'motor');
+  seg('segCMetaD', 'metaD');
+  seg('segCInvD', 'invD');
+  seg('segCInvDato', 'invDato', (v) => {
+    if (v !== C.invDato) { C.invVal = null; $('#cInvVal').value = ''; }
+  });
+  seg('segCPesoU', 'pesoU', (v) => {
+    // Al cambiar de unidad el peso sigue siendo el mismo: se convierte el número.
+    if (v !== C.pesoU && isFin(C.peso)) {
+      C.peso = Math.round(v === 'kg' ? C.peso / R.K.LB_KG : C.peso * R.K.LB_KG);
+      $('#cPeso').value = C.peso;
+    }
+  });
+  campo('cAlt', 'alt', () => {
+    const p = R.PISTAS.find((x) => x.ft === C.alt);
+    C.pista = p ? p.id : 'otra';
+  });
+  campo('cTemp', 'temp');
+  campo('cDa', 'da');
+  campo('cTempTel', 'tempTel');
+  campo('cPeso', 'peso');
+  campo('cHp', 'hp');
+  campo('cNitro', 'nitro');
+  campo('cBoost', 'boost');
+  campo('cMetaT', 'metaT');
+  campo('cInvVal', 'invVal');
+  const daSe = $('#cDaSe');
+  daSe.checked = !!C.daSe;
+  daSe.onchange = () => {
+    C.daSe = daSe.checked;
+    // Se llena con la DA de las condiciones elegidas, para corregirla con la del día.
+    if (C.daSe && isFin(C.alt) && isFin(C.temp)) { C.da = Math.round(R.densidadHoja(C.temp, C.alt)); $('#cDa').value = C.da; }
+    guardar(); pintar();
+  };
+  $('#cBtnAqui').onclick = tomarAqui;
+
+  // Al entrar a la pestaña se repinta (la unidad de velocidad pudo cambiar en Ajustes; "hace X min").
+  const tab = document.querySelector('.tabs button[data-view="vCalc"]');
+  if (tab) tab.addEventListener('click', pintar);
+  pintar();
+  window.__calc = { C, pintar, daActual };   // para pruebas
+})();
+
+</script>
+</body>
+</html>

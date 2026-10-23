@@ -13,14 +13,17 @@
   };
   const FT_M = 3.28084;
 
-  // Valores iniciales = los de la hoja de Daniel (3100 lb, 420 hp, Villa 5100 ft, 20 °C, meta 15.00 s).
+  // Valores iniciales: el auto de Daniel (1320 lb, 308 hp, guiño personal) y las condiciones de su hoja
+  // (Villa 5100 ft, 20 °C, meta 15.00 s). La hoja original traía 3100 lb y 420 hp.
   const DEF = {
     aire: 'manual', pista: 'villa', alt: 5100, temp: 20, daSe: false, da: 7443,
-    peso: 3100, pesoU: 'lb', hp: 420, motor: 'atmos', nitro: 100, boost: 8,
+    peso: 1320, pesoU: 'lb', hp: 308, motor: 'atmos', nitro: 100, boost: 8,
     metaD: '4', metaT: 15, invD: '8', invDato: 'v', invVal: null,
     lectura: null, tempTel: null, invU: null,
   };
   const C = Object.assign({}, DEF, LS.get('dragtrim.calc', {}));
+  // Quien ya abrió la calculadora con los valores viejos de fábrica (3100 lb, 420 hp) sin cambiarlos, pasa a los nuevos.
+  if (C.peso === 3100 && C.pesoU === 'lb' && C.hp === 420) { C.peso = DEF.peso; C.hp = DEF.hp; }
   const guardar = () => LS.set('dragtrim.calc', C);
 
   // ------------------------------------------------------------------ formato

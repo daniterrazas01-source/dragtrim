@@ -63,9 +63,13 @@ async def main():
             async def escribe(sel, val):
                 await pg.fill(sel, str(val)); await pg.dispatch_event(sel, 'input'); await pg.wait_for_timeout(50)
 
-            # 1) valores de la hoja por defecto
+            # 1) valores de inicio (el auto de Daniel) y luego los de la hoja
             await pg.click('.tabs button[data-view="vCalc"]'); await pg.wait_for_timeout(700)
             await pg.screenshot(path=SH + 'calc_01_inicio.png', full_page=True)
+            chk(await pg.input_value('#cPeso') == '1320' and await pg.input_value('#cHp') == '308', 'de inicio salen 1320 lb y 308 hp')
+            e0 = await pg.evaluate("Rooster.predecir({peso:1320,hp:308,motor:'atmos',da:Rooster.densidadHoja(20,5100)}).pista.et14.toFixed(2)")
+            chk((await tabla())[0][1] == f'≈ {e0} s', f'tiempo de inicio con 1320 lb y 308 hp: {e0} s')
+            await escribe('#cPeso', 3100); await escribe('#cHp', 420)
             t = await tabla()
             print(t)
             fila = {r[0]: r[1:] for r in t}
@@ -180,6 +184,14 @@ async def main():
             chk('≈ 420 hp' in inv and 'shot' in inv, f'nitro: ida y vuelta da 420 hp del motor: {inv!r}')
             await pg.click('#segCMotor button[data-v="atmos"]')
 
+            # 9b) quien tenía guardados los valores viejos de fábrica (3100/420) pasa a 1320/308; otros valores se respetan
+            for viejo, esperado in (({'peso': 3100, 'pesoU': 'lb', 'hp': 420}, ('1320', '308')), ({'peso': 2800, 'pesoU': 'lb', 'hp': 420}, ('2800', '420'))):
+                await pg.evaluate(f"localStorage.setItem('dragtrim.calc', JSON.stringify({json.dumps(viejo)}))")
+                await pg.reload(); await pg.wait_for_timeout(400)
+                await pg.click('.tabs button[data-view="vCalc"]'); await pg.wait_for_timeout(400)
+                v = (await pg.input_value('#cPeso'), await pg.input_value('#cHp'))
+                chk(v == esperado, f'guardado {viejo} -> {v}')
+            await escribe('#cPeso', 3100); await escribe('#cHp', 420)
             # 10) se guarda al recargar
             await escribe('#cHp', 500)
             await pg.reload(); await pg.wait_for_timeout(500)

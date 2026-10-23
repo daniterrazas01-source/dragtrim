@@ -805,8 +805,8 @@
   $('#btnCancelar').onclick = () => { salirSesion(); };
   $('#btnTerminar').onclick = () => finCorrida('manual');
 
-  // ------------------------------------------------------------ instalación (PWA) y compartir
-  const URL_APP = 'https://daniterrazas01-source.github.io/dragtrim/';
+  // ------------------------------------------------------------ instalación (PWA)
+  // Sin botón de compartir a propósito: Daniel pasa el enlace en persona (0.5.2).
   const ua = navigator.userAgent;
   const P = {
     ipad: /iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),
@@ -823,7 +823,7 @@
 
   function pasosInstalar() {
     const fin = '<p class="hint">Después ábrela siempre desde el ícono nuevo: así funciona sin internet y ahí se guardan tus corridas.</p>';
-    if (instalada) return '<p>Ya estás usando la app instalada. Para que tus amigos la tengan, compárteles el enlace.</p>';
+    if (instalada) return '<p>Ya estás usando la app instalada.</p>';
     if (P.enApp) return `<p>Estás viendo la app dentro de otra app (Instagram, Facebook…), y desde ahí no se puede instalar.</p>
       <ol><li>Toca el menú <b>⋯</b> de esta pantalla.</li><li>Elige <b>Abrir en el navegador</b> (${P.ios ? 'Safari' : 'Chrome'}).</li><li>Ahí sigue los pasos para instalarla.</li></ol>`;
     if (P.ios && P.navIOS === 'Safari') return `<ol>
@@ -859,13 +859,6 @@
     };
   });
   $('#guiaOcultar').onclick = () => { LS.set('dragtrim.guiaOculta', true); pintarGuia(); };
-  $('#btnCompartir').onclick = async () => {
-    const datos = { title: 'Drag Tree', text: 'Mide tus arrancones (60 ft, 1/8 y 1/4) con el teléfono y practica la salida con el semáforo:', url: URL_APP };
-    try { if (navigator.share) { await navigator.share(datos); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
-    try { await navigator.clipboard.writeText(URL_APP); $('#btnCompartir').textContent = 'Enlace copiado: pégalo en WhatsApp'; }
-    catch (e) { $('#btnCompartir').textContent = 'Copia el enlace de abajo'; }
-    setTimeout(() => { $('#btnCompartir').textContent = 'Compartir la app con un amigo'; }, 4000);
-  };
   pintarGuia();
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('sw.js').catch(() => { /* la app funciona igual sin modo sin conexión */ });
