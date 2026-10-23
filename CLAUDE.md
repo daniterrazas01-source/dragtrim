@@ -108,9 +108,12 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
     dar pistas) se encienden los stickers del fondo: verdes según qué tan cerca de la perfecta
     (v = (1 − rt/0.200)^1.3; rt desde la verde, .000 = .400 Pro/.500 Full), rojos con luz roja o reacción
     lenta (r = (rt − 0.250)/0.250). Se apaga al hacer stage otra vez. 1 vs 1: cada mitad con su carril.
-    build.py genera `fondos/<id>_brillo_{verde,rojo}.webp` (formas de los stickers de ese color; si el
-    fondo no tiene ese color, sus stickers blancos, y si tampoco, todos los de color) y una fuerza máxima
-    por fondo según cuánto cubren (0.15/cobertura, inyectada en app.js como BRILLO). Sin fondo: resplandor
+    build.py genera `fondos/<id>_brillo_{verde,rojo}.webp`: en Combinado, Combinado rojo y Botella NOS
+    recorta solo los stickers de ese color; en **Neón, Blanco y negro y el verde de Rojo** usa logos de
+    marcas **elegidos a mano** (pedido de Daniel: que se prendan logos sueltos, no todo el fondo), en
+    `fuente/fondos/brillo/` (lista LOGOS en `hacer_mascaras.py`; correrlo regenera los PNG). Fuerza
+    máxima por fondo según cuánto cubren (0.15/cobertura, inyectada en app.js como BRILLO); brillo_test
+    revisa que ningún fondo prenda más del 16 % de la pantalla. Sin fondo: resplandor
     detrás del árbol. Las luces del árbol siguen sin transición; pt_test da los mismos tiempos.
 
 ```
@@ -126,6 +129,7 @@ fuente/publicar.sh             build + copia a la raíz
 fuente/matlab/                 script MATLAB Mobile v2.3 (mismo algoritmo); Drag_tree_v2_unico.m = todo en un archivo
 fuente/pruebas/                pruebas (ver abajo)
 fuente/fondos/                 fondos originales (PNG); se publican como fondos/*.webp
+fuente/fondos/brillo/          logos que se prenden en Práctica para fondos de un solo color (hacer_mascaras.py + PNG)
 archivo/                       respaldo: originales/ (archivos de Daniel sin tocar, p. ej. ROOSTER_RACING.xlsx)
                                y versiones/ (index.html de cada versión publicada); ver archivo/LEEME.md
 ```

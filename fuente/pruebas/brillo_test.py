@@ -14,7 +14,16 @@ fallas = []
 def chk(c, t):
     print(('ok    ' if c else 'FALLA ') + t)
     if not c: fallas.append(t)
+
+def revisar_mascaras():
+    # Que en ningún fondo se prenda casi toda la pantalla: solo logos sueltos (como en Combinado)
+    from PIL import Image, ImageStat
+    import glob
+    for f in sorted(glob.glob(os.path.join(DIST, 'fondos', '*_brillo_*.webp'))):
+        cubre = ImageStat.Stat(Image.open(f).getchannel('A')).mean[0] / 255
+        chk(0.02 <= cubre <= 0.16, f'{os.path.basename(f)}: se prende el {cubre * 100:.1f} % de la pantalla')
 async def main():
+    revisar_mascaras()
     srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(PUERTO), '-d', DIST], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     await asyncio.sleep(0.8)
     try:

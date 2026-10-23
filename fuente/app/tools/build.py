@@ -89,7 +89,8 @@ if FONDOS_SRC.exists():
         im.resize((1080, round(im.height * 1080 / im.width)), Image.LANCZOS).save(DIST / 'fondos' / f'{fid}.webp', quality=72, method=6)
         im.resize((180, round(im.height * 180 / im.width)), Image.LANCZOS).save(DIST / 'fondos' / f'{fid}_mini.webp', quality=70, method=6)
         # Práctica: formas de los stickers verdes y rojos del fondo, para encenderlos según la reacción.
-        # Si el fondo no tiene ese color, se usan sus stickers blancos (se tiñen en la app).
+        # Fondos de un solo color (Neón, Blanco y negro, y el verde de Rojo): logos elegidos a mano en
+        # fuente/fondos/brillo/. Los demás se recortan solos por color.
         chico = im.resize((540, round(im.height * 540 / im.width)), Image.LANCZOS)
         h, s, v = chico.convert('HSV').split()
         def banda(canal, lo, hi):
@@ -105,7 +106,10 @@ if FONDOS_SRC.exists():
         rojo = y(color, ImageChops.lighter(banda(h, 0, 13), banda(h, 241, 255)))   # ≤ 18° o ≥ 340°
         blanco = Image.new('L', chico.size, 255)
         for nombre, m in (('verde', verde), ('rojo', rojo)):
-            if ImageStat.Stat(m).mean[0] / 255 < 0.01:
+            elegida = FONDOS_SRC / 'brillo' / f'{fid}_{nombre}.png'   # logos elegidos a mano (fondos/brillo/hacer_mascaras.py)
+            if elegida.exists():
+                m = Image.open(elegida).convert('L').resize(chico.size, Image.NEAREST)
+            elif ImageStat.Stat(m).mean[0] / 255 < 0.01:
                 # sin ese color: los stickers blancos; y si tampoco hay blancos (Neón), todos los de color
                 m = claros if ImageStat.Stat(claros).mean[0] / 255 >= 0.01 else color
             # entre más pantalla cubra la forma, menos brilla (si no, se pinta todo y no se lee el tiempo)

@@ -2377,7 +2377,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
     { id: 'blanco_negro', nombre: 'Blanco y negro', acento: '#ffffff' },
   ];
   // Fuerza máxima del brillo de Práctica por fondo: build.py la calcula según cuánto cubren los stickers.
-  const BRILLO = {"blanco_negro": {"rojo": 0.28, "verde": 0.28}, "botella_nos": {"rojo": 1.0, "verde": 1.0}, "combinado": {"rojo": 1.0, "verde": 1.0}, "combinado_rojo": {"rojo": 1.0, "verde": 1.0}, "neon": {"rojo": 0.22, "verde": 0.22}, "rojo": {"rojo": 1.0, "verde": 0.29}};
+  const BRILLO = {"blanco_negro": {"rojo": 1.0, "verde": 1.0}, "botella_nos": {"rojo": 1.0, "verde": 1.0}, "combinado": {"rojo": 1.0, "verde": 1.0}, "combinado_rojo": {"rojo": 1.0, "verde": 1.0}, "neon": {"rojo": 1.0, "verde": 1.0}, "rojo": {"rojo": 1.0, "verde": 1.0}};
   function aplicarFondo() {
     const f = FONDOS.find((x) => x.id === S.fondo);
     const raiz = document.documentElement;
