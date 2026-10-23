@@ -50,6 +50,9 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
      grabar el árbol con la cámara, medir la reacción y registrarla con la corrida. No empezar sin
      que Daniel lo pida.
    - Más adelante: app nativa (Capacitor) para Play Store/App Store; GNSS externo.
+   - **Logo nuevo** (pendiente, 23 oct): borradores y referencias en `archivo/logo_pendiente/`.
+     Daniel quiere el logo de su calcomanía original; el redibujo v4 no lo convenció. No cambiar el
+     logo de la app hasta que él lo retome.
 
 7. **Fondos de pantalla** (beta 0.4): 6 fondos sticker bomb que Daniel hizo (`fuente/fondos/*.png`,
    el build los convierte a WebP en `fondos/`). Con fondo, la app usa estilo sticker: paneles con
