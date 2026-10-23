@@ -94,6 +94,14 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
     Daniel decidió (13 oct) dejar así los íconos de sus dos dispositivos ("Drag Trim"); no proponer
     respaldar/reinstalar para cambiarlo. Instalaciones nuevas ya salen como "Drag Tree".
 
+11. **Compartir con amigos** (0.5.2): guía de instalación en Medir (solo en teléfono, si no está instalada;
+    "Ahora no" la oculta: `dragtrim.guiaOculta`) y en Ajustes ("Instalar y compartir" + botón Compartir
+    con el enlace). Detecta iPhone/iPad Safari (Compartir → Agregar a inicio; iPad: arriba a la derecha),
+    Chrome/Edge en iOS, navegadores dentro de Instagram/Facebook/TikTok (pide "Abrir en el navegador"),
+    Android Chrome (botón Instalar con beforeinstallprompt, o menú ⋮) y Samsung Internet. En iOS los
+    datos de Safari y los del ícono son distintos: por eso la guía dice usar siempre el ícono.
+    Se corrigió la barra de pestañas ilegible con el teléfono en modo claro y tema Automático (venía de 0.4).
+
 ## Estructura
 
 ```
@@ -114,7 +122,7 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Versión actual: **beta 0.5.1** (nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
+caché del service worker; cambiarlo fuerza la actualización). Versión actual: **beta 0.5.2** (guía para instalar y compartir; 0.5.1: nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
 algoritmo v2.3.
 
 Los zips exportados desde la app traen `drag_raw_gps_*.csv`, `drag_raw_acc_*.csv`,
@@ -133,6 +141,7 @@ python3 uitest.py real   # igual, pero con GPS/acelerómetro falsos a través de
 python3 pt_test.py       # simulador de semáforo (tiempos, rojas, 1 vs 1)
 node calc.js             # calculadora: hoja exacta vs LibreOffice (datos/rooster_vectores.json) + app
 python3 calc_test.py     # pestaña Calcular en Chromium (GPS y clima falsos, sin internet)
+python3 instalar_test.py # guía de instalación por teléfono/navegador, iPad vertical/horizontal, contraste de pestañas
 python3 mcheck.py ../matlab/*.m   # revisión estructural de MATLAB (aquí no hay MATLAB/Octave)
 ```
 Las pruebas de navegador usan Playwright (Python) con el Chromium preinstalado y dejan

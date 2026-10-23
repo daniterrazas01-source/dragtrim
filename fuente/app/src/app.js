@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = 'beta 0.5.1';
+  const APP_VERSION = 'beta 0.5.2';
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -805,13 +805,68 @@
   $('#btnCancelar').onclick = () => { salirSesion(); };
   $('#btnTerminar').onclick = () => finCorrida('manual');
 
-  // ------------------------------------------------------------ instalación (PWA)
+  // ------------------------------------------------------------ instalación (PWA) y compartir
+  const URL_APP = 'https://daniterrazas01-source.github.io/dragtrim/';
+  const ua = navigator.userAgent;
+  const P = {
+    ipad: /iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),
+    android: /Android/i.test(ua),
+    // navegadores dentro de otras apps (no pueden instalar)
+    enApp: /FBAN|FBAV|FB_IAB|Instagram|Line\/|Snapchat|TikTok|musical_ly|Twitter|LinkedInApp|GSA\//i.test(ua),
+    navIOS: /CriOS/.test(ua) ? 'Chrome' : /FxiOS/.test(ua) ? 'Firefox' : /EdgiOS/.test(ua) ? 'Edge' : /OPiOS/.test(ua) ? 'Opera' : 'Safari',
+    samsung: /SamsungBrowser/i.test(ua),
+  };
+  P.ios = /iP(hone|od)/.test(ua) || P.ipad;
+  P.movil = P.ios || P.android;
+  const instalada = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   let promptInstalar = null;
-  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); promptInstalar = e; $('#btnInstalar').hidden = false; });
-  $('#btnInstalar').onclick = async () => { if (!promptInstalar) return; promptInstalar.prompt(); await promptInstalar.userChoice; promptInstalar = null; $('#btnInstalar').hidden = true; };
-  const esIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const instalada = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-  if (esIOS && !instalada) $('#iosInstall').hidden = false;
+
+  function pasosInstalar() {
+    const fin = '<p class="hint">Después ábrela siempre desde el ícono nuevo: así funciona sin internet y ahí se guardan tus corridas.</p>';
+    if (instalada) return '<p>Ya estás usando la app instalada. Para que tus amigos la tengan, compárteles el enlace.</p>';
+    if (P.enApp) return `<p>Estás viendo la app dentro de otra app (Instagram, Facebook…), y desde ahí no se puede instalar.</p>
+      <ol><li>Toca el menú <b>⋯</b> de esta pantalla.</li><li>Elige <b>Abrir en el navegador</b> (${P.ios ? 'Safari' : 'Chrome'}).</li><li>Ahí sigue los pasos para instalarla.</li></ol>`;
+    if (P.ios && P.navIOS === 'Safari') return `<ol>
+      <li>Toca <b>Compartir</b> <span class="guia-ico" aria-hidden="true">⎙</span> (el cuadro con la flecha hacia arriba) ${P.ipad ? 'arriba a la derecha' : 'en la barra de abajo'}. Si no lo ves, toca <b>⋯</b> y luego <b>Compartir</b>.</li>
+      <li>Desliza hacia abajo y toca <b>Agregar a inicio</b>.</li>
+      <li>Toca <b>Agregar</b>.</li></ol>
+      <p class="hint">Si no aparece "Agregar a inicio", abriste el enlace dentro de otra app (como WhatsApp): toca <b>Abrir en Safari</b> primero.</p>${fin}`;
+    if (P.ios && (P.navIOS === 'Chrome' || P.navIOS === 'Edge')) return `<ol>
+      <li>Toca <b>Compartir</b> <span class="guia-ico" aria-hidden="true">⎙</span> junto a la barra de la dirección.</li>
+      <li>Toca <b>Agregar a inicio</b> (si no aparece, toca <b>Más</b>).</li><li>Toca <b>Agregar</b>.</li></ol>
+      <p class="hint">Si tu iPhone no muestra esa opción, abre el enlace en <b>Safari</b>.</p>${fin}`;
+    if (P.ios) return `<p>Para instalarla, abre el enlace en <b>Safari</b> y ahí toca Compartir → <b>Agregar a inicio</b>.</p>${fin}`;
+    if (P.android && promptInstalar) return `<p>Toca <b>Instalar app</b> y confirma.</p>${fin}`;
+    if (P.android && P.samsung) return `<ol><li>Toca el menú <b>≡</b> abajo a la derecha.</li><li>Toca <b>Agregar página a</b> → <b>Pantalla de inicio</b>.</li></ol>${fin}`;
+    if (P.android) return `<ol><li>Toca el menú <b>⋮</b> arriba a la derecha de Chrome.</li><li>Toca <b>Instalar app</b> o <b>Agregar a pantalla principal</b>.</li><li>Confirma con <b>Instalar</b>.</li></ol>${fin}`;
+    return '<p>Abre este enlace en tu teléfono (iPhone, iPad o Android) para instalarla: necesita el GPS del teléfono.</p>';
+  }
+  function pintarGuia() {
+    const html = pasosInstalar();
+    document.querySelectorAll('.guia .guia-pasos').forEach((d) => { d.innerHTML = html; });
+    document.querySelectorAll('[data-instalar]').forEach((b) => { b.hidden = !promptInstalar || instalada; });
+    // En Medir solo se muestra la primera vez, en el teléfono y si no está instalada
+    $('#guiaMedir').hidden = instalada || !P.movil || LS.get('dragtrim.guiaOculta', false);
+  }
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); promptInstalar = e; pintarGuia(); });
+  window.addEventListener('appinstalled', () => { promptInstalar = null; LS.set('dragtrim.guiaOculta', true); pintarGuia(); });
+  document.querySelectorAll('[data-instalar]').forEach((b) => {
+    b.onclick = async () => {
+      if (!promptInstalar) return;
+      promptInstalar.prompt();
+      try { await promptInstalar.userChoice; } catch (e) { /* */ }
+      promptInstalar = null; pintarGuia();
+    };
+  });
+  $('#guiaOcultar').onclick = () => { LS.set('dragtrim.guiaOculta', true); pintarGuia(); };
+  $('#btnCompartir').onclick = async () => {
+    const datos = { title: 'Drag Tree', text: 'Mide tus arrancones (60 ft, 1/8 y 1/4) con el teléfono y practica la salida con el semáforo:', url: URL_APP };
+    try { if (navigator.share) { await navigator.share(datos); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+    try { await navigator.clipboard.writeText(URL_APP); $('#btnCompartir').textContent = 'Enlace copiado: pégalo en WhatsApp'; }
+    catch (e) { $('#btnCompartir').textContent = 'Copia el enlace de abajo'; }
+    setTimeout(() => { $('#btnCompartir').textContent = 'Compartir la app con un amigo'; }, 4000);
+  };
+  pintarGuia();
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('sw.js').catch(() => { /* la app funciona igual sin modo sin conexión */ });
   }

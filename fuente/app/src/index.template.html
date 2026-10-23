@@ -32,6 +32,14 @@
   <!-- ============ MEDIR ============ -->
   <section id="vMedir" class="view">
     <div id="medirIdle">
+      <div class="field guia" id="guiaMedir" hidden>
+        <span class="lab">Instala Drag Tree en tu teléfono</span>
+        <div class="guia-pasos"></div>
+        <div class="guia-acciones">
+          <button class="primary" data-instalar hidden>Instalar app</button>
+          <button class="ghost" id="guiaOcultar">Ahora no</button>
+        </div>
+      </div>
       <div class="seg big" role="radiogroup" aria-label="Distancia" id="segDist">
         <button role="radio" data-v="201.168">1/8 de milla</button>
         <button role="radio" data-v="402.336">1/4 de milla</button>
@@ -331,8 +339,13 @@
       <p class="hint" style="margin-top:6px">Transiciones suaves en la app. Las luces del semáforo de Práctica siempre encienden al instante, sin efectos.</p>
     </div>
 
-    <button id="btnInstalar" class="primary" hidden>Instalar app</button>
-    <p id="iosInstall" class="msg" hidden>Para instalarla en iPhone: abre en Safari, toca Compartir y luego "Agregar a inicio".</p>
+    <div class="field guia" id="guiaAjustes">
+      <span class="lab">Instalar y compartir</span>
+      <div class="guia-pasos"></div>
+      <button class="primary" data-instalar hidden>Instalar app</button>
+      <button class="ghost" id="btnCompartir">Compartir la app con un amigo</button>
+      <p class="hint guia-link">Enlace: <b>daniterrazas01-source.github.io/dragtrim</b></p>
+    </div>
     <button id="btnBorrarHist" class="danger">Borrar todo el historial</button>
     <p class="ver" id="verText"></p>
   </section>

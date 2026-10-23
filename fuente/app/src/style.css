@@ -245,6 +245,17 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   .big { font-size: 68px; }
 }
 
+/* ============================================================ Guía de instalación */
+.guia .guia-pasos { font-size: 15px; }
+.guia .guia-pasos p { margin: 6px 0 8px; }
+.guia .guia-pasos ol { margin: 6px 0 8px; padding-left: 22px; }
+.guia .guia-pasos li { margin-bottom: 6px; }
+.guia-ico { display: inline-block; font-weight: 700; }
+.guia-acciones { display: grid; grid-template-columns: 1fr; gap: 0; }
+.guia-acciones .ghost { margin-top: 8px; padding: 10px 16px; }
+.guia-link { margin: 10px 0 0; word-break: break-all; }
+#guiaMedir { margin-bottom: 14px; }
+
 /* ============================================================ Calculadora (Rooster Racing) */
 @media (max-width: 350px) { .tabs button { font-size: 13px; } }
 /* Encabezado en pantallas angostas: primero se compacta; si aun así no cabe (≤ ~365 px), los indicadores
@@ -383,6 +394,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 :root[data-fondo] .seg button[aria-checked="true"] { color: #0e0e0f; }
 :root[data-fondo] .tabs { background: rgba(10, 10, 11, .94); border-top: 2px solid var(--sticker); }
 :root[data-fondo][data-theme="light"] .tabs { background: rgba(255, 255, 255, .96); }
+@media (prefers-color-scheme: light) { :root[data-fondo]:not([data-theme]) .tabs { background: rgba(255, 255, 255, .96); } }
 :root[data-fondo] .tabs button[aria-current="page"] { font-style: italic; font-weight: 900; }
 :root[data-fondo] .track { background: var(--surface); border: 2px solid var(--sticker); }
 :root[data-fondo] .slip { box-shadow: 0 0 0 3px var(--sticker), 0 8px 0 3px rgba(0, 0, 0, .55); transform: rotate(-.6deg); }
