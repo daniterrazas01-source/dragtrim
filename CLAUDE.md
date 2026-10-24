@@ -46,9 +46,15 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
 6. Pendiente / ideas acordadas:
    - **Validar con datos reales**: Daniel probará en autódromo y mandará los zips exportados +
      tiempos de la boleta oficial (60 ft, 1/8 o 1/4, velocidad). Ajustar rollout/algoritmo con eso.
-   - Sección **"Medir con el semáforo real"** (beta, solo marcada "en desarrollo" en Medir):
-     grabar el árbol con la cámara, medir la reacción y registrarla con la corrida. No empezar sin
-     que Daniel lo pida.
+   - Sección **"Medir con el semáforo real"** (Daniel lo pidió el 24 oct; EN CURSO): la cámara graba el
+     árbol mientras está armada y, al terminar, se calcula la reacción. Especificación completa en
+     `archivo/ideas/semaforo_real/plan.md` (+ informes; prototipos en `fuente/pruebas/arbol_proto/`).
+     Avance: `semaforo.js` y `semaforo_vision.js` a medias (sin probar). **Plan acordado con Daniel por
+     el límite de uso:** (1) terminar detección + cálculos (semaforo_vision.js, semaforo.js,
+     semaforo_sim.js y sus pruebas semaforo_mc.js/reaccion.js) **con ultracode**; (2) **PAUSAR y avisarle**
+     para que baje el esfuerzo; (3) sin ultracode: página de prueba (T6), cámara (T3) e integración en la
+     app (T4/T5); (4) revisión final corta con ultracode antes de publicar. Guardar (commit + push a la rama)
+     al terminar cada parte.
    - **Race 1 vs 1** (idea de Daniel, 24 oct; tarjeta "en desarrollo" en Medir desde 0.5.4; no programar
      hasta que lo pida): dos autos, cada uno con la app en su teléfono, en pista sin semáforo o lugar
      controlado; la app da la salida a los dos a la vez (excepción a propósito al punto 3, solo en este modo),
