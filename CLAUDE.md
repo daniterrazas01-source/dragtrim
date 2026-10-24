@@ -134,6 +134,8 @@ fuente/fondos/                 fondos originales (PNG); se publican como fondos/
 fuente/fondos/brillo/          logos que se prenden en Práctica para fondos de un solo color (hacer_mascaras.py + PNG)
 archivo/                       respaldo: originales/ (archivos de Daniel sin tocar, p. ej. ROOSTER_RACING.xlsx)
                                y versiones/ (index.html de cada versión publicada); ver archivo/LEEME.md
+.claude/settings.json          "enableWorkflows": true (Daniel lo pidió el 24 oct para usar `/effort ultracode`;
+                               en su plan vienen apagados). No afecta la app.
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
