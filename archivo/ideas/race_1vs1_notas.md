@@ -56,10 +56,46 @@ Todo son estimaciones: nada está probado con dos teléfonos.
    - Android: basta con que sea de los últimos 3–4 años con Chrome al día; lo que importa es
      calibrar el modelo, no que sea nuevo.
 
+## Idea de Daniel: una "sala" (24 oct 2026)
+
+Para esta sección los dos teléfonos tendrán datos o Wi-Fi. Daniel propone **crear una sala** donde
+se conectan el teléfono A y el B; la sala da la salida del semáforo y junta las mediciones. Le parece
+más lógico que usar servicios de terceros.
+
+Lo que hay que saber: una sala por internet siempre vive en una computadora prendida en algún lado
+(un servidor). La app hoy es solo una página en GitHub Pages, y GitHub Pages no puede guardar una
+sala. Hay dos lugares donde puede vivir la sala:
+
+**A. La sala vive en el teléfono A** (nada de internet ni de terceros)
+- B se conecta al hotspot de A y escanea dos QR en los pits (~10 s).
+- Es la conexión más rápida: verdes más parejas (relojes a ±1–5 ms, estimado).
+- Punto débil: si la conexión se cae, hay que volver a escanear los QR.
+- Dato a favor: durante la carrera los dos autos van juntos (carriles vecinos, a pocos metros), así
+  que puede que la conexión ni se caiga. Hay que probarlo.
+
+**B. La sala vive en internet, en una cuenta de Daniel** (no en un servicio público compartido)
+- Uno crea la sala y le sale un código corto (4–5 letras); el otro lo teclea. Sin QR.
+- Si se cae la señal, se reconectan solos. Los resultados llegan aunque estén lejos.
+- La sala hace de **juez de salida**: sabe cuándo están los dos en stage, elige la espera al azar y
+  manda a los dos "la verde se prende a tal hora" con anticipación (≥0.5 s, dentro de la misma
+  espera al azar). Cada teléfono la prende con su reloj, así que el retraso de la señal no importa;
+  solo importa qué tan juntos estén los relojes: ±10–30 ms por celular (estimado). El piloto no lo
+  nota y el resultado sigue siendo justo (cada quien contra su verde).
+- La sala corre en computadoras de una empresa (como la app ya corre en GitHub), pero es **de Daniel**:
+  su cuenta, su código, sin depender de servidores públicos de otros. Para unas cuantas carreras al
+  día, los planes gratis deberían alcanzar (confirmarlo al elegir).
+- Contras: hay que crear y cuidar esa cuenta; sin señal no hay sala.
+
+**Recomendación:** empezar con la B (es la idea de Daniel tal cual: sala con código). Si la prueba con
+cámara lenta muestra que las verdes no salen parejas, agregar después la conexión directa por
+hotspot como mejora, usando la misma sala para encontrarse (sin QR).
+
+Ideas extra que permite la sala (para después): ver la carrera desde un tercer teléfono (en la tribuna)
+y varias rondas en la misma sala (mejor de 3, marcador).
+
 ## Preguntas pendientes para Daniel
 
-- ¿Está bien usar un servicio gratis de internet (de otra empresa) para conectar los teléfonos y
-  mandar resultados? Solo sería el respaldo, o para emparejar con un código corto en lugar de dos QR.
+- ¿Sala en internet con cuenta propia (B) o sala en el teléfono (A)?
 - ¿Solo "gana quien llega primero" o también bracket con dial-in más adelante?
 - Si alguien se mueve en stage antes de que baje el árbol: ¿se cancela la salida (como en pista, donde
   se apaga el stage y no baja el árbol) o es roja (como en Práctica)?
