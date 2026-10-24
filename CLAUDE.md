@@ -49,6 +49,15 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    - Sección **"Medir con el semáforo real"** (beta, solo marcada "en desarrollo" en Medir):
      grabar el árbol con la cámara, medir la reacción y registrarla con la corrida. No empezar sin
      que Daniel lo pida.
+   - **Race 1 vs 1** (idea de Daniel, 24 oct; tarjeta "en desarrollo" en Medir desde 0.5.4; no programar
+     hasta que lo pida): dos autos, cada uno con la app en su teléfono, en pista sin semáforo o lugar
+     controlado; la app da la salida a los dos a la vez (excepción a propósito al punto 3, solo en este modo),
+     mide reacción y tiempos de ambos y el ticket de los dos sale en un teléfono. Diseño ya estudiado en
+     `archivo/ideas/race_1vs1.md` (no repetir el análisis): hotspot de un teléfono + WebRTC emparejado con
+     QR (sin internet ni servidores ajenos), sincronía tipo NTP con pings, stage = quieto (acelerómetro + GPS
+     <1 km/h), árbol de practica.js tras espera al azar, RT = tRo − verde (calibrar el retraso de pantalla y
+     sensor de cada teléfono: 20–60 ms por modelo), roja si cruza el rollout antes de la verde, "empate
+     técnico" si la diferencia es menor al error. Primer paso: página de prueba aparte en sus teléfonos.
    - Más adelante: app nativa (Capacitor) para Play Store/App Store; GNSS externo.
    - **Logo nuevo** (pendiente, 23 oct): borradores y referencias en `archivo/logo_pendiente/`.
      Daniel quiere el logo de su calcomanía original; el redibujo v4 no lo convenció. No cambiar el
@@ -133,7 +142,7 @@ fuente/pruebas/                pruebas (ver abajo)
 fuente/fondos/                 fondos originales (PNG); se publican como fondos/*.webp
 fuente/fondos/brillo/          logos que se prenden en Práctica para fondos de un solo color (hacer_mascaras.py + PNG)
 archivo/                       respaldo: originales/ (archivos de Daniel sin tocar, p. ej. ROOSTER_RACING.xlsx)
-                               y versiones/ (index.html de cada versión publicada); ver archivo/LEEME.md
+                               y versiones/ (index.html de cada versión publicada); ideas/ (diseños guardados); ver archivo/LEEME.md
 .claude/settings.json          "enableWorkflows": true (Daniel lo pidió el 24 oct para usar `/effort ultracode`;
                                en su plan vienen apagados). No afecta la app.
 ```
