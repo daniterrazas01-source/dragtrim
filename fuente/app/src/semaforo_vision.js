@@ -2155,7 +2155,7 @@
   const api = {
     VERSION, FOCOS, LADOS, RASGOS, COLUMNAS, LIN, defaultConfig,
     lineal, estabilizar, eventos, manchasFijas, localizar, rasgos, serie, ajustarFlanco, calidad,
-    claseTono, tonoDe, flancoGrueso: (s, signo, tA, tB, T) => flancoGrueso(normSerie(s), signo, tA, tB, T),
+    claseTono, tonoDe, _manchasClaras: manchasClaras, _votarCorrimiento: votarCorrimiento, flancoGrueso: (s, signo, tA, tB, T) => flancoGrueso(normSerie(s), signo, tA, tB, T),
     _interno: { _partirNucleo, _dividir, conf },   // solo para pruebas
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

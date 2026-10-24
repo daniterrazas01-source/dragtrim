@@ -705,6 +705,16 @@
     let eS = cerca(apagados('stg', sA, sB), L_ref);
     let eP = cerca(apagados('pre', (eS ? eS.t0 : sA) - 0.5, (eS ? eS.t0 : sB) + 0.5), eS ? eS.t0 : L_ref);
     if (eS && eP && eP.t0 > eS.t0 + 2 * T && eP.t0 >= sA && eP.t0 <= sB) { const x = eS; eS = eP; eP = x; sec.avisos.push('stage_dudoso'); }
+    // Si el seguimiento de la imagen falló justo alrededor del apagado (cabeceo con desenfoque fuerte, p. ej. de
+    // noche a 30 cuadros/s), el foco se pudo medir fuera de lugar y "apagarse" antes de tiempo: no se usa.
+    if (eS) {
+      const mv = X.rasgos && X.rasgos.mov;
+      if (mv && mv.q && mv.t) {
+        let tot = 0, mal = 0;
+        for (let k = 0; k < mv.t.length; k++) if (mv.t[k] >= eS.t0 - 0.15 && mv.t[k] <= eS.t0 + 0.1) { tot++; if (mv.q[k] < 0.38) mal++; }
+        if (tot && mal > 0.2 * tot) { sec.avisos.push('stage_movido'); eS = null; }
+      }
+    }
     if (eS) {
       const fs = afinar(V, t, [foco(eS.foco)], peso, eS.t0, -1, T, cfg);
       sec.t_stage_off = fs.t; sec.s_stage_off = fs.sigma; sec.lampara.stage = fs.lampara;
@@ -766,6 +776,11 @@
     }
     out.n = tk.length;
     if (tk.length < 10) { out.motivo = 'pocos_cuadros'; return out; }
+    // Si el seguimiento de la imagen fue dudoso en parte de la ventana (de noche con desenfoque, p. ej.), una
+    // correlación alta puede salir con el retraso equivocado por ~0.1 s: mejor no usar K1.
+    let enV = 0, bienV = 0;
+    for (let k = 0; k < mov.t.length; k++) if (mov.t[k] >= wA && mov.t[k] <= wB) { enV++; if (!mov.q || !(mov.q[k] < 0.5)) bienV++; }
+    if (enV && bienV < 0.8 * enV) { out.motivo = 'mov_dudoso'; return out; }
     // Ángulos del giroscopio (rad), integrados con trapecios alrededor de la ventana
     const gA = tk[0] - C.rango_s - 0.5, gB = tk[tk.length - 1] + C.rango_s + 0.5;
     const gt = [], th = { a: [], b: [], g: [] };
