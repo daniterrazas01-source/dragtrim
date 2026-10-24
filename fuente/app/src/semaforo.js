@@ -432,9 +432,9 @@
     const out = [], pers = Math.max(1, cfg.eventos.persistir | 0);
     for (let i = m; i + m <= N; i++) {
       if (!(s[i] > thr)) continue;
-      // un encendido/apagado cambia buena parte del brillo del foco (el rasgo ya resta el fondo): un cambio
+      // un encendido/apagado cambia al menos el 12 % del brillo del foco (con sol de frente el foco apagado también brilla) (el rasgo ya resta el fondo): un cambio
       // lento de unos % (autoexposición, desenfoque) no es un flanco aunque el ruido sea muy bajo
-      if (Math.abs(POST[i] - PRE[i]) < 0.4 * Math.max(Math.abs(PRE[i]), Math.abs(POST[i]))) continue;
+      if (Math.abs(POST[i] - PRE[i]) < 0.12 * Math.max(Math.abs(PRE[i]), Math.abs(POST[i]))) continue;
       let pico = true;
       for (let j = Math.max(m, i - m); j <= Math.min(N - m, i + m); j++) if (s[j] > s[i] || (s[j] === s[i] && j < i)) { pico = false; break; }
       if (!pico) continue;

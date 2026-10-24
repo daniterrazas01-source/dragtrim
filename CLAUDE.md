@@ -49,7 +49,12 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    - Sección **"Medir con el semáforo real"** (Daniel lo pidió el 24 oct; EN CURSO): la cámara graba el
      árbol mientras está armada y, al terminar, se calcula la reacción. Especificación completa en
      `archivo/ideas/semaforo_real/plan.md` (+ informes; prototipos en `fuente/pruebas/arbol_proto/`).
-     Avance: `semaforo.js` y `semaforo_vision.js` a medias (sin probar). **Plan acordado con Daniel por
+     Avance (25 oct): `semaforo_vision.js`, `semaforo.js` y `semaforo_sim.js` funcionan; pruebas
+     `semaforo_mc.js` (todas las condiciones; resultados en `archivo/ideas/semaforo_real/resultados_mc.txt`),
+     `reaccion.js` (punta a punta) y `semaforo_sim_test.js`. A 60 fps de día/sombra/noche/incandescente: RT con
+     ±4–9 ms (solo cámara, sesgo ~2.6 ms). Pendiente en detección: PWM (sobre todo 1000 Hz), 30 fps (sesgo +5 ms
+     en ámbar, σ ~20), sol de frente a veces no lee (58–92 %), 1 roja falsa en 24 y casos sueltos de 100–300 ms
+     (noche Full, PWM 1000) desde que el cambio mínimo de un flanco bajó de 40 % a 12 % (por el sol): revisar. **Plan acordado con Daniel por
      el límite de uso:** (1) terminar detección + cálculos (semaforo_vision.js, semaforo.js,
      semaforo_sim.js y sus pruebas semaforo_mc.js/reaccion.js) **con ultracode**; (2) **PAUSAR y avisarle**
      para que baje el esfuerzo; (3) sin ultracode: página de prueba (T6), cámara (T3) e integración en la
