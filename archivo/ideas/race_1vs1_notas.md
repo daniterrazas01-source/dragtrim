@@ -169,6 +169,39 @@ Ideas que salen de esto:
     stage con el motor prendido) antes de salir a pista. Hace falta que Daniel mande ese zip (no está
     en el repo).
 
+## Modo Solo: "yo solo en pista" (idea de Daniel, 24 oct 2026)
+
+Lo mismo que el 1 vs 1, pero con un solo carro: la app da la salida con el árbol y mide la corrida.
+Va aparte del 1 vs 1.
+
+- **No es Medir.** Medir sigue neutral, sin luces (decisión 3 de CLAUDE.md), para cuando la pista
+  tiene su semáforo. El modo Solo es para cuando no hay semáforo. Propuesta: la sección tiene dos
+  opciones, **Solo** y **1 vs 1**.
+- **No necesita internet ni sala.** El mismo teléfono prende la verde y mide, con el mismo reloj:
+  no hay que sincronizar nada.
+- Flujo: elegir árbol (Pro .400 / Full .500) y distancia (1/8 o 1/4) → stage → espera al azar →
+  árbol → corrida → boleta.
+- Boleta de un carril: reacción (boleta y desde la verde), 60 ft, 330 ft, 1/8 y velocidad, 1000 ft,
+  1/4 y velocidad. Si se mueve antes de su verde: "ROJA", con sus tiempos de todos modos.
+- Se guarda en el historial como las corridas de Medir, marcada "con árbol".
+- **Recomendación: hacer el Solo primero.** Usa casi todas las piezas del 1 vs 1 (árbol en el
+  soporte, stage, detector de falta, reacción con el carro real, salidas malas, boleta), menos la
+  sala. Se prueba con un teléfono y un carro. Luego el 1 vs 1 solo agrega la sala encima.
+
+## Hueco en el plan: el stage automático en la fila
+
+El plan decía: tocar "Listo" antes del burnout y el stage es "carro quieto ~2 s". Problema: en el
+autódromo el carro también se queda quieto en la fila y en la caja de agua antes del burnout. La app
+creería que está en stage y bajaría el árbol ahí. En el 1 vs 1 pasa igual: los dos carros esperan
+juntos en la fila.
+
+Propuesta: **un toque grande de "Stage"** (toda la pantalla) ya parado en la línea. Después, el
+teléfono confirma que el carro está quieto y baja el árbol tras la espera al azar (1 vs 1: cuando los
+dos tocaron). Como el piloto necesita las manos para el two-step o el transbrake, un ajuste de
+"tiempo para prepararte" (unos 3–5 s) antes de que empiece la espera al azar. Idea para probar
+después: un botoncito Bluetooth en el volante (control de cámara), si el navegador lo puede leer.
+
 ## Preguntas pendientes para Daniel
 
 - ¿Alto antes de la verde cancela sin falta (propuesta de arriba), o también cuenta como falta?
+- ¿Stage con un toque en la línea (propuesta de arriba) o automático? ¿Cuánto tiempo para prepararte?
