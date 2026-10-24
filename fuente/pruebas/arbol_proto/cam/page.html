@@ -1,0 +1,21 @@
+<!doctype html><html><body><video id=v playsinline muted autoplay></video><canvas id=c width=160 height=120></canvas>
+<script>
+window.res = { frames: [], info: {} };
+(async () => {
+  const st = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', frameRate: { ideal: 60 }, width: { ideal: 1280 } }, audio: false });
+  const tr = st.getVideoTracks()[0];
+  res.info.settings = tr.getSettings(); res.info.caps = tr.getCapabilities ? tr.getCapabilities() : null;
+  res.info.mstp = typeof MediaStreamTrackProcessor; res.info.rvfc = 'requestVideoFrameCallback' in HTMLVideoElement.prototype;
+  res.info.imagecapture = typeof ImageCapture;
+  const v = document.getElementById('v'); v.srcObject = st; await v.play();
+  const c = document.getElementById('c'), ctx = c.getContext('2d', { willReadFrequently: true });
+  const cb = (now, md) => {
+    ctx.drawImage(v, 0, 0, 160, 120);
+    const d = ctx.getImageData(75 - 3, 82 - 3, 7, 7).data;   // verde en (300,330)/4
+    let g = 0; for (let i = 0; i < d.length; i += 4) g += d[i + 1] - d[i];
+    res.frames.push({ now, pn: performance.now(), cap: md.captureTime, pres: md.presentationTime, exp: md.expectedDisplayTime, mt: md.mediaTime, n: md.presentedFrames, g: g / 49, w: md.width, h: md.height });
+    if (res.frames.length < 200) v.requestVideoFrameCallback(cb); else res.done = true;
+  };
+  v.requestVideoFrameCallback(cb);
+})().catch(e => { res.err = String(e); res.done = true; });
+</script></body></html>
