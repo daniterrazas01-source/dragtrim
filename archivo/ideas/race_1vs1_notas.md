@@ -201,7 +201,72 @@ dos tocaron). Como el piloto necesita las manos para el two-step o el transbrake
 "tiempo para prepararte" (unos 3–5 s) antes de que empiece la espera al azar. Idea para probar
 después: un botoncito Bluetooth en el volante (control de cámara), si el navegador lo puede leer.
 
+## Decisión: cómo se hace el stage (24 oct 2026)
+
+Como en la vida real: los carros ya están alineados en la línea. **Cada quien toca la pantalla de su
+teléfono → se prende su pre-stage. 2–3 s después se prende su stage.** Cuando los dos tocaron, es como
+si ya estuvieran en stage en la pista y empieza el semáforo normal. En Solo, igual con un carril.
+
+Detalles propuestos (Daniel puede corregir):
+- Stage a los **3 s** del toque (ajustable de 2 a 5 s en Ajustes). Es el tiempo para agarrar el
+  volante y el two-step o el transbrake.
+- Con los dos en stage, **espera al azar de 0.6–1.5 s** (como el arranque automático de pista y
+  Práctica) y baja el árbol Pro o Full.
+- Si el carro se mueve **en pre-stage** (antes de que prenda su stage): se apaga el pre-stage y toca
+  otra vez, sin falta (como acomodarse en la pista). Si se mueve **con su stage prendido** y antes de
+  su verde: falta.
+- Si el carro no está quieto a los 3 s, el stage espera a que se quede quieto.
+- Alto antes de la verde = "me salgo": se cancela la salida de los dos, sin falta, y vuelven a tocar
+  (Daniel no lo objetó; queda así salvo que diga otra cosa).
+
+## Pantallas paso a paso (propuesta, 24 oct 2026)
+
+**Dónde va:** en Medir, arriba, "¿Quién da la salida?": [Semáforo de la pista] [Solo] [1 vs 1].
+Por defecto "Semáforo de la pista", que es Medir como hoy, neutral. Así no hace falta una sexta pestaña
+(ya hay Medir, Práctica, Calcular, Historial y Ajustes). Alternativa: pestaña nueva "Carrera".
+
+### Solo
+1. **Preparar:** árbol Pro/Full y distancia 1/8 o 1/4 (se recuerdan). Estado de GPS y acelerómetro,
+   como hoy. Avisos: "Activa No molestar", "deja la app abierta", "pon el teléfono alto, donde lo
+   veas sin bajar la vista". Botón **Ir a la línea** (arma la medición; el burnout se ignora).
+2. **En la línea:** árbol grande apagado y "Toca la pantalla cuando estés alineado". Botón chico
+   **Alto** en una esquina.
+3. **Árbol:** toque → pre-stage → 3 s → stage → espera al azar → ámbar → verde. Brillo al máximo. Si
+   sale antes: roja (sigue midiendo).
+4. **Corrida:** después de la verde, pantalla neutral "Corrida en curso", sin vibrar ni sonar. Se
+   cierra sola cuando el carro se detiene, o con Alto.
+5. **Boleta:** reacción (boleta y desde la verde), 60 ft, 330 ft, 1/8 y velocidad, 1000 ft, 1/4 y
+   velocidad; "ROJA" si hubo. Botones **Otra corrida** (vuelve al paso 2) y **Ver en historial**.
+
+### 1 vs 1
+1. **Entrar:** **Crear sala** o **Unirme**. Nombre del piloto y del carro (opcional, se recuerda).
+2. **Crear:** el que crea elige árbol y distancia; le sale un código grande (p. ej. KR7PX) y
+   "Esperando a tu rival…". **Unirme:** teclear el código.
+3. **Sala:** los dos ven lo mismo:
+   - carril izquierdo y derecho con nombres, botón **Cambiar de carril** (según dónde se formen);
+   - árbol, distancia y número de ronda;
+   - palomitas de cada teléfono: señal, GPS, sensores, relojes al tiempo.
+   - Cada quien toca **Ir a la línea** cuando va a la fila. Se ve el estado del otro ("en la fila",
+     "en la línea").
+4. **En la línea:** árbol con los dos carriles en cada teléfono. Cada quien toca su pantalla cuando
+   está alineado: su pre-stage se prende en los dos teléfonos y 3 s después su stage. Con los dos en
+   stage: espera al azar y baja el árbol en los dos.
+   - Falta de uno: su roja se ve en los dos teléfonos; el árbol del otro sigue y él decide si corre.
+   - Se va la señal antes de la verde: "Sin señal del carril derecho, el árbol no baja". Vuelven a
+     tocar cuando regrese.
+   - Alto antes de la verde: se cancela la salida de los dos; vuelven a tocar.
+5. **Corrida:** pantalla neutral "Corrida en curso". Nada del rival mientras corres.
+6. **Boleta:** tu carril sale primero; el otro dice "esperando…" y se completa solo. Dos columnas,
+   ganador marcado, margen, quién salió primero y por cuánto, "holeshot", faltas, "no terminó", "sin
+   ganador". Botones **Otra ronda** (misma sala) y **Salir de la sala**. Se guarda en el historial
+   de los dos.
+7. **Historial:** las carreras se ven con los dos carriles; el zip de cada teléfono trae sus datos
+   crudos más los datos de la carrera.
+
+Ojo: un toque por error en la fila bajaría el árbol en Solo. Para eso está el Alto. En 1 vs 1 es menos
+probable porque tienen que tocar los dos.
+
 ## Preguntas pendientes para Daniel
 
-- ¿Alto antes de la verde cancela sin falta (propuesta de arriba), o también cuenta como falta?
-- ¿Stage con un toque en la línea (propuesta de arriba) o automático? ¿Cuánto tiempo para prepararte?
+- ¿La sección va dentro de Medir ("¿Quién da la salida?") o en una pestaña nueva "Carrera"?
+- ¿Marcador de rondas en la sala (p. ej. Daniel 2 – Juan 1) desde la primera versión, o después?
