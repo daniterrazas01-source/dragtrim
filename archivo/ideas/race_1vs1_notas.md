@@ -129,7 +129,7 @@ Qué pasa en cada caso (propuesta de reglas, a confirmar con Daniel):
 | Dos rojas | Pierde quien salió primero respecto a su verde |
 | A un carro le falla y no llega a la meta | Se ven sus parciales (60 ft, 1/8…) y "no terminó"; gana el otro |
 | Un carro no arranca | "No salió" (si no se mueve en ~10–15 s después de la verde); gana el otro |
-| Ninguno llega a la meta | Pendiente: ¿sin ganador, o el que iba adelante en la última marca que pasaron los dos? |
+| Ninguno llega a la meta | Botón **Alto** (ver abajo): "sin ganador", con los parciales de los dos |
 | Un teléfono se apaga o se cierra la app | Boleta con "sin datos" en ese carril; se completa si los datos llegan después |
 
 Ideas que salen de esto:
@@ -143,12 +143,32 @@ Ideas que salen de esto:
   chico que decide la salida y arma la boleta), por ejemplo Cloudflare. Firebase (Google) está más
   pensado para guardar datos. Se decide en la prueba de conexión.
 
+## Más decisiones de Daniel (24 oct 2026)
+
+- **Botón "Alto"** para parar la medición cuando los dos carros fallan o quieren salirse. Así no hace
+  falta regla para "ninguno llegó": la boleta dice "sin ganador" y muestra hasta dónde llegó cada uno.
+  - Propuesta: Alto **antes de la verde** = "me salgo", cancela la salida de los dos sin falta. Alto
+    **después de la verde** = "no terminó" en ese carril; si el otro termina, gana el otro.
+  - Por seguridad, el Alto se toca ya detenido. Además la corrida se cierra sola si el carro se
+    detiene (como ya hace Medir), para no tener que tocar el teléfono en movimiento.
+- **Sin cronómetro para hacer stage**, "reglas de calle": si uno ya está alineado y el otro tarda, no
+  importa. El árbol baja cuando los dos estén en stage al mismo tiempo, sin límite.
+  - La sala espera los datos del otro carril sin límite mientras esté abierta (no hace falta que
+    Daniel lo decida).
+  - Como la espera puede ser larga, los relojes se siguen sincronizando todo el tiempo en la sala.
+- **Por ahora solo "gana el que llega primero".** Bracket con dial más adelante; el diseño no lo debe
+  impedir (en bracket el árbol de cada carril baja a distinta hora).
+- **Moverse antes = falta y pierde automáticamente**, como en cualquier autódromo.
+  - En cuanto un teléfono detecta la falta, los dos lo ven ("Falta: carril izquierdo").
+  - El árbol del otro carril **sigue y baja normal**: el otro decide si corre. Gana de todos modos;
+    si corre, la boleta trae sus tiempos.
+  - Como la falta hace perder, una falta falsa (por la vibración del motor en two-step) arruina la
+    carrera. El detector en vivo debe pedir un movimiento claro hacia adelante, no vibración. La
+    boleta confirma con los datos completos (pasó el rollout antes de su verde).
+  - Idea: probar el detector con los datos crudos de la primera prueba (zip del 11 oct, que trae el
+    stage con el motor prendido) antes de salir a pista. Hace falta que Daniel mande ese zip (no está
+    en el repo).
+
 ## Preguntas pendientes para Daniel
 
-- Si ninguno de los dos llega a la meta, ¿quién gana?
-- ¿Cuánto tiempo guarda la sala una carrera esperando los datos del otro? (propuesta: todo el día)
-- ¿Solo "gana quien llega primero" o también bracket con dial-in más adelante?
-- Si alguien se mueve en stage antes de que baje el árbol: ¿se cancela la salida (como en pista, donde
-  se apaga el stage y no baja el árbol) o es roja (como en Práctica)?
-- ¿Tiempo límite para hacer stage, como el arranque automático de pista (si uno ya está en stage y el
-  otro no llega en X s)?
+- ¿Alto antes de la verde cancela sin falta (propuesta de arriba), o también cuenta como falta?
