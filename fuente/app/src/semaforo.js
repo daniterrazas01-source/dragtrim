@@ -432,6 +432,9 @@
     const out = [], pers = Math.max(1, cfg.eventos.persistir | 0);
     for (let i = m; i + m <= N; i++) {
       if (!(s[i] > thr)) continue;
+      // un encendido/apagado cambia buena parte del brillo del foco (el rasgo ya resta el fondo): un cambio
+      // lento de unos % (autoexposición, desenfoque) no es un flanco aunque el ruido sea muy bajo
+      if (Math.abs(POST[i] - PRE[i]) < 0.4 * Math.max(Math.abs(PRE[i]), Math.abs(POST[i]))) continue;
       let pico = true;
       for (let j = Math.max(m, i - m); j <= Math.min(N - m, i + m); j++) if (s[j] > s[i] || (s[j] === s[i] && j < i)) { pico = false; break; }
       if (!pico) continue;
@@ -686,9 +689,10 @@
     const apagados = (f, a, b) => flancos(t, S[f], peso, -1, T, a, b, cfg).filter((e) => {
       // prendido ≥ prendido_min_s antes y apagado ≥ apagado_min cuadros después
       // Antes: "prendido" con el máximo de 3 cuadros (un foco con PWM sale apagado en algunos cuadros).
-      // Después: apagado en TODOS los cuadros de max(apagado_min cuadros, 0.25 s); así un hueco del PWM
-      // (unos cuadros oscuros a media meseta) no pasa por el apagado de verdad.
-      const y = S[f], mid = (e.pre + e.post) / 2, tFin = e.t0 + Math.max(C.apagado_min * T, 0.25);
+      // Después: apagado en TODOS los cuadros de max(apagado_min cuadros, quedar_s = 0.5 s). Al salir, el foco
+      // ya no se vuelve a prender (el auto se fue); un hueco del PWM o el desenfoque del cabeceo de la salida
+      // (el foco "desaparece" unos cuadros y luego se ve otra vez) no pasan por el apagado de verdad.
+      const y = S[f], mid = (e.pre + e.post) / 2, tFin = e.t0 + Math.max(C.apagado_min * T, isFin(C.quedar_s) ? C.quedar_s : 0.5);
       let on = 0, tot = 0, off = 0, tot2 = 0;
       for (let k = 0; k < n; k++) {
         if (!isFin(y[k]) || !(peso[k] > 0)) continue;
