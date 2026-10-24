@@ -29,7 +29,7 @@
              nominal: [0.400, 0.500] /* Pro, Full */ },
     ventana: { buscar: [-3.6, 0.6] },
     rt: [-1.0, 1.5],                            // L_ref − t_verde aceptable
-    disco: 1.6, anillo: [2.0, 2.8],
+    disco: 1.6, anillo: [2.0, 2.8], rasgos: { excl_frac: 0.5 },   // fuera los píxeles del disco quemados en ≥ 50 % de los cuadros con el foco quemado
     fijas: { radio_px: 12 },                    // apertura (top-hat) para manchas fijas, a escala 1
     flanco: { rejilla: 1e-4, grueso: 5, atras_min_s: 0.09, atras_T: 2, adelante_T: 2, ventana_T: 6,
               ventana_extra_s: 0.02, ventana_min_s: 0.25, huber: 2.5, tr_ms: [0, 5, 10, 20, 30, 45, 60, 80],
@@ -77,7 +77,7 @@
       nominal: p('arbol.nominal'),
       buscar: p('ventana.buscar'),
       rt: (isFin(rtMin) && isFin(rtMax)) ? [rtMin, rtMax] : p(['rt', 'rt.rango']),
-      disco: p('disco'), anillo: p('anillo'), fijas_R: p('fijas.radio_px'), quieto_s: p('carril.quieto_s'),
+      disco: p('disco'), anillo: p('anillo'), fijas_R: p('fijas.radio_px'), quieto_s: p('carril.quieto_s'), excl_frac: p('rasgos.excl_frac'),
       fl: {
         rejilla: p(['flanco.rejilla', 'flanco.rejilla_s']), grueso: Math.max(1, Math.round(p('flanco.grueso'))),
         atras_min_s: p(['flanco.atras_min_s', 'flanco.rango_min_s']), atras_T: p(['flanco.atras_T', 'flanco.rango_T']),
@@ -285,6 +285,8 @@
   // Corrimiento global de cada cuadro contra la referencia (mediana de los cuadros k_ref) con perfiles 1D del
   // gradiente (filas → dy, columnas → dx) y correlación normalizada; G = ganancia (media recortada de Ylin).
   // El contenido en (x, y) de la referencia aparece en (x + dx, y + dy) del cuadro.
+  // Máscara: fuera lo que se quema (≥ sat) y, en una 2.ª vuelta, lo que cambia de brillo (focos que se prenden o
+  // apagan y sus halos), visto en los cuadros ya estabilizados de la 1.ª vuelta.
   function estabilizar(c, o) {
     o = o || {};
     const C = conf(o.cfg), g = geo(c), w = g.w, h = g.h, np = g.np, tam = g.tam, D = c.datos, n = c.n | 0;
@@ -292,50 +294,61 @@
     const kB = isFin(o.kB) ? clampi(Math.round(o.kB), kA, Math.max(0, n - 1)) : n - 1;
     const nm = n > 0 ? kB - kA + 1 : 0;
     const mov = { t: new Float64Array(nm), dx: new Float32Array(nm), dy: new Float32Array(nm), q: new Float32Array(nm),
-                  G: new Float32Array(nm), k0: kA, n: nm, w, h, ref: [kA, kA] };
+                  G: new Float32Array(nm), k0: kA, n: nm, w, h, ref: [kA, kA], mascara_px: 0 };
     if (!nm) return mov;
     for (let i = 0; i < nm; i++) mov.t[i] = c.t[kA + i];
     const S = Math.max(1, Math.round(isFin(o.busqueda_px) ? o.busqueda_px : C.busqueda_px));
-    // cuadros de referencia
+    // cuadros de referencia (k_ref = índices; ref = horas [tA, tB] como las pasa semaforo.js; o L_ref)
+    const Lref = isFin(o.L_ref) ? o.L_ref : (Array.isArray(o.ref) && isFin(o.ref[1]) ? o.ref[1] - C.mov_ref[1] : NaN);
     let r0, r1;
     if (Array.isArray(o.k_ref)) { r0 = o.k_ref[0]; r1 = o.k_ref[1]; }
     else if (isFin(o.k_ref)) { r0 = o.k_ref - 2; r1 = o.k_ref + 2; }
-    else if (isFin(o.L_ref)) { r0 = kDeT(c, o.L_ref + C.mov_ref[0]); r1 = kDeT(c, o.L_ref + C.mov_ref[1] + 1e-9) - 1; }
+    else if (Array.isArray(o.ref) && isFin(o.ref[0]) && isFin(o.ref[1])) { r0 = kDeT(c, o.ref[0]); r1 = kDeT(c, o.ref[1] + 1e-9) - 1; }
+    else if (isFin(Lref)) { r0 = kDeT(c, Lref + C.mov_ref[0]); r1 = kDeT(c, Lref + C.mov_ref[1] + 1e-9) - 1; }
     else { r0 = kA + Math.round(0.60 * (nm - 1)); r1 = kA + Math.round(0.66 * (nm - 1)); }
     r0 = clampi(Math.round(r0), kA, kB); r1 = clampi(Math.round(r1), r0, kB);
     mov.ref = [r0, r1];
     const ref = medianaCuadros(c, muestrear(r0, r1, 9), null);
     if (w < 8 || h < 8) { for (let i = 0; i < nm; i++) mov.G[i] = NaN; return mov; }
-    // máscara: fuera los píxeles que se queman en algún momento (focos, reflejos), con 2 px de margen
-    const malo = new Uint8Array(np), tmp8 = new Uint8Array(np), malo2 = new Uint8Array(np);
+    // máscara 1: píxeles que se queman en la referencia o en cuadros de muestra antes de la salida
+    const malo = new Uint8Array(np), tmp8 = new Uint8Array(np), malo2 = new Uint8Array(np), mask = new Uint8Array(np);
     for (let i = 0; i < np; i++) if (ref[i] >= C.sat) malo[i] = 1;
     let kLim = kA + Math.round(0.85 * (nm - 1));
-    if (isFin(o.L_ref)) kLim = clampi(kDeT(c, o.L_ref - 0.1) - 1, kA, kB);
+    if (isFin(Lref)) kLim = clampi(kDeT(c, Lref - 0.1) - 1, kA, kB);
     const pasoK = Math.max(1, Math.floor((kLim - kA + 1) / 60));
     for (let k = kA; k <= kLim; k += pasoK) { const off = k * tam; for (let i = 0; i < np; i++) if (D[off + i] >= C.sat) malo[i] = 1; }
-    filtroMM(malo, w, h, 2, true, tmp8, malo2);
-    const mask = new Uint8Array(np);
-    for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) { const i = y * w + x; mask[i] = malo2[i] ? 0 : 1; }
+    const armarMascara = () => {
+      filtroMM(malo, w, h, 2, true, tmp8, malo2);
+      mask.fill(0);
+      let m = 0;
+      for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) { const i = y * w + x; if (!malo2[i]) { mask[i] = 1; m++; } }
+      return m;
+    };
+    armarMascara();
     // gradientes recortados de la referencia → sumas acumuladas por fila (Sx) y por columna (Sy), separadas por
     // paridad: los perfiles usan un píxel de cada dos en la dirección de la suma
     const gc = C.gclip, W2 = (w >> 1) + 2, H2 = (h >> 1) + 2;
     const Sx = [new Float64Array(W2 * h), new Float64Array(W2 * h)], Sy = [new Float64Array(H2 * w), new Float64Array(H2 * w)];
-    for (let y = 0; y < h; y++) for (let pa = 0; pa < 2; pa++) {
-      let acc = 0;
-      const S_ = Sx[pa], b = y * W2;
-      for (let x = pa; x < w; x += 2) {
-        const i = y * w + x;
-        if (mask[i]) { let v = ref[i + w] - ref[i - w]; if (v < 0) v = -v; acc += v > gc ? gc : v; }
-        S_[b + (x >> 1) + 1] = acc;
+    function sumasRef() {
+      for (let y = 0; y < h; y++) for (let pa = 0; pa < 2; pa++) {
+        let acc = 0;
+        const S_ = Sx[pa], b = y * W2;
+        S_[b] = 0;
+        for (let x = pa; x < w; x += 2) {
+          const i = y * w + x;
+          if (mask[i]) { let v = ref[i + w] - ref[i - w]; if (v < 0) v = -v; acc += v > gc ? gc : v; }
+          S_[b + (x >> 1) + 1] = acc;
+        }
       }
-    }
-    for (let x = 0; x < w; x++) for (let pa = 0; pa < 2; pa++) {
-      let acc = 0;
-      const S_ = Sy[pa], b = x * H2;
-      for (let y = pa; y < h; y += 2) {
-        const i = y * w + x;
-        if (mask[i]) { let v = ref[i + 1] - ref[i - 1]; if (v < 0) v = -v; acc += v > gc ? gc : v; }
-        S_[b + (y >> 1) + 1] = acc;
+      for (let x = 0; x < w; x++) for (let pa = 0; pa < 2; pa++) {
+        let acc = 0;
+        const S_ = Sy[pa], b = x * H2;
+        S_[b] = 0;
+        for (let y = pa; y < h; y += 2) {
+          const i = y * w + x;
+          if (mask[i]) { let v = ref[i + 1] - ref[i - 1]; if (v < 0) v = -v; acc += v > gc ? gc : v; }
+          S_[b + (y >> 1) + 1] = acc;
+        }
       }
     }
     const L = Math.max(w, h) + 2;
@@ -391,7 +404,8 @@
           r = (va > 1e-9 && vb > 1e-9) ? (m * sab - sa * sb) / Math.sqrt(va * vb) : 0;
         }
         ncc[s + S + 1] = r;
-        const sc = r - 0.001 * Math.abs(s - prior);
+        // continuidad: un salto de más de 16 px contra el cuadro anterior necesita una correlación 0.2 mejor
+        const ds = Math.abs(s - prior), sc = r - 0.001 * ds - (ds > 16 ? 0.2 : 0);
         if (sc > best) { best = sc; bs = s; }
       }
       const r0 = ncc[bs + S + 1];
@@ -430,10 +444,48 @@
       mov.dx[i] = dx; mov.dy[i] = dy; mov.q[i] = q; mov.G[i] = ganancia(off, Math.round(dx), Math.round(dy));
     }
     const kc = clampi(Math.round((r0 + r1) / 2), kA, kB);
-    let px = 0, py = 0;
-    for (let k = kc; k <= kB; k++) { medir(k, px, py); if (r.q > C.q_min) { px = r.dx; py = r.dy; } }
-    px = mov.dx[kc - kA]; py = mov.dy[kc - kA];
-    for (let k = kc - 1; k >= kA; k--) { medir(k, px, py); if (r.q > C.q_min) { px = r.dx; py = r.dy; } }
+    function seguir() {
+      sumasRef();
+      let px = 0, py = 0;
+      for (let k = kc; k <= kB; k++) { medir(k, px, py); if (r.q > C.q_min) { px = r.dx; py = r.dy; } }
+      px = mov.dx[kc - kA]; py = mov.dy[kc - kA];
+      for (let k = kc - 1; k >= kA; k--) { medir(k, px, py); if (r.q > C.q_min) { px = r.dx; py = r.dy; } }
+    }
+    seguir();
+    // máscara 2: lo que cambia de brillo (focos que se prenden o apagan y sus halos), con la ganancia de cada cuadro
+    // corregida, en ≥ 3 cuadros. (A) antes de la salida (solo vibración): cuadro crudo más brillante que el máximo
+    // 13×13 de la referencia; no depende de la 1.ª vuelta. (B) cuadros bien estabilizados en la 1.ª vuelta (q ≥ 0.6):
+    // más brillante que el máximo 7×7 o más oscuro que el mínimo 7×7 de la referencia.
+    const rMax = filtroMM(ref, w, h, 3, true, tmp8, new Uint8Array(np)), rMin = filtroMM(ref, w, h, 3, false, tmp8, new Uint8Array(np));
+    const rMax6 = filtroMM(ref, w, h, 6, true, tmp8, new Uint8Array(np));
+    const iref = clampi(kc - kA, 0, nm - 1), Gref = mov.G[iref];
+    const cuenta = new Uint8Array(np), est = new Uint8Array(np), lk = new Float32Array(256), LH = new Float32Array(256);
+    for (let v = 0; v < 256; v++) LH[v] = LIN[v] + 0.03 + 0.25 * LIN[v];
+    const pasoV = nm > 200 ? 2 : 1, tLanz = isFin(Lref) ? Lref - 0.25 : Infinity;
+    let nv = 0;
+    if (Gref > 0) {
+      for (let i = 0; i < nm; i += pasoV) {
+        if (!(mov.G[i] > 0)) continue;
+        const sk = Gref / mov.G[i], off = (kA + i) * tam;
+        for (let v = 0; v < 256; v++) lk[v] = LIN[v] * sk;
+        const crudo = mov.t[i] < tLanz, bien = mov.q[i] >= 0.6;
+        if (crudo) {
+          for (let j = 0; j < np; j++) if (lk[D[off + j]] > LH[rMax6[j]] && cuenta[j] < 255) cuenta[j]++;
+        } else if (bien) {
+          copiaEstab(D, off, w, h, Math.round(mov.dx[i]), Math.round(mov.dy[i]), est);
+          for (let j = 0; j < np; j++) {
+            const v = lk[est[j]], lo = LIN[rMin[j]];
+            if ((v > LH[rMax[j]] || lo - v > 0.03 + 0.25 * lo) && cuenta[j] < 255) cuenta[j]++;
+          }
+        }
+      }
+      for (let j = 0; j < np; j++) if (cuenta[j] >= 3 && !malo[j]) { malo[j] = 1; nv++; }
+    }
+    if (nv > 0.002 * np) { armarMascara(); seguir(); }
+    let enMask = 0;
+    for (let j = 0; j < np; j++) enMask += mask[j];
+    mov.mascara_px = np - enMask;               // píxeles fuera de la máscara (diagnóstico)
+    mov.vueltas = nv > 0.002 * np ? 2 : 1;
     return mov;
   }
 
@@ -507,8 +559,90 @@
     v = 255;
     for (let m = 255; m >= 0; m--) { const lim = LIN[m] - thr; while (v >= 0 && LIN[v] >= lim) v--; lOff[m] = v; }
   }
-  // Separa un componente en manchas si tiene varios máximos con un valle entre ellos (focos pegados por el halo)
-  function _dividir(comp, n, dmap, cid, cc, w, lbl, cand) {
+  // Separa un componente en manchas (focos pegados por el halo). Con núcleo quemado (≥ 16 px sobre el 90 % del pico):
+  // picos de la distancia al borde del núcleo con un cuello entre ellos. Si no: máximos de dmap con un valle entre
+  // ellos y, de respaldo, islas a 75/90/97 % del pico. Cada píxel va con el pico más cercano.
+  function _dividir(comp, n, dmap, cid, cc, w, lbl, cand, isla) {
+    let pico = 0, nuc = 0;
+    for (let q = 0; q < n; q++) if (dmap[comp[q]] > pico) pico = dmap[comp[q]];
+    for (let q = 0; q < n; q++) if (dmap[comp[q]] >= 0.9 * pico) nuc++;
+    let picos;
+    if (nuc >= 16) picos = _partirNucleo(comp, n, dmap, w, 0.9 * pico);
+    else {
+      picos = _picosValle(comp, n, dmap, cid, cc, w, cand);
+      if (picos.length <= 1 && isla) {
+        for (const f of [0.75, 0.9, 0.97]) {
+          const lim = f * pico, islas = [];
+          for (let q = 0; q < n; q++) isla[comp[q]] = dmap[comp[q]] >= lim ? -1 : -2;   // −1: sin visitar
+          for (let q = 0; q < n; q++) {
+            const j0 = comp[q];
+            if (isla[j0] !== -1) continue;
+            const id = islas.length, pila = [j0];
+            let sd = 0, sx = 0, sy = 0, m = 0;
+            isla[j0] = id;
+            while (pila.length) {
+              const j = pila.pop(), d = dmap[j], xj = j % w, yj = (j - xj) / w;
+              sd += d; sx += d * xj; sy += d * yj; m++;
+              for (const u of [j - 1, j + 1, j - w, j + w]) if (u >= 0 && u < isla.length && cid[u] === cc && isla[u] === -1) { isla[u] = id; pila.push(u); }
+            }
+            islas.push({ x: sx / sd, y: sy / sd, d: pico, m });
+          }
+          const grandes = islas.filter(s_ => s_.m >= 2);
+          if (grandes.length >= 2) { picos = grandes; break; }
+        }
+      }
+    }
+    if (picos.length <= 1) return 1;
+    for (let q = 0; q < n; q++) {
+      const j = comp[q], xj = j % w, yj = (j - xj) / w;
+      let bi = 0, bd = Infinity;
+      for (let i = 0; i < picos.length; i++) { const d = (xj - picos[i].x) ** 2 + (yj - picos[i].y) ** 2; if (d < bd) { bd = d; bi = i; } }
+      lbl[q] = bi;
+    }
+    return picos.length;
+  }
+  // Distancia chaflán (3-4) de cada píxel del núcleo (dmap ≥ lim) a lo que no es núcleo, en la caja del componente;
+  // máximos locales de esa distancia separados por un cuello (< 0.7 del menor) = focos distintos.
+  function _partirNucleo(comp, n, dmap, w, lim) {
+    let x0 = Infinity, y0 = Infinity, x1 = -1, y1 = -1;
+    for (let q = 0; q < n; q++) { const j = comp[q], x = j % w, y = (j - x) / w; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    const bw = x1 - x0 + 3, bh = y1 - y0 + 3, Dm = new Float32Array(bw * bh);
+    let nn = 0;
+    for (let q = 0; q < n; q++) { const j = comp[q], x = j % w, y = (j - x) / w; if (dmap[j] >= lim) { Dm[(y - y0 + 1) * bw + x - x0 + 1] = 1e9; nn++; } }
+    if (nn < 16) return [];
+    for (let y = 1; y < bh - 1; y++) for (let x = 1; x < bw - 1; x++) {
+      const i = y * bw + x; if (!Dm[i]) continue;
+      Dm[i] = Math.min(Dm[i], Dm[i - 1] + 3, Dm[i - bw] + 3, Dm[i - bw - 1] + 4, Dm[i - bw + 1] + 4);
+    }
+    for (let y = bh - 2; y >= 1; y--) for (let x = bw - 2; x >= 1; x--) {
+      const i = y * bw + x; if (!Dm[i]) continue;
+      Dm[i] = Math.min(Dm[i], Dm[i + 1] + 3, Dm[i + bw] + 3, Dm[i + bw + 1] + 4, Dm[i + bw - 1] + 4);
+    }
+    const cand = [];
+    for (let y = 1; y < bh - 1; y++) for (let x = 1; x < bw - 1; x++) {
+      const i = y * bw + x, d = Dm[i];
+      if (d < 6) continue;                          // ≥ 2 px adentro
+      if (d < Dm[i - 1] || d < Dm[i + 1] || d < Dm[i - bw] || d < Dm[i + bw] || d < Dm[i - bw - 1] || d < Dm[i - bw + 1] || d < Dm[i + bw - 1] || d < Dm[i + bw + 1]) continue;
+      cand.push([x, y, d]);
+    }
+    cand.sort((a, b) => b[2] - a[2]);
+    const picos = [];
+    for (const [x, y, d] of cand) {
+      let nuevo = true;
+      for (const p of picos) {
+        const dx = x - p.bx, dy = y - p.by, L = Math.hypot(dx, dy);
+        if (L <= 2.01) { nuevo = false; break; }
+        let dmin = Infinity;
+        const pasos = Math.ceil(L * 2);
+        for (let s = 1; s < pasos; s++) { const f = s / pasos, v = Dm[Math.round(p.by + f * dy) * bw + Math.round(p.bx + f * dx)]; if (v < dmin) dmin = v; }
+        if (dmin >= 0.7 * Math.min(d, p.d)) { nuevo = false; break; }
+      }
+      if (nuevo) picos.push({ bx: x, by: y, x: x + x0 - 1, y: y + y0 - 1, d });
+      if (picos.length > 12) break;
+    }
+    return picos;
+  }
+  function _picosValle(comp, n, dmap, cid, cc, w, cand) {
     let nc = 0;
     for (let q = 0; q < n; q++) {
       const j = comp[q], d = dmap[j];
@@ -520,7 +654,7 @@
       }
       if (esMax) cand[nc++] = q;
     }
-    if (nc <= 1) return 1;
+    if (nc <= 1) return [];
     const orden = Array.from(cand.subarray(0, nc)).sort((a, b) => dmap[comp[b]] - dmap[comp[a]]);
     const picos = [];
     for (const q of orden) {
@@ -541,14 +675,7 @@
       if (nuevo) picos.push({ x: xj, y: yj, d });
       if (picos.length > 12) break;
     }
-    if (picos.length <= 1) return 1;
-    for (let q = 0; q < n; q++) {
-      const j = comp[q], xj = j % w, yj = (j - xj) / w;
-      let bi = 0, bd = Infinity;
-      for (let i = 0; i < picos.length; i++) { const d = (xj - picos[i].x) ** 2 + (yj - picos[i].y) ** 2; if (d < bd) { bd = d; bi = i; } }
-      lbl[q] = bi;
-    }
-    return picos.length;
+    return picos;
   }
   function _eventosAmbos(c, mov, kA, kB, C) {
     const g = geo(c), w = g.w, h = g.h, np = g.np, tam = g.tam, D = c.datos;
@@ -565,7 +692,7 @@
     const candOn = new Int32Array(np), candOff = new Int32Array(np);
     const marca = new Int32Array(np).fill(-1), cid = new Int32Array(np).fill(-1);
     const pila = new Int32Array(np), comp = new Int32Array(np), lbl = new Int32Array(np), candI = new Int32Array(np);
-    const dmap = new Float32Array(np);
+    const dmap = new Float32Array(np), isla = new Int32Array(np);
     const limOn = new Int16Array(256), limOff = new Int16Array(256), limOnH = new Int16Array(256), limOffH = new Int16Array(256);
     const pend = [], acept = [];
     let sello = 0, cc = 0;
@@ -653,7 +780,7 @@
             dmap[j] = sg > 0 ? LIN[Sk[j]] - LIN[M[j]] : LIN[M[j]] - LIN[Sk[j]];
             cid[j] = cc;
           }
-          const nb = n >= 10 ? _dividir(comp, n, dmap, cid, cc, w, lbl, candI) : 1;
+          const nb = n >= 10 ? _dividir(comp, n, dmap, cid, cc, w, lbl, candI, isla) : 1;
           for (let b = 0; b < nb; b++) {
             let area = 0, sd = 0, sdx = 0, sdy = 0, pico = 0, bx0 = w, by0 = h, bx1 = -1, by1 = -1;
             for (let q = 0; q < n; q++) {
@@ -696,6 +823,10 @@
         if (t - q.t > C.dedup_s) break;
         const lim = Math.max(2, 0.8 * (r + q.r));
         if ((q.x - p.x) ** 2 + (q.y - p.y) ** 2 <= lim * lim) { dup = q; break; }
+        // el halo que sigue creciendo en los cuadros siguientes (exposición parcial, vibración): más débil y dentro
+        // de la caja del evento anterior → el mismo foco
+        const cq = q.caja;
+        if (cq && p.suma < 0.5 * q.suma && p.x >= cq[0] - 1 && p.x <= cq[2] + 1 && p.y >= cq[1] - 1 && p.y <= cq[3] + 1) { dup = q; break; }
       }
       if (dup) {
         if (p.pico > dup.pico) { dup.pico = p.pico; dup.snr = Math.max(dup.snr, p.snr); }
@@ -741,7 +872,7 @@
   }
 
   // ------------------------------------------------------------------ 6. manchas fijas (focos ya prendidos)
-  // Mediana estabilizada de [kA, kB] (≤ 15 cuadros) → top-hat (Ylin − apertura) → componentes.
+  // Mediana estabilizada de [kA, kB] (≤ 15 cuadros) → top-hat (Ylin − apertura) → manchas a media altura.
   // Para pre-stage y stage se usa [τ − 0.25, τ − 0.05] (τ = primer ámbar); localizar() lo hace si le dan cuadros.
   function manchasFijas(c, mov, o) {
     o = o || {};
@@ -765,48 +896,46 @@
     const sig = kB > kA ? ruidoPix(c, tr, kA, kB) : 0;
     const thr = Math.max(C.umbral_min * (Gm > 0 ? Gm : 0), C.umbral_sigma * sig * 1.25 / Math.sqrt(ks.length), 2e-4);
     const amin = Math.max(1, Math.round(C.area[0] * e * e)), amax = Math.max(amin + 2, Math.round(C.area[1] * e * e));
-    const marca = new Uint8Array(np), cid = new Int32Array(np).fill(-1);
-    const pila = new Int32Array(np), comp = new Int32Array(np), lbl = new Int32Array(np), candI = new Int32Array(np);
+    // semillas = máximos locales del top-hat sobre el umbral (de mayor a menor); cada mancha = píxeles conexos
+    // ≥ ½ de su pico (ancho a media altura). Así un foco no se une con la textura de alrededor ni con su vecino.
+    const sem = [];
+    for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x, v = th[i];
+      if (!(v > thr)) continue;
+      if (v < th[i - 1] || v < th[i + 1] || v < th[i - w] || v < th[i + w] || v < th[i - w - 1] || v < th[i - w + 1] || v < th[i + w - 1] || v < th[i + w + 1]) continue;
+      sem.push(i);
+    }
+    sem.sort((p_, q_) => th[q_] - th[p_]);
+    const marca = new Uint8Array(np), pila = new Int32Array(np), comp = new Int32Array(np);
     const out = [];
     const kMid = ks[ks.length >> 1], iMid = kMid - k0;
-    let cc = 0;
-    for (let y = 1; y < h - 1; y++) {
-      for (let x = 1; x < w - 1; x++) {
-        const i0 = y * w + x;
-        if (marca[i0] || !(th[i0] > thr)) continue;
-        let n = 0, sp = 0;
-        pila[sp++] = i0; marca[i0] = 1;
-        while (sp) {
-          const j = pila[--sp];
-          comp[n++] = j;
-          const xj = j % w, yj = (j - xj) / w;
-          if (xj > 1 && !marca[j - 1] && th[j - 1] > thr) { marca[j - 1] = 1; pila[sp++] = j - 1; }
-          if (xj < w - 2 && !marca[j + 1] && th[j + 1] > thr) { marca[j + 1] = 1; pila[sp++] = j + 1; }
-          if (yj > 1 && !marca[j - w] && th[j - w] > thr) { marca[j - w] = 1; pila[sp++] = j - w; }
-          if (yj < h - 2 && !marca[j + w] && th[j + w] > thr) { marca[j + w] = 1; pila[sp++] = j + w; }
-        }
-        if (n < amin || n > amax) continue;
-        cc++;
-        for (let q = 0; q < n; q++) cid[comp[q]] = cc;
-        const nb = n >= 10 ? _dividir(comp, n, th, cid, cc, w, lbl, candI) : 1;
-        for (let b = 0; b < nb; b++) {
-          let area = 0, sd = 0, sdx = 0, sdy = 0, pico = 0, bx0 = w, by0 = h, bx1 = -1, by1 = -1;
-          for (let q = 0; q < n; q++) {
-            if (nb > 1 && lbl[q] !== b) continue;
-            const j = comp[q], d = th[j], xj = j % w, yj = (j - xj) / w;
-            area++; sd += d; sdx += d * xj; sdy += d * yj;
-            if (d > pico) pico = d;
-            if (xj < bx0) bx0 = xj; if (xj > bx1) bx1 = xj; if (yj < by0) by0 = yj; if (yj > by1) by1 = yj;
-          }
-          if (area < amin || !(sd > 0)) continue;
-          let nm = 0;
-          for (let q = 0; q < n; q++) if ((nb === 1 || lbl[q] === b) && th[comp[q]] >= 0.5 * pico) nm++;
-          const m = { x: sdx / sd, y: sdy / sd, r: Math.max(0.5, Math.sqrt(nm / Math.PI)), area, pico,
-                      contraste: pico / Math.max(Gm > 0 ? Gm : 0, 1e-3), tono: NaN, sat: NaN, caja: [bx0, by0, bx1, by1] };
-          if (g.yuv) _tonoMancha(c, m, kMid, tr.sx[iMid], tr.sy[iMid], C);
-          out.push(m);
-        }
+    for (const i0 of sem) {
+      if (marca[i0]) continue;
+      const pico = th[i0], lim = 0.5 * pico;
+      let n = 0, sp = 0, grande = false;
+      pila[sp++] = i0; marca[i0] = 1;
+      while (sp) {
+        const j = pila[--sp];
+        if (n < comp.length) comp[n++] = j;
+        if (n > 4 * amax) grande = true;
+        const xj = j % w, yj = (j - xj) / w;
+        if (xj > 1 && !marca[j - 1] && th[j - 1] >= lim) { marca[j - 1] = 1; pila[sp++] = j - 1; }
+        if (xj < w - 2 && !marca[j + 1] && th[j + 1] >= lim) { marca[j + 1] = 1; pila[sp++] = j + 1; }
+        if (yj > 1 && !marca[j - w] && th[j - w] >= lim) { marca[j - w] = 1; pila[sp++] = j - w; }
+        if (yj < h - 2 && !marca[j + w] && th[j + w] >= lim) { marca[j + w] = 1; pila[sp++] = j + w; }
       }
+      if (grande || n < amin || n > amax) continue;
+      let sd = 0, sdx = 0, sdy = 0, bx0 = w, by0 = h, bx1 = -1, by1 = -1;
+      for (let q = 0; q < n; q++) {
+        const j = comp[q], d = th[j] - 0.5 * lim, xj = j % w, yj = (j - xj) / w;
+        sd += d; sdx += d * xj; sdy += d * yj;
+        if (xj < bx0) bx0 = xj; if (xj > bx1) bx1 = xj; if (yj < by0) by0 = yj; if (yj > by1) by1 = yj;
+      }
+      if (!(sd > 0)) continue;
+      const m = { x: sdx / sd, y: sdy / sd, r: Math.max(0.5, Math.sqrt(n / Math.PI)), area: n, pico,
+                  contraste: pico / Math.max(Gm > 0 ? Gm : 0, 1e-3), tono: NaN, sat: NaN, caja: [bx0, by0, bx1, by1] };
+      if (g.yuv) _tonoMancha(c, m, kMid, tr.sx[iMid], tr.sy[iMid], C);
+      out.push(m);
     }
     out.sort((a, b) => b.contraste - a.contraste);
     return out;
@@ -883,12 +1012,47 @@
       return best;
     }
     function penal(e, px, py, u, s) { const [al, pe] = desv(e, px, py, u, s); return 0.5 * ((al / C.paso_tol) ** 2 + (pe / C.col_desv) ** 2); }
-    function hayStage(a1x, a1y, u, s) {          // mancha fija sobre la columna, 0.8–3 pasos arriba de a1
+    // manchas fijas útiles: las de contraste comparable al de la más fuerte (los focos son lo más brillante de la caja)
+    let cMaxFijas = 0;
+    const fijasUtiles = () => { cMaxFijas = 0; for (const m of fijasA) if (m.contraste > cMaxFijas) cMaxFijas = m.contraste; };
+    fijasUtiles();
+    function hayStage(a1x, a1y, u, s) {          // mancha fija fuerte sobre la columna, 0.8–3 pasos arriba de a1
       for (const m of fijasA) {
+        if (m.contraste < 0.25 * cMaxFijas) continue;
         const dx = m.x - a1x, dy = m.y - a1y, al = -(dx * u[0] + dy * u[1]) / s, pe = Math.abs(dx * u[1] - dy * u[0]) / s;
         if (al >= C.pre_stage[0] - 0.15 && al <= C.pre_stage[1] && pe <= C.col_desv) return true;
       }
       return false;
+    }
+    // grupos de manchas fijas en la banda de pre-stage/stage de una columna (de lado, ofs·derecha pasos), por altura;
+    // las dobles de lado (Portatree) quedan en un grupo. Solo manchas con ≥ 35 % del contraste de la más fuerte de la banda.
+    function gruposFijos(a1x, a1y, u, s, ofs) {
+      const dr = [u[1], -u[0]], cand = [];
+      for (const m of fijasA) {
+        const dx = m.x - a1x, dy = m.y - a1y, al = -(dx * u[0] + dy * u[1]) / s, pe = (dx * dr[0] + dy * dr[1]) / s - ofs;
+        if (al < C.pre_stage[0] - 0.15 || al > C.pre_stage[1] || Math.abs(pe) > C.col_desv + 0.2) continue;
+        cand.push({ m, al });
+      }
+      let cmax = 0;
+      for (const q of cand) if (q.m.contraste > cmax) cmax = q.m.contraste;
+      const grupos = [];
+      for (const q of cand.sort((a, b) => b.m.contraste - a.m.contraste)) {
+        if (q.m.contraste < 0.35 * cmax) continue;
+        let gp = grupos.find(g_ => Math.abs(g_.al - q.al) < 0.35);
+        if (!gp) { gp = { al: q.al, ms: [] }; grupos.push(gp); }
+        gp.ms.push(q.m);
+      }
+      for (const gp of grupos) {
+        const wsum = gp.ms.reduce((a, m) => a + m.contraste, 0) || 1;
+        gp.x = gp.ms.reduce((a, m) => a + m.x * m.contraste, 0) / wsum;
+        gp.y = gp.ms.reduce((a, m) => a + m.y * m.contraste, 0) / wsum;
+        let r = Math.max(...gp.ms.map(m => m.r));
+        for (const m of gp.ms) r = Math.max(r, Math.hypot(m.x - gp.x, m.y - gp.y) + m.r);
+        gp.r = Math.min(r, 0.45 * s);
+        gp.al = -((gp.x - a1x) * u[0] + (gp.y - a1y) * u[1]) / s;
+        gp.contraste = Math.max(...gp.ms.map(m => m.contraste));
+      }
+      return grupos.sort((a, b) => a.al - b.al);
     }
     // evalúa una hipótesis de columna: a1 + m·v (m = 0..2 ámbar, 3 verde, 4 roja)
     function evaluar(tipo, a1x, a1y, vx, vy, t1, P) {
@@ -1035,6 +1199,7 @@
       const top = par_ ? (par_[0].best.puntaje >= par_[1].best.puntaje ? par_[0] : par_[1]) : cols.slice().sort((a, b) => b.best.puntaje - a.best.puntaje)[0];
       const hpT = elegir(top) || top.best, tau = Math.min(...hpT.t_ambar.filter(isFin));
       try { fijasA = fijasF(tau - 0.25, tau - 0.05) || []; } catch (err) { fijasA = []; }
+      fijasUtiles();
     }
     let colIzq = null, colDer = null, ux, uy;
     if (par_) {
@@ -1089,16 +1254,24 @@
 
     // ---- auxiliares de localizar
     function ladoOtra(A, ux_, uy_) {
-      // +1: hay focos fijos a la derecha (A es la izquierda); −1: a la izquierda; 0: no se sabe
-      const s = A.s, dxr = uy_, dyr = -ux_;
-      let der = 0, izq = 0;
-      for (const m of fijasA) {
-        const dx = m.x - A.a1[0], dy = m.y - A.a1[1];
-        const al = -(dx * ux_ + dy * uy_) / s, pe = (dx * dxr + dy * dyr) / s;
-        if (al < C.pre_stage[0] - 0.3 || al > C.pre_stage[1] + 0.3) continue;
-        if (pe >= C.sep_col[0] && pe <= C.sep_col[1]) der++;
-        if (-pe >= C.sep_col[0] && -pe <= C.sep_col[1]) izq++;
-      }
+      // +1: la otra columna (sus focos fijos) está a la derecha (A es la izquierda); −1: a la izquierda; 0: no se sabe.
+      // Se buscan grupos de manchas fijas a la misma altura y de contraste parecido a los de A, a 1.2–4 pasos de lado.
+      const s = A.s, u = [ux_, uy_], propios = gruposFijos(A.a1[0], A.a1[1], u, s, 0);
+      const ref = propios.length ? propios : null;
+      const puntos = (sg) => {
+        let mejor = 0;
+        for (let k = Math.ceil(C.sep_col[0] / 0.25); k * 0.25 <= C.sep_col[1]; k++) {
+          const gs = gruposFijos(A.a1[0], A.a1[1], u, s, sg * k * 0.25);
+          let p = 0;
+          for (const g_ of gs) {
+            if (ref) { if (ref.some(q => Math.abs(q.al - g_.al) < 0.3 && g_.contraste >= 0.3 * q.contraste && g_.contraste <= 3.3 * q.contraste)) p++; }
+            else if (g_.contraste >= 0.3 * cMaxFijas) p++;
+          }
+          if (p > mejor) mejor = p;
+        }
+        return mejor;
+      };
+      const der = puntos(+1), izq = puntos(-1);
       return der > izq ? 1 : izq > der ? -1 : 0;
     }
     function focosDe(hp) {
@@ -1120,41 +1293,27 @@
       for (let m = 0; m < 3; m++) f['a' + (m + 1)] = { x: a1x + m * vx, y: a1y + m * vy, r: rAm, visto: !!hp.ev['a' + (m + 1)] };
       f.g = { x: a1x + 3 * vx, y: a1y + 3 * vy, r: rG, visto: !!hp.ev.g };
       f.r = hp.ev.r ? { x: hp.ev.r.x, y: hp.ev.r.y, r: rG, visto: true } : { x: f.g.x + vx, y: f.g.y + vy, r: rG, visto: false };
-      // pre-stage y stage: manchas fijas 0.8–3 pasos arriba de a1; las dobles de lado se unen
-      const grupos = [];
-      for (const m of fijasA) {
-        const dx = m.x - a1x, dy = m.y - a1y, al = -(dx * u[0] + dy * u[1]) / s, pe = Math.abs(dx * u[1] - dy * u[0]) / s;
-        if (al < C.pre_stage[0] - 0.15 || al > C.pre_stage[1] || pe > C.col_desv + 0.2) continue;
-        let gp = grupos.find(q => Math.abs(q.al - al) < 0.35);
-        if (!gp) { gp = { al, ms: [] }; grupos.push(gp); }
-        gp.ms.push(m);
-      }
-      for (const gp of grupos) {
-        const wsum = gp.ms.reduce((a, m) => a + m.contraste, 0) || 1;
-        gp.x = gp.ms.reduce((a, m) => a + m.x * m.contraste, 0) / wsum;
-        gp.y = gp.ms.reduce((a, m) => a + m.y * m.contraste, 0) / wsum;
-        let r = Math.max(...gp.ms.map(m => m.r));
-        for (const m of gp.ms) r = Math.max(r, Math.hypot(m.x - gp.x, m.y - gp.y) + m.r);
-        gp.r = Math.min(r, 0.45 * s);
-        gp.al = -((gp.x - a1x) * u[0] + (gp.y - a1y) * u[1]) / s;
-      }
-      grupos.sort((a, b) => a.al - b.al);
-      if (grupos[0]) f.stg = { x: grupos[0].x, y: grupos[0].y, r: grupos[0].r, visto: true };
+      // pre-stage y stage: manchas fijas 0.8–3 pasos arriba de a1 (stage = la más cercana a a1; pre = la de arriba)
+      const grupos = gruposFijos(a1x, a1y, u, s, 0);
+      if (grupos[0]) f.stg = { x: grupos[0].x, y: grupos[0].y, r: grupos[0].r, visto: true, contraste: grupos[0].contraste };
       const pre = grupos.find(gp => gp.al > grupos[0].al + 0.3);
-      if (pre) f.pre = { x: pre.x, y: pre.y, r: pre.r, visto: true };
+      if (pre) f.pre = { x: pre.x, y: pre.y, r: pre.r, visto: true, contraste: pre.contraste };
       return f;
     }
     function otraPorFijas(f, ladoSigno) {
-      // la otra columna solo por sus focos fijos: misma forma, corrida de lado
+      // la otra columna solo por sus focos fijos: misma forma, corrida de lado (stage de contraste parecido)
       const vac = focosVacios();
       if (!f.stg) return vac;
       const dr = [disp.derecha[0] * ladoSigno, disp.derecha[1] * ladoSigno], s = disp.paso_px || 10;
+      const cRef = f.stg.contraste || 0;
       let best = null, bd = Infinity;
       for (const m of fijasA) {
         const dx = m.x - f.stg.x, dy = m.y - f.stg.y, pe = (dx * dr[0] + dy * dr[1]) / s;
         const al = Math.abs(dx * disp.abajo[0] + dy * disp.abajo[1]) / s;
         if (pe < C.sep_col[0] || pe > C.sep_col[1] || al > 0.5) continue;
-        if (al < bd) { bd = al; best = m; }
+        if (cRef > 0 && (m.contraste < 0.3 * cRef || m.contraste > 3.3 * cRef)) continue;
+        const d = al - 0.05 * Math.min(m.contraste, 20);
+        if (d < bd) { bd = d; best = m; }
       }
       if (!best) return vac;
       const ox = best.x - f.stg.x, oy = best.y - f.stg.y;
@@ -1280,29 +1439,39 @@
       F.excl = new Uint8Array(disco.length >> 1);
       F.nfila = 2 * R1 + 1;
     }
-    // píxeles del disco que se queman en algún cuadro (con el foco prendido): fuera
+    // píxeles del disco que se queman con el foco prendido: fuera. "Prendido" = cuadros en que algún píxel del disco
+    // se quema; se excluyen los que se queman en ≥ la mitad de esos cuadros (el núcleo), no los del borde que solo se
+    // queman a ratos por la vibración: así e conserva la fracción de exposición sin volverse ruido.
     const pasoS = n > 240 ? 2 : 1;
     for (const F of lista) {
-      const nd = F.disco.length >> 1, maxv = new Uint8Array(nd);
+      const nd = F.disco.length >> 1, cnt = new Uint16Array(nd);
+      let nFr = 0;
       for (let i = 0; i < n; i += pasoS) {
         const off = (k0 + i) * tam, cx = F.rx + tr.sx[i], cy = F.ry + tr.sy[i];
+        let alguno = false;
         for (let q = 0; q < nd; q++) {
           const px = cx + F.disco[2 * q], py = cy + F.disco[2 * q + 1];
           if (px < 0 || py < 0 || px >= w || py >= h) continue;
-          const v = D[off + py * w + px];
-          if (v > maxv[q]) maxv[q] = v;
+          if (D[off + py * w + px] >= C.sat) { cnt[q]++; alguno = true; }
         }
+        if (alguno) nFr++;
       }
       let ne = 0;
-      for (let q = 0; q < nd; q++) if (maxv[q] >= C.sat) { F.excl[q] = 1; ne++; }
+      const fr = C.excl_frac;
+      if (nFr >= 3 && fr <= 1) for (let q = 0; q < nd; q++) if (cnt[q] >= Math.max(1, fr * nFr)) { F.excl[q] = 1; ne++; }
       F.todoQuemado = nd > 0 && ne > 0.9 * nd;
       if (F.todoQuemado) F.excl.fill(0);
+      F.n_excl = F.todoQuemado ? 0 : ne;
     }
     const hist = new Float64Array(256), accF = new Float64Array(256), cntF = new Float64Array(256), accC = new Float64Array(256), cntC = new Float64Array(256);
     const yuv = g.yuv;
     for (let i = 0; i < n; i++) {
       const k = k0 + i, off = k * tam, uo = off + w * h, vo = uo + cw * ch, base = i * nc;
       const sxk = tr.sx[i], syk = tr.sy[i];
+      // corrimiento sub-píxel: el disco se muestrea con interpolación bilineal en luz lineal
+      const dxf = isFin(mov.dx[i]) ? mov.dx[i] : 0, dyf = isFin(mov.dy[i]) ? mov.dy[i] : 0;
+      const ix = Math.floor(dxf), iy = Math.floor(dyf), fx = dxf - ix, fy = dyf - iy;
+      const a00 = (1 - fx) * (1 - fy), a10 = fx * (1 - fy), a01 = (1 - fx) * fy, a11 = fx * fy;
       for (const F of lista) {
         const cx = F.rx + sxk, cy = F.ry + syk;
         // fondo: mediana del anillo (y su color medio)
@@ -1321,19 +1490,24 @@
         let e = 0, nd = 0, sY = 0, sU = 0, sV = 0, nt = 0;
         const R1 = F.R1, nf = F.nfila;
         for (let q = 0; q < nf; q++) { accF[q] = 0; cntF[q] = 0; accC[q] = 0; cntC[q] = 0; }
-        const di = F.disco;
+        const di = F.disco, bx = F.rx + ix, by = F.ry + iy;
         for (let q = 0; q < di.length; q += 2) {
           if (F.excl[q >> 1]) continue;
-          const ox = di[q], oy = di[q + 1], px = cx + ox, py = cy + oy;
-          if (px < 0 || py < 0 || px >= w || py >= h) continue;
-          const Y = D[off + py * w + px];
-          let v = LIN[Y] - b;
+          const ox = di[q], oy = di[q + 1], px = bx + ox, py = by + oy;
+          if (px < 0 || py < 0 || px + 1 >= w || py + 1 >= h) continue;
+          const j = off + py * w + px;
+          let v = a00 * LIN[D[j]] + a10 * LIN[D[j + 1]] + a01 * LIN[D[j + w]] + a11 * LIN[D[j + w + 1]] - b;
           if (v < 0) v = 0;
           e += v; nd++;
           accF[oy + R1] += v; cntF[oy + R1]++; accC[ox + R1] += v; cntC[ox + R1]++;
-          if (yuv && Y < C.sin_saturar && Y - b8 > 4) {
-            const ci = Math.min(py >> 1, ch - 1) * cw + Math.min(px >> 1, cw - 1);
-            sY += Y - b8; sU += D[uo + ci]; sV += D[vo + ci]; nt++;
+          if (yuv) {
+            const qx = cx + ox, qy = cy + oy;
+            if (qx < 0 || qy < 0 || qx >= w || qy >= h) continue;
+            const Y = D[off + qy * w + qx];
+            if (Y < C.sin_saturar && Y - b8 > 4) {
+              const ci = Math.min(qy >> 1, ch - 1) * cw + Math.min(qx >> 1, cw - 1);
+              sY += Y - b8; sU += D[uo + ci]; sV += D[vo + ci]; nt++;
+            }
           }
         }
         if (!nd) continue;
@@ -1353,6 +1527,7 @@
         R.datos[base + F.col + 2] = tono;
       }
     }
+    for (const F of lista) R.focos[F.lado][F.f].excluidos = F.n_excl;
     return R;
   }
   // serie de un foco lista para ajustarFlanco: y = e/G (o p/G), con peso; lado 'izq'|'der', foco 'a3', etc.
@@ -1392,9 +1567,10 @@
     if (!isFin(t0)) t0 = mediana(lista.map(s => flancoGrueso(s, signo, tA, tB, T)));
     if (!isFin(t0)) { res0.motivo = 'sin_flanco'; return res0; }
     let r = null;
-    for (let vuelta = 0; vuelta < 2; vuelta++) {
+    for (let vuelta = 0; vuelta < 3; vuelta++) {
       r = _ajustar(lista, signo, t0, T, F, o);
-      if (!r.borde || !isFin(r.t)) break;
+      if (isFin(r.recentrar)) { t0 = r.recentrar; o = Object.assign({}, o, { _recentrado: true }); continue; }   // PWM: ancla lejos del grueso
+      if (!r.borde || !isFin(r.t) || vuelta >= 1) break;
       t0 = r.t;                                  // el flanco quedó en la orilla de la rejilla: recentrar una vez
     }
     if (r.ok) completar(r, lista[0], signo);
@@ -1447,6 +1623,7 @@
       const m = idx.length;
       const x = { n: m, t: new Float64Array(m), y: new Float64Array(m), w: new Float64Array(m), p: new Float64Array(m), tienep: s.tienep };
       idx.forEach((i, j) => { x.t[j] = s.t[i]; x.y[j] = s.y[i]; x.w[j] = s.w[i]; x.p[j] = s.p[i]; });
+      x.full = s;                                   // serie completa (para aprender el patrón del PWM)
       ser.push(x);
     }
     if (!ser.length) { res.motivo = 'pocos_cuadros'; return res; }
@@ -1462,17 +1639,23 @@
       const madOff = mediana(off.map(z => Math.abs(z - lo))), madOn = mediana(on.map(z => Math.abs(z - hiM)));
       return { off, on, lo, hiM, hi90, madOff, madOn };
     }
+    // ¿PWM? cuadros de la meseta que caen cerca del nivel apagado (bajo lo + max(4σ_apagado, 12 % del salto), nunca más
+    // de la mitad): así una meseta que solo tiembla (desenfoque por vibración de noche) no pasa por PWM
     let nBajo = 0, nMes = 0;
     for (const x of ser) {
-      const L = niveles(x, false), mid = 0.5 * (L.lo + L.hi90);
-      for (let i = 0; i < x.n; i++) {
-        const enMeseta = signo > 0 ? x.t[i] > t0 + 2 * T : x.t[i] < t0 - 2 * T;
-        if (!enMeseta) continue;
+      const L = niveles(x, false), paso_ = L.hi90 - L.lo;
+      const lim = L.lo + Math.min(0.5 * paso_, Math.max(4 * 1.4826 * (L.madOff || 0), 0.12 * paso_));
+      const fu = x.full || x;                     // meseta de hasta 0.35 s, de la serie completa
+      for (let i = 0; i < fu.n; i++) {
+        const dt = fu.t[i] - t0;
+        if (!(signo > 0 ? dt > 2 * T && dt < 0.35 : dt < -2 * T && dt > -0.35) || !isFin(fu.y[i])) continue;
         nMes++;
-        if (x.y[i] < mid) nBajo++;
+        if (fu.y[i] < lim) nBajo++;
       }
     }
-    const pwm = o.pwm === true || (o.pwm !== false && nMes >= 5 && nBajo / nMes > F.pwm_frac);
+    let pwm = o.pwm === true || (o.pwm !== false && nMes >= 5 && nBajo / nMes > F.pwm_frac);
+    // o una meseta con niveles que se repiten cada 2–8 cuadros (PWM con exposición que lo corta a medias)
+    if (!pwm && o.pwm !== false) for (const x of ser) { const L = niveles(x, false); if (nivelesPeriodicos(x.full || x, x.full ? x.full.y : x.y, L, signo, t0, T)) { pwm = true; break; } }
     if (pwm) for (const x of ser) if (x.tienep) { const tmp = x.y; x.y = x.p; x.p = tmp; }
     const Ls = ser.map(x => niveles(x, false));
     // escala del ruido (MAD de las mesetas), común a todos los modelos
@@ -1485,9 +1668,28 @@
     let mObs = 0;
     for (const x of ser) mObs += x.n;
     res.n = mObs;
-    if (pwm) return _ajustarPWM(ser, Ls, signo, tauLo, du, NT, T, F, res, sc);
+    if (pwm) {
+      // Con PWM el flanco grueso puede caer varios cuadros lejos (un cuadro apagado en la meseta parece el flanco).
+      // Ancla = primer cuadro prendido (subida) o último prendido (bajada) a ±0.4 s, de la serie completa; τ queda
+      // entre ese cuadro y el cuadro "prendible" vecino del patrón: rejilla [ancla − 5T, ancla + T] (o al revés).
+      const usaP = ser.some(x => x.tienep), x0 = ser[0], fu = x0.full || x0, vals = usaP && x0.tienep ? fu.p : fu.y;
+      const mid = 0.5 * (Ls[0].lo + Ls[0].hi90);
+      let anc = NaN;
+      for (let k = 0; k < fu.n; k++) {
+        const dt = fu.t[k] - t0;
+        if (dt < -0.4 || dt > 0.4 || !(vals[k] > mid)) continue;
+        if (signo > 0) { anc = fu.t[k]; break; }
+        anc = fu.t[k];
+      }
+      if (!isFin(anc)) anc = t0;
+      if (Math.abs(anc - t0) > 3 * T && !o._recentrado) { res.recentrar = anc; return res; }
+      const lo2 = signo > 0 ? anc - 5 * T : anc - T, hi2 = signo > 0 ? anc + T : anc + 5 * T;
+      return _ajustarPWM(ser, Ls, signo, lo2, du, Math.floor((hi2 - lo2) / du) + 1, T, F, res, sc, usaP);
+    }
     // modelos (τr, E)
-    const Es = F.E_s.concat(F.E_T.map(f => f * T)).filter(E => E > 0).sort((a, b) => a - b);
+    // exposición: la rejilla de §2.7, o la que diga el que llama (o.E_s: número o lista, p. ej. la de otro flanco)
+    const Eo = Array.isArray(o.E_s) ? o.E_s : isFin(o.E_s) ? [o.E_s] : null;
+    const Es = (Eo && Eo.some(E => E > 0) ? Eo.map(E => Math.min(E, 0.98 * T)) : F.E_s.concat(F.E_T.map(f => f * T))).filter(E => E > 0).sort((a, b) => a - b);
     const modelos = [];
     for (const trm of F.tr_ms) for (const E of Es) modelos.push({ tr: trm / 1000, E });
     const umin = wa - tauHi - 1.0 * T - 2 * du, umax = wb - tauLo + 1.0 * T + 2 * du;
@@ -1600,6 +1802,11 @@
     res.t = tHat; res.sigma = Math.sqrt(Math.max(sig, Math.sqrt(top.var || 0), du / Math.sqrt(12)) ** 2 + sSis * sSis);
     res.lampara = { tipo: top.tr > 0 ? 'inc' : 'led', tr_s: top.tr };
     res.E_s = top.E; res.bic = top.bic; res.bic_led = bLed; res.bic_inc = bInc; res.ruido = sc;
+    // peso de cada exposición en la posterior (para combinar flancos de la misma corrida)
+    const pe = new Map();
+    let zt = 0;
+    for (const m of delTipo) { pe.set(m.E, (pe.get(m.E) || 0) + (m.Z || 0)); zt += m.Z || 0; }
+    res.E_post = Array.from(pe.entries()).sort((a, b) => a[0] - b[0]).map(([E, z]) => [E, zt > 0 ? z / zt : 0]);
     const antes = sal.a, despues = sal.a + sal.b;
     res.nivel_off = signo > 0 ? antes : despues; res.nivel_on = signo > 0 ? despues : antes;
     res.salto = res.nivel_on - res.nivel_off;
@@ -1616,44 +1823,60 @@
   }
   // PWM: encendido = d_k·N(y; on, 3σ) + (1−d_k)·N(y; off, σ); apagado = N(y; off, σ) (+1e-3·N(on)).
   // d_k = probabilidad de que el cuadro k vea el foco prendido. Muestreado a fps, el PWM es periódico en el índice del
-  // cuadro (frecuencia alias ν = f mod fps): se ajusta (ν, arco de fase) al patrón prendido/apagado de la meseta y se
-  // predice d_k en los cuadros junto al flanco. Si nada explica la meseta, d_k = fracción vista (como pwm.js).
-  function patronPWM(x, L, signo, t0, T) {
-    const mid = 0.5 * (L.lo + L.hi90), n = x.n, kk = new Float64Array(n), d = new Float64Array(n);
-    const tr = x.t[0];
-    for (let k = 0; k < n; k++) kk[k] = Math.round((x.t[k] - tr) / T);
-    const mes = [];
-    for (let k = 0; k < n; k++) if (signo > 0 ? x.t[k] > t0 + 2 * T : x.t[k] < t0 - 2 * T) mes.push(k);
-    const nOn = mes.filter(k => x.y[k] > mid).length;
-    const dFija = clampi(mes.length ? nOn / mes.length : 0.5, 0.3, 0.98);
+  // cuadro (frecuencia alias ν = f mod fps): se ajusta (ν, arco de fase) al patrón prendido/apagado de la meseta (hasta
+  // 0.35 s del flanco, de la serie completa) y se predice d_k junto al flanco. Si nada explica la meseta, d_k = fracción
+  // vista (como pwm.js). Índice del cuadro = round((t − t0)/T), así un cuadro perdido no corre el patrón.
+  function patronPWM(x, L, signo, t0, T, usaP) {
+    const mid = 0.5 * (L.lo + L.hi90), full = x.full || x, vals = usaP ? full.p : full.y;
+    const n = x.n, d = new Float64Array(n);
+    const mes = [], lab0 = [], org = origenCuadro(full, t0);
+    for (let k = 0; k < full.n; k++) {
+      const dt = full.t[k] - t0;
+      if (signo > 0 ? (dt > 2 * T && dt < 0.35) : (dt < -2 * T && dt > -0.35)) {
+        if (!isFin(vals[k])) continue;
+        mes.push(Math.round((full.t[k] - org) / T)); lab0.push(vals[k] > mid ? 1 : -1);
+      }
+    }
+    const m = mes.length, nOn = lab0.filter(v => v > 0).length;
+    const dFija = clampi(m ? nOn / m : 0.5, 0.3, 0.98);
     d.fill(dFija);
-    if (mes.length < 6 || nOn === mes.length || nOn < 2) return { d, dFija, nsol: 0 };
+    if (m < 6 || nOn === m || nOn < 2) return { d, dFija, nsol: 0 };
+    const kkW = new Float64Array(n);
+    for (let k = 0; k < n; k++) kkW[k] = Math.round((x.t[k] - org) / T);
+    // 0) niveles que se repiten cada p cuadros (fracción prendida de cada clase k mod p)
+    const np_ = nivelesPeriodicos(full, vals, L, signo, t0, T);
+    if (np_) {
+      // una clase casi apagada (dentro de 3σ del nivel apagado) cuenta como apagada: no informa
+      const uMin = 3 * 1.4826 * (L.madOff || 0) / Math.max(1e-12, L.hi90 - L.lo);
+      for (let k = 0; k < n; k++) { const r = ((kkW[k] % np_.per) + np_.per) % np_.per; d[k] = np_.u[r] > Math.max(uMin, 0.02) ? np_.u[r] : 0; }
+      return { d, dFija, nsol: 1, periodo: np_.per, modo: 'nivel', ruido: np_.mad };
+    }
     // 1) patrón con periodo corto exacto (p cuadros): cada clase k mod p siempre igual en la meseta
     for (let per = 2; per <= 8; per++) {
       const cls = new Int8Array(per), cnt = new Int32Array(per);
       let ok = true;
-      for (const k of mes) {
-        const r = ((kk[k] % per) + per) % per, b = x.y[k] > mid ? 1 : -1;
+      for (let j = 0; j < m; j++) {
+        const r = ((mes[j] % per) + per) % per, b = lab0[j];
         if (cls[r] && cls[r] !== b) { ok = false; break; }
         cls[r] = b; cnt[r]++;
       }
-      if (!ok || mes.length < 2 * per) continue;
+      if (!ok || m < 2 * per) continue;
       let todas = true;
       for (let r = 0; r < per; r++) if (cnt[r] < 2) todas = false;
       if (!todas) continue;
-      for (let k = 0; k < n; k++) { const r = ((kk[k] % per) + per) % per; d[k] = cls[r] > 0 ? 0.92 : 0.08; }
+      for (let k = 0; k < n; k++) { const r = ((kkW[k] % per) + per) % per; d[k] = cls[r] > 0 ? 0.92 : 0.08; }
       return { d, dFija, nsol: 1, periodo: per };
     }
     // 2) frecuencia alias ν: promedio de las soluciones que explican la meseta
-    const m = mes.length, psi = new Float64Array(m), ord = new Int32Array(m), lab = new Int8Array(m);
+    const psi = new Float64Array(m), ord = new Int32Array(m), lab = new Int8Array(m);
     const sols = [];
     let mejor = Infinity;
     const fps = 1 / T, pasoNu = 0.05;
     for (let nu = 0; nu <= fps / 2 + 1e-9; nu += pasoNu) {
       const a = nu * T;                         // ciclos por cuadro
-      for (let j = 0; j < m; j++) { const v = a * kk[mes[j]]; psi[j] = v - Math.floor(v); ord[j] = j; }
+      for (let j = 0; j < m; j++) { const v = a * mes[j]; psi[j] = v - Math.floor(v); ord[j] = j; }
       ord.sort((p_, q_) => psi[p_] - psi[q_]);
-      for (let j = 0; j < m; j++) lab[j] = x.y[mes[ord[j]]] > mid ? 1 : -1;
+      for (let j = 0; j < m; j++) lab[j] = lab0[ord[j]];
       // arco circular con máximo (prendidos − apagados): Kadane sobre la lista duplicada, largo ≤ m
       let best = -Infinity, bi = 0, bj = 0;
       for (let i = 0; i < m; i++) {
@@ -1673,28 +1896,61 @@
     for (let k = 0; k < n; k++) {
       let c = 0;
       for (const so of sols) {
-        let v = so.a * kk[k]; v -= Math.floor(v);
-        let ini = so.ini - Math.floor(so.ini), fin = ini + (so.fin - so.ini);
+        let v = so.a * kkW[k]; v -= Math.floor(v);
+        const ini = so.ini - Math.floor(so.ini), fin = ini + (so.fin - so.ini);
         if ((v >= ini && v <= fin) || (v + 1 >= ini && v + 1 <= fin)) c++;
       }
       d[k] = clampi((c + 0.5) / (sols.length + 1), 0.05, 0.95);
     }
     return { d, dFija, nsol: sols.length, err: mejor };
   }
-  function _ajustarPWM(ser, Ls, signo, tauLo, du, NT, T, F, res, sc) {
+  // hora de un cuadro real cerca de t0: origen del índice de cuadro (round((t − org)/T) no queda a medio cuadro)
+  function origenCuadro(full, t0) {
+    let org = t0, bd = Infinity;
+    for (let k = 0; k < full.n; k++) { const d = Math.abs(full.t[k] - t0); if (d < bd) { bd = d; org = full.t[k]; } }
+    return org;
+  }
+  // Meseta (hasta 0.39 s del flanco) con niveles periódicos: para p = 2..8, mediana por clase (k mod p) de
+  // u = (y − apagado)/(prendido − apagado); se acepta si dentro de cada clase la MAD ≤ 0.08 y las clases difieren ≥ 0.35.
+  function nivelesPeriodicos(full, vals, L, signo, t0, T) {
+    const paso_ = L.hi90 - L.lo;
+    if (!(paso_ > 0)) return null;
+    const kk = [], u = [], org = origenCuadro(full, t0);
+    for (let k = 0; k < full.n; k++) {
+      const dt = full.t[k] - t0;
+      if (!(signo > 0 ? dt > 1.5 * T && dt < 0.39 : dt < -1.5 * T && dt > -0.39) || !isFin(vals[k])) continue;
+      kk.push(Math.round((full.t[k] - org) / T)); u.push((vals[k] - L.lo) / paso_);
+    }
+    const m = kk.length;
+    for (let per = 2; per <= 8; per++) {
+      if (m < 2 * per + 2) break;
+      const cl = Array.from({ length: per }, () => []);
+      for (let j = 0; j < m; j++) cl[((kk[j] % per) + per) % per].push(u[j]);
+      if (cl.some(c_ => c_.length < 2)) continue;
+      const med = cl.map(c_ => mediana(c_)), mad = mediana(cl.flatMap((c_, i) => c_.map(v => Math.abs(v - med[i]))));
+      if (mad > 0.08 || Math.max(...med) - Math.min(...med) < 0.35) continue;
+      return { per, u: med.map(v => clampi(v, 0, 1.2)), mad };
+    }
+    return null;
+  }
+  function _ajustarPWM(ser, Ls, signo, tauLo, du, NT, T, F, res, sc, usaP) {
     const nll = new Float64Array(NT);
     let sumD = 0, nD = 0, nsol = 0;
     const t0 = res.t0;
     for (let si = 0; si < ser.length; si++) {
       const x = ser[si], L = Ls[si];
       const lo = L.lo, hi = L.hi90, sg = Math.max(1.4826 * (L.madOff || 0), 1e-3 * Math.abs(hi - lo), 1e-12);
-      const pat = patronPWM(x, L, signo, t0, T);
+      const pat = patronPWM(x, L, signo, t0, T, usaP && x.tienep);
+      if (pat.modo === 'nivel') res.pwm_modo = 'nivel';
       sumD += pat.dFija; nD++; nsol += pat.nsol;
       const N = (y, m, s) => Math.exp(-0.5 * ((y - m) / s) ** 2) / s;
       for (let k = 0; k < x.n; k++) {
         const y = x.y[k], wk = x.w[k], dk = pat.d[k];
         const lOff = -Math.log(N(y, lo, sg) + 1e-3 * N(y, hi, 3 * sg) + 1e-300);
-        const lOn = -Math.log(dk * N(y, hi, 3 * sg) + (1 - dk) * N(y, lo, sg) + 1e-300);
+        // modo 'nivel': el cuadro prendido vale lo + d·(hi − lo); si no, mezcla prendido/apagado
+        const lOn = pat.modo === 'nivel'
+          ? -Math.log(N(y, lo + dk * (hi - lo), Math.hypot(sg, (1.4826 * pat.ruido + 0.03) * dk * (hi - lo))) + 1e-300)
+          : -Math.log(dk * N(y, hi, 3 * sg) + (1 - dk) * N(y, lo, sg) + 1e-300);
         // τ_i ≤ t_k ⇔ i ≤ (t_k − tauLo)/du: en la subida ese cuadro está prendido
         const iCorte = Math.floor((x.t[k] - tauLo) / du);
         for (let i = 0; i < NT; i++) {
@@ -1824,6 +2080,7 @@
     VERSION, FOCOS, LADOS, RASGOS, COLUMNAS, LIN, defaultConfig,
     lineal, estabilizar, eventos, manchasFijas, localizar, rasgos, serie, ajustarFlanco, calidad,
     claseTono, tonoDe, flancoGrueso: (s, signo, tA, tB, T) => flancoGrueso(normSerie(s), signo, tA, tB, T),
+    _interno: { _partirNucleo, _dividir, conf },   // solo para pruebas
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.SemaforoVision = api;

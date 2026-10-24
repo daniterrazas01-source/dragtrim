@@ -226,12 +226,13 @@
 
   // ------------------------------------------------------------ reloj de cuadros (K0, decisión 7)
   // Elige la fuente de la hora: 'cap' (captureTime validado) > 'media' (mediaTime en rejilla) >
-  // 'indice' (presentedFrames o acumulado). Con 'media'/'indice', recta sobre la envolvente inferior
-  // de la hora de llegada (cb): t = c0 + c1·src. El retraso fijo que queda lo absorben K1/K3.
-  // Sin horas de llegada (video de archivo) → 'archivo': t = media (pts).
+  // 'indice' (presentedFrames y/o la fase de la llegada). Con 'media'/'indice', recta sobre la
+  // envolvente inferior de la hora de llegada (cb): t = c0 + c1·src. El retraso fijo que queda lo
+  // absorben K1/K3. Sin horas de llegada (video de archivo) → 'archivo': t = media (pts).
   function reloj(crudos, opts) {
     opts = opts || {};
     const c = config(opts.cfg).reloj;
+    const fpsN = num(opts.fps_nominal) > 0 ? opts.fps_nominal : NaN;
     const cb = crudos && crudos.cb ? crudos.cb : [], n = cb.length;
     const out = { fuente: 'cb', c0: 0, c1: 1, lat_min_s: NaN, jitter_s: NaN, perdidos: 0, fps: NaN, t: new Float64Array(n) };
     if (!n) return out;
@@ -240,103 +241,128 @@
     const NF = new Float64Array(n); for (let i = 0; i < n; i++) { const v = crudos.nf ? num(crudos.nf[i]) : NaN; NF[i] = isFin(v) && v >= 0 ? v : NaN; }
     const frac = (a) => { let k = 0; for (let i = 0; i < n; i++) if (isFin(a[i])) k++; return k / n; };
     const creciente = (a) => { let p = -Infinity; for (let i = 0; i < n; i++) if (isFin(a[i])) { if (!(a[i] > p)) return false; p = a[i]; } return true; };
-    const nfOk = frac(NF) >= c.frac_min && creciente(NF);
+    const nfOk = n >= 2 && frac(NF) >= c.frac_min && creciente(NF);
     const base = nfOk ? rellenar(NF, null) : null;   // eje para rellenar huecos
-    // Periodo: mediana de los pasos, afinada con pasos de k cuadros
-    const periodo = (a) => {
-      const d = []; let p = NaN;
-      for (let i = 0; i < n; i++) if (isFin(a[i])) { if (isFin(p) && a[i] > p) d.push(a[i] - p); p = a[i]; }
-      const T0 = mediana(d); if (!(T0 > 0)) return { T: NaN, ok: 0, perd: 0 };
-      let sd = 0, sk = 0, ok = 0, perd = 0;
-      for (const x of d) { const k = Math.max(1, Math.round(x / T0)); if (Math.abs(x - k * T0) <= c.paso_tol * T0) { ok++; sd += x; sk += k; perd += k - 1; } }
-      return { T: sk ? sd / sk : T0, ok: d.length ? ok / d.length : 0, perd };
-    };
-    let usaNF = true;
-    const perdidosNF = () => { let s = 0, p = NaN; for (let i = 0; i < n; i++) if (isFin(NF[i])) { if (isFin(p) && NF[i] - p > 1) s += NF[i] - p - 1; p = NF[i]; } return s; };
     const fin = (fuente, t, extra) => {
       Object.assign(out, extra || {}); out.fuente = fuente; out.t = t;
-      const P = periodo(t);
+      const P = pasosDe(t, n, c.paso_tol);
       out.fps = P.T > 0 ? 1 / P.T : NaN;
-      out.perdidos = nfOk && usaNF ? perdidosNF() : P.perd;
+      if (!isFin(out.perdidos) || !(extra && 'perdidos' in extra)) out.perdidos = nfOk ? saltos(NF) : P.perd;
       return out;
     };
-
     // Video de archivo: no hay hora de llegada
     if (frac(CB) < 0.5) {
       if (frac(MED) >= 0.5) return fin('archivo', rellenar(MED, base));
-      const t = new Float64Array(n); for (let i = 0; i < n; i++) t[i] = i / (opts.fps_nominal || 30);
-      return fin('indice', t, { c0: 0, c1: 1 / (opts.fps_nominal || 30) });
+      const f = isFin(fpsN) ? fpsN : 30, t = new Float64Array(n); for (let i = 0; i < n; i++) t[i] = (base ? base[i] - base[0] : i) / f;
+      return fin('indice', t, { c0: 0, c1: 1 / f });
     }
     const cbR = rellenar(CB, base);
-
-    // 'cap': captureTime presente, creciente y cerca de la llegada
+    if (n < 3) return fin('cb', cbR);
+    // 'cap': captureTime presente (≥ 90 %), creciente y a menos de 1 s de la llegada
     if (frac(CAP) >= c.frac_min && creciente(CAP)) {
       let peor = 0; const lat = [];
       for (let i = 0; i < n; i++) if (isFin(CAP[i]) && isFin(CB[i])) { const d = CB[i] - CAP[i]; lat.push(d); peor = Math.max(peor, Math.abs(d)); }
-      if (peor < c.cap_max_desfase_s) {
+      if (lat.length && peor < c.cap_max_desfase_s) {
         const lmin = percentil(lat, c.pct_final);
         return fin('cap', rellenar(CAP, base), { c0: 0, c1: 1, lat_min_s: lmin, jitter_s: mediana(lat) - lmin });
       }
     }
     // 'media': estrictamente creciente con pasos ≈ k·T
-    let src = null, fuente = 'indice';
     if (frac(MED) >= c.frac_min && creciente(MED)) {
-      const P = periodo(MED);
-      if (P.T > 0 && P.ok >= c.frac_min) { src = rellenar(MED, base); fuente = 'media'; }
+      const P = pasosDe(MED, n, c.paso_tol);
+      if (P.T > 0 && P.ok >= c.frac_min) {
+        const src = rellenar(MED, base), e = envolvente(src, CB, c);
+        if (e) { const t = new Float64Array(n); for (let i = 0; i < n; i++) t[i] = e.c0 + e.c1 * src[i]; return fin('media', t, { c0: e.c0, c1: e.c1, jitter_s: e.jitter }); }
+      }
     }
-    if (!src) {
-      // índice deducido de la hora de llegada; también revisa presentedFrames, que no ve los
-      // cuadros que la cámara pierde antes del video
-      const P = periodo(cbR), Tl = periodoCoherente(cbR, P.T > 0 ? P.T : 1 / (opts.fps_nominal || 60));
-      const kl = indicesDeLlegada(cbR, Tl);
-      if (nfOk && !(kl[n - 1] - kl[0] > base[n - 1] - base[0] + 1)) src = base;
-      else { src = kl; usaNF = false; }
+    // 'indice': número de cuadro. presentedFrames cuenta los cuadros que llegan al video (también los que
+    // rVFC no entrega), pero no los que la cámara pierde antes; la fase de la llegada sí los ve. Se
+    // combinan: k_i = min(llegada_i, k_{i+1} − Δnf) de atrás hacia adelante (ver indicesDeLlegada).
+    let T = NaN;
+    if (nfOk) { const e = envolvente(base, CB, c); if (e && e.c1 > 0) T = e.c1; }
+    if (!(T > 0)) { const P = pasosDe(cbR, n, 0.5); T = P.T; }
+    if (!(T > 0)) T = 1 / (isFin(fpsN) ? fpsN : 60);
+    T = periodoCoherente(cbR, T, nfOk ? 0.06 : 0.15);   // sin nf, la mediana de los pasos sale baja con jitter
+    let src = indicesDeLlegada(cbR, T, NaN, nfOk ? NF : null);
+    let e = envolvente(src, CB, c);
+    if (e && e.c1 > 0) {
+      // segunda vuelta: índice desde el piso de la envolvente (en vez de la moda de la fase)
+      src = indicesDeLlegada(cbR, e.c1, e.c0, nfOk ? NF : null);
+      const e2 = envolvente(src, CB, c); if (e2 && e2.c1 > 0) e = e2;
     }
-    // Envolvente inferior: MC iterativos sobre el env_pct % más bajo de residuos, luego bajar al percentil pct_final
+    if (!e) return fin('cb', cbR);
+    const t = new Float64Array(n); for (let i = 0; i < n; i++) t[i] = e.c0 + e.c1 * src[i];
+    return fin('indice', t, { c0: e.c0, c1: e.c1, jitter_s: e.jitter, perdidos: saltos(src) });
+  }
+  // Σ(salto − 1) de un índice creciente
+  function saltos(a) { let s = 0, p = NaN; for (let i = 0; i < a.length; i++) if (isFin(a[i])) { if (isFin(p) && a[i] - p > 1) s += Math.round(a[i] - p) - 1; p = a[i]; } return s; }
+  // Periodo: mediana de los pasos, afinada con los pasos que son ≈ k·T0. ok = fracción de esos pasos.
+  function pasosDe(a, n, tol) {
+    const d = []; let p = NaN;
+    for (let i = 0; i < n; i++) if (isFin(a[i])) { if (isFin(p) && a[i] > p) d.push(a[i] - p); p = a[i]; }
+    const T0 = mediana(d); if (!(T0 > 0)) return { T: NaN, ok: 0, perd: 0 };
+    let sd = 0, sk = 0, ok = 0, perd = 0;
+    for (const x of d) { const k = Math.max(1, Math.round(x / T0)); if (Math.abs(x - k * T0) <= tol * T0) { ok++; sd += x; sk += k; perd += k - 1; } }
+    return { T: sk ? sd / sk : T0, ok: d.length ? ok / d.length : 0, perd };
+  }
+  // Envolvente inferior y ≈ c0 + c1·x: mínimos cuadrados iterativos (iter vueltas con el env_pct % de
+  // residuos más bajos) y luego la recta se baja al percentil pct_final.
+  function envolvente(x0, y0, c) {
     const x = [], y = [];
-    for (let i = 0; i < n; i++) if (isFin(src[i]) && isFin(CB[i])) { x.push(src[i]); y.push(CB[i]); }
-    let fit = recta(x, y, null);
-    if (!fit) { out.t = cbR; out.fuente = 'cb'; return out; }
+    for (let i = 0; i < x0.length; i++) if (isFin(x0[i]) && isFin(y0[i])) { x.push(x0[i]); y.push(y0[i]); }
+    let fit = recta(x, y, null); if (!fit) return null;
+    const r = new Float64Array(x.length);
+    const resid = () => { for (let i = 0; i < x.length; i++) r[i] = y[i] - fit.c0 - fit.c1 * x[i]; };
     for (let it = 0; it < c.iter; it++) {
-      const r = x.map((xi, i) => y[i] - fit.c0 - fit.c1 * xi);
-      const q = percentil(r, c.env_pct), usar = r.map((ri) => ri <= q);
+      resid();
+      const q = percentil(r, c.env_pct), usar = new Uint8Array(x.length);
+      for (let i = 0; i < x.length; i++) usar[i] = r[i] <= q ? 1 : 0;
       const f2 = recta(x, y, usar); if (!f2) break; fit = f2;
     }
-    const r = x.map((xi, i) => y[i] - fit.c0 - fit.c1 * xi);
+    resid();
     const baja = percentil(r, c.pct_final);
-    const c0 = fit.c0 + baja, c1 = fit.c1;
-    const t = new Float64Array(n); for (let i = 0; i < n; i++) t[i] = c0 + c1 * src[i];
-    return fin(fuente, t, { c0, c1, jitter_s: mediana(r) - baja });
+    return { c0: fit.c0 + baja, c1: fit.c1, jitter: mediana(r) - baja };
   }
-  // Periodo exacto de la llegada: máximo de la coherencia de fase |Σ exp(2πi·cb/T)| cerca de T0
+  // Periodo exacto de la llegada: máximo de la coherencia de fase |Σ exp(2πi·cb/T)| a ±rel de T0
   // (los cuadros a tiempo comparten fase; los atascados casi no pesan).
-  function periodoCoherente(cb, T0) {
+  function periodoCoherente(cb, T0, rel) {
     const n = cb.length; if (n < 8 || !(T0 > 0)) return T0;
     const c = (T) => { let sr = 0, si = 0; for (let i = 0; i < n; i++) { const a = 2 * Math.PI * (cb[i] - cb[0]) / T; sr += Math.cos(a); si += Math.sin(a); } return sr * sr + si * si; };
-    const malla = (Tc, rel, m) => {
+    const malla = (Tc, r, m) => {
       let bT = Tc, bv = -1, bi = 0; const v = new Float64Array(2 * m + 1);
-      for (let j = -m; j <= m; j++) { const T = Tc * (1 + rel * j / m); v[j + m] = c(T); if (v[j + m] > bv) { bv = v[j + m]; bT = T; bi = j + m; } }
-      if (bi > 0 && bi < 2 * m) { const a = v[bi - 1], b = v[bi], d = v[bi + 1], den = a - 2 * b + d; if (den < 0) bT += Tc * rel / m * 0.5 * (a - d) / den; }
+      for (let j = -m; j <= m; j++) { const T = Tc * (1 + r * j / m); v[j + m] = c(T); if (v[j + m] > bv) { bv = v[j + m]; bT = T; bi = j + m; } }
+      if (bi > 0 && bi < 2 * m) { const a = v[bi - 1], b = v[bi], d = v[bi + 1], den = a - 2 * b + d; if (den < 0) bT += Tc * r / m * 0.5 * (a - d) / den; }
       return bT;
     };
     const span = cb[n - 1] - cb[0], ancho = Math.max(1e-6, T0 / Math.max(span, T0));   // ancho del pico (relativo)
-    let T = malla(T0, 0.02, Math.ceil(0.02 / ancho * 4));
+    let T = malla(T0, rel, Math.min(2000, Math.ceil(rel / ancho * 4)));
     T = malla(T, 4 * ancho, 40);
     return T;
   }
-  // Índice de cuadro solo con la hora de llegada: los cuadros a tiempo caen en una misma fase
-  // (moda de cb mod T); k = piso de la fase. Un cuadro atascado sale con k de más: se corrige de
-  // atrás hacia adelante (k_i ≤ k_{i+1} − 1). Un cuadro perdido deja un salto que se conserva.
-  function indicesDeLlegada(cb, T) {
-    const n = cb.length, B = 64, h = new Float64Array(B), o = new Float64Array(n);
+  // Índice de cuadro con la hora de llegada. Sin piso (c0 NaN): los cuadros a tiempo caen en una misma
+  // fase (moda de cb mod T) y k = piso de la fase. Con piso: k = ⌊(cb − c0)/T + 0.1⌋ (la llegada nunca
+  // es antes del piso). Un cuadro atrasado sale con k de más: se corrige de atrás hacia adelante,
+  // k_i ≤ k_{i+1} − max(1, nf_{i+1} − nf_i). Un salto que la llegada sí ve (cuadro que la cámara
+  // perdió) se conserva aunque presentedFrames no lo cuente.
+  function indicesDeLlegada(cb, T, c0, nf) {
+    const n = cb.length, o = new Float64Array(n);
     if (!n) return o;
     const ref = cb[0];
-    for (let i = 0; i < n; i++) { const f = (((cb[i] - ref) % T) + T) % T; h[Math.min(B - 1, Math.floor(f / T * B))]++; }
-    let pb = 0, pv = -1;
-    for (let b = 0; b < B; b++) { let v = 0; for (let d = -2; d <= 2; d++) v += h[(b + d + B) % B]; if (v > pv) { pv = v; pb = b; } }
-    const fase = (pb + 0.5) / B * T;
-    for (let i = 0; i < n; i++) o[i] = Math.floor((cb[i] - ref - fase + 0.3 * T) / T);
-    for (let i = n - 2; i >= 0; i--) if (o[i] > o[i + 1] - 1) o[i] = o[i + 1] - 1;
+    if (isFin(c0)) {
+      for (let i = 0; i < n; i++) o[i] = Math.floor((cb[i] - c0) / T + 0.1);
+    } else {
+      const B = 64, h = new Float64Array(B);
+      for (let i = 0; i < n; i++) { const f = (((cb[i] - ref) % T) + T) % T; h[Math.min(B - 1, Math.floor(f / T * B))]++; }
+      let pb = 0, pv = -1;
+      for (let b = 0; b < B; b++) { let v = 0; for (let d = -2; d <= 2; d++) v += h[(b + d + B) % B]; if (v > pv) { pv = v; pb = b; } }
+      const fase = (pb + 0.5) / B * T;
+      for (let i = 0; i < n; i++) o[i] = Math.floor((cb[i] - ref - fase + 0.3 * T) / T);
+    }
+    for (let i = n - 2; i >= 0; i--) {
+      let d = 1;
+      if (nf && isFin(nf[i]) && isFin(nf[i + 1])) d = Math.max(1, Math.round(nf[i + 1] - nf[i]));
+      if (o[i] > o[i + 1] - d) o[i] = o[i + 1] - d;
+    }
     const k0 = o[0]; for (let i = 0; i < n; i++) o[i] -= k0;
     return o;
   }
@@ -1236,7 +1262,7 @@
     VERSION, ARBOLES, FOCOS, defaultConfig, Anillo, reloj, buscarSecuencia, k1, reaccion, reaccionDe, rolloutMedido,
     analizar, reanalizar, prueba, calidad, fmtRT, aCSV, deCSV, clip, tira, calibracion, _llamadas,
     _vision: null,   // las pruebas pueden inyectar aquí una visión falsa
-    _util: { mediana, percentil, mad, interp1, mezclar, flancos, periodoDe, deltaNominal },
+    _util: { mediana, percentil, mad, interp1, mezclar, flancos, periodoDe, deltaNominal, periodoCoherente, indicesDeLlegada, envolvente, pasosDe },
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Semaforo = api;
