@@ -30,7 +30,7 @@
     ventana: { buscar: [-3.6, 0.6] },
     rt: [-1.0, 1.5],                            // L_ref − t_verde aceptable
     disco: 1.6, anillo: [2.0, 2.8], rasgos: { excl_frac: 0.5 },   // fuera los píxeles del disco quemados en ≥ 50 % de los cuadros con el foco quemado
-    fijas: { radio_px: 12 },                    // apertura (top-hat) para manchas fijas, a escala 1
+    fijas: { radio_px: 12, cuantil: 0.8 },      // apertura (top-hat) para manchas fijas, a escala 1; cuantil por píxel (PWM)
     flanco: { rejilla: 1e-4, grueso: 5, atras_min_s: 0.09, atras_T: 2, adelante_T: 2, ventana_T: 6,
               ventana_extra_s: 0.02, ventana_min_s: 0.25, huber: 2.5, tr_ms: [0, 5, 10, 20, 30, 45, 60, 80],
               tf_rel: 0.6, E_s: [0.0003], E_T: [0.25, 0.5, 0.98], pwm_frac: 0.15, contraste_min: 4, bic_inc: 3 },
@@ -77,7 +77,7 @@
       nominal: p('arbol.nominal'),
       buscar: p('ventana.buscar'),
       rt: (isFin(rtMin) && isFin(rtMax)) ? [rtMin, rtMax] : p(['rt', 'rt.rango']),
-      disco: p('disco'), anillo: p('anillo'), fijas_R: p('fijas.radio_px'), quieto_s: p('carril.quieto_s'), excl_frac: p('rasgos.excl_frac'),
+      disco: p('disco'), anillo: p('anillo'), fijas_R: p('fijas.radio_px'), fijas_q: p('fijas.cuantil'), quieto_s: p('carril.quieto_s'), excl_frac: p('rasgos.excl_frac'),
       fl: {
         rejilla: p(['flanco.rejilla', 'flanco.rejilla_s']), grueso: Math.max(1, Math.round(p('flanco.grueso'))),
         atras_min_s: p(['flanco.atras_min_s', 'flanco.rango_min_s']), atras_T: p(['flanco.atras_T', 'flanco.rango_T']),
@@ -201,7 +201,8 @@
     }
   }
   // mediana por píxel (Y8) de los cuadros ks; con desp = {sx, sy, k0} se estabiliza cada cuadro
-  function medianaCuadros(c, ks, desp) {
+  // q: cuantil por píxel (0.5 = mediana). Un cuantil alto deja ver focos con PWM que en algunos cuadros salen apagados.
+  function medianaCuadros(c, ks, desp, q) {
     const g = geo(c), np = g.np, m = ks.length, D = c.datos;
     const out = new Uint8Array(np);
     if (!m) return out;
@@ -212,7 +213,7 @@
       else pila.set(D.subarray(k * g.tam, k * g.tam + np), j * np);
     }
     if (m === 1) { out.set(pila.subarray(0, np)); return out; }
-    const v = new Uint8Array(m), mid = m >> 1, par_ = m % 2 === 0;
+    const v = new Uint8Array(m), qq = isFin(q) ? q : 0.5, iq = Math.round(qq * (m - 1)), mid = m >> 1, par_ = m % 2 === 0 && !isFin(q);
     for (let i = 0; i < np; i++) {
       for (let j = 0; j < m; j++) {
         const x = pila[j * np + i];
@@ -220,7 +221,7 @@
         while (q >= 0 && v[q] > x) { v[q + 1] = v[q]; q--; }
         v[q + 1] = x;
       }
-      out[i] = par_ ? (v[mid - 1] + v[mid] + 1) >> 1 : v[mid];
+      out[i] = par_ ? (v[mid - 1] + v[mid] + 1) >> 1 : (isFin(q) ? v[iq] : v[mid]);
     }
     return out;
   }
@@ -404,8 +405,10 @@
           r = (va > 1e-9 && vb > 1e-9) ? (m * sab - sa * sb) / Math.sqrt(va * vb) : 0;
         }
         ncc[s + S + 1] = r;
-        // continuidad: un salto de más de 16 px contra el cuadro anterior necesita una correlación 0.2 mejor
-        const ds = Math.abs(s - prior), sc = r - 0.001 * ds - (ds > 16 ? 0.2 : 0);
+        // continuidad contra la predicción (velocidad constante): de noche solo hay focos, a un paso fijo, y la
+        // correlación tiene picos casi iguales cada ~paso; lejos de la predicción se paga 0.006/px y, a más de
+        // 10 px, 0.2 más
+        const ds = Math.abs(s - prior), sc = r - 0.006 * ds - (ds > 10 ? 0.2 : 0);
         if (sc > best) { best = sc; bs = s; }
       }
       const r0 = ncc[bs + S + 1];
@@ -444,12 +447,21 @@
       mov.dx[i] = dx; mov.dy[i] = dy; mov.q[i] = q; mov.G[i] = ganancia(off, Math.round(dx), Math.round(dy));
     }
     const kc = clampi(Math.round((r0 + r1) / 2), kA, kB);
+    // seguimiento con predicción de velocidad constante (el cabeceo de la salida mueve varios px por cuadro)
     function seguir() {
       sumasRef();
-      let px = 0, py = 0;
-      for (let k = kc; k <= kB; k++) { medir(k, px, py); if (r.q > C.q_min) { px = r.dx; py = r.dy; } }
-      px = mov.dx[kc - kA]; py = mov.dy[kc - kA];
-      for (let k = kc - 1; k >= kA; k--) { medir(k, px, py); if (r.q > C.q_min) { px = r.dx; py = r.dy; } }
+      const pasada = (k0_, k1_, dk) => {
+        let px = k0_ === kc ? 0 : mov.dx[kc - kA], py = k0_ === kc ? 0 : mov.dy[kc - kA], vx = 0, vy = 0, ant = null;
+        for (let k = k0_; dk > 0 ? k <= k1_ : k >= k1_; k += dk) {
+          medir(k, px + vx, py + vy);
+          if (r.q > C.q_min) {
+            if (ant) { vx = Math.max(-12, Math.min(12, r.dx - ant[0])); vy = Math.max(-12, Math.min(12, r.dy - ant[1])); }
+            ant = [r.dx, r.dy]; px = r.dx; py = r.dy;
+          } else { vx = 0; vy = 0; ant = null; }
+        }
+      };
+      pasada(kc, kB, 1);
+      pasada(kc - 1, kA, -1);
     }
     seguir();
     // máscara 2: lo que cambia de brillo (focos que se prenden o apagan y sus halos), con la ganancia de cada cuadro
@@ -482,6 +494,24 @@
       for (let j = 0; j < np; j++) if (cuenta[j] >= 3 && !malo[j]) { malo[j] = 1; nv++; }
     }
     if (nv > 0.002 * np) { armarMascara(); seguir(); }
+    // Respaldo de noche: con el fondo oscuro casi no hay gradientes y la correlación pierde el cabeceo de la salida.
+    // Entonces se siguen las luces mismas (pre-stage/stage de los dos carriles, otras luces fijas): todas se mueven
+    // juntas, así que el corrimiento más votado entre las manchas de la referencia y las del cuadro es el del cuadro.
+    // Las que se prenden o se apagan solo agregan votos sueltos.
+    const mRef = manchasClaras(ref, w, h);
+    let nb = 0;
+    if (mRef.n >= 3) {
+      for (let k = kA; k <= kB; k++) {
+        const i = k - kA;
+        if (mov.q[i] >= 0.5) continue;
+        const mk = manchasClaras(D.subarray(k * tam, k * tam + np), w, h);
+        const v = votarCorrimiento(mRef, mk, S);
+        if (!v) continue;
+        mov.dx[i] = v.dx; mov.dy[i] = v.dy; mov.q[i] = 0.6; mov.G[i] = ganancia(k * tam, Math.round(v.dx), Math.round(v.dy));
+        nb++;
+      }
+    }
+    mov.por_luces = nb;
     let enMask = 0;
     for (let j = 0; j < np; j++) enMask += mask[j];
     mov.mascara_px = np - enMask;               // píxeles fuera de la máscara (diagnóstico)
@@ -491,6 +521,52 @@
 
   // ------------------------------------------------------------------ ruido por píxel
   // σ de Ylin entre cuadros seguidos (estabilizados), robusto: 1.4826·mediana|Δ|/√2
+  // Manchas claras (centroides) de una imagen de luma: umbral max(96, 0.6·máximo), 4-conexas, área ≥ 2; hasta 48.
+  function manchasClaras(Y, w, h) {
+    let mx = 0;
+    for (let i = 0; i < w * h; i++) if (Y[i] > mx) mx = Y[i];
+    const thr = Math.max(96, 0.6 * mx), vis = new Uint8Array(w * h), pila = new Int32Array(w * h);
+    const xs = [], ys = [], as = [];
+    for (let i0 = 0; i0 < w * h; i0++) {
+      if (vis[i0] || Y[i0] < thr) continue;
+      let sp = 0, n = 0, sx = 0, sy = 0, sw = 0;
+      pila[sp++] = i0; vis[i0] = 1;
+      while (sp) {
+        const i = pila[--sp], x = i % w, y = (i - x) / w, v = Y[i] - thr + 1;
+        n++; sx += v * x; sy += v * y; sw += v;
+        if (x > 0 && !vis[i - 1] && Y[i - 1] >= thr) { vis[i - 1] = 1; pila[sp++] = i - 1; }
+        if (x < w - 1 && !vis[i + 1] && Y[i + 1] >= thr) { vis[i + 1] = 1; pila[sp++] = i + 1; }
+        if (y > 0 && !vis[i - w] && Y[i - w] >= thr) { vis[i - w] = 1; pila[sp++] = i - w; }
+        if (y < h - 1 && !vis[i + w] && Y[i + w] >= thr) { vis[i + w] = 1; pila[sp++] = i + w; }
+      }
+      if (n >= 2) { xs.push(sx / sw); ys.push(sy / sw); as.push(n); }
+    }
+    if (xs.length > 48) {
+      const ord = as.map((a, i) => i).sort((p_, q_) => as[q_] - as[p_]).slice(0, 48);
+      return { n: 48, x: ord.map(i => xs[i]), y: ord.map(i => ys[i]) };
+    }
+    return { n: xs.length, x: xs, y: ys };
+  }
+  // Corrimiento del cuadro respecto a la referencia por votación de pares de manchas (±S px). null si no hay
+  // un grupo claro: ≥ 3 pares a ≤ 2 px del corrimiento y ≥ 40 % de las manchas del lado con menos.
+  function votarCorrimiento(A, B, S) {
+    if (A.n < 3 || B.n < 3) return null;
+    const dx = [], dy = [];
+    for (let i = 0; i < A.n; i++) for (let j = 0; j < B.n; j++) {
+      const a = B.x[j] - A.x[i], b = B.y[j] - A.y[i];
+      if (Math.abs(a) <= S && Math.abs(b) <= S) { dx.push(a); dy.push(b); }
+    }
+    let best = 0, bi = -1;
+    for (let i = 0; i < dx.length; i++) {
+      let c = 0;
+      for (let j = 0; j < dx.length; j++) if (Math.abs(dx[j] - dx[i]) <= 2 && Math.abs(dy[j] - dy[i]) <= 2) c++;
+      if (c > best) { best = c; bi = i; }
+    }
+    if (bi < 0 || best < 3 || best < 0.4 * Math.min(A.n, B.n)) return null;
+    let sx = 0, sy = 0, m = 0;
+    for (let j = 0; j < dx.length; j++) if (Math.abs(dx[j] - dx[bi]) <= 2 && Math.abs(dy[j] - dy[bi]) <= 2) { sx += dx[j]; sy += dy[j]; m++; }
+    return { dx: sx / m, dy: sy / m, votos: m };
+  }
   function ruidoPix(c, tr, kA, kB) {
     const g = geo(c), w = g.w, h = g.h, np = g.np, tam = g.tam, D = c.datos, k0 = tr.k0, nmv = tr.sx.length;
     const a = new Uint8Array(np), b = new Uint8Array(np);
@@ -882,7 +958,7 @@
     if (!(kB >= kA) || w < 6 || h < 6) return [];
     const tr = trasladoEntero(mov), k0 = tr.k0, e = esc(c);
     const ks = muestrear(kA, kB, 15);
-    const med = medianaCuadros(c, ks, tr);
+    const med = medianaCuadros(c, ks, tr, C.fijas_q);
     const L = lineal(med);
     const R = Math.max(2, Math.round(C.fijas_R * e));
     const tmp = new Float32Array(np), ero = new Float32Array(np), op = new Float32Array(np);

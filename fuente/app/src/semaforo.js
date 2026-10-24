@@ -424,8 +424,9 @@
     const q = (arr, p) => { const b = Array.from(arr).sort((a, c) => a - c); const x = (b.length - 1) * p, i = Math.floor(x); return i + 1 < b.length ? b[i] + (x - i) * (b[i + 1] - b[i]) : b[i]; };
     for (let i = m; i + m <= N; i++) {
       for (let j = 0; j < m; j++) { tmpA[j] = yy[i - m + j]; tmpB[j] = yy[i + j]; }
-      // el lado "prendido" con cuantil 0.75: aguanta PWM que apaga algunos cuadros
-      const pre = q(tmpA, signo > 0 ? 0.5 : 0.75), post = q(tmpB, signo > 0 ? 0.75 : 0.5);
+      // los dos lados con cuantil 0.75 (envolvente alta): un foco con PWM sale apagado en algunos cuadros y,
+      // con la mediana, la meseta prendida parecía volver a encenderse (o apagarse) a media secuencia
+      const pre = q(tmpA, 0.75), post = q(tmpB, 0.75);
       PRE[i] = pre; POST[i] = post; s[i] = signo * (post - pre);
     }
     const out = [], pers = Math.max(1, cfg.eventos.persistir | 0);
@@ -442,7 +443,16 @@
       for (let j = Math.max(1, i - m); j <= Math.min(N - 1, i + m); j++) {
         const a = signo * (yy[j - 1] - mid), b = signo * (yy[j] - mid);
         if (!(a <= 0 && b > 0)) continue;
-        let ok = true; for (let q2 = 0; q2 < pers && j + q2 < N; q2++) if (signo * (yy[j + q2] - pre) < thr / 2) { ok = false; break; }
+        // al prender, cada cuadro de la persistencia se mira con el máximo de 3 cuadros: un foco con PWM sale
+        // apagado en algunos cuadros aunque ya esté prendido (al apagar, todos deben quedar abajo)
+        // al apagar se exige quedar abajo durante m cuadros (~0.1 s): un hueco del PWM dura 1–3 cuadros
+        let ok = true;
+        const persJ = signo > 0 ? pers : Math.max(pers, m);
+        for (let q2 = 0; q2 < persJ && j + q2 < N; q2++) {
+          let v = yy[j + q2];
+          if (signo > 0) for (let q3 = 1; q3 < 3 && j + q2 + q3 < N; q3++) v = Math.max(v, yy[j + q2 + q3]);
+          if (signo * (v - pre) < thr / 2) { ok = false; break; }
+        }
         if (ok) { t0 = tt[j - 1] + (tt[j] - tt[j - 1]) * (-a) / (b - a); break; }
       }
       if (!isFin(t0) || t0 < tA || t0 > tB) continue;
@@ -450,6 +460,22 @@
       out.push({ k: kk[i], t0, pre, post, paso: Math.abs(post - pre), snr: Math.abs(post - pre) / sigma });
     }
     return out;
+  }
+
+  // Apagado de un foco con PWM (cuadros prendidos salteados en la meseta). null si no hay huecos.
+  function huecoPWM(y, t, peso, e, T) {
+    const mid = (e.pre + e.post) / 2, on = [];
+    for (let k = 0; k < t.length; k++) {
+      if (!(t[k] >= e.t0 - 0.35 && t[k] < e.t0 + T) || !(peso[k] > 0) || !isFin(y[k])) continue;
+      if (y[k] > mid) on.push(k);
+    }
+    if (on.length < 4) return null;
+    const last = on[on.length - 1];
+    let sg = 0, ng = 0, gmax = 1;
+    for (let i = 1; i < on.length; i++) { const g = Math.round((t[on[i]] - t[on[i - 1]]) / T); sg += g; ng++; if (g > gmax) gmax = g; }
+    const gm = sg / ng;
+    if (!(gm > 1.15) || gmax > 8) return null;
+    return { t: t[last] + 0.5 * gm * T, sigma: gm * T / Math.sqrt(12) };
   }
 
   // Ajuste fino de un flanco con SemaforoVision.ajustarFlanco; si falla, se queda el grueso.
@@ -659,11 +685,19 @@
     const sB = isFin(L_ref) ? L_ref + C.busqueda_s : tV + cfg.rt_max_s;
     const apagados = (f, a, b) => flancos(t, S[f], peso, -1, T, a, b, cfg).filter((e) => {
       // prendido ≥ prendido_min_s antes y apagado ≥ apagado_min cuadros después
-      const y = S[f], mid = (e.pre + e.post) / 2; let on = 0, tot = 0, off = 0, tot2 = 0;
+      // Antes: "prendido" con el máximo de 3 cuadros (un foco con PWM sale apagado en algunos cuadros).
+      // Después: apagado en TODOS los cuadros de max(apagado_min cuadros, 0.25 s); así un hueco del PWM
+      // (unos cuadros oscuros a media meseta) no pasa por el apagado de verdad.
+      const y = S[f], mid = (e.pre + e.post) / 2, tFin = e.t0 + Math.max(C.apagado_min * T, 0.25);
+      let on = 0, tot = 0, off = 0, tot2 = 0;
       for (let k = 0; k < n; k++) {
         if (!isFin(y[k]) || !(peso[k] > 0)) continue;
-        if (t[k] >= e.t0 - C.prendido_min_s && t[k] < e.t0 - T) { tot++; if (y[k] > mid) on++; }
-        if (t[k] > e.t0 + 0.5 * T && tot2 < C.apagado_min) { tot2++; if (y[k] < mid) off++; }
+        if (t[k] >= e.t0 - C.prendido_min_s && t[k] < e.t0 - T) {
+          let v = y[k];
+          for (let j = Math.max(0, k - 1); j <= Math.min(n - 1, k + 1); j++) if (isFin(y[j]) && t[j] < e.t0 && y[j] > v) v = y[j];
+          tot++; if (v > mid) on++;
+        }
+        if (t[k] > e.t0 + 0.5 * T && t[k] <= tFin) { tot2++; if (y[k] < mid) off++; }
       }
       return tot >= 3 && on / tot >= 0.8 && tot2 >= C.apagado_min && off === tot2;
     }).map((e) => Object.assign(e, { foco: f }));
@@ -674,6 +708,11 @@
     if (eS) {
       const fs = afinar(V, t, [foco(eS.foco)], peso, eS.t0, -1, T, cfg);
       sec.t_stage_off = fs.t; sec.s_stage_off = fs.sigma; sec.lampara.stage = fs.lampara;
+      // Con PWM el foco chico se ve "prendido" solo en algunos cuadros: el apagado real queda en algún punto
+      // entre el último cuadro prendido y el siguiente que habría salido prendido. Sin el patrón exacto,
+      // el punto medio de ese hueco (hueco medio de la meseta) quita el sesgo de tomar el último prendido.
+      const pw = huecoPWM(S[eS.foco], t, peso, eS, T);
+      if (pw) { sec.t_stage_off = pw.t; sec.s_stage_off = Math.max(fs.sigma, pw.sigma); sec.stage_pwm = true; }
     }
     if (eP) sec.t_pre_off = eP.t0;   // diagnóstico (grueso)
     // Stage prendido (último encendido antes del árbol)
