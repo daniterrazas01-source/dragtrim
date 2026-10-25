@@ -397,19 +397,11 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   display: block; position: fixed; inset: 0; z-index: -1;
   background: var(--asphalt) var(--fondo-url) center / cover no-repeat;
 }
-:root[data-fondo] :is(.fondo, .notch)::after {
+:root[data-fondo] .fondo::after {
   content: ""; position: absolute; inset: 0;
   background: rgba(var(--velo-color), var(--velo, .78)); transition: background-color .4s;
 }
-:root[data-fondo] body.sesion :is(.fondo, .notch)::after { background: rgba(var(--velo-color), .92); }
-/* Franja de arriba en iPhone (notch o isla): el fondo sigue detrás de la hora y la batería, y lo que se
-   desliza pasa por debajo de ella en vez de verse detrás de la hora. Es una copia del fondo recortada a la
-   zona segura de arriba (0 px en Android y en computadora). Sin fondo, el color de la app. */
-.notch {
-  position: fixed; inset: 0; z-index: 4; pointer-events: none; background: var(--asphalt);
-  -webkit-clip-path: inset(0 0 calc(100% - env(safe-area-inset-top)) 0); clip-path: inset(0 0 calc(100% - env(safe-area-inset-top)) 0);
-}
-:root[data-fondo] .notch { background: var(--asphalt) var(--fondo-url) center / cover no-repeat; }
+:root[data-fondo] body.sesion .fondo::after { background: rgba(var(--velo-color), .92); }
 
 /* Paneles = stickers: borde recortado y sombra */
 :root[data-fondo] :is(.status, .field, .howto, .kpis, .chart, .quality, .msg, .proximo, .seg, .c-res) {
@@ -511,12 +503,10 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 :where(.view, #medirIdle, #medirSesion) > :nth-child(6) { animation-delay: 175ms; }
 :where(.view, #medirIdle, #medirSesion) > :nth-child(7) { animation-delay: 210ms; }
 :where(.view, #medirIdle, #medirSesion) > :nth-child(n+8) { animation-delay: 240ms; }
-/* Deslizar entre pestañas (app.js): la pantalla sigue al dedo y la nueva entra de lado, de una pieza (sin la cascada) */
-:root.desliza-tab main { overflow-x: hidden; overflow-x: clip; }
-@keyframes entra-der { from { opacity: 0; transform: translateX(24%); } }
-@keyframes entra-izq { from { opacity: 0; transform: translateX(-24%); } }
-.view[data-entra="der"] { animation: entra-der .26s var(--ease-out) backwards; }
-.view[data-entra="izq"] { animation: entra-izq .26s var(--ease-out) backwards; }
+/* Deslizar entre pestañas (app.js): la actual y las de los lados se mueven juntas con el dedo. Las que se asoman ya
+   vienen pintadas (data-entra): sin la cascada de entrada, que se queda apagada hasta que se ocultan. */
+:root.desliza-tab main { position: relative; overflow-x: clip; }
+:root.desliza-tab main > .view:not([hidden]) { will-change: transform; }
 :where(.view[data-entra]) > *, :where(.view[data-entra] #medirIdle) > * { animation: none; }
 
 /* Logo: las luces se encienden una vez al abrir la app */

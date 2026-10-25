@@ -1121,49 +1121,78 @@
       if (b.dataset.view === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     }
   }
+  // Lo que prepara cada pestaña al abrirse (también al asomarse cuando se desliza el dedo).
+  function prepararVista(v) {
+    if (v === 'vMedir') { $('#medirIdle').hidden = false; $('#medirSesion').hidden = true; }
+    if (v === 'vHistorial') pintarHistorial();
+    if (v === 'vAjustes') pintarAjCam();
+  }
   for (const b of document.querySelectorAll('.tabs button')) {
-    b.onclick = () => {
-      const v = b.dataset.view;
-      if (v === 'vMedir') { $('#medirIdle').hidden = false; $('#medirSesion').hidden = true; }
-      if (v === 'vHistorial') pintarHistorial();
-      if (v === 'vAjustes') pintarAjCam();
-      mostrarVista(v); window.scrollTo(0, 0);
-    };
+    b.onclick = () => { const v = b.dataset.view; prepararVista(v); mostrarVista(v); window.scrollTo(0, 0); };
   }
 
-  // Deslizar el dedo a la izquierda o a la derecha pasa a la pestaña de al lado (lo mismo que picarla abajo).
-  // La pantalla sigue al dedo; al soltar pasa si se deslizó lo suficiente (o rápido) y si no, regresa. No se usa
-  // cuando no hay pestañas (corrida, resultado de una corrida, semáforo de Práctica, cámara) ni si el dedo empieza
-  // en la orilla (ahí el teléfono tiene su gesto de "atrás"), en un campo que se está escribiendo, en un deslizador
-  // o en algo que se recorre de lado (tablas de Calcular).
+  // Deslizar el dedo a la izquierda o a la derecha pasa a la pestaña de al lado, como en una app del iPhone: las
+  // pestañas de los lados ya están pintadas junto a la actual y se mueven pegadas a ella con el dedo; al soltar
+  // terminan de pasar (o regresan) con la velocidad que traía el dedo. Pasa si se deslizó más de un tercio o con un
+  // movimiento rápido. No se usa cuando no hay pestañas (corrida, resultado de una corrida, semáforo de Práctica,
+  // cámara) ni si el dedo empieza en la orilla (ahí el teléfono tiene su gesto de "atrás"), en un campo que se está
+  // escribiendo, en un deslizador o en algo que se recorre de lado (tablas de Calcular).
   (() => {
     const botones = [...document.querySelectorAll('.tabs button')], barra = document.querySelector('.tabs');
-    const ORILLA = 24, BLOQUEO = 10;
+    const raiz = document.documentElement, main = document.querySelector('main');
+    const ORILLA = 24, BLOQUEO = 10, CURVA = 'cubic-bezier(.25, 1, .5, 1)';   // la curva de iOS al soltar
     let g = null, tapaClic = -Infinity, ocupado = false;   // tapaClic: hora del último soltar después de deslizar
     const actual = () => Math.max(0, botones.findIndex((b) => b.hasAttribute('aria-current')));
     const hayPestanas = () => getComputedStyle(barra).display !== 'none' && !document.body.classList.contains('practica')
-      && !document.body.classList.contains('sesion') && !document.documentElement.classList.contains('cam-abierta');
+      && !document.body.classList.contains('sesion') && !raiz.classList.contains('cam-abierta');
     const deLado = (el) => {
       for (; el && el !== document.body; el = el.parentElement) {
         if (el.scrollWidth > el.clientWidth + 1 && /auto|scroll/.test(getComputedStyle(el).overflowX)) return true;
       }
       return false;
     };
-    const raiz = document.documentElement;
-    let quitar = 0;
-    const deslizando = (si) => { clearTimeout(quitar); raiz.classList.toggle('desliza-tab', si); };
+    const rebote = (x, w) => Math.sign(x) * (1 - 1 / (Math.abs(x) * 0.55 / w + 1)) * w;   // orilla elástica
+    const mover = (el, x) => { el.style.transform = `translate3d(${x}px, 0, 0)`; };
+    const soltarVista = (el) => { for (const p of ['position', 'top', 'left', 'width', 'transform']) el.style[p] = ''; };
+
+    // Asoma las pestañas de los lados a la altura donde quedarán al pasar a ellas: si la actual está bajada,
+    // la de al lado empieza en su parte de arriba, justo bajo la hora.
+    function asomar() {
+      raiz.classList.add('desliza-tab');
+      const { v, i, W } = g, s = window.scrollY;
+      const V = v.getBoundingClientRect().top + s;                       // dónde empiezan las pestañas en la página
+      const abajo = document.documentElement.scrollHeight - (V + v.offsetHeight);
+      const tope = parseFloat(getComputedStyle(document.body).paddingTop) || 0;   // zona de la hora (notch)
+      g.lados = [];
+      for (const k of [-1, 1]) {
+        const b = botones[i + k], n = b && document.getElementById(b.dataset.view);
+        if (!n || n === v) continue;
+        prepararVista(n.id);
+        n.dataset.entra = '1'; n.hidden = false;                          // ya pintada: sin la cascada de entrada
+        Object.assign(n.style, { position: 'absolute', left: v.offsetLeft + 'px', width: v.offsetWidth + 'px' });
+        const tope2 = Math.max(0, V + n.offsetHeight + abajo - window.innerHeight);   // lo más que se podrá bajar
+        const sN = Math.min(s, Math.max(0, V - tope), tope2);             // cómo quedará la página al pasar
+        n.style.top = (v.offsetTop + s - sN) + 'px';
+        mover(n, k * W);
+        g.lados.push({ k, n, sN, j: i + k });
+      }
+    }
+    function esconder(n) { soltarVista(n); n.hidden = true; delete n.dataset.entra; }
+
     document.addEventListener('touchstart', (e) => {
       if (g && g.modo === 'lado') { soltar(e, true); return; }   // otro dedo a media deslizada: regresa
       g = null;
-      if (ocupado || e.touches.length !== 1 || !hayPestanas()) return;   // ocupado: la pantalla va saliendo
-      const t = e.touches[0], el = e.target, ancho = window.innerWidth;
-      if (t.clientX < ORILLA || t.clientX > ancho - ORILLA) return;
+      if (ocupado || e.touches.length !== 1 || !hayPestanas()) return;   // ocupado: va terminando la anterior
+      const t = e.touches[0], el = e.target, W = window.innerWidth;
+      if (t.clientX < ORILLA || t.clientX > W - ORILLA) return;
       if (el.closest('input[type="range"], textarea, [contenteditable]') || (el === document.activeElement && el.matches('input, select'))) return;
       if (deLado(el)) return;
       const v = document.querySelector('main .view:not([hidden])');
-      if (v) g = { x0: t.clientX, y0: t.clientY, t0: e.timeStamp, v, modo: 'espera', dx: 0, xs: [[e.timeStamp, t.clientX]], i: actual(), ancho };
+      if (v) g = { x0: t.clientX, y0: t.clientY, t0: e.timeStamp, v, modo: 'espera', dx: 0, d: 0, xs: [[e.timeStamp, t.clientX]], i: actual(), W, lados: [] };
     }, { passive: true });
+
     document.addEventListener('touchmove', (e) => {
+      if (ocupado && e.cancelable) { e.preventDefault(); return; }   // mientras termina de pasar, la página no se mueve
       if (!g || g.modo === 'no') return;
       const t = e.touches[0], dx = t.clientX - g.x0, dy = t.clientY - g.y0;
       if (g.modo === 'espera') {
@@ -1171,52 +1200,61 @@
         // de lado y sin dejar el dedo quieto antes (eso es seleccionar texto); si no, es para subir o bajar
         if (Math.abs(dx) > Math.abs(dy) * 1.3 && e.timeStamp - g.t0 < 450 && e.cancelable) {
           g.modo = 'lado';
-          g.v.getAnimations().forEach((a) => a.cancel());   // si iba regresando de la vez anterior, la toma el dedo
-          if (conAnim()) deslizando(true);
+          if (conAnim()) asomar();
         } else { g.modo = 'no'; return; }
       }
       e.preventDefault();   // ya es de lado: que la página no suba ni baje
-      g.dx = dx; g.xs.push([e.timeStamp, t.clientX]); if (g.xs.length > 8) g.xs.shift();
+      g.dx = t.clientX - g.x0; g.xs.push([e.timeStamp, t.clientX]); if (g.xs.length > 8) g.xs.shift();
       if (!conAnim()) return;
-      const hay = botones[g.i + (dx < 0 ? 1 : -1)];
-      const d = hay ? dx : dx * 0.25;   // en la primera y la última pestaña solo cede un poco
-      g.v.style.transform = `translateX(${d}px)`;
-      g.v.style.opacity = String(1 - Math.min(0.5, Math.abs(d) / g.ancho * 0.6));
+      const hay = g.lados.some((l) => l.k === (g.dx < 0 ? 1 : -1));
+      g.d = hay ? g.dx : rebote(g.dx, g.W);   // en la primera y la última pestaña solo cede un poco
+      mover(g.v, g.d);
+      for (const l of g.lados) mover(l.n, l.k * g.W + g.d);
     }, { passive: false });
+
     function soltar(e, cancelado) {
       if (!g || g.modo !== 'lado') { g = null; return; }
-      const { v, dx, i, ancho, xs } = g; g = null;
+      const { v, dx, d, i, W, xs, lados } = g; g = null;
       tapaClic = e.timeStamp;
       const [tb, xb] = xs[xs.length - 1], [ta, xa] = xs.find(([tt]) => tt >= tb - 100) || xs[0];
-      const vel = tb > ta ? (xb - xa) / (tb - ta) : 0;   // px/ms en los últimos 100 ms
-      const j = i + (dx < 0 ? 1 : -1);
-      const pasa = !cancelado && !!botones[j] && (Math.abs(dx) > Math.min(110, ancho * 0.28)
-        || (Math.abs(vel) > 0.4 && Math.abs(dx) > 40 && Math.sign(vel) === Math.sign(dx)));
-      const ir = () => { if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur(); botones[j].click(); };
-      if (!conAnim()) { if (pasa) ir(); return; }
-      const desde = { transform: v.style.transform || 'none', opacity: v.style.opacity || '1' };
-      v.style.transform = v.style.opacity = '';
-      if (!pasa) {   // regresa a su lugar
-        v.animate([desde, { transform: 'none', opacity: 1 }], { duration: 220, easing: 'cubic-bezier(.22, 1, .36, 1)' })
-          .onfinish = () => deslizando(false);
-        return;
-      }
+      // px/ms en los últimos 100 ms; si el dedo se detuvo antes de soltar, ya no lleva velocidad
+      const vel = tb > ta && e.timeStamp - tb < 80 ? (xb - xa) / (tb - ta) : 0;
+      const k = dx < 0 ? 1 : -1, j = i + k;
+      const pasa = !cancelado && !!botones[j] && Math.sign(vel) !== -Math.sign(dx)
+        && (Math.abs(dx) > W / 3 || (Math.abs(vel) > 0.3 && Math.abs(dx) > 24));
+      const ir = () => { if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur(); };
+      if (!conAnim()) { if (pasa) { ir(); botones[j].click(); } return; }
+      const lado = lados.find((l) => l.k === k);
+      const fin = pasa && lado ? -k * W : 0;
+      // que termine con la velocidad del dedo: la curva arranca 4 veces más rápido que su promedio
+      const falta = Math.abs(fin - d), rapidez = Math.abs(vel);
+      const dur = rapidez > 0.05 ? Math.min(420, Math.max(240, 4 * falta / rapidez)) : 360;
+      if (pasa && lado) for (const b of botones) { if (b === botones[j]) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); }
       ocupado = true;
-      const sale = v.animate([desde, { transform: `translateX(${dx < 0 ? -45 : 45}%)`, opacity: 0 }], { duration: 120, easing: 'ease-in', fill: 'forwards' });
-      sale.onfinish = () => {
-        ir(); sale.cancel(); ocupado = false;
-        const n = document.querySelector('main .view:not([hidden])');
-        // la nueva entra por el lado contrario al dedo; data-entra se queda hasta que se oculte (quitarlo antes
-        // volvería a arrancar la cascada de sus partes)
-        if (n) n.dataset.entra = dx < 0 ? 'der' : 'izq';
-        quitar = setTimeout(() => raiz.classList.remove('desliza-tab'), 320);
+      const anims = [[v, d, fin], ...lados.map((l) => [l.n, l.k * W + d, l.k * W + fin])].map(([el, de, a]) =>
+        el.animate([{ transform: `translate3d(${de}px, 0, 0)` }, { transform: `translate3d(${a}px, 0, 0)` }], { duration: dur, easing: CURVA, fill: 'forwards' }));
+      anims[0].onfinish = () => {
+        anims.forEach((a) => a.cancel());
+        soltarVista(v);
+        if (pasa && lado) {
+          // la nueva queda en su lugar en la página, a la misma altura en que se veía (sin brinco)
+          ir(); soltarVista(lado.n);
+          for (const l of lados) if (l !== lado) esconder(l.n);
+          mostrarVista(lado.n.id);
+          window.scrollTo(0, lado.sN);
+        } else {
+          for (const l of lados) esconder(l.n);
+          mostrarVista(v.id, botones[i].dataset.view);
+        }
+        raiz.classList.remove('desliza-tab');
+        ocupado = false;
       };
-      sale.oncancel = () => { ocupado = false; deslizando(false); };
+      anims[0].oncancel = () => { ocupado = false; };
     }
     document.addEventListener('touchend', (e) => soltar(e, false));
     document.addEventListener('touchcancel', (e) => soltar(e, true));
-    // al soltar después de deslizar no se pica lo que quedó bajo el dedo (el clic de ir() sí pasa: no es del dedo)
-    document.addEventListener('click', (e) => { if (e.isTrusted && e.timeStamp - tapaClic < 400) { e.stopPropagation(); e.preventDefault(); } }, true);
+    // al soltar después de deslizar no se pica lo que quedó bajo el dedo (el clic de botones[j].click() sí pasa)
+    document.addEventListener('click', (e) => { if (e.isTrusted && (ocupado || e.timeStamp - tapaClic < 400)) { e.stopPropagation(); e.preventDefault(); } }, true);
   })();
 
   // ------------------------------------------------------------ controles

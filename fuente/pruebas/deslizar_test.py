@@ -34,12 +34,18 @@ def pestana(pg):
     return pg.evaluate("(document.querySelector('.tabs button[aria-current]') || {}).dataset?.view || null")
 
 def limpio(pg):
-    """Ninguna pantalla movida ni transparente, nada animándose ya y data-entra solo en la visible."""
+    """Una sola pantalla visible, en su lugar (sin estilos del deslizar), nada animándose ya y data-entra solo en ella."""
     return pg.evaluate("""(() => {
-        const vs = [...document.querySelectorAll('.view')], vis = vs.find(v => !v.hidden);
-        const corre = document.getAnimations().filter(a => a.playState === 'running' && a.effect && vis.contains(a.effect.target));
-        return vs.every(v => !v.style.transform && !v.style.opacity && (v === vis || !v.dataset.entra))
+        const vs = [...document.querySelectorAll('.view')], vis = vs.filter(v => !v.hidden);
+        if (vis.length !== 1) return false;
+        const corre = document.getAnimations().filter(a => a.playState === 'running' && a.effect && vis[0].contains(a.effect.target));
+        return vs.every(v => !v.style.transform && !v.style.position && !v.style.top && !v.style.width && (v === vis[0] || !v.dataset.entra))
             && !document.documentElement.classList.contains('desliza-tab') && corre.length === 0; })()""")
+
+def tx(pg, id):
+    """Cuánto está movida de lado la pantalla id (px), o None si no se ve."""
+    return pg.evaluate(f"""(() => {{ const v = document.getElementById('{id}'); if (v.hidden) return null;
+        const m = getComputedStyle(v).transform; return m === 'none' ? 0 : new DOMMatrix(m).m41; }})()""")
 
 def nueva(b, ajustes, espera=700):
     ctx = b.new_context(viewport={'width': W, 'height': H}, device_scale_factor=2, is_mobile=True, has_touch=True,
@@ -86,13 +92,41 @@ def main():
             deslizar(pg, cdp, 250, Y, -70, ms=90, pasos=5)
             chk(vista(pg) == 'vPractica', f'B. 70 px rápido sí cambia (vista {vista(pg)})')
 
-            # C. a media deslizada la pantalla sigue al dedo
-            deslizar(pg, cdp, 300, Y, -120, soltar=False)
-            tx = pg.evaluate("getComputedStyle(document.querySelector('#vPractica')).transform")
-            chk(tx not in ('none', '') and '-120' in tx.replace(' ', ''), f'C. la pantalla sigue al dedo ({tx})')
+            # C. a media deslizada la actual y las de los lados se mueven juntas, ya pintadas
+            deslizar(pg, cdp, 300, Y, -150, soltar=False)
+            c = [tx(pg, 'vPractica'), tx(pg, 'vCalc'), tx(pg, 'vMedir')]
+            chk(c[0] is not None and abs(c[0] + 150) < 1 and abs(c[1] - (W - 150)) < 1 and abs(c[2] - (-W - 150)) < 1,
+                f'C. la actual sigue al dedo y las de los lados van pegadas (actual, derecha, izquierda: {c})')
+            op = pg.evaluate("""(() => { const n = document.getElementById('vCalc');
+                const corre = document.getAnimations().filter(a => a.playState === 'running' && n.contains(a.effect.target));
+                return [...n.children].every(h => getComputedStyle(h).opacity === '1') && corre.length === 0; })()""")
+            chk(op, 'C. la que se asoma ya está completa (sin la cascada de entrada)')
             pg.screenshot(path=SH + 'deslizar_a_medias.png')
             cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': [], 'timestamp': time.time()}); pg.wait_for_timeout(600)
-            chk(vista(pg) == 'vCalc' and limpio(pg), f'C. al soltar a 120 px pasa (vista {vista(pg)})')
+            chk(vista(pg) == 'vCalc' and limpio(pg), f'C. al soltar a 150 px (más de un tercio) pasa (vista {vista(pg)})')
+            deslizar(pg, cdp, 300, Y, -100, soltar=False); pg.wait_for_timeout(300)
+            cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': [], 'timestamp': time.time()}); pg.wait_for_timeout(600)
+            chk(vista(pg) == 'vCalc' and limpio(pg), f'C. 100 px y detenerse antes de soltar: regresa (vista {vista(pg)})')
+
+            # L. viniendo de una pantalla bajada, la nueva queda donde se veía (sin brinco)
+            pg.click('.tabs button[data-view="vAjustes"]'); pg.wait_for_timeout(500)
+            pg.evaluate("window.scrollTo(0, 700)"); pg.wait_for_timeout(200)
+            deslizar(pg, cdp, 80, Y, 200, soltar=False)
+            arriba = pg.evaluate("document.getElementById('vHistorial').getBoundingClientRect().top + new DOMMatrix(getComputedStyle(document.getElementById('vHistorial')).transform).m42")
+            cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': [], 'timestamp': time.time()}); pg.wait_for_timeout(600)
+            despues = pg.evaluate("document.getElementById('vHistorial').getBoundingClientRect().top")
+            chk(vista(pg) == 'vHistorial' and limpio(pg) and abs(arriba - despues) < 2,
+                f'L. Historial queda a la misma altura en que se asomó ({arriba:.0f} → {despues:.0f} px, scrollY {pg.evaluate("scrollY")})')
+            pg.screenshot(path=SH + 'deslizar_desde_abajo.png')
+            pg.click('.tabs button[data-view="vCalc"]'); pg.wait_for_timeout(500)
+            pg.evaluate("window.scrollTo(0, 600)"); pg.wait_for_timeout(200)
+            deslizar(pg, cdp, 80, Y, 200, soltar=False)
+            arriba = pg.evaluate("document.getElementById('vPractica').getBoundingClientRect().top")
+            cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': [], 'timestamp': time.time()}); pg.wait_for_timeout(600)
+            despues = pg.evaluate("document.getElementById('vPractica').getBoundingClientRect().top")
+            sy = pg.evaluate('scrollY')
+            chk(vista(pg) == 'vPractica' and limpio(pg) and abs(arriba - despues) < 2 and sy > 0,
+                f'L. de Calcular bajada a Práctica: empieza arriba, sin brinco ({arriba:.0f} → {despues:.0f} px, scrollY {sy})')
 
             # D. subir o bajar no cambia de pestaña (y sí se desliza la página)
             pg.click('.tabs button[data-view="vAjustes"]'); pg.wait_for_timeout(500)
@@ -153,7 +187,7 @@ def main():
 
             # J. con las animaciones apagadas pasa igual, sin moverse con el dedo
             ctx, pg, cdp, errs = nueva(b, {'fondo': 'combinado', 'anim': False})
-            deslizar(pg, cdp, 300, Y, -120, soltar=False)
+            deslizar(pg, cdp, 300, Y, -160, soltar=False)
             chk(pg.evaluate("getComputedStyle(document.querySelector('#vMedir')).transform") == 'none', 'J. sin animaciones la pantalla no sigue al dedo')
             cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': [], 'timestamp': time.time()}); pg.wait_for_timeout(300)
             chk(vista(pg) == 'vPractica' and limpio(pg), 'J. sin animaciones también cambia de pestaña')

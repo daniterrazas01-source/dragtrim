@@ -90,20 +90,24 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    títulos de cada pantalla (`h2`), etiquetas (`.lab`: Modo, Árbol, Peso…), todos los selectores (`.seg button`), botones
    principales (`.primary`) y pestañas, en todas las pantallas. Las letras chiquitas (ayudas, descripciones, datos,
    tarjetas) no. `font-synthesis: none` para que no se incline doble. Si manda el archivo de la letra original, cambiarla.
-   **Franja del notch / isla del iPhone** (0.6.2, 25 oct): `.notch` (index.template.html, style.css) es una copia del fondo
-   (con su velo) recortada a `env(safe-area-inset-top)`, encima del contenido: el fondo se ve detrás de la hora y la batería y
-   lo que se desliza pasa por debajo (antes se veía detrás de la hora). Sin fondo, el color de la app; en Android y computadora
-   mide 0. Ahí no caben GPS/Acel/Pantalla: iOS pone la hora y la batería a los lados de la isla. **No cambiar
+   **Franja del notch / isla del iPhone** (0.6.2, 25 oct): es pantalla activa, como pidió Daniel: el fondo (fijo) se ve
+   detrás de la hora y la batería y lo que se desliza hacia arriba pasa visible por ahí (se probó una franja `.notch` que lo
+   tapaba y Daniel pidió quitarla). El contenido empieza bajo la hora (`padding-top: env(safe-area-inset-top)`). Ahí no
+   caben GPS/Acel/Pantalla: iOS pone la hora y la batería a los lados de la isla. **No cambiar
    `apple-mobile-web-app-status-bar-style`** (black-translucent desde 0.2): iOS lo lee al instalar y cambiarlo exigiría
    reinstalar. Desde iOS 26.1 el sistema pone un degradado oscuro sobre la hora (no se puede quitar). La vista previa
    "Drag Trim en iPhone" lo simula (iframe a pantalla completa 393×852 con las zonas seguras puestas a 59/34 px).
-   **Deslizar entre pestañas** (0.6.2, 25 oct, Daniel lo pidió): con el dedo a la izquierda/derecha se pasa a la pestaña
-   de al lado (lo mismo que picarla: llama a su botón). La pantalla sigue al dedo; pasa con > min(110 px, 28 % del ancho)
-   o rápido (> 0.4 px/ms y > 40 px); si no, regresa. En la primera y la última solo cede un poco. No se usa sin pestañas
-   (corrida, resultado de corrida, semáforo de Práctica, cámara), desde la orilla (24 px: gesto de "atrás" de iPhone y
-   Android), en un campo con el cursor, en un deslizador ni en algo que se recorre de lado (tablas de Calcular). Bloquea el
-   clic del dedo 400 ms después de soltar. Sin animaciones: cambia al soltar, sin seguir al dedo. La nueva entra de lado
-   (`data-entra`, se queda hasta que se oculta: quitarla antes reinicia la cascada). Código al final de la navegación en app.js.
+   **Deslizar entre pestañas** (0.6.2, 25 oct, Daniel lo pidió "como nativa de iPhone"): con el dedo a la izquierda/derecha
+   se pasa a la pestaña de al lado. Al tomar el dedo de lado, las pestañas de los lados ya se pintan (`prepararVista`,
+   `data-entra` = sin la cascada de entrada) a ±ancho y se mueven pegadas a la actual; cada una se pone a la altura donde
+   quedará al pasar (si la actual está bajada, la nueva empieza arriba, bajo la hora; `sN`), así al soltar no hay brinco.
+   Pasa con más de 1/3 del ancho o rápido (> 0.3 px/ms y > 24 px, sin regresar el dedo); si el dedo se detuvo > 80 ms
+   antes de soltar, no cuenta la velocidad. Termina con la curva de iOS cubic-bezier(.25, 1, .5, 1) en 240–420 ms según
+   la velocidad del dedo; la pestaña de abajo se marca al soltar. En la primera y la última, orilla elástica. Mientras
+   termina (`ocupado`) no se toman toques, deslizadas ni clics. No se usa sin pestañas (corrida, resultado de corrida,
+   semáforo de Práctica, cámara), desde la orilla (24 px: gesto de "atrás" de iPhone y Android), en un campo con el
+   cursor, en un deslizador ni en algo que se recorre de lado (tablas de Calcular). Bloquea el clic del dedo 400 ms
+   después de soltar. Sin animaciones: cambia al soltar, sin seguir al dedo. Código al final de la navegación en app.js.
 
 8. **Primera prueba real** (11 oct 2026, autódromo, zip `dragtrim_20261011_143244`, rollout 0.5 ft):
    boleta 60ft 2.650 / 201 m 9.339 @132.40 / 402 m 14.043 @ 181.71 km/h (confirmado por Daniel;
