@@ -1,0 +1,48 @@
+/* camara.css — "Medir con el semáforo real": video escondido mientras graba y la pantalla Apuntar.
+   build.py la junta con style.css (usa sus variables). */
+
+/* Mientras la medición está armada el video NO se ve: 2×2 px casi transparente, nunca display:none
+   (iOS deja de dar cuadros). Es la única forma en que la cámara está en la pantalla al medir. */
+.cam-oculta { position: fixed; left: 0; top: 0; width: 2px; height: 2px; opacity: .01; pointer-events: none; z-index: -1; }
+
+/* Apuntar: pantalla completa, oscura como Práctica; sirve en vertical y en horizontal */
+html.cam-abierta, html.cam-abierta body { overflow: hidden; }
+.cam-apuntar {
+  position: fixed; inset: 0; z-index: 30; background: #141618; color: #eceee9; overflow-y: auto; overscroll-behavior: contain;
+  padding: calc(8px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  display: grid; gap: 10px; align-content: start; grid-template-columns: minmax(0, 1fr);
+  --chalk: #eceee9; --chalk-dim: #a5abb0; --surface: #24282c; --line: #3e454b; --asphalt: #141618;
+}
+.cam-cab { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cam-cab h2 { margin: 0; font: 700 22px/1.1 var(--num); }
+.cam-x { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--chalk);
+         font-size: 26px; line-height: 1; cursor: pointer; }
+.cam-caja { position: relative; width: 100%; aspect-ratio: 16 / 9; max-height: 62vh; background: #000; border-radius: 14px; overflow: hidden;
+            cursor: crosshair; touch-action: manipulation; }
+.cam-caja video.cam-vista { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.cam-lienzo { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.cam-vacia { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; text-align: center; color: var(--chalk-dim); font-size: 15px; }
+.cam-ayuda { margin: 0; color: var(--chalk-dim); font-size: 15px; }
+.cam-apuntar .cam-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--surface); border-radius: 12px; padding: 4px; gap: 4px; }
+.cam-apuntar .cam-seg button { border: 0; background: transparent; padding: 11px 6px; border-radius: 9px; font-weight: 600; color: var(--chalk-dim); cursor: pointer; min-height: 44px; }
+.cam-apuntar .cam-seg button[aria-checked="true"] { background: var(--chalk); color: #141618; }
+.cam-calidad { list-style: none; margin: 0; padding: 0; font-size: 14px; }
+.cam-calidad li { display: flex; gap: 8px; align-items: baseline; padding: 4px 0; border-top: 1px solid var(--line); }
+.cam-calidad li:first-child { border-top: 0; }
+.cam-ic { flex: none; width: 1.1em; text-align: center; font-weight: 700; }
+.cam-ic.bien { color: #36d46b; } .cam-ic.mal { color: #f0453a; } .cam-ic.info { color: var(--chalk-dim); }
+.cam-prueba { margin: 0; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 12px; color: var(--chalk-dim); font-size: 14px; }
+.cam-prueba.visto { border-style: solid; border-color: #ffb020; color: var(--chalk); }
+.cam-acc { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cam-btn { min-height: 52px; border-radius: 14px; border: 0; background: var(--amber, #ffb020); color: #1d1a12; font-weight: 700; font-size: 17px; cursor: pointer; }
+.cam-btn.sec { background: transparent; border: 1px solid var(--line); color: var(--chalk); font-weight: 600; }
+.cam-btn:disabled { opacity: .45; cursor: default; }
+/* horizontal (teléfono en el soporte): la imagen a la izquierda y los controles a la derecha */
+@media (orientation: landscape) and (max-height: 560px) {
+  .cam-apuntar { grid-template-columns: minmax(0, 1.5fr) minmax(220px, 1fr); column-gap: 14px; align-items: start; }
+  .cam-apuntar .cam-cab { grid-column: 1 / -1; }
+  .cam-apuntar .cam-caja { grid-column: 1; grid-row: 2 / span 6; max-height: calc(100dvh - 90px); }
+  .cam-apuntar > :not(.cam-cab):not(.cam-caja) { grid-column: 2; }
+  .cam-apuntar .cam-acc { position: sticky; bottom: calc(-16px - env(safe-area-inset-bottom)); background: #141618; padding: 8px 0 calc(16px + env(safe-area-inset-bottom)); }
+  .cam-apuntar .cam-caja { position: sticky; top: 0; }
+}
