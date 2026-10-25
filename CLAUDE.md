@@ -46,7 +46,7 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
 6. Pendiente / ideas acordadas:
    - **Validar con datos reales**: Daniel probará en autódromo y mandará los zips exportados +
      tiempos de la boleta oficial (60 ft, 1/8 o 1/4, velocidad). Ajustar rollout/algoritmo con eso.
-   - Sección **"Medir con el semáforo real"** (Daniel lo pidió el 24 oct): **hecha en beta 0.6, sin publicar**;
+   - Sección **"Medir con el semáforo real"** (Daniel lo pidió el 24 oct): **publicada en beta 0.6 (25 oct)**;
      cómo funciona y qué falta en el punto 13. Especificación en `archivo/ideas/semaforo_real/plan.md`
      (+ informes; prototipos en `fuente/pruebas/arbol_proto/`). El plan acordado por el límite de uso
      (detección y cálculos con ultracode; página de prueba, cámara e integración sin agentes; revisión final
@@ -130,7 +130,7 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
     brillo_test revisa que cada color cubra 4–22 % de la pantalla y que brille 0.12 s después de soltar. Sin fondo: resplandor
     detrás del árbol. Las luces del árbol siguen sin transición; pt_test da los mismos tiempos.
 
-13. **Medir con el semáforo real** (beta 0.6, sin publicar al 25 oct): el teléfono va fijo en el carro y la cámara
+13. **Medir con el semáforo real** (beta 0.6, publicada el 25 oct): el teléfono va fijo en el carro y la cámara
     trasera ve el árbol (como un "tree reader", pero solo mide). En Medir: interruptor "Medir con el semáforo real"
     (beta), árbol **Pro .400 / Full .500** (Daniel quitó "Automático" el 25 oct: en los autódromos solo hay esos dos;
     quien tenía "auto" toma el de Práctica), "Apuntar la cámara" (tocar los focos de tu carril; revisa luz, foco y
@@ -210,8 +210,8 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). En la rama, sin publicar: **beta 0.6** (semáforo real
-con la cámara, punto 13; trae también la 0.5.4: tarjeta Race 1 vs 1 "en desarrollo"). Publicada: **beta 0.5.3** (fondo de Práctica que responde a la reacción; 0.5.2: guía para instalar; 0.5.1: nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
+caché del service worker; cambiarlo fuerza la actualización). Versión actual: **beta 0.6** (publicada 25 oct 2026: semáforo real
+con la cámara, punto 13; trae también la 0.5.4: tarjeta Race 1 vs 1 "en desarrollo"). Antes: **beta 0.5.3** (fondo de Práctica que responde a la reacción; 0.5.2: guía para instalar; 0.5.1: nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
 algoritmo v2.3.
 
 Los zips exportados desde la app traen `drag_raw_gps_*.csv`, `drag_raw_acc_*.csv`,
