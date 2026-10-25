@@ -156,6 +156,10 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
                                y versiones/ (index.html de cada versión publicada); ideas/ (diseños guardados); ver archivo/LEEME.md
 .claude/settings.json          "enableWorkflows": true (Daniel lo pidió el 24 oct para usar `/effort ultracode`;
                                en su plan vienen apagados). No afecta la app.
+.claude/skills/                skills del proyecto (24 oct, Daniel las pidió): arrancones (cómo se corre y
+                               se mide en pista), dragtree-medicion (algoritmo y cómo cambiarlo),
+                               dragtree-datos-reales (zips + boleta: analizar.js, calibrar.js),
+                               dragtree-publicar (probar_todo.sh y pasos para publicar)
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
