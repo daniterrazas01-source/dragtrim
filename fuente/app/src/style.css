@@ -205,6 +205,26 @@ body.sesion { padding-bottom: env(safe-area-inset-bottom); }
 .proximo p { margin: 6px 0 0; font-size: 14px; }
 .beta-tag { font-size: 12px; font-weight: 600; color: var(--amber); border: 1px solid var(--amber); border-radius: 4px; padding: 1px 5px; margin-left: 4px; }
 
+/* Semáforo con cámara (beta) */
+.cam-campo { margin-top: 14px; }
+.toggle .beta-tag { margin-right: auto; }
+.cam-lab { display: block; font-weight: 600; margin: 4px 0 8px; }
+.cam-estado { margin-top: 10px; font-size: 14px; }
+.field .hint.cam-regla { margin: 10px 0 0; }
+.armar-carril { display: grid; }
+a.ghost.boton { display: block; text-align: center; text-decoration: none; }
+.cam-cal p { margin: 6px 0; font-size: 14px; color: var(--chalk-dim); }
+.cam-cal p b { color: var(--chalk); }
+.cam-cal .ghost { margin-top: 6px; padding: 10px 14px; }
+.cam-tira { width: 100%; height: auto; display: block; border-radius: 10px; margin: 8px 0 4px; }
+.cam-boleta { margin: 10px 0 4px; }
+.cam-boleta summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
+.cam-boleta .rejilla { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.cam-boleta label { display: grid; gap: 4px; font-size: 13px; color: var(--chalk-dim); }
+.cam-boleta input { width: 100%; background: var(--asphalt); border: 1px solid var(--line); border-radius: 10px; padding: 10px; font-size: 17px; color: var(--chalk); }
+.slip tr.rt td { font-size: 18px; font-weight: 700; padding-bottom: 6px; }
+.slip tr.rt.baja td:nth-child(2) { color: #8d9093; }
+
 /* Práctica: estadísticas */
 .ps-ult { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 8px; font: 600 15px/1.3 var(--num); font-variant-numeric: tabular-nums; }
 .ps-ult li.rojo { color: var(--red); }

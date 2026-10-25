@@ -25,6 +25,7 @@
     <span id="chipGps" class="chip">GPS</span>
     <span id="chipAcc" class="chip">Acel</span>
     <span id="chipWake" class="chip" title="Pantalla siempre encendida">Pantalla</span>
+    <span id="chipCam" class="chip" title="Cámara del semáforo" hidden>Cám</span>
   </div>
 </header>
 
@@ -55,10 +56,25 @@
 
       <button id="btnSensores" class="primary">Activar sensores</button>
       <button id="btnArmar" class="primary go" hidden>Armar medición</button>
+      <div class="armar-carril" id="armarCarril" hidden>
+        <button id="btnArmarIzq" class="primary go">Armar · carril izquierdo</button>
+        <button id="btnArmarDer" class="primary go">Armar · carril derecho</button>
+      </div>
       <button id="btnDemo" class="ghost">Probar con una corrida simulada</button>
-      <div class="proximo">
-        <b>Medir con el semáforo real</b> <span class="beta-tag">en desarrollo</span>
-        <p>Grabar el árbol de la pista con la cámara para medir tu tiempo de reacción y registrarlo junto con la corrida.</p>
+      <div class="field cam-campo" id="campoCam">
+        <label class="toggle">Leer el semáforo con la cámara <span class="beta-tag">beta</span><input type="checkbox" id="inCam"></label>
+        <p class="hint">La cámara de atrás graba el árbol mientras la medición está armada. Al terminar, la app calcula tu reacción como en la boleta. No te avisa nada durante la corrida.</p>
+        <div id="camOpciones" hidden>
+          <span class="lab cam-lab">Árbol</span>
+          <div class="seg" role="radiogroup" aria-label="Árbol de la pista" id="segCamArbol">
+            <button role="radio" data-v="auto">Automático</button>
+            <button role="radio" data-v="pro">Pro .4</button>
+            <button role="radio" data-v="full">Full .5</button>
+          </div>
+          <p class="msg cam-estado" id="camEstado"></p>
+          <button class="ghost" id="btnApuntar">Apuntar la cámara</button>
+          <p class="hint cam-regla">Solo mide: no se conecta al auto ni da señales. En eventos con reglamento (NHRA, IHRA…) un teléfono que mira el árbol puede tomarse como "lector de árbol", que está prohibido: úsalo en práctica o test &amp; tune y avísale al director técnico.</p>
+        </div>
       </div>
       <div class="proximo">
         <b>Race 1 vs 1</b> <span class="beta-tag">en desarrollo</span>
@@ -73,6 +89,13 @@
           <li>Deja la app abierta con la pantalla encendida. Si cambias de app o se bloquea la pantalla, el GPS se pausa.</li>
           <li>La app no da la salida: arranca con el semáforo de la pista. Arma la medición cuando quieras, incluso antes del burnout; el arranque se detecta solo.</li>
           <li>Las tablets solo-WiFi no tienen GPS y no sirven para medir.</li>
+        </ul>
+        <ul id="howtoCam" hidden>
+          <li>Con la cámara: pon el teléfono <b>horizontal</b>, con la cámara de atrás viendo al frente por el parabrisas, sin que la tapen el soporte, el limpiaparabrisas ni la franja polarizada.</li>
+          <li>El árbol queda a un lado (unos 20°). Con el teléfono horizontal lo ves en los dos carriles sin girarlo.</li>
+          <li>Limpia la lente y el parabrisas; un trapo oscuro en el tablero evita reflejos.</li>
+          <li>Arma la medición en la fila, eligiendo tu carril: la cámara solo graba mientras está armada (máx. 30 min).</li>
+          <li>Apaga el modo de bajo consumo y no dejes el teléfono al sol.</li>
         </ul>
       </details>
     </div>
@@ -343,6 +366,15 @@
       <p class="hint" style="margin-top:6px">Transiciones suaves en la app. Las luces del semáforo de Práctica siempre encienden al instante, sin efectos.</p>
     </div>
 
+    <div class="field" id="ajCam">
+      <span class="lab">Semáforo con cámara <span class="beta-tag">beta</span></span>
+      <div id="ajCamCal" class="cam-cal"></div>
+      <label class="toggle" style="margin-top:10px">Guardar los cuadros del árbol <input type="checkbox" id="inCamCuadros"></label>
+      <p class="hint" style="margin-top:6px">Ayuda a mejorar la app y permite cambiar de carril después (~1 MB por corrida; se conservan las últimas 30).</p>
+      <button class="ghost" id="btnOlvidarZona">Olvidar dónde está el árbol</button>
+      <a class="ghost boton" id="lnkPrueba" href="prueba/camara.html">Página de prueba de la cámara</a>
+    </div>
+
     <div class="field guia" id="guiaAjustes">
       <span class="lab">Instalar la app</span>
       <div class="guia-pasos"></div>
@@ -398,6 +430,18 @@
 
 <script>
 /*CORE*/
+</script>
+<script>
+/*SEMVISION*/
+</script>
+<script>
+/*SEMAFORO*/
+</script>
+<script>
+/*SEMSIM*/
+</script>
+<script>
+/*CAMARA*/
 </script>
 <script>
 /*APP*/

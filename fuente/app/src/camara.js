@@ -447,11 +447,15 @@
     function cerrar(guardar) {
       if (cerrado) return;
       cerrado = true;
+      const est = lector ? lector.estado() : null;
       if (lector) lector.detener();
       v.classList.remove('cam-vista'); v.classList.add('cam-oculta'); document.body.appendChild(v);
       ov.remove(); document.documentElement.classList.remove('cam-abierta');
       root.removeEventListener('resize', dibujar);
-      if (guardar && typeof o.alGuardar === 'function') o.alGuardar({ zonas: { izq: zonas.izq, der: zonas.der }, orig, camara });
+      if (guardar && typeof o.alGuardar === 'function') {
+        o.alGuardar({ zonas: { izq: zonas.izq, der: zonas.der }, orig, camara,
+                      estado: est ? { W: est.W, H: est.H, fps: est.fps, fuente_t: est.fuente_t, proc_ms: est.proc_ms } : null });
+      }
       if (typeof o.alCerrar === 'function') o.alCerrar();
     }
     bx.addEventListener('click', () => cerrar(false));
