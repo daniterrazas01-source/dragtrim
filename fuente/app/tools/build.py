@@ -5,7 +5,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageStat
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC, DIST = ROOT / 'src', ROOT / 'dist'
 DIST.mkdir(exist_ok=True)
-VERSION = 'beta-0.6'
+VERSION = 'beta-0.6.1'
 
 html = (SRC / 'index.template.html').read_text(encoding='utf-8')
 html = html.replace('/*CSS*/', (SRC / 'style.css').read_text(encoding='utf-8') + '\n' + (SRC / 'camara.css').read_text(encoding='utf-8'))

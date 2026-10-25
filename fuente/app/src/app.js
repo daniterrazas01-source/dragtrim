@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = 'beta 0.6';
+  const APP_VERSION = 'beta 0.6.1';
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -19,6 +19,10 @@
   const S = Object.assign({}, DEF, LS.get('dragtrim.settings', {}));
   for (const k of ['cam_zona', 'cam_delta', 'cam_ajuste']) S[k] = Object.assign({}, DEF[k], S[k] || {});
   const guardarAjustes = () => LS.set('dragtrim.settings', S);
+  // "Medir con el semáforo real" vuelve a estar en desarrollo (0.6.1, Daniel: tiene detalles por corregir): no se ve
+  // ni prende la cámara. Para seguir desarrollándolo y en las pruebas: index.html?camdev o localStorage dragtrim.camDev = true.
+  const CAM_DEV = /[?&]camdev\b/.test(location.search) || LS.get('dragtrim.camDev', false) === true;
+  if (!CAM_DEV) S.cam = false;
   // Árbol de la pista: Pro .400 o Full .500 (ya no hay "Automático"; quien lo tenía toma el de Práctica)
   if (S.cam_arbol !== 'pro' && S.cam_arbol !== 'full') { S.cam_arbol = LS.get('dragtrim.practica.cfg', {}).arbol === 'full' ? 'full' : 'pro'; guardarAjustes(); }
 
@@ -1239,6 +1243,7 @@
 
   // ------------------------------------------------------------ semáforo con cámara: controles
   function pintarCam() {
+    $('#campoCam').hidden = !CAM_DEV; $('#proximoCam').hidden = CAM_DEV; $('#ajCam').hidden = !CAM_DEV;
     const on = !!S.cam;
     $('#inCam').checked = on;
     $('#camOpciones').hidden = !on;

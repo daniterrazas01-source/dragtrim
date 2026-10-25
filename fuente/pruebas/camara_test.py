@@ -30,7 +30,8 @@ class Silencio(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a): pass
 srv = socketserver.TCPServer(('127.0.0.1', 0), Silencio); PORT = srv.server_address[1]
 threading.Thread(target=srv.serve_forever, daemon=True).start()
-URL = f'http://127.0.0.1:{PORT}/index.html'
+URL = f'http://127.0.0.1:{PORT}/index.html?camdev'   # el semáforo está "en desarrollo": solo se ve con ?camdev (0.6.1)
+URL_NORMAL = f'http://127.0.0.1:{PORT}/index.html'
 
 # Sensores falsos (como uitest.py 'real') + giroscopio + cámara = lienzo con el árbol simulado
 MOCK = r"""
@@ -311,6 +312,19 @@ with sync_playwright() as p:
         ok(top['height'] < 90, f"G: encabezado con el chip Cám cabe ({top['height']:.0f} px a {nombre})")
         pg.screenshot(path=str(CAPT / f'camara_medir_{nombre}.png'), full_page=True)
         ctx.close()
+
+    # ---------------- I: sin ?camdev (lo publicado): la sección es solo una tarjeta "en desarrollo" y la cámara no se prende
+    ctx = b.new_context(viewport={'width': 390, 'height': 844}, color_scheme='dark')
+    ctx.add_init_script(f"localStorage.setItem('dragtrim.settings', {json.dumps(json.dumps(AJUSTES))});")
+    pg = ctx.new_page(); errores = []; pg.on('pageerror', lambda e: errores.append(str(e)))
+    pg.goto(URL_NORMAL); pg.wait_for_timeout(600)
+    vis = pg.evaluate("['#campoCam', '#proximoCam', '#ajCam', '#chipCam'].map((q) => !!document.querySelector(q).offsetParent || !document.querySelector(q).hidden)")
+    ok(vis == [False, True, False, False], f'I: sin ?camdev solo se ve la tarjeta "en desarrollo" {vis}')
+    pg.click('#btnDemo'); pg.wait_for_selector('.slip', timeout=60000); pg.wait_for_timeout(400)
+    run = pg.evaluate('window.__dragtrim.ses.ultimoRun')
+    ok(not run.get('cam') and 'Semáforo' not in pg.locator('#vResultado').inner_text(), 'I: la corrida simulada sale sin semáforo aunque estuviera prendido')
+    ok(not errores, f'I: sin errores {errores[:3]}')
+    ctx.close()
 
     # ---------------- H: árbol Pro .400 / Full .500 y la marca de los selectores sobre el botón elegido
     MARCA = r"""() => [...document.querySelectorAll('.seg')].filter(s => s.offsetParent).map(s => {

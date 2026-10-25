@@ -700,7 +700,11 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
         <button id="btnArmarDer" class="primary go">Armar · carril derecho</button>
       </div>
       <button id="btnDemo" class="ghost">Probar con una corrida simulada</button>
-      <div class="field cam-campo" id="campoCam">
+      <div class="proximo" id="proximoCam">
+        <b>Medir con el semáforo real</b> <span class="beta-tag">en desarrollo</span>
+        <p>Grabar el árbol de la pista con la cámara para medir tu tiempo de reacción y registrarlo junto con la corrida.</p>
+      </div>
+      <div class="field cam-campo" id="campoCam" hidden>
         <label class="toggle">Leer el semáforo con la cámara <span class="beta-tag">beta</span><input type="checkbox" id="inCam"></label>
         <p class="hint">La cámara de atrás graba el árbol mientras la medición está armada. Al terminar, la app calcula tu reacción como en la boleta. No te avisa nada durante la corrida.</p>
         <div id="camOpciones" hidden>
@@ -1004,7 +1008,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
       <p class="hint" style="margin-top:6px">Transiciones suaves en la app. Las luces del semáforo de Práctica siempre encienden al instante, sin efectos.</p>
     </div>
 
-    <div class="field" id="ajCam">
+    <div class="field" id="ajCam" hidden>
       <span class="lab">Semáforo con cámara <span class="beta-tag">beta</span></span>
       <div id="ajCamCal" class="cam-cal"></div>
       <label class="toggle" style="margin-top:10px">Guardar los cuadros del árbol <input type="checkbox" id="inCamCuadros"></label>
@@ -6845,7 +6849,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = 'beta 0.6';
+  const APP_VERSION = 'beta 0.6.1';
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -6862,6 +6866,10 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   const S = Object.assign({}, DEF, LS.get('dragtrim.settings', {}));
   for (const k of ['cam_zona', 'cam_delta', 'cam_ajuste']) S[k] = Object.assign({}, DEF[k], S[k] || {});
   const guardarAjustes = () => LS.set('dragtrim.settings', S);
+  // "Medir con el semáforo real" vuelve a estar en desarrollo (0.6.1, Daniel: tiene detalles por corregir): no se ve
+  // ni prende la cámara. Para seguir desarrollándolo y en las pruebas: index.html?camdev o localStorage dragtrim.camDev = true.
+  const CAM_DEV = /[?&]camdev\b/.test(location.search) || LS.get('dragtrim.camDev', false) === true;
+  if (!CAM_DEV) S.cam = false;
   // Árbol de la pista: Pro .400 o Full .500 (ya no hay "Automático"; quien lo tenía toma el de Práctica)
   if (S.cam_arbol !== 'pro' && S.cam_arbol !== 'full') { S.cam_arbol = LS.get('dragtrim.practica.cfg', {}).arbol === 'full' ? 'full' : 'pro'; guardarAjustes(); }
 
@@ -8082,6 +8090,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
 
   // ------------------------------------------------------------ semáforo con cámara: controles
   function pintarCam() {
+    $('#campoCam').hidden = !CAM_DEV; $('#proximoCam').hidden = CAM_DEV; $('#ajCam').hidden = !CAM_DEV;
     const on = !!S.cam;
     $('#inCam').checked = on;
     $('#camOpciones').hidden = !on;

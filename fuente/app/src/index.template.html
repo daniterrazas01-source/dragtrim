@@ -61,7 +61,11 @@
         <button id="btnArmarDer" class="primary go">Armar · carril derecho</button>
       </div>
       <button id="btnDemo" class="ghost">Probar con una corrida simulada</button>
-      <div class="field cam-campo" id="campoCam">
+      <div class="proximo" id="proximoCam">
+        <b>Medir con el semáforo real</b> <span class="beta-tag">en desarrollo</span>
+        <p>Grabar el árbol de la pista con la cámara para medir tu tiempo de reacción y registrarlo junto con la corrida.</p>
+      </div>
+      <div class="field cam-campo" id="campoCam" hidden>
         <label class="toggle">Leer el semáforo con la cámara <span class="beta-tag">beta</span><input type="checkbox" id="inCam"></label>
         <p class="hint">La cámara de atrás graba el árbol mientras la medición está armada. Al terminar, la app calcula tu reacción como en la boleta. No te avisa nada durante la corrida.</p>
         <div id="camOpciones" hidden>
@@ -365,7 +369,7 @@
       <p class="hint" style="margin-top:6px">Transiciones suaves en la app. Las luces del semáforo de Práctica siempre encienden al instante, sin efectos.</p>
     </div>
 
-    <div class="field" id="ajCam">
+    <div class="field" id="ajCam" hidden>
       <span class="lab">Semáforo con cámara <span class="beta-tag">beta</span></span>
       <div id="ajCamCal" class="cam-cal"></div>
       <label class="toggle" style="margin-top:10px">Guardar los cuadros del árbol <input type="checkbox" id="inCamCuadros"></label>
