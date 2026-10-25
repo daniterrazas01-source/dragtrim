@@ -85,6 +85,9 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    y deja su forma y su huella en `brillo/rooster-gallos*.png`; `hacer_mascaras.py` (PROPIOS, LOGOS['gallos'] = los del
    Blanco y negro) prende esos logos en verde y en rojo y salta solos los que quedaron tapados (JEGS, STRANGE, cápsula
    NOS). Brillo: verde 12.1 %, rojo 15.3 %.
+   Con Gallos, la distancia (1/8–1/4), el botón grande de arriba de Medir (Activar sensores / Armar) y las pestañas usan
+   la letra del texto "Rooster Racing" del logo: **Saira Black Italic** (OFL, `fuente/app/src/fuentes/`; build.py la mete
+   en index.html como data URI). Lo demás (tarjetas, textos) con la letra normal, como pidió Daniel.
 
 8. **Primera prueba real** (11 oct 2026, autódromo, zip `dragtrim_20261011_143244`, rollout 0.5 ft):
    boleta 60ft 2.650 / 201 m 9.339 @132.40 / 402 m 14.043 @ 181.71 km/h (confirmado por Daniel;

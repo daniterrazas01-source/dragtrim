@@ -444,6 +444,10 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 :root[data-fondo][data-theme="light"] .tabs { background: rgba(255, 255, 255, .96); }
 @media (prefers-color-scheme: light) { :root[data-fondo]:not([data-theme]) .tabs { background: rgba(255, 255, 255, .96); } }
 :root[data-fondo] .tabs button[aria-current="page"] { font-style: italic; font-weight: 900; }
+/* Gallos: la letra del texto "Rooster Racing" del logo (Saira Black Italic, licencia OFL: fuentes/OFL-Saira.txt; build.py
+   la mete en index.html) en lo que Daniel marcó: la distancia, el botón grande de arriba de Medir y las pestañas */
+@font-face { font-family: 'Rooster'; src: url("fuentes/saira-black-italic.woff2") format("woff2"); font-weight: 900; font-style: normal; font-display: swap; }
+:root[data-fondo="gallos"] :is(#segDist button, #btnSensores, #btnArmar, .tabs button) { font-family: 'Rooster', var(--num); font-style: normal; font-weight: 900; }
 :root[data-fondo] .track { background: var(--surface); border: 2px solid var(--sticker); }
 :root[data-fondo] .slip { box-shadow: 0 0 0 3px var(--sticker), 0 8px 0 3px rgba(0, 0, 0, .55); transform: rotate(-.6deg); }
 

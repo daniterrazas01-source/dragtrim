@@ -1,3 +1,4 @@
+import base64
 """Arma dist/: index.html autocontenido + manifest + service worker + íconos."""
 import json, os, pathlib
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageStat
@@ -9,6 +10,10 @@ VERSION = 'beta-0.6.2'
 
 html = (SRC / 'index.template.html').read_text(encoding='utf-8')
 html = html.replace('/*CSS*/', (SRC / 'style.css').read_text(encoding='utf-8') + '\n' + (SRC / 'camara.css').read_text(encoding='utf-8'))
+# letra de Rooster Racing (fondo Gallos), dentro del index.html para que funcione sin internet
+_fuente = 'url("fuentes/saira-black-italic.woff2")'
+assert html.count(_fuente) == 1
+html = html.replace(_fuente, 'url("data:font/woff2;base64,' + base64.b64encode((SRC / 'fuentes' / 'saira-black-italic.woff2').read_bytes()).decode() + '")')
 html = html.replace('/*CORE*/', (SRC / 'dragcore.js').read_text(encoding='utf-8'))
 # Semáforo real: visión, núcleo, simulador (corrida simulada con cámara) y cámara
 for marca, archivo in (('/*SEMVISION*/', 'semaforo_vision.js'), ('/*SEMAFORO*/', 'semaforo.js'),
