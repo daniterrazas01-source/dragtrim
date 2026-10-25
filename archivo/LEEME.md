@@ -37,6 +37,18 @@ podría mezclar ajustes.
 El código fuente editable de cada versión está en `fuente/` de ese commit:
 `git checkout <commit>` o, en GitHub, "Browse files" en el commit.
 
+## ideas/
+
+Diseños e investigaciones guardados para no repetirlos.
+
+| Archivo | Qué es |
+|---|---|
+| `race_1vs1.md` | Diseño de "Race 1 vs 1" (dos teléfonos; la app da la salida a los dos). Sin programar. |
+| `semaforo_real/plan.md` | Especificación de "Medir con el semáforo real" (cámara que lee el árbol) |
+| `semaforo_real/informe_*.md`, `reporte_simulador.md` | Investigación: pista, algoritmo, plataforma (navegador y teléfono), integración, simulador |
+| `semaforo_real/resultados_mc.txt` | Salida aceptada de `semaforo_mc.js rapido` (base para `--base`) |
+| `semaforo_real/resultados_reaccion.txt` | Salida aceptada de `reaccion.js` |
+
 ## Al publicar una versión nueva
 
 Agregar aquí su copia: `git show <commit>:index.html > archivo/versiones/drag_beta_X.html`

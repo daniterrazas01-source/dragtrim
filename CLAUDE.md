@@ -46,20 +46,12 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
 6. Pendiente / ideas acordadas:
    - **Validar con datos reales**: Daniel probará en autódromo y mandará los zips exportados +
      tiempos de la boleta oficial (60 ft, 1/8 o 1/4, velocidad). Ajustar rollout/algoritmo con eso.
-   - Sección **"Medir con el semáforo real"** (Daniel lo pidió el 24 oct; EN CURSO): la cámara graba el
-     árbol mientras está armada y, al terminar, se calcula la reacción. Especificación completa en
-     `archivo/ideas/semaforo_real/plan.md` (+ informes; prototipos en `fuente/pruebas/arbol_proto/`).
-     Avance (25 oct): `semaforo_vision.js`, `semaforo.js` y `semaforo_sim.js` funcionan; pruebas
-     `semaforo_mc.js` (todas las condiciones; resultados en `archivo/ideas/semaforo_real/resultados_mc.txt`),
-     `reaccion.js` (punta a punta) y `semaforo_sim_test.js`. A 60 fps de día/sombra/noche/incandescente: RT con
-     ±4–9 ms (solo cámara, sesgo ~2.6 ms). Pendiente en detección: PWM (sobre todo 1000 Hz), 30 fps (sesgo +5 ms
-     en ámbar, σ ~20), sol de frente a veces no lee (58–92 %), 1 roja falsa en 24 y casos sueltos de 100–300 ms
-     (noche Full, PWM 1000) desde que el cambio mínimo de un flanco bajó de 40 % a 12 % (por el sol): revisar. **Plan acordado con Daniel por
-     el límite de uso:** (1) terminar detección + cálculos (semaforo_vision.js, semaforo.js,
-     semaforo_sim.js y sus pruebas semaforo_mc.js/reaccion.js) **con ultracode**; (2) **PAUSAR y avisarle**
-     para que baje el esfuerzo; (3) sin ultracode: página de prueba (T6), cámara (T3) e integración en la
-     app (T4/T5); (4) revisión final corta con ultracode antes de publicar. Guardar (commit + push a la rama)
-     al terminar cada parte.
+   - Sección **"Medir con el semáforo real"** (Daniel lo pidió el 24 oct): **hecha en beta 0.6, sin publicar**;
+     cómo funciona y qué falta en el punto 13. Especificación en `archivo/ideas/semaforo_real/plan.md`
+     (+ informes; prototipos en `fuente/pruebas/arbol_proto/`). El plan acordado por el límite de uso
+     (detección y cálculos con ultracode; página de prueba, cámara e integración sin agentes; revisión final
+     antes de publicar) ya se cumplió hasta la revisión final (25 oct, esfuerzo max sin agentes, como pidió
+     Daniel). Falta que Daniel diga "publícala".
    - **Race 1 vs 1** (idea de Daniel, 24 oct; tarjeta "en desarrollo" en Medir desde 0.5.4; no programar
      hasta que lo pida): dos autos, cada uno con la app en su teléfono, en pista sin semáforo o lugar
      controlado; la app da la salida a los dos a la vez (excepción a propósito al punto 3, solo en este modo),
@@ -138,6 +130,52 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
     brillo_test revisa que cada color cubra 4–22 % de la pantalla y que brille 0.12 s después de soltar. Sin fondo: resplandor
     detrás del árbol. Las luces del árbol siguen sin transición; pt_test da los mismos tiempos.
 
+13. **Medir con el semáforo real** (beta 0.6, sin publicar al 25 oct): el teléfono va fijo en el carro y la cámara
+    trasera ve el árbol (como un "tree reader", pero solo mide). En Medir: interruptor "Medir con el semáforo real"
+    (beta), árbol Auto/Pro/Full, "Apuntar la cámara" (tocar los focos de tu carril; revisa luz, foco y temblor; se ve
+    bien en horizontal) y "Armar" carril izquierdo o derecho. **Sigue neutral (punto 3):** armada, la cámara graba
+    sin verse (video de 2×2 px, opacidad .01; nunca `display:none`, iOS deja de dar cuadros), no se analiza nada, no
+    hay luces ni vibración; se apaga sola al detectar el arranque (o a los 30 min). Al terminar: "Leyendo el
+    semáforo…" → reacción en boleta y desde la verde (el formato de Práctica manda cuál va primero), qué tan segura
+    es, roja, tira de cuadros, avisos, "Cambiar carril", recalcular y "Tu boleta oficial (para calibrar)".
+    - Archivos: `semaforo_vision.js` (cuadros → brillo de cada foco: estabiliza la imagen, ubica focos, ajusta
+      flancos con modelo de LED/incandescente/exposición/PWM), `semaforo.js` (Anillo de cuadros YUV, reloj de
+      cámara, flancos, Pro/Full, secuencia, K1, reacción, calibración, CSV), `semaforo_sim.js` (árbol y cámara
+      simulados: pruebas y demo), `camara.js` + `camara.css` (DragCam: permiso, Lector con
+      requestVideoFrameCallback, pantalla Apuntar). build.py los mete en index.html con los marcadores
+      /\*SEMVISION\*/ /\*SEMAFORO\*/ /\*SEMSIM\*/ /\*CAMARA\*/.
+    - Cálculo: la salida es el apagado del foco de stage (haz a 1 ft); RT boleta = salida − último ámbar (se mide
+      directo, el intervalo real puede ser .370/.350); RT verde = salida − verde vista (o ámbar + intervalo
+      nominal si no se vio o si cae a más de 70 ms + 1.5 cuadros del nominal: aviso "verde_dudosa"). Roja = roja vista en tu
+      columna o RT verde < 0. Si no se ve el stage: salida = tRo − δ (acelerómetro). δ = reloj de sensores −
+      reloj de cámara: K1 lo mide en cada corrida con el cabeceo del arranque (cámara contra giroscopio); si
+      no, el guardado por carril. La búsqueda se centra en el cruce de 1 ft de procesar() (`tHaz`), no en el
+      rollout configurado. K2: sesgo del acelerómetro aprendido de corridas con el stage visto (≥3, MAD < 30 ms).
+      K3: corrección con boletas oficiales (≥3) en Ajustes con botón "Usar". También mide el rollout real.
+      Con PWM, el ajuste fino usa el rasgo por filas p solo si separa prendido de apagado (contraste ≥ 6; si no, la
+      energía e) y su ancla es el primer cuadro prendido en los dos rasgos (un reflejo o el sol la movían ~190 ms).
+      En simulación, a 60 fps con PWM la energía sola dio mejor ámbar (σ 3–6 contra 6–10 ms) pero a 30 fps peor:
+      revisarlo con video real.
+    - Datos: IndexedDB 'dragtrim' **v2** con el store 'camdatos' (lo pesado, últimas 30 corridas); en 'runs' solo
+      el resumen `run.cam` (~2 KB). El zip agrega `drag_raw_gyro`, `drag_raw_cam` (CSV de rasgos),
+      `drag_raw_cam_meta`, `drag_cam_clip` (.bin) y `drag_cam_tira` (.jpg); el meta y el DRAGPACK traen la reacción.
+    - Página de prueba aparte: `prueba/camara.html` (de `prueba_camara.template.html` con `build_prueba.py`;
+      publicar.sh la arma y la copia): cámara y sensores, "mueve el soporte" ×3 (K1), permiso, segundo plano,
+      prueba larga (`?larga=N`) y resultados en JSON para compartir o descargar (archivo de diagnóstico).
+    - Resultados en simulación (aún **sin video real**): a 60 fps de día/sombra/noche/incandescente, ámbar y
+      verde con σ ~2–5 ms; RT solo cámara 1.8 ± 5.6 ms; acelerómetro + K1 10 ± 12.5 ms (casi todo es el error
+      del cruce de 1 ft de procesar(), que en 200 sesiones da +3.5 ± 12.4 ms; la parte del semáforo 0.9 ± 6.9);
+      fusión con K2 de 5 corridas 3.0 ± 6.0; rojas 24/24, rojas falsas 0, carril equivocado 0/24.
+      Límites conocidos: PWM (sobre todo 1000 Hz y a 30 fps: stage σ ~15–37 ms), 30 fps en general (RT σ ~8–26),
+      sol de frente (a 60 fps lee 83–100 %; a 30 fps 67–92 %). Los criterios del plan que aún no se cumplen (73 al
+      25 oct, casi todos de PWM, 30 fps y sol) están en `resultados_mc.txt`, la salida aceptada;
+      `semaforo_mc.js --base` compara contra ella (si un cambio la mejora a propósito, se guarda la nueva).
+    - Falta de Daniel: abrir `prueba/camara.html` en su iPhone (Safari y la app instalada) y mandar el JSON;
+      videos en cámara lenta (240 fps) del árbol desde el carro + foto de la boleta; luego ≥5 corridas con la
+      cámara y boleta para calibrar (K3).
+    - Reglamento: los lectores del árbol ("tree readers") están prohibidos en eventos sancionados; la app no da
+      la salida ni avisa nada en vivo, solo mide después. En un evento sancionado, avisar al director técnico.
+
 ```
 index.html, sw.js, manifest.webmanifest, icon-*.png   ← lo publicado (generado, no editar a mano)
 fuente/app/src/dragcore.js     algoritmo (procesar, DetectorVivo, simulador)
@@ -145,6 +183,9 @@ fuente/app/src/app.js          interfaz: sensores, sesión, resultados, historia
 fuente/app/src/practica.js     simulador de semáforo
 fuente/app/src/rooster.js      fórmulas de la calculadora (hoja exacta + versión de la app)
 fuente/app/src/calculadora.js  pestaña Calcular
+fuente/app/src/semaforo_vision.js, semaforo.js, semaforo_sim.js   semáforo real: visión, análisis, simulador (punto 13)
+fuente/app/src/camara.js, camara.css   cámara en el navegador (DragCam) y pantalla Apuntar
+fuente/app/src/prueba_camara.template.html + tools/build_prueba.py   página de prueba prueba/camara.html
 fuente/app/src/index.template.html, style.css
 fuente/app/tools/build.py      junta todo en un index.html autocontenido + sw.js + íconos (sube VERSION al cambiar)
 fuente/publicar.sh             build + copia a la raíz
@@ -163,7 +204,8 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Versión actual: **beta 0.5.3** (fondo de Práctica que responde a la reacción; 0.5.2: guía para instalar; 0.5.1: nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
+caché del service worker; cambiarlo fuerza la actualización). En la rama, sin publicar: **beta 0.6** (semáforo real
+con la cámara, punto 13; trae también la 0.5.4: tarjeta Race 1 vs 1 "en desarrollo"). Publicada: **beta 0.5.3** (fondo de Práctica que responde a la reacción; 0.5.2: guía para instalar; 0.5.1: nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
 algoritmo v2.3.
 
 Los zips exportados desde la app traen `drag_raw_gps_*.csv`, `drag_raw_acc_*.csv`,
@@ -185,7 +227,15 @@ python3 calc_test.py     # pestaña Calcular en Chromium (GPS y clima falsos, si
 python3 brillo_test.py   # Práctica: brillo verde/rojo por fondo y que no cambie durante el árbol
 python3 instalar_test.py # guía de instalación por teléfono/navegador, iPad vertical/horizontal, contraste de pestañas
 python3 mcheck.py ../matlab/*.m   # revisión estructural de MATLAB (aquí no hay MATLAB/Octave)
+node semaforo_sim_test.js   # simulador del árbol y la cámara
+node reaccion.js            # semáforo punta a punta: sesión simulada + árbol + análisis (~75 s)
+node semaforo_mc.js rapido --base ../../archivo/ideas/semaforo_real/resultados_mc.txt   # lectura en todas las
+                            # condiciones (~7 min); sin --base revisa los criterios del plan (varios aún no se cumplen)
+python3 camara_lector_test.py  # cámara en Chromium con video falso (.y4m): Lector y Apuntar
+python3 camara_test.py      # semáforo en la app: neutralidad, demo, permiso negado, historial, zip, migración v1→v2
+python3 prueba_camara_test.py  # página de prueba prueba/camara.html (antes: python3 ../app/tools/build_prueba.py)
 ```
+Todas juntas: `bash .claude/skills/dragtree-publicar/scripts/probar_todo.sh` (o por grupos; ver la skill).
 Las pruebas de navegador usan Playwright (Python) con el Chromium preinstalado y dejan
 capturas en `fuente/pruebas/capturas/` (ignorado por git): revísalas antes de publicar.
 

@@ -232,6 +232,11 @@ a.ghost.boton { display: block; text-align: center; text-decoration: none; }
 .cam-cal p { margin: 6px 0; font-size: 14px; color: var(--chalk-dim); }
 .cam-cal p b { color: var(--chalk); }
 .cam-cal .ghost { margin-top: 6px; padding: 10px 14px; }
+/* "Automático" es más largo que "Pro .4": columnas según el texto (a 320 px se salía del botón) */
+#segCamArbol { grid-auto-columns: auto; }
+/* en el Semáforo los valores son largos ("640×360, 48.1 cuadros/s…"): las dos columnas se reparten y el valor también parte renglón */
+.quality.cam-res dl { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); }
+.quality.cam-res dd { white-space: normal; }
 .cam-tira { width: 100%; height: auto; display: block; border-radius: 10px; margin: 8px 0 4px; }
 .cam-boleta { margin: 10px 0 4px; }
 .cam-boleta summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
@@ -1774,7 +1779,8 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     fijas: { radio_px: 12, cuantil: 0.8 },      // apertura (top-hat) para manchas fijas, a escala 1; cuantil por píxel (PWM)
     flanco: { rejilla: 1e-4, grueso: 5, atras_min_s: 0.09, atras_T: 2, adelante_T: 2, ventana_T: 6,
               ventana_extra_s: 0.02, ventana_min_s: 0.25, huber: 2.5, tr_ms: [0, 5, 10, 20, 30, 45, 60, 80],
-              tf_rel: 0.6, E_s: [0.0003], E_T: [0.25, 0.5, 0.98], pwm_frac: 0.15, contraste_min: 4, bic_inc: 3 },
+              tf_rel: 0.6, E_s: [0.0003], E_T: [0.25, 0.5, 0.98], pwm_frac: 0.15, contraste_min: 4, bic_inc: 3,
+              p_contraste_min: 6 },   // con PWM, el rasgo por filas p se usa solo si separa prendido de apagado así
     carril: { quieto_s: 0.5 },
   };
   function defaultConfig() { return JSON.parse(JSON.stringify(DEF)); }
@@ -1826,6 +1832,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
         ventana_extra_s: p('flanco.ventana_extra_s'), ventana_min_s: p('flanco.ventana_min_s'), huber: p('flanco.huber'),
         tr_ms: p(['flanco.tr_ms', 'flanco.tr']), tf_rel: p(['flanco.tf_rel', 'flanco.tf_tr']), E_s: p('flanco.E_s'), E_T: p('flanco.E_T'),
         pwm_frac: p('flanco.pwm_frac'), contraste_min: p('flanco.contraste_min'), bic_inc: p('flanco.bic_inc'),
+        p_contraste_min: p('flanco.p_contraste_min'),
       },
     };
     // semaforo.js da los tiempos de subida en segundos (flanco.tr_s)
@@ -3473,7 +3480,16 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     let pwm = o.pwm === true || (o.pwm !== false && nMes >= 5 && nBajo / nMes > F.pwm_frac);
     // o una meseta con niveles que se repiten cada 2–8 cuadros (PWM con exposición que lo corta a medias)
     if (!pwm && o.pwm !== false) for (const x of ser) { const L = niveles(x, false); if (nivelesPeriodicos(x.full || x, x.full ? x.full.y : x.y, L, signo, t0, T)) { pwm = true; break; } }
-    if (pwm) for (const x of ser) if (x.tienep) { const tmp = x.y; x.y = x.p; x.p = tmp; }
+    // Con PWM se usa el rasgo por filas p (un foco cortado por el obturador por filas sigue viéndose prendido en p) solo si
+    // p separa prendido de apagado: un reflejo en la mica, o algo brillante en parte del disco, deja p alto con el foco
+    // apagado (pasó en la verde con PWM 400 Hz: el ajuste la ponía 190 ms antes). Si no, la energía e.
+    if (pwm) for (const x of ser) {
+      x.usaP = false;
+      if (!x.tienep) continue;
+      const Lp = niveles(x, true), sP = Math.max(1.4826 * (Lp.madOff || 0), 1e-9 * Math.abs(Lp.hi90 - Lp.lo), 1e-12);
+      if (!((Lp.hi90 - Lp.lo) / sP >= F.p_contraste_min)) continue;
+      const tmp = x.y; x.y = x.p; x.p = tmp; x.usaP = true;
+    }
     const Ls = ser.map(x => niveles(x, false));
     // escala del ruido (MAD de las mesetas), común a todos los modelos
     let sc = 1.4826 * mediana(Ls.flatMap(L => [L.madOff, L.madOn]).filter(isFin));
@@ -3489,12 +3505,16 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
       // Con PWM el flanco grueso puede caer varios cuadros lejos (un cuadro apagado en la meseta parece el flanco).
       // Ancla = primer cuadro prendido (subida) o último prendido (bajada) a ±0.4 s, de la serie completa; τ queda
       // entre ese cuadro y el cuadro "prendible" vecino del patrón: rejilla [ancla − 5T, ancla + T] (o al revés).
-      const usaP = ser.some(x => x.tienep), x0 = ser[0], fu = x0.full || x0, vals = usaP && x0.tienep ? fu.p : fu.y;
-      const mid = 0.5 * (Ls[0].lo + Ls[0].hi90);
+      const usaP = ser.some(x => x.usaP), x0 = ser[0], fu = x0.full || x0;
+      // "Prendido" en los dos rasgos (si hay p): un reflejo en la mica deja p alto con el foco apagado y el sol de frente
+      // mete cuadros raros en la energía; un cuadro raro en uno solo se llevaba el ancla ~190 ms lejos.
+      const Le = x0.usaP ? niveles(x0, true) : Ls[0], pasoE = Le.hi90 - Le.lo;      // si se cambiaron, x0.p trae e
+      const limE = Le.lo + Math.min(0.5 * pasoE, Math.max(4 * 1.4826 * (Le.madOff || 0), 0.12 * pasoE));
+      const Lp = x0.tienep ? (x0.usaP ? Ls[0] : niveles(x0, true)) : null, midP = Lp ? 0.5 * (Lp.lo + Lp.hi90) : NaN;
       let anc = NaN;
       for (let k = 0; k < fu.n; k++) {
         const dt = fu.t[k] - t0;
-        if (dt < -0.4 || dt > 0.4 || !(vals[k] > mid)) continue;
+        if (dt < -0.4 || dt > 0.4 || !(fu.y[k] > limE) || (Lp && !(fu.p[k] > midP))) continue;
         if (signo > 0) { anc = fu.t[k]; break; }
         anc = fu.t[k];
       }
@@ -3757,7 +3777,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     for (let si = 0; si < ser.length; si++) {
       const x = ser[si], L = Ls[si];
       const lo = L.lo, hi = L.hi90, sg = Math.max(1.4826 * (L.madOff || 0), 1e-3 * Math.abs(hi - lo), 1e-12);
-      const pat = patronPWM(x, L, signo, t0, T, usaP && x.tienep);
+      const pat = patronPWM(x, L, signo, t0, T, !!x.usaP);
       if (pat.modo === 'nivel') res.pwm_modo = 'nivel';
       sumD += pat.dFija; nD++; nsol += pat.nsol;
       const N = (y, m, s) => Math.exp(-0.5 * ((y - m) / s) ** 2) / s;
@@ -3787,7 +3807,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     }
     const tHat = st / sw;
     res.t = tHat; res.sigma = Math.max(Math.sqrt(Math.max(0, stt / sw - tHat * tHat)), du / Math.sqrt(12));
-    res.pwm = true; res.lampara = { tipo: 'led', tr_s: 0 }; res.E_s = F.E_s[0]; res.ruido = sc;
+    res.pwm = true; res.usaP = !!(ser[0] && ser[0].usaP); res.lampara = { tipo: 'led', tr_s: 0 }; res.E_s = F.E_s[0]; res.ruido = sc;
     res.salto = res.nivel_on - res.nivel_off;
     const sgo = Math.max(1.4826 * (Ls[0].madOff || 0), 1e-12);
     res.contraste = res.salto / sgo;
@@ -3804,7 +3824,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   // cuánto duró el nivel de antes (s) y cuántos cuadros seguidos quedó el de después (con 1 cuadro raro de tolerancia)
   function completar(r, s, signo) {
     const mid = 0.5 * (r.nivel_off + r.nivel_on), lado = y => (y - mid) * signo;   // < 0: antes, > 0: después
-    if (r.pwm && s.tienep) s = { n: s.n, t: s.t, y: s.p };
+    if (r.pwm && r.usaP && s.tienep) s = { n: s.n, t: s.t, y: s.p };
     let j = -1;
     for (let i = 0; i < s.n; i++) if (s.t[i] < r.t) j = i;
     let tUlt = r.t, malos = 0;
@@ -3950,6 +3970,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
         full_paso: [0.42, 0.58], delta: [0.30, 0.60], paso_tol: 0.30, col_desv: 0.5,
         sep_col: [1.2, 4.0], pre_stage: [0.8, 3.0],
         delta_pista_s: NaN,         // Δ medido de la pista (fase 2); NaN = usar el nominal
+        intervalo_max_s: 0.07,      // verde vista a más de esto (+ 1.5 cuadros) del nominal: mala lectura
         roja_contraste_min: 0.25,   // la roja debe brillar al menos esto del contraste de los ámbares
       },
       disco: 1.6, anillo: [2.0, 2.8],
@@ -4490,7 +4511,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   function secuenciaVacia(motivo, carril, carril_fuente) {
     return {
       ok: false, motivo, tipo: null, carril: carril || null, carril_fuente: carril_fuente || null,
-      t_ambar: [NaN, NaN, NaN], t_ambar_ref: NaN, s_ambar: NaN, t_verde_vista: NaN, s_verde: NaN, t_roja_vista: NaN,
+      t_ambar: [NaN, NaN, NaN], t_ambar_ref: NaN, s_ambar: NaN, t_verde_vista: NaN, s_verde: NaN, t_verde_dudosa: NaN, t_roja_vista: NaN,
       t_stage_on: NaN, t_stage_off: NaN, s_stage_off: NaN, t_pre_off: NaN,
       delta_s: NaN, delta_nominal: NaN, delta_fuente: null,
       lampara: { ambar: null, verde: null, stage: null }, pwm: false, E_s: NaN, nivel: 'baja',
@@ -4603,7 +4624,11 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
       const fr = afinar(V, t, [foco('r')], peso, h.r.t0, +1, T, cfg);
       sec.t_roja_vista = fr.t;   // solo marca (TruSTART), nunca el instante de salida
     }
-    // Δ
+    // Δ. Los árboles reales van a .400/.370/.350 (Pro) o .500 (Full), con menos de 1 ms entre corridas: una verde a más de
+    // intervalo_max_s (+ 1.5 cuadros) del nominal es una mala lectura (un reflejo, el PWM), no el árbol; no se usa.
+    if (isFin(sec.t_verde_vista) && Math.abs(sec.t_verde_vista - sec.t_ambar_ref - sec.delta_nominal) > cfg.arbol.intervalo_max_s + 1.5 * T) {
+      sec.t_verde_dudosa = sec.t_verde_vista; sec.t_verde_vista = NaN; sec.avisos.push('verde_dudosa');
+    }
     if (isFin(sec.t_verde_vista)) {
       sec.delta_s = sec.t_verde_vista - sec.t_ambar_ref; sec.delta_fuente = 'medido';
       if (Math.abs(sec.delta_s - sec.delta_nominal) > 1.5 * T) sec.avisos.push('intervalo ' + sec.delta_s.toFixed(3));
@@ -4868,6 +4893,15 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   // ------------------------------------------------------------ análisis completo (después de la corrida)
   const _llamadas = { analizar: 0, prueba: 0, calidad: 0, reanalizar: 0 };
 
+  // Instante en que el auto recorrió 1 ft (donde queda el haz de stage), en el reloj del acelerómetro. Centra la búsqueda
+  // del árbol y del apagado del stage sin depender del rollout configurado (con rollout 0, tRo es el primer movimiento,
+  // ~0.4 s antes). Sin la curva de distancia de procesar(): tRo.
+  function tHaz(R, tRo) {
+    if (!R || !R.t || !R.d || !(R.t.length > 2)) return tRo;
+    const D = 0.3048;
+    for (let i = 1; i < R.t.length; i++) if (R.d[i] >= D && R.d[i - 1] < D) return R.t[i - 1] + (R.t[i] - R.t[i - 1]) * (D - R.d[i - 1]) / (R.d[i] - R.d[i - 1]);
+    return tRo;
+  }
   function deltaGuess(ctx, fuente_t, cfg) {
     const [dg] = valorN(ctx.delta_guardado_s);
     if (isFin(dg)) return dg;
@@ -4910,7 +4944,8 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
       if ((R && R.ok === false) || !isFin(tRo)) return fin('sin_corrida');
       if (!V) return fin('sin_vision');
       const fuente_t = cuadros.reloj ? cuadros.reloj.fuente : null;
-      let L_ref = tRo - deltaGuess(ctx, fuente_t, cfg);
+      const tH = tHaz(R, tRo);
+      let L_ref = tH - deltaGuess(ctx, fuente_t, cfg);
       const t = cuadros.t, n = cuadros.n, T = periodoDe(t), W = cfg.ventana;
       if (t[n - 1] < L_ref - 0.5) return fin('camara_detenida');
       if (t[0] > L_ref - W.ventana_minima_antes_s) return fin('ventana');
@@ -4923,7 +4958,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
       res.mov = mov;
       // 2) K1 con el cabeceo de la salida → mejor L_ref
       res.k1 = ctx.giro ? k1(mov, ctx.giro, { L_ref, cfg }) : Object.assign(k1(null, null, {}), { motivo: 'sin_giro' });
-      if (res.k1.ok) L_ref = tRo - res.k1.delta_s;
+      if (res.k1.ok) L_ref = tH - res.k1.delta_s;
       res.L_ref = L_ref;
       // 3) eventos y disposición del árbol
       const bA = ki(L_ref + W.buscar[0]), bB = ki(L_ref + W.buscar[1]);
@@ -4970,7 +5005,8 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     const tRo = isFin(num(ctx.tRo)) ? ctx.tRo : (R && R.ok ? num(R.tRo) : NaN);
     const fuente_t = (g.rasgos && g.rasgos.fuente_t) || ctx.fuente_t || null;
     const K = g.k1 && g.k1.ok ? g.k1 : null;
-    const L_ref = isFin(num(ctx.L_ref)) ? ctx.L_ref : (K ? tRo - K.delta_s : tRo - deltaGuess(ctx, fuente_t, cfg));
+    const tH = tHaz(R, tRo);
+    const L_ref = isFin(num(ctx.L_ref)) ? ctx.L_ref : (K ? tH - K.delta_s : tH - deltaGuess(ctx, fuente_t, cfg));
     if (!g.rasgos) return { sec: secuenciaVacia('sin_arbol', ctx.carril, 'usuario'), rt: reaccion(null, {}) };
     const sec = buscarSecuencia(g.rasgos, g.disp || null, { carril: ctx.carril, arbol: ctx.arbol, L_ref, cfg, hora_quieto: ctx.hora_quieto });
     const rt = reaccion(sec, Object.assign({}, ctx, { tRo, k1: g.k1 || null, fuente_t, cfg }));
@@ -5251,7 +5287,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     VERSION, ARBOLES, FOCOS, defaultConfig, Anillo, reloj, buscarSecuencia, k1, reaccion, reaccionDe, rolloutMedido,
     analizar, reanalizar, prueba, calidad, fmtRT, aCSV, deCSV, clip, tira, calibracion, _llamadas,
     _vision: null,   // las pruebas pueden inyectar aquí una visión falsa
-    _util: { mediana, percentil, mad, interp1, mezclar, flancos, periodoDe, deltaNominal, periodoCoherente, indicesDeLlegada, envolvente, pasosDe },
+    _util: { mediana, percentil, mad, interp1, mezclar, flancos, periodoDe, deltaNominal, periodoCoherente, indicesDeLlegada, envolvente, pasosDe, tHaz },
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Semaforo = api;
@@ -6420,9 +6456,14 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
       try { if (navigator.mediaDevices.getSupportedConstraints().resizeMode) v.resizeMode = 'none'; } catch (e) { /* */ }
       return { audio: false, video: v };
     }
-    async _abrir() {
+    async _abrir(gen) {
       const id = await idDe(this.o.camara);
-      this.stream = await navigator.mediaDevices.getUserMedia(this._restricciones(id));
+      const st = await navigator.mediaDevices.getUserMedia(this._restricciones(id));
+      if (gen !== this._gen) {   // detener() mientras abría: no se queda prendida
+        for (const t of st.getTracks()) { try { t.stop(); } catch (e) { /* */ } }
+        throw Object.assign(new Error('se detuvo mientras abría'), { name: 'Cancelada' });
+      }
+      this.stream = st;
       this.track = this.stream.getVideoTracks()[0];
       const v = video();
       v.srcObject = this.stream;
@@ -6437,8 +6478,10 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
       const s = soporte();
       if (!s.ok) return { ok: false, motivo: s.motivo };
       if (!root.Semaforo || !root.Semaforo.Anillo) return { ok: false, motivo: 'no_soportado' };
-      try { await this._abrir(); }
-      catch (e) { this._cerrar(); return { ok: false, motivo: motivoDe(e), error: String(e && e.message || e) }; }
+      const gen = this._gen = (this._gen || 0) + 1;
+      try { await this._abrir(gen); }
+      catch (e) { this._cerrar(); return { ok: false, motivo: gen !== this._gen ? 'abriendo' : motivoDe(e), error: String(e && e.message || e) }; }
+      if (gen !== this._gen) { this._cerrar(); return { ok: false, motivo: 'abriendo' }; }
       const v = video();
       this.W = v.videoWidth; this.H = v.videoHeight;
       let settings = null, caps = null;
@@ -6517,15 +6560,17 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
       if (this._reintento) { this.activo = false; this._cerrar(); this._falla('camara_detenida'); return; }
       this._reintento = true;
       this._falla('reintentando');
+      const gen = this._gen;
       try {
         this._cerrar();
-        await this._abrir();
+        await this._abrir(gen);
+        if (gen !== this._gen) { this._cerrar(); return; }   // se detuvo a propósito mientras reabría
         const v = video();
         if (v.videoWidth !== this.W || v.videoHeight !== this.H) { this.activo = false; this._falla('rotacion'); return; }
         this._nfPrev = NaN;
         v.requestVideoFrameCallback(this._paso);
         this._falla('reanudada');
-      } catch (e) { this.activo = false; this._cerrar(); this._falla('camara_detenida'); }
+      } catch (e) { this.activo = false; this._cerrar(); if (gen === this._gen) this._falla('camara_detenida'); }
     }
     _visibilidad() {
       if (!this.activo) return;
@@ -6538,12 +6583,15 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
       }, 1200);
     }
     _cerrar() {
-      if (this.stream) for (const t of this.stream.getTracks()) { try { t.stop(); } catch (e) { /* */ } }
+      const st = this.stream;
+      if (st) for (const t of st.getTracks()) { try { t.stop(); } catch (e) { /* */ } }
       this.stream = null; this.track = null;
-      const v = _video; if (v) { try { v.pause(); } catch (e) { /* */ } v.srcObject = null; }
+      const v = _video;   // el video es uno para todos: solo se suelta si trae la cámara de este lector
+      if (v && st && v.srcObject === st) { try { v.pause(); } catch (e) { /* */ } v.srcObject = null; }
     }
     // Apaga la cámara; lo grabado se queda para congelar()
     detener() {
+      this._gen = (this._gen || 0) + 1;
       this.activo = false;
       document.removeEventListener('visibilitychange', this._onVis);
       this._cerrar();
@@ -7121,7 +7169,9 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     ses.camInfo = Object.assign({ carril }, r);
     if (!r.ok) {
       ses.lector = null; ses.camFalla = r.motivo;
-      logEvento(r.motivo === 'sin_permiso' ? 'Sin permiso de cámara: esta corrida se mide sin semáforo.' : 'No se pudo abrir la cámara: esta corrida se mide sin semáforo.', 'red');
+      logEvento(r.motivo === 'sin_permiso' ? 'Sin permiso de cámara: esta corrida se mide sin semáforo.'
+        : r.motivo === 'abriendo' ? 'La cámara no terminó de abrir antes de tu arranque: esta corrida se mide sin semáforo.'
+        : 'No se pudo abrir la cámara: esta corrida se mide sin semáforo.', 'red');
     } else ses.camT0 = nowS();
     chips();
   }
@@ -7379,10 +7429,13 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   // Historial (getAll de 'runs') siga siendo ligero. El nombre 'dragtrim' no cambia nunca (ahí está el historial).
   const CAM_MAX = 30;
   const DB = {
-    mem: [], memCam: new Map(), db: null,
+    mem: [], memCam: new Map(), db: null, bloqueada: false, _pend: null,
     async abrir() {
       if (this.db || !('indexedDB' in window)) return this.db;
-      this.db = await new Promise((res) => {
+      if (this._pend) return this._pend;
+      this._pend = new Promise((res) => {
+        let listo = false;
+        const fin = (db) => { if (!listo) { listo = true; res(db); } };
         try {
           const rq = indexedDB.open('dragtrim', 2);
           rq.onupgradeneeded = () => {
@@ -7390,12 +7443,26 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
             if (!db.objectStoreNames.contains('runs')) db.createObjectStore('runs', { keyPath: 'id' });
             if (!db.objectStoreNames.contains('camdatos')) db.createObjectStore('camdatos', { keyPath: 'id' });
           };
-          rq.onsuccess = () => res(rq.result);
-          rq.onerror = () => res(null);
-          rq.onblocked = () => res(null);
-        } catch (e) { res(null); }
+          rq.onsuccess = () => {
+            const db = rq.result;
+            // una versión más nueva abierta en otra pestaña: esta conexión se cierra para no detener su actualización
+            db.onversionchange = () => { db.close(); if (this.db === db) this.db = null; };
+            this.db = db; this.bloqueada = false; this._pend = null;
+            if (listo) this.vaciarMem();   // abrió tarde (estaba bloqueada): guardar lo que quedó en memoria
+            fin(db);
+          };
+          rq.onerror = () => { this._pend = null; fin(null); };
+          // Otra pestaña o ventana con la versión anterior abierta (Android) detiene la actualización hasta que se
+          // cierre. Mientras, la app sigue en memoria sin colgarse y el Historial lo avisa; al abrir, guarda lo pendiente.
+          rq.onblocked = () => { this.bloqueada = true; setTimeout(() => fin(null), 2500); };
+        } catch (e) { this._pend = null; fin(null); }
       });
-      return this.db;
+      return this._pend;
+    },
+    async vaciarMem() {
+      for (const r of this.mem.slice()) if ((await this.tx('readwrite', (st) => st.put(r))) != null) this.mem = this.mem.filter((x) => x !== r);
+      for (const [id, d] of [...this.memCam]) if ((await this.tx('readwrite', (st) => st.put(d), 'camdatos')) != null) this.memCam.delete(id);
+      if (!$('#vHistorial').hidden) pintarHistorial();
     },
     async tx(modo, fn, store = 'runs') {
       const db = await this.abrir();
@@ -7479,6 +7546,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
               flancos_debiles: 'Los focos se veían débiles (sol de frente o árbol lejos): lectura menos segura.',
               stage_movido: 'La imagen se movió justo al salir: el final de tu reacción se tomó del acelerómetro.',
               stage_dudoso: 'No quedó claro cuál foco era el de stage.', sin_verde: 'No se vio la verde (normal con luz roja).',
+              verde_dudosa: 'La verde no se leyó bien: la reacción desde la verde usa el intervalo normal del árbol.',
               desacuerdo: 'La cámara y el acelerómetro no coinciden en tu salida: se usó la cámara.' })[a] || null;
   }
   // fila R/T de la boleta, KPI de reacción y sección "Semáforo"
@@ -7850,9 +7918,13 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
 
   // ------------------------------------------------------------ historial
   async function pintarHistorial() {
-    const runs = await DB.todos(), ul = $('#histList');
+    const runs = await DB.todos(), ul = $('#histList'), he = $('#histEmpty');
     ul.innerHTML = '';
-    $('#histEmpty').hidden = runs.length > 0;
+    const bloq = DB.bloqueada && !DB.db;
+    if (!he.dataset.vacio) he.dataset.vacio = he.textContent;
+    he.hidden = runs.length > 0 && !bloq;
+    he.textContent = bloq ? 'Tu historial sigue guardado, pero no se pudo abrir: hay otra ventana o pestaña de Drag Tree '
+      + 'abierta con la versión anterior. Ciérrala y aparecerá aquí.' : he.dataset.vacio;
     for (const r of runs) {
       const li = document.createElement('li'), b = document.createElement('button');
       const et = r.ok ? etPrincipal(r) : null;

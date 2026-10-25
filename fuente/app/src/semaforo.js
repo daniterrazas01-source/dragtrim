@@ -43,6 +43,7 @@
         full_paso: [0.42, 0.58], delta: [0.30, 0.60], paso_tol: 0.30, col_desv: 0.5,
         sep_col: [1.2, 4.0], pre_stage: [0.8, 3.0],
         delta_pista_s: NaN,         // Δ medido de la pista (fase 2); NaN = usar el nominal
+        intervalo_max_s: 0.07,      // verde vista a más de esto (+ 1.5 cuadros) del nominal: mala lectura
         roja_contraste_min: 0.25,   // la roja debe brillar al menos esto del contraste de los ámbares
       },
       disco: 1.6, anillo: [2.0, 2.8],
@@ -583,7 +584,7 @@
   function secuenciaVacia(motivo, carril, carril_fuente) {
     return {
       ok: false, motivo, tipo: null, carril: carril || null, carril_fuente: carril_fuente || null,
-      t_ambar: [NaN, NaN, NaN], t_ambar_ref: NaN, s_ambar: NaN, t_verde_vista: NaN, s_verde: NaN, t_roja_vista: NaN,
+      t_ambar: [NaN, NaN, NaN], t_ambar_ref: NaN, s_ambar: NaN, t_verde_vista: NaN, s_verde: NaN, t_verde_dudosa: NaN, t_roja_vista: NaN,
       t_stage_on: NaN, t_stage_off: NaN, s_stage_off: NaN, t_pre_off: NaN,
       delta_s: NaN, delta_nominal: NaN, delta_fuente: null,
       lampara: { ambar: null, verde: null, stage: null }, pwm: false, E_s: NaN, nivel: 'baja',
@@ -696,7 +697,11 @@
       const fr = afinar(V, t, [foco('r')], peso, h.r.t0, +1, T, cfg);
       sec.t_roja_vista = fr.t;   // solo marca (TruSTART), nunca el instante de salida
     }
-    // Δ
+    // Δ. Los árboles reales van a .400/.370/.350 (Pro) o .500 (Full), con menos de 1 ms entre corridas: una verde a más de
+    // intervalo_max_s (+ 1.5 cuadros) del nominal es una mala lectura (un reflejo, el PWM), no el árbol; no se usa.
+    if (isFin(sec.t_verde_vista) && Math.abs(sec.t_verde_vista - sec.t_ambar_ref - sec.delta_nominal) > cfg.arbol.intervalo_max_s + 1.5 * T) {
+      sec.t_verde_dudosa = sec.t_verde_vista; sec.t_verde_vista = NaN; sec.avisos.push('verde_dudosa');
+    }
     if (isFin(sec.t_verde_vista)) {
       sec.delta_s = sec.t_verde_vista - sec.t_ambar_ref; sec.delta_fuente = 'medido';
       if (Math.abs(sec.delta_s - sec.delta_nominal) > 1.5 * T) sec.avisos.push('intervalo ' + sec.delta_s.toFixed(3));
@@ -961,6 +966,15 @@
   // ------------------------------------------------------------ análisis completo (después de la corrida)
   const _llamadas = { analizar: 0, prueba: 0, calidad: 0, reanalizar: 0 };
 
+  // Instante en que el auto recorrió 1 ft (donde queda el haz de stage), en el reloj del acelerómetro. Centra la búsqueda
+  // del árbol y del apagado del stage sin depender del rollout configurado (con rollout 0, tRo es el primer movimiento,
+  // ~0.4 s antes). Sin la curva de distancia de procesar(): tRo.
+  function tHaz(R, tRo) {
+    if (!R || !R.t || !R.d || !(R.t.length > 2)) return tRo;
+    const D = 0.3048;
+    for (let i = 1; i < R.t.length; i++) if (R.d[i] >= D && R.d[i - 1] < D) return R.t[i - 1] + (R.t[i] - R.t[i - 1]) * (D - R.d[i - 1]) / (R.d[i] - R.d[i - 1]);
+    return tRo;
+  }
   function deltaGuess(ctx, fuente_t, cfg) {
     const [dg] = valorN(ctx.delta_guardado_s);
     if (isFin(dg)) return dg;
@@ -1003,7 +1017,8 @@
       if ((R && R.ok === false) || !isFin(tRo)) return fin('sin_corrida');
       if (!V) return fin('sin_vision');
       const fuente_t = cuadros.reloj ? cuadros.reloj.fuente : null;
-      let L_ref = tRo - deltaGuess(ctx, fuente_t, cfg);
+      const tH = tHaz(R, tRo);
+      let L_ref = tH - deltaGuess(ctx, fuente_t, cfg);
       const t = cuadros.t, n = cuadros.n, T = periodoDe(t), W = cfg.ventana;
       if (t[n - 1] < L_ref - 0.5) return fin('camara_detenida');
       if (t[0] > L_ref - W.ventana_minima_antes_s) return fin('ventana');
@@ -1016,7 +1031,7 @@
       res.mov = mov;
       // 2) K1 con el cabeceo de la salida → mejor L_ref
       res.k1 = ctx.giro ? k1(mov, ctx.giro, { L_ref, cfg }) : Object.assign(k1(null, null, {}), { motivo: 'sin_giro' });
-      if (res.k1.ok) L_ref = tRo - res.k1.delta_s;
+      if (res.k1.ok) L_ref = tH - res.k1.delta_s;
       res.L_ref = L_ref;
       // 3) eventos y disposición del árbol
       const bA = ki(L_ref + W.buscar[0]), bB = ki(L_ref + W.buscar[1]);
@@ -1063,7 +1078,8 @@
     const tRo = isFin(num(ctx.tRo)) ? ctx.tRo : (R && R.ok ? num(R.tRo) : NaN);
     const fuente_t = (g.rasgos && g.rasgos.fuente_t) || ctx.fuente_t || null;
     const K = g.k1 && g.k1.ok ? g.k1 : null;
-    const L_ref = isFin(num(ctx.L_ref)) ? ctx.L_ref : (K ? tRo - K.delta_s : tRo - deltaGuess(ctx, fuente_t, cfg));
+    const tH = tHaz(R, tRo);
+    const L_ref = isFin(num(ctx.L_ref)) ? ctx.L_ref : (K ? tH - K.delta_s : tH - deltaGuess(ctx, fuente_t, cfg));
     if (!g.rasgos) return { sec: secuenciaVacia('sin_arbol', ctx.carril, 'usuario'), rt: reaccion(null, {}) };
     const sec = buscarSecuencia(g.rasgos, g.disp || null, { carril: ctx.carril, arbol: ctx.arbol, L_ref, cfg, hora_quieto: ctx.hora_quieto });
     const rt = reaccion(sec, Object.assign({}, ctx, { tRo, k1: g.k1 || null, fuente_t, cfg }));
@@ -1344,7 +1360,7 @@
     VERSION, ARBOLES, FOCOS, defaultConfig, Anillo, reloj, buscarSecuencia, k1, reaccion, reaccionDe, rolloutMedido,
     analizar, reanalizar, prueba, calidad, fmtRT, aCSV, deCSV, clip, tira, calibracion, _llamadas,
     _vision: null,   // las pruebas pueden inyectar aquí una visión falsa
-    _util: { mediana, percentil, mad, interp1, mezclar, flancos, periodoDe, deltaNominal, periodoCoherente, indicesDeLlegada, envolvente, pasosDe },
+    _util: { mediana, percentil, mad, interp1, mezclar, flancos, periodoDe, deltaNominal, periodoCoherente, indicesDeLlegada, envolvente, pasosDe, tHaz },
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Semaforo = api;

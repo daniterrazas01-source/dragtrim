@@ -33,7 +33,8 @@
     fijas: { radio_px: 12, cuantil: 0.8 },      // apertura (top-hat) para manchas fijas, a escala 1; cuantil por píxel (PWM)
     flanco: { rejilla: 1e-4, grueso: 5, atras_min_s: 0.09, atras_T: 2, adelante_T: 2, ventana_T: 6,
               ventana_extra_s: 0.02, ventana_min_s: 0.25, huber: 2.5, tr_ms: [0, 5, 10, 20, 30, 45, 60, 80],
-              tf_rel: 0.6, E_s: [0.0003], E_T: [0.25, 0.5, 0.98], pwm_frac: 0.15, contraste_min: 4, bic_inc: 3 },
+              tf_rel: 0.6, E_s: [0.0003], E_T: [0.25, 0.5, 0.98], pwm_frac: 0.15, contraste_min: 4, bic_inc: 3,
+              p_contraste_min: 6 },   // con PWM, el rasgo por filas p se usa solo si separa prendido de apagado así
     carril: { quieto_s: 0.5 },
   };
   function defaultConfig() { return JSON.parse(JSON.stringify(DEF)); }
@@ -85,6 +86,7 @@
         ventana_extra_s: p('flanco.ventana_extra_s'), ventana_min_s: p('flanco.ventana_min_s'), huber: p('flanco.huber'),
         tr_ms: p(['flanco.tr_ms', 'flanco.tr']), tf_rel: p(['flanco.tf_rel', 'flanco.tf_tr']), E_s: p('flanco.E_s'), E_T: p('flanco.E_T'),
         pwm_frac: p('flanco.pwm_frac'), contraste_min: p('flanco.contraste_min'), bic_inc: p('flanco.bic_inc'),
+        p_contraste_min: p('flanco.p_contraste_min'),
       },
     };
     // semaforo.js da los tiempos de subida en segundos (flanco.tr_s)
@@ -1732,7 +1734,16 @@
     let pwm = o.pwm === true || (o.pwm !== false && nMes >= 5 && nBajo / nMes > F.pwm_frac);
     // o una meseta con niveles que se repiten cada 2–8 cuadros (PWM con exposición que lo corta a medias)
     if (!pwm && o.pwm !== false) for (const x of ser) { const L = niveles(x, false); if (nivelesPeriodicos(x.full || x, x.full ? x.full.y : x.y, L, signo, t0, T)) { pwm = true; break; } }
-    if (pwm) for (const x of ser) if (x.tienep) { const tmp = x.y; x.y = x.p; x.p = tmp; }
+    // Con PWM se usa el rasgo por filas p (un foco cortado por el obturador por filas sigue viéndose prendido en p) solo si
+    // p separa prendido de apagado: un reflejo en la mica, o algo brillante en parte del disco, deja p alto con el foco
+    // apagado (pasó en la verde con PWM 400 Hz: el ajuste la ponía 190 ms antes). Si no, la energía e.
+    if (pwm) for (const x of ser) {
+      x.usaP = false;
+      if (!x.tienep) continue;
+      const Lp = niveles(x, true), sP = Math.max(1.4826 * (Lp.madOff || 0), 1e-9 * Math.abs(Lp.hi90 - Lp.lo), 1e-12);
+      if (!((Lp.hi90 - Lp.lo) / sP >= F.p_contraste_min)) continue;
+      const tmp = x.y; x.y = x.p; x.p = tmp; x.usaP = true;
+    }
     const Ls = ser.map(x => niveles(x, false));
     // escala del ruido (MAD de las mesetas), común a todos los modelos
     let sc = 1.4826 * mediana(Ls.flatMap(L => [L.madOff, L.madOn]).filter(isFin));
@@ -1748,12 +1759,16 @@
       // Con PWM el flanco grueso puede caer varios cuadros lejos (un cuadro apagado en la meseta parece el flanco).
       // Ancla = primer cuadro prendido (subida) o último prendido (bajada) a ±0.4 s, de la serie completa; τ queda
       // entre ese cuadro y el cuadro "prendible" vecino del patrón: rejilla [ancla − 5T, ancla + T] (o al revés).
-      const usaP = ser.some(x => x.tienep), x0 = ser[0], fu = x0.full || x0, vals = usaP && x0.tienep ? fu.p : fu.y;
-      const mid = 0.5 * (Ls[0].lo + Ls[0].hi90);
+      const usaP = ser.some(x => x.usaP), x0 = ser[0], fu = x0.full || x0;
+      // "Prendido" en los dos rasgos (si hay p): un reflejo en la mica deja p alto con el foco apagado y el sol de frente
+      // mete cuadros raros en la energía; un cuadro raro en uno solo se llevaba el ancla ~190 ms lejos.
+      const Le = x0.usaP ? niveles(x0, true) : Ls[0], pasoE = Le.hi90 - Le.lo;      // si se cambiaron, x0.p trae e
+      const limE = Le.lo + Math.min(0.5 * pasoE, Math.max(4 * 1.4826 * (Le.madOff || 0), 0.12 * pasoE));
+      const Lp = x0.tienep ? (x0.usaP ? Ls[0] : niveles(x0, true)) : null, midP = Lp ? 0.5 * (Lp.lo + Lp.hi90) : NaN;
       let anc = NaN;
       for (let k = 0; k < fu.n; k++) {
         const dt = fu.t[k] - t0;
-        if (dt < -0.4 || dt > 0.4 || !(vals[k] > mid)) continue;
+        if (dt < -0.4 || dt > 0.4 || !(fu.y[k] > limE) || (Lp && !(fu.p[k] > midP))) continue;
         if (signo > 0) { anc = fu.t[k]; break; }
         anc = fu.t[k];
       }
@@ -2016,7 +2031,7 @@
     for (let si = 0; si < ser.length; si++) {
       const x = ser[si], L = Ls[si];
       const lo = L.lo, hi = L.hi90, sg = Math.max(1.4826 * (L.madOff || 0), 1e-3 * Math.abs(hi - lo), 1e-12);
-      const pat = patronPWM(x, L, signo, t0, T, usaP && x.tienep);
+      const pat = patronPWM(x, L, signo, t0, T, !!x.usaP);
       if (pat.modo === 'nivel') res.pwm_modo = 'nivel';
       sumD += pat.dFija; nD++; nsol += pat.nsol;
       const N = (y, m, s) => Math.exp(-0.5 * ((y - m) / s) ** 2) / s;
@@ -2046,7 +2061,7 @@
     }
     const tHat = st / sw;
     res.t = tHat; res.sigma = Math.max(Math.sqrt(Math.max(0, stt / sw - tHat * tHat)), du / Math.sqrt(12));
-    res.pwm = true; res.lampara = { tipo: 'led', tr_s: 0 }; res.E_s = F.E_s[0]; res.ruido = sc;
+    res.pwm = true; res.usaP = !!(ser[0] && ser[0].usaP); res.lampara = { tipo: 'led', tr_s: 0 }; res.E_s = F.E_s[0]; res.ruido = sc;
     res.salto = res.nivel_on - res.nivel_off;
     const sgo = Math.max(1.4826 * (Ls[0].madOff || 0), 1e-12);
     res.contraste = res.salto / sgo;
@@ -2063,7 +2078,7 @@
   // cuánto duró el nivel de antes (s) y cuántos cuadros seguidos quedó el de después (con 1 cuadro raro de tolerancia)
   function completar(r, s, signo) {
     const mid = 0.5 * (r.nivel_off + r.nivel_on), lado = y => (y - mid) * signo;   // < 0: antes, > 0: después
-    if (r.pwm && s.tienep) s = { n: s.n, t: s.t, y: s.p };
+    if (r.pwm && r.usaP && s.tienep) s = { n: s.n, t: s.t, y: s.p };
     let j = -1;
     for (let i = 0; i < s.n; i++) if (s.t[i] < r.t) j = i;
     let tUlt = r.t, malos = 0;

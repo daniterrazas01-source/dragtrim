@@ -216,6 +216,11 @@ a.ghost.boton { display: block; text-align: center; text-decoration: none; }
 .cam-cal p { margin: 6px 0; font-size: 14px; color: var(--chalk-dim); }
 .cam-cal p b { color: var(--chalk); }
 .cam-cal .ghost { margin-top: 6px; padding: 10px 14px; }
+/* "Automático" es más largo que "Pro .4": columnas según el texto (a 320 px se salía del botón) */
+#segCamArbol { grid-auto-columns: auto; }
+/* en el Semáforo los valores son largos ("640×360, 48.1 cuadros/s…"): las dos columnas se reparten y el valor también parte renglón */
+.quality.cam-res dl { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); }
+.quality.cam-res dd { white-space: normal; }
 .cam-tira { width: 100%; height: auto; display: block; border-radius: 10px; margin: 8px 0 4px; }
 .cam-boleta { margin: 10px 0 4px; }
 .cam-boleta summary { cursor: pointer; font-weight: 600; padding: 6px 0; }

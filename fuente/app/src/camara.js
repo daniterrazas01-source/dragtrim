@@ -109,9 +109,14 @@
       try { if (navigator.mediaDevices.getSupportedConstraints().resizeMode) v.resizeMode = 'none'; } catch (e) { /* */ }
       return { audio: false, video: v };
     }
-    async _abrir() {
+    async _abrir(gen) {
       const id = await idDe(this.o.camara);
-      this.stream = await navigator.mediaDevices.getUserMedia(this._restricciones(id));
+      const st = await navigator.mediaDevices.getUserMedia(this._restricciones(id));
+      if (gen !== this._gen) {   // detener() mientras abría: no se queda prendida
+        for (const t of st.getTracks()) { try { t.stop(); } catch (e) { /* */ } }
+        throw Object.assign(new Error('se detuvo mientras abría'), { name: 'Cancelada' });
+      }
+      this.stream = st;
       this.track = this.stream.getVideoTracks()[0];
       const v = video();
       v.srcObject = this.stream;
@@ -126,8 +131,10 @@
       const s = soporte();
       if (!s.ok) return { ok: false, motivo: s.motivo };
       if (!root.Semaforo || !root.Semaforo.Anillo) return { ok: false, motivo: 'no_soportado' };
-      try { await this._abrir(); }
-      catch (e) { this._cerrar(); return { ok: false, motivo: motivoDe(e), error: String(e && e.message || e) }; }
+      const gen = this._gen = (this._gen || 0) + 1;
+      try { await this._abrir(gen); }
+      catch (e) { this._cerrar(); return { ok: false, motivo: gen !== this._gen ? 'abriendo' : motivoDe(e), error: String(e && e.message || e) }; }
+      if (gen !== this._gen) { this._cerrar(); return { ok: false, motivo: 'abriendo' }; }
       const v = video();
       this.W = v.videoWidth; this.H = v.videoHeight;
       let settings = null, caps = null;
@@ -206,15 +213,17 @@
       if (this._reintento) { this.activo = false; this._cerrar(); this._falla('camara_detenida'); return; }
       this._reintento = true;
       this._falla('reintentando');
+      const gen = this._gen;
       try {
         this._cerrar();
-        await this._abrir();
+        await this._abrir(gen);
+        if (gen !== this._gen) { this._cerrar(); return; }   // se detuvo a propósito mientras reabría
         const v = video();
         if (v.videoWidth !== this.W || v.videoHeight !== this.H) { this.activo = false; this._falla('rotacion'); return; }
         this._nfPrev = NaN;
         v.requestVideoFrameCallback(this._paso);
         this._falla('reanudada');
-      } catch (e) { this.activo = false; this._cerrar(); this._falla('camara_detenida'); }
+      } catch (e) { this.activo = false; this._cerrar(); if (gen === this._gen) this._falla('camara_detenida'); }
     }
     _visibilidad() {
       if (!this.activo) return;
@@ -227,12 +236,15 @@
       }, 1200);
     }
     _cerrar() {
-      if (this.stream) for (const t of this.stream.getTracks()) { try { t.stop(); } catch (e) { /* */ } }
+      const st = this.stream;
+      if (st) for (const t of st.getTracks()) { try { t.stop(); } catch (e) { /* */ } }
       this.stream = null; this.track = null;
-      const v = _video; if (v) { try { v.pause(); } catch (e) { /* */ } v.srcObject = null; }
+      const v = _video;   // el video es uno para todos: solo se suelta si trae la cámara de este lector
+      if (v && st && v.srcObject === st) { try { v.pause(); } catch (e) { /* */ } v.srcObject = null; }
     }
     // Apaga la cámara; lo grabado se queda para congelar()
     detener() {
+      this._gen = (this._gen || 0) + 1;
       this.activo = false;
       document.removeEventListener('visibilitychange', this._onVis);
       this._cerrar();

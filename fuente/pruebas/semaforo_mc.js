@@ -1,14 +1,18 @@
 // semaforo_mc.js — Monte Carlo de la lectura del semáforo con cuadros simulados (semaforo_sim.js → Semaforo.analizar)
 // Criterios: archivo/ideas/semaforo_real/plan.md §6. Errores contra la verdad en el reloj de la cámara (verdad.en_camara).
-// Uso: node semaforo_mc.js [rapido|completo] [semilla]     (rapido: 12 corridas por celda; completo: 60)
+// Uso: node semaforo_mc.js [rapido|completo] [semilla] [--base archivo]     (rapido: 12 corridas por celda; completo: 60)
 //      node semaforo_mc.js detalle <fps> <condición> <pro|full> [corridas, p. ej. 0-11 o 3,7] [roja|handicap]
 //      (una línea por corrida, con las mismas semillas que la celda del Monte Carlo)
-// Sale con código 1 si algún criterio no se cumple.
+// Sale con código 1 si algún criterio del plan no se cumple. Con --base (p. ej. archivo/ideas/semaforo_real/resultados_mc.txt,
+// la salida guardada de la última versión aceptada) solo cuentan los retrocesos contra esa salida: varios criterios del plan
+// todavía no se cumplen (PWM, 30 fps, sol) y así una prueba sirve para saber si un cambio empeoró algo.
 'use strict';
 const P = __dirname + '/../app/src/';
 const S = require(P + 'semaforo.js'), Sim = require(P + 'semaforo_sim.js');
 
-const modo = process.argv[2] || 'rapido', N = modo === 'completo' ? 60 : 12, SEM = +((modo === 'detalle' ? process.env.SEMILLA : process.argv[3]) || 1000);
+const iBase = process.argv.indexOf('--base'), BASE = iBase > 0 ? process.argv[iBase + 1] : null;
+const argv = process.argv.filter((_, i) => iBase < 0 || (i !== iBase && i !== iBase + 1));
+const modo = argv[2] || 'rapido', N = modo === 'completo' ? 60 : 12, SEM = +((modo === 'detalle' ? process.env.SEMILLA : argv[3]) || 1000);
 const CONDS = ['dia', 'sombra', 'noche', 'inc40', 'pwm400', 'pwm1000', 'sol'];
 
 function stats(a) {
@@ -31,7 +35,7 @@ function corrida(cond, fps, tipo, i, extra) {
   const s = A.sec || {}, R = A.rt || {};
   const out = { ok: !!s.ok, tipo_ok: s.tipo === tipo, ms: A.ms, roja_v: !!v.roja, roja: !!R.roja, ev: [], stg: NaN, rt: NaN, otro: false,
                 carril, rot: o.rot, rt_s: rt, motivo: A.motivo || s.motivo || null, avisos: s.avisos || [], metodo: R.metodo, nivel: R.nivel,
-                tipo_det: s.tipo, delta_s: s.delta_s, verde_v: v.verde_visible };
+                tipo_det: s.tipo, delta_s: s.delta_s, verde_v: v.verde_visible, dudosa: (s.avisos || []).includes('verde_dudosa') };
   if (!s.ok) return out;
   out.ev.push((s.t_ambar_ref - ec.t_ambar_ref) * 1e3);
   if (isFinite(s.t_verde_vista) && isFinite(ec.t_verde)) out.ev.push((s.t_verde_vista - ec.t_verde) * 1e3);
@@ -43,7 +47,7 @@ function corrida(cond, fps, tipo, i, extra) {
 }
 
 if (modo === 'detalle') {
-  const fps = +process.argv[3], cond = process.argv[4], tipo = process.argv[5], sel = process.argv[6] || '0-11', caso = process.argv[7] || '';
+  const fps = +argv[3], cond = argv[4], tipo = argv[5], sel = argv[6] || '0-11', caso = argv[7] || '';
   const ids = []; for (const p of sel.split(',')) { const [a, b] = p.split('-').map(Number); for (let i = a; i <= (isFinite(b) ? b : a); i++) ids.push(i); }
   for (const i0 of ids) {
     // mismas corridas que el Monte Carlo: rojas = 500+i, handicap = 700+i, normales = i
@@ -75,7 +79,7 @@ const META = {
   sol: { 60: { ev: [NaN, NaN, NaN] }, 30: { ev: [NaN, NaN, NaN] } },
 };
 const STG = { 60: [7, 13], 30: [13, 24] }, RT = { 60: [9, 16], 30: [16, 28] };
-const t0 = Date.now(), sdDia = {};
+const t0 = Date.now(), sdDia = {}, dudosas = [];   // verdes descartadas por caer lejos del intervalo nominal
 
 console.log(`semaforo_mc (${modo}, ${N} corridas por celda, semilla ${SEM})`);
 console.log('celda                      lee   tipo | ámbar/verde sesgo  σ   p95 | stage  vistos  σ    p95 | RT boleta σ   p95 | ms');
@@ -85,6 +89,8 @@ for (const fps of [60, 30]) for (const cond of CONDS) for (const tipo of ['pro',
   const rt = stats(ok.map((r) => r.rt).filter(isFinite)), lee = ok.length / N, tp = ok.filter((r) => r.tipo_ok).length / Math.max(1, ok.length);
   const ms = rs.reduce((x, r) => x + r.ms, 0) / N, celda = `${fps}fps ${cond} ${tipo}`;
   console.log(`${celda.padEnd(26)} ${(100 * lee).toFixed(0).padStart(3)}%  ${(100 * tp).toFixed(0).padStart(3)}% |   ${f1(ev.m)} ${f1(ev.s)} ${f1(ev.p95)} | ${String(sg.n).padStart(3)}/${String(ok.length).padEnd(3)} ${f1(sg.s)} ${f1(sg.p95)} |  ${f1(rt.s)} ${f1(rt.p95)} | ${ms.toFixed(0)}`);
+  filas.push({ celda, lee, tp, ev, sg, rt, nOk: ok.length });
+  const nd = ok.filter((r) => r.dudosa).length; if (nd) dudosas.push(`${celda} ${nd}`);
   const M = META[cond][fps], pwm = cond.startsWith('pwm');
   revisar(`${celda} lectura`, lee, pwm ? 0.9 : 0.99, '>=');
   revisar(`${celda} tipo Pro/Full`, tp, 1, '>=');
@@ -112,6 +118,38 @@ revisar('rojas detectadas', rojas / rojasV, 0.99, '>=');
 revisar('rojas falsas', falsas, 0);
 revisar('carril equivocado con handicap', otro, 0);
 
+console.log(`verdes descartadas (lejos del intervalo nominal): ${dudosas.length ? dudosas.join(', ') : 'ninguna'}`);
 console.log(`\n${((Date.now() - t0) / 1000).toFixed(0)} s`);
-if (fallas.length) { console.log(`NO CUMPLE (${fallas.length}):\n  ` + fallas.join('\n  ')); process.exit(1); }
-console.log('Todo cumple.');
+if (fallas.length) console.log(`NO CUMPLE (${fallas.length}):\n  ` + fallas.join('\n  '));
+else console.log('Todo cumple.');
+if (BASE) {
+  // Retroceso: lee 2+ corridas menos, Pro/Full mal donde estaba bien, o un σ/p95 que crece más de 25 % + 2 ms (con 12
+  // corridas por celda el σ varía ~20 % solo por azar, pero las semillas son fijas: sin cambios sale idéntico).
+  // Rojas detectadas no bajan; rojas falsas y carril equivocado no suben.
+  const txt = require('fs').readFileSync(BASE, 'utf8'), base = {}, peor = [];
+  const num = (x) => (x === '—' ? NaN : +x);
+  for (const l of txt.split('\n')) {
+    const m = l.match(/^(\d+fps \S+ (?:pro|full))\s+(\d+)%\s+(\d+)% \|\s+(\S+)\s+(\S+)\s+(\S+) \|\s+(\d+)\/(\d+)\s+(\S+)\s+(\S+) \|\s+(\S+)\s+(\S+)/);
+    if (m) base[m[1]] = { lee: +m[2] / 100, tp: +m[3] / 100, ev: [num(m[5]), num(m[6])], sg: [num(m[9]), num(m[10])], rt: [num(m[11]), num(m[12])] };
+    const r = l.match(/^rojas detectadas (\d+)\/(\d+) · rojas falsas (\d+) · carril equivocado con handicap (\d+)\//);
+    if (r) base.rojas = { det: +r[1] / +r[2], falsas: +r[3], otro: +r[4] };
+  }
+  const crece = (nuevo, viejo) => isFinite(nuevo) && (!isFinite(viejo) ? false : nuevo > 1.25 * viejo + 2);
+  for (const f of filas) {
+    const b = base[f.celda]; if (!b) { peor.push(`${f.celda}: no está en la base`); continue; }
+    if (f.lee < b.lee - 1.5 / N) peor.push(`${f.celda} lectura ${(100 * f.lee).toFixed(0)}% (antes ${(100 * b.lee).toFixed(0)}%)`);
+    if (f.tp < 1 && b.tp >= 1) peor.push(`${f.celda} tipo Pro/Full ${(100 * f.tp).toFixed(0)}% (antes 100%)`);
+    for (const [k, nom] of [['ev', 'ámbar/verde'], ['sg', 'stage'], ['rt', 'RT']]) {
+      const v = [f[k].s, f[k].p95];
+      ['σ', 'p95'].forEach((q, j) => { if (crece(v[j], b[k][j])) peor.push(`${f.celda} ${nom} ${q} ${v[j].toFixed(1)} (antes ${b[k][j].toFixed(1)})`); });
+    }
+  }
+  if (base.rojas) {
+    if (rojas / rojasV < base.rojas.det) peor.push(`rojas detectadas ${rojas}/${rojasV} (antes ${(100 * base.rojas.det).toFixed(0)}%)`);
+    if (falsas > base.rojas.falsas) peor.push(`rojas falsas ${falsas} (antes ${base.rojas.falsas})`);
+    if (otro > base.rojas.otro) peor.push(`carril equivocado ${otro} (antes ${base.rojas.otro})`);
+  } else peor.push('la base no trae la línea de rojas');
+  console.log(peor.length ? `\nRETROCESOS contra ${BASE} (${peor.length}):\n  ` + peor.join('\n  ') : `\nSin retrocesos contra ${BASE}.`);
+  process.exit(peor.length ? 1 : 0);
+}
+process.exit(fallas.length ? 1 : 0);

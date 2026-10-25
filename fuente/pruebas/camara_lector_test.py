@@ -75,6 +75,25 @@ with sync_playwright() as p:
     ok(r['vid'][0] == '2px' and r['vid'][1] == '2px' and r['vid'][2] <= 0.05 and r['vid'][3] != 'none' and 'cam-oculta' in r['vid'][4], f"video escondido mientras graba {r['vid']}")
     ok(r['llamadas'][0] == r['llamadas'][1], f"el Lector no analiza nada mientras graba {r['llamadas'][1]}")
 
+    # ---- detener mientras abre (arranque o cancelar justo al armar): la cámara no se queda prendida y otra abre bien
+    r = pg.evaluate("""async () => {
+      const L = new DragCam.Lector({ fps: 30 });
+      const p = L.iniciar();
+      L.detener();
+      const r = await p;
+      await new Promise((s) => setTimeout(s, 300));
+      const v = DragCam.video(), sinVideo = !v.srcObject, activo = L.estado().activo, prendida = !!L.stream;
+      const L2 = new DragCam.Lector({ fps: 30 });
+      const r2 = await L2.iniciar();
+      await new Promise((s) => setTimeout(s, 800));
+      const c2 = L2.congelar();
+      L2.detener();
+      return { r, sinVideo, activo, prendida, r2ok: r2.ok, n2: c2 ? c2.n : 0 };
+    }""")
+    ok(r['r']['ok'] is False and r['r']['motivo'] == 'abriendo' and r['sinVideo'] and not r['activo'] and not r['prendida'],
+       f"detener mientras abre: no se queda prendida ({r['r']['motivo']})")
+    ok(r['r2ok'] and r['n2'] > 5, f"después otra cámara abre bien ({r['n2']} cuadros)")
+
     # ---- Lector con zona alrededor del árbol (a escala 1)
     cx = (info['caja'][0] + info['caja'][2] / 2) / info['W']; cy = (info['caja'][1] + info['caja'][3] / 2) / info['H']
     zona = [cx - 0.0625, cy - 0.1735, 0.125, 0.347]

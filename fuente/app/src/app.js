@@ -337,7 +337,9 @@
     ses.camInfo = Object.assign({ carril }, r);
     if (!r.ok) {
       ses.lector = null; ses.camFalla = r.motivo;
-      logEvento(r.motivo === 'sin_permiso' ? 'Sin permiso de cámara: esta corrida se mide sin semáforo.' : 'No se pudo abrir la cámara: esta corrida se mide sin semáforo.', 'red');
+      logEvento(r.motivo === 'sin_permiso' ? 'Sin permiso de cámara: esta corrida se mide sin semáforo.'
+        : r.motivo === 'abriendo' ? 'La cámara no terminó de abrir antes de tu arranque: esta corrida se mide sin semáforo.'
+        : 'No se pudo abrir la cámara: esta corrida se mide sin semáforo.', 'red');
     } else ses.camT0 = nowS();
     chips();
   }
@@ -595,10 +597,13 @@
   // Historial (getAll de 'runs') siga siendo ligero. El nombre 'dragtrim' no cambia nunca (ahí está el historial).
   const CAM_MAX = 30;
   const DB = {
-    mem: [], memCam: new Map(), db: null,
+    mem: [], memCam: new Map(), db: null, bloqueada: false, _pend: null,
     async abrir() {
       if (this.db || !('indexedDB' in window)) return this.db;
-      this.db = await new Promise((res) => {
+      if (this._pend) return this._pend;
+      this._pend = new Promise((res) => {
+        let listo = false;
+        const fin = (db) => { if (!listo) { listo = true; res(db); } };
         try {
           const rq = indexedDB.open('dragtrim', 2);
           rq.onupgradeneeded = () => {
@@ -606,12 +611,26 @@
             if (!db.objectStoreNames.contains('runs')) db.createObjectStore('runs', { keyPath: 'id' });
             if (!db.objectStoreNames.contains('camdatos')) db.createObjectStore('camdatos', { keyPath: 'id' });
           };
-          rq.onsuccess = () => res(rq.result);
-          rq.onerror = () => res(null);
-          rq.onblocked = () => res(null);
-        } catch (e) { res(null); }
+          rq.onsuccess = () => {
+            const db = rq.result;
+            // una versión más nueva abierta en otra pestaña: esta conexión se cierra para no detener su actualización
+            db.onversionchange = () => { db.close(); if (this.db === db) this.db = null; };
+            this.db = db; this.bloqueada = false; this._pend = null;
+            if (listo) this.vaciarMem();   // abrió tarde (estaba bloqueada): guardar lo que quedó en memoria
+            fin(db);
+          };
+          rq.onerror = () => { this._pend = null; fin(null); };
+          // Otra pestaña o ventana con la versión anterior abierta (Android) detiene la actualización hasta que se
+          // cierre. Mientras, la app sigue en memoria sin colgarse y el Historial lo avisa; al abrir, guarda lo pendiente.
+          rq.onblocked = () => { this.bloqueada = true; setTimeout(() => fin(null), 2500); };
+        } catch (e) { this._pend = null; fin(null); }
       });
-      return this.db;
+      return this._pend;
+    },
+    async vaciarMem() {
+      for (const r of this.mem.slice()) if ((await this.tx('readwrite', (st) => st.put(r))) != null) this.mem = this.mem.filter((x) => x !== r);
+      for (const [id, d] of [...this.memCam]) if ((await this.tx('readwrite', (st) => st.put(d), 'camdatos')) != null) this.memCam.delete(id);
+      if (!$('#vHistorial').hidden) pintarHistorial();
     },
     async tx(modo, fn, store = 'runs') {
       const db = await this.abrir();
@@ -695,6 +714,7 @@
               flancos_debiles: 'Los focos se veían débiles (sol de frente o árbol lejos): lectura menos segura.',
               stage_movido: 'La imagen se movió justo al salir: el final de tu reacción se tomó del acelerómetro.',
               stage_dudoso: 'No quedó claro cuál foco era el de stage.', sin_verde: 'No se vio la verde (normal con luz roja).',
+              verde_dudosa: 'La verde no se leyó bien: la reacción desde la verde usa el intervalo normal del árbol.',
               desacuerdo: 'La cámara y el acelerómetro no coinciden en tu salida: se usó la cámara.' })[a] || null;
   }
   // fila R/T de la boleta, KPI de reacción y sección "Semáforo"
@@ -1066,9 +1086,13 @@
 
   // ------------------------------------------------------------ historial
   async function pintarHistorial() {
-    const runs = await DB.todos(), ul = $('#histList');
+    const runs = await DB.todos(), ul = $('#histList'), he = $('#histEmpty');
     ul.innerHTML = '';
-    $('#histEmpty').hidden = runs.length > 0;
+    const bloq = DB.bloqueada && !DB.db;
+    if (!he.dataset.vacio) he.dataset.vacio = he.textContent;
+    he.hidden = runs.length > 0 && !bloq;
+    he.textContent = bloq ? 'Tu historial sigue guardado, pero no se pudo abrir: hay otra ventana o pestaña de Drag Tree '
+      + 'abierta con la versión anterior. Ciérrala y aparecerá aquí.' : he.dataset.vacio;
     for (const r of runs) {
       const li = document.createElement('li'), b = document.createElement('button');
       const et = r.ok ? etPrincipal(r) : null;

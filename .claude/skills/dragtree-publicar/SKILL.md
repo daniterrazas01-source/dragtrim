@@ -20,7 +20,7 @@ capturas, y decirle qué tan seguro estás.
 
 ## 2. Qué pruebas correr
 
-`bash .claude/skills/dragtree-publicar/scripts/probar_todo.sh` corre todas (≈4–5 min), arma
+`bash .claude/skills/dragtree-publicar/scripts/probar_todo.sh` corre todas (≈15 min; el Monte Carlo del semáforo tarda ~7), arma
 `fuente/app/dist` y da un resumen OK/FALLA; los registros quedan en `fuente/pruebas/capturas/registros/`.
 Si falta Playwright de Python lo instala en la misma versión que el de Node (nunca `playwright install`).
 Por grupos:
@@ -31,7 +31,8 @@ Por grupos:
 | `practica.js`, fondos, brillo | `practica` | pt_test.py, brillo_test.py |
 | `rooster.js`, `calculadora.js` | `calc` | calc.js, calc_test.py |
 | Guía de instalación, pestañas, tema | `instalar ui` | instalar_test.py, uitest |
-| `app.js`, `style.css`, `index.template.html` | `ui practica instalar` | lo de navegador |
+| `semaforo*.js`, `camara.js/.css`, la página de prueba | `semaforo ui` | semaforo_sim_test.js, reaccion.js, semaforo_mc.js rapido (contra `archivo/ideas/semaforo_real/resultados_mc.txt`), camara_lector_test.py, camara_test.py, prueba_camara_test.py |
+| `app.js`, `style.css`, `index.template.html` | `ui practica instalar semaforo` | lo de navegador |
 | Solo texto/docs/skills | `rapido` | lo que no usa navegador |
 
 Antes de publicar, corre **todo** aunque hayas cambiado poco.

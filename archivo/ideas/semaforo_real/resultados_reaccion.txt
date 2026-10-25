@@ -3,15 +3,25 @@ Solo cámara 60 fps: 16/16 ({"camara":16}) error 1.8 ± 5.6 ms, p95 11.5
   bien  cámara: |sesgo| ms: 1.79 (meta ≤ 2)
   bien  cámara: σ ms: 5.61 (meta ≤ 9)
 Acelerómetro + K1: 16/16 error 10.0 ± 12.5 ms, p95 27.9 · K1 -0.5 ± 4.9 ms (16)
+  por partes: procesar() 9.1 ± 9.6 ms en estas corridas (3.5 ± 12.4 en 200) · semáforo 0.9 ± 6.9 ms
   bien  acel+K1: corridas con K1: 1.00 (meta ≥ 0.8)
-  FALLA  acel+K1: |sesgo| ms: 9.95 (meta ≤ 5)
+  bien  acel+K1, parte del semáforo: |sesgo| ms: 0.88 (meta ≤ 2)
+  bien  acel+K1, parte del semáforo: σ ms: 6.94 (meta ≤ 9)
+  bien  acel+K1: |sesgo| ms (procesar en 200 + semáforo): 4.36 (meta ≤ 5)
   bien  acel+K1: σ ms: 12.53 (meta ≤ 18)
   bien  acel+K1: p95 ms: 27.88 (meta ≤ 35)
+Fusión (sesgo aprendido -2.1 ms de 5): 16/16 fusionadas, error 3.0 ± 6.0 ms, p95 12.4
+  bien  fusión: sesgo aprendido de 5 corridas: 5.00 (meta = 5)
+  bien  fusión: corridas fusionadas: 1.00 (meta ≥ 0.9)
+  bien  fusión: sesgo agregado sobre solo cámara (ms): 1.19 (meta ≤ 2)
+  bien  fusión: σ ms: 5.99 (meta ≤ 8)
   bien  δ supuesto → nivel baja (6/6): 1.00 (meta ≥ 1)
   bien  acel: ΔRT − ΔtRo (s): 0.00 (meta ≤ 0.000001)
   bien  cámara: RT igual con otro rollout (s): 0.00 (meta ≤ 0.000001)
   bien  rollout medido ≈ 1 ft (diferencia): 0.04 (meta ≤ 0.1)
+  bien  rollout 0: misma reacción por cámara (6/6): 1.00 (meta ≥ 1)
   bien  CSV → reanalizar: misma RT (s): 0.00 (meta ≤ 0.000001)
+  bien  árbol Pro .370/.350: verde usada y reacciones bien (4/4): 1.00 (meta ≥ 1)
   bien  roja con RT −0.05 (6/6): 1.00 (meta ≥ 1)
 
-NO CUMPLE: acel+K1: |sesgo| ms
+Todo cumple.
