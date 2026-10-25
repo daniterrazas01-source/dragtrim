@@ -35,7 +35,8 @@
       reloj: { env_pct: 20, iter: 3, pct_final: 2, cap_max_desfase_s: 1.0, frac_min: 0.9, paso_tol: 0.25 },
       ventana: { antes_s: 4.5, despues_s: 0.8, buscar: [-3.6, 0.6], ventana_minima_antes_s: 3.0 },
       mov: { busqueda_px: 80, ref: [-1.3, -1.0], salto_max_px: 6, salto_AE: 0.10 },
-      eventos: { umbral_min: 0.06, umbral_sigma: 6, area: [3, 600], persistir: 2 },
+      eventos: { umbral_min: 0.06, umbral_sigma: 6, area: [3, 600], persistir: 2, frac_rango: 0.2,
+                 debil: { umbral_sigma: 3.5, frac_rango: 0.1 } },   // 2.ª pasada si la normal no encuentra el árbol
       tonos: { ambar: [20, 55], verde: [70, 190], rojo: [15, 340], sin_saturar: 235 },   // rojo: ≤15° o ≥340°
       arbol: {
         pro_simult: 1.5,            // en cuadros (T)
@@ -418,7 +419,7 @@
     const sigma = Math.max(1.4826 * mediana(dif) / Math.SQRT2, 1e-9);
     const rango = percentil(yy, 98) - percentil(yy, 2);
     const sPaso = sigma * Math.sqrt(Math.PI / m);   // ruido de la diferencia de dos medianas de m
-    const thr = Math.max(cfg.eventos.umbral_sigma * sPaso, 0.2 * rango, 1e-9);
+    const thr = Math.max(cfg.eventos.umbral_sigma * sPaso, (isFin(cfg.eventos.frac_rango) ? cfg.eventos.frac_rango : 0.2) * rango, 1e-9);
     const s = new Float64Array(N).fill(-Infinity), PRE = new Float64Array(N), POST = new Float64Array(N);
     const tmpA = new Float64Array(m), tmpB = new Float64Array(m);
     const q = (arr, p) => { const b = Array.from(arr).sort((a, c) => a - c); const x = (b.length - 1) * p, i = Math.floor(x); return i + 1 < b.length ? b[i] + (x - i) * (b[i + 1] - b[i]) : b[i]; };
@@ -478,7 +479,10 @@
     for (let i = 1; i < on.length; i++) { const g = Math.round((t[on[i]] - t[on[i - 1]]) / T); sg += g; ng++; if (g > gmax) gmax = g; }
     const gm = sg / ng;
     if (!(gm > 1.15) || gmax > 8) return null;
-    return { t: t[last] + 0.5 * gm * T, sigma: gm * T / Math.sqrt(12) };
+    // Si cada cuadro sale prendido con probabilidad p = 1/gm (fase del PWM al azar), después del último cuadro
+    // prendido quedan K cuadros oscuros "de mala suerte" antes del apagado real: K geométrica con
+    // E[K] = gm − 1 y var[K] = gm·(gm − 1). Apagado ≈ último prendido + (K + ½)·T.
+    return { t: t[last] + (gm - 0.5) * T, sigma: T * Math.sqrt(gm * (gm - 1) + 1 / 12) };
   }
 
   // Ajuste fino de un flanco con SemaforoVision.ajustarFlanco; si falla, se queda el grueso.
@@ -599,31 +603,51 @@
     // ventana de búsqueda
     let wA = t[0], wB = t[n - 1];
     if (isFin(L_ref)) { wA = Math.max(wA, L_ref + cfg.ventana.buscar[0]); wB = Math.min(wB, L_ref + cfg.ventana.buscar[1]); }
-    const E = {};
-    for (const f of ['a1', 'a2', 'a3', 'g', 'r']) E[f] = flancos(t, S[f], peso, +1, T, wA, wB, cfg);
     const tonoClase = { a: 'ambar', g: 'verde', r: 'rojo' };
-    const tono = (e, cual) => {
-      const foco = cual === 'a' ? null : cual;
-      // el foco del flanco: se busca en qué serie está
-      let serie = null;
-      if (foco) serie = C[foco];
-      else for (const f of ['a1', 'a2', 'a3']) if ((E[f] || []).indexOf(e) >= 0) { serie = C[f]; break; }
-      if (!serie) return null;
-      const hs = []; for (let k = 0; k < n; k++) if (t[k] > e.t0 + 0.5 * T && t[k] < e.t0 + 0.2) hs.push(serie[k]);
-      return tonoEs(tonoMedio(hs), tonoClase[cual], cfg);
+    const armarH = (cfgX) => {
+      const E_ = {};
+      for (const f of ['a1', 'a2', 'a3', 'g', 'r']) E_[f] = flancos(t, S[f], peso, +1, T, wA, wB, cfgX);
+      const tono = (e, cual) => {
+        const foco = cual === 'a' ? null : cual;
+        // el foco del flanco: se busca en qué serie está
+        let serie = null;
+        if (foco) serie = C[foco];
+        else for (const f of ['a1', 'a2', 'a3']) if ((E_[f] || []).indexOf(e) >= 0) { serie = C[f]; break; }
+        if (!serie) return null;
+        const hs = []; for (let k = 0; k < n; k++) if (t[k] > e.t0 + 0.5 * T && t[k] < e.t0 + 0.2) hs.push(serie[k]);
+        return tonoEs(tonoMedio(hs), tonoClase[cual], cfgX);
+      };
+      return { E: E_, H: hipotesis(E_, T, arbol, cfgX, { tono }) };
     };
-    let H = hipotesis(E, T, arbol, cfg, { tono });
+    const enRangoDe = (lista) => (isFin(L_ref) ? lista.filter((h) => { const rt = L_ref - h.t_v; return rt >= cfg.rt_min_s && rt <= cfg.rt_max_s; }) : lista);
+    let { E, H } = armarH(cfg);
+    // Segunda pasada, más sensible, solo si la normal no encontró ninguna secuencia (sol de frente que lava los
+    // focos, árbol lejano). La protege la geometría y el tiempo del árbol: tienen que coincidir los ámbares y la
+    // verde (o la roja) con los intervalos de Pro o Full; el resultado lleva el aviso 'flancos_debiles'.
+    if (!enRangoDe(H).length) {
+      const d = cfg.eventos.debil || { umbral_sigma: 3.5, frac_rango: 0.1 };
+      const cfg2 = config(mezclar(mezclar(defaultConfig(), o.cfg || {}), { eventos: { umbral_sigma: d.umbral_sigma, frac_rango: d.frac_rango } }));
+      const r2 = armarH(cfg2);
+      if (enRangoDe(r2.H).length) { E = r2.E; H = r2.H; for (const h of H) h.debil = true; }
+    }
     H.sort((a, b) => a.u - b.u);
     const resumen = (h) => ({ tipo: h.tipo, t_ref: h.u, t_verde: h.t_v, verde: !!h.g, roja: !!h.r, puntaje: +h.puntaje.toFixed(3) });
     const candidatos = H.map(resumen);
     let elegidas = H;
     if (isFin(L_ref)) {
-      const enRango = H.filter((h) => { const rt = L_ref - h.t_v; return rt >= cfg.rt_min_s && rt <= cfg.rt_max_s; });
+      const enRango = enRangoDe(H);
       if (!enRango.length) {
         const s = secuenciaVacia(H.length ? 'sin_secuencia' : 'sin_secuencia', carril, o.carril_fuente);
         s.candidatos = candidatos; s.fps = 1 / T; s.fuente_t = rasgos.fuente_t || null; return [s];
       }
-      const ult = enRango[enRango.length - 1];
+      // Hipótesis que se enciman en el tiempo (|Δ ámbar| < 1.2 s, o la misma verde) compiten: queda la de mejor
+      // puntaje. Entre las que no se enciman se elige la última (la secuencia de esta salida, no una anterior).
+      const quedan = [];
+      for (const h of enRango.slice().sort((a, b) => b.puntaje - a.puntaje)) {
+        if (!quedan.some((x) => Math.abs(x.u - h.u) < 1.2 || (isFin(x.t_v) && isFin(h.t_v) && Math.abs(x.t_v - h.t_v) < 1.5 * T))) quedan.push(h);
+      }
+      quedan.sort((a, b) => a.u - b.u);
+      const ult = quedan[quedan.length - 1];
       const rival = enRango.find((h) => h !== ult && h.tipo !== ult.tipo && Math.abs(h.u - ult.u) < 1.2 && h.puntaje >= 0.8 * ult.puntaje);
       if (rival) {
         const s = secuenciaVacia('ambigua', carril, o.carril_fuente);
@@ -723,8 +747,7 @@
       const fs = afinar(V, t, [foco(eS.foco)], peso, eS.t0, -1, T, cfg);
       sec.t_stage_off = fs.t; sec.s_stage_off = fs.sigma; sec.lampara.stage = fs.lampara;
       // Con PWM el foco chico se ve "prendido" solo en algunos cuadros: el apagado real queda en algún punto
-      // entre el último cuadro prendido y el siguiente que habría salido prendido. Sin el patrón exacto,
-      // el punto medio de ese hueco (hueco medio de la meseta) quita el sesgo de tomar el último prendido.
+      // del hueco oscuro después del último cuadro prendido (ver huecoPWM).
       const pw = huecoPWM(S[eS.foco], t, peso, eS, T);
       if (pw) { sec.t_stage_off = pw.t; sec.s_stage_off = Math.max(fs.sigma, pw.sigma); sec.stage_pwm = true; }
     }
@@ -735,6 +758,7 @@
     // Nivel de la secuencia (por el ámbar de referencia) y puntaje
     const eA = sec.s_ambar;
     sec.nivel = eA <= cfg.rt.alta_s ? 'alta' : eA <= cfg.rt.media_s ? 'media' : 'baja';
+    if (h.debil) { sec.avisos.push('flancos_debiles'); if (sec.nivel === 'alta') sec.nivel = 'media'; }
     sec.puntaje = h.puntaje;
     if (!h.g && !h.r) sec.avisos.push('sin_verde');
     // Carril dudoso: las dos pruebas (centro de la imagen y stage al quedar quieto) apuntan al otro lado

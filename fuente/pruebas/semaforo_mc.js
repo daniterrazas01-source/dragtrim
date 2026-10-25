@@ -1,12 +1,14 @@
 // semaforo_mc.js — Monte Carlo de la lectura del semáforo con cuadros simulados (semaforo_sim.js → Semaforo.analizar)
 // Criterios: archivo/ideas/semaforo_real/plan.md §6. Errores contra la verdad en el reloj de la cámara (verdad.en_camara).
 // Uso: node semaforo_mc.js [rapido|completo] [semilla]     (rapido: 12 corridas por celda; completo: 60)
+//      node semaforo_mc.js detalle <fps> <condición> <pro|full> [corridas, p. ej. 0-11 o 3,7] [roja|handicap]
+//      (una línea por corrida, con las mismas semillas que la celda del Monte Carlo)
 // Sale con código 1 si algún criterio no se cumple.
 'use strict';
 const P = __dirname + '/../app/src/';
 const S = require(P + 'semaforo.js'), Sim = require(P + 'semaforo_sim.js');
 
-const modo = process.argv[2] || 'rapido', N = modo === 'completo' ? 60 : 12, SEM = +(process.argv[3] || 1000);
+const modo = process.argv[2] || 'rapido', N = modo === 'completo' ? 60 : 12, SEM = +((modo === 'detalle' ? process.env.SEMILLA : process.argv[3]) || 1000);
 const CONDS = ['dia', 'sombra', 'noche', 'inc40', 'pwm400', 'pwm1000', 'sol'];
 
 function stats(a) {
@@ -27,7 +29,9 @@ function corrida(cond, fps, tipo, i, extra) {
   const tRo = ec.t_stage_off + v.k1.delta_s;          // el acelerómetro "perfecto" en su propio reloj
   const A = S.analizar(r.cuadros, { carril, arbol: 'auto', tRo, giro: r.giro, hora_quieto: v.hora_quieto });
   const s = A.sec || {}, R = A.rt || {};
-  const out = { ok: !!s.ok, tipo_ok: s.tipo === tipo, ms: A.ms, roja_v: !!v.roja, roja: !!R.roja, ev: [], stg: NaN, rt: NaN, otro: false };
+  const out = { ok: !!s.ok, tipo_ok: s.tipo === tipo, ms: A.ms, roja_v: !!v.roja, roja: !!R.roja, ev: [], stg: NaN, rt: NaN, otro: false,
+                carril, rot: o.rot, rt_s: rt, motivo: A.motivo || s.motivo || null, avisos: s.avisos || [], metodo: R.metodo, nivel: R.nivel,
+                tipo_det: s.tipo, delta_s: s.delta_s, verde_v: v.verde_visible };
   if (!s.ok) return out;
   out.ev.push((s.t_ambar_ref - ec.t_ambar_ref) * 1e3);
   if (isFinite(s.t_verde_vista) && isFinite(ec.t_verde)) out.ev.push((s.t_verde_vista - ec.t_verde) * 1e3);
@@ -36,6 +40,22 @@ function corrida(cond, fps, tipo, i, extra) {
   // ¿leyó la otra columna? (handicap: la secuencia del otro carril va desfasada)
   if (v.otro && isFinite(v.otro.desfase_s) && Math.abs(out.ev[0]) > 50 && Math.abs(out.ev[0] - v.otro.desfase_s * 1e3) < 50) out.otro = true;
   return out;
+}
+
+if (modo === 'detalle') {
+  const fps = +process.argv[3], cond = process.argv[4], tipo = process.argv[5], sel = process.argv[6] || '0-11', caso = process.argv[7] || '';
+  const ids = []; for (const p of sel.split(',')) { const [a, b] = p.split('-').map(Number); for (let i = a; i <= (isFinite(b) ? b : a); i++) ids.push(i); }
+  for (const i0 of ids) {
+    // mismas corridas que el Monte Carlo: rojas = 500+i, handicap = 700+i, normales = i
+    const i = caso === 'roja' ? 500 + i0 : caso === 'handicap' ? 700 + i0 : i0;
+    const extra = caso === 'roja' ? { rt_s: -(0.02 + 0.28 * ((i0 * 0.618) % 1)) }
+      : caso === 'handicap' ? { escena: { otro: { desfase_s: 0.1 + 1.4 * ((i0 * 0.618) % 1), presente: true } } } : null;
+    const r = corrida(cond, fps, tipo, i, extra);
+    console.log(`${String(i0).padStart(3)} ${r.carril} rot${String(r.rot).padEnd(3)} rt ${r.rt_s.toFixed(3)} ${r.ok ? 'lee' : 'NO '} ${(r.tipo_det || '-').padEnd(4)}` +
+      ` ámbar ${f1(r.ev[0])} verde ${f1(r.ev[1])} stage ${f1(r.stg)} RT ${f1(r.rt)} roja ${r.roja ? 'sí' : 'no'}${r.roja_v ? '(verdad sí)' : ''}` +
+      ` ${r.metodo || ''} ${r.nivel || ''} Δ ${isFinite(r.delta_s) ? r.delta_s.toFixed(3) : '—'} ${r.motivo || ''} ${r.avisos.join(',')}`);
+  }
+  process.exit(0);
 }
 
 const fallas = [], filas = [];
