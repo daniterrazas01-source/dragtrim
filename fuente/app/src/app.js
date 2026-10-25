@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = 'beta 0.6.1';
+  const APP_VERSION = 'beta 0.6.2';
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -19,8 +19,9 @@
   const S = Object.assign({}, DEF, LS.get('dragtrim.settings', {}));
   for (const k of ['cam_zona', 'cam_delta', 'cam_ajuste']) S[k] = Object.assign({}, DEF[k], S[k] || {});
   const guardarAjustes = () => LS.set('dragtrim.settings', S);
-  // "Medir con el semáforo real" vuelve a estar en desarrollo (0.6.1, Daniel: tiene detalles por corregir): no se ve
-  // ni prende la cámara. Para seguir desarrollándolo y en las pruebas: index.html?camdev o localStorage dragtrim.camDev = true.
+  // "Medir con el semáforo real" está fuera de la app (0.6.2, Daniel: presentó fallos; se retoma más adelante): no se ve
+  // en Medir, Ajustes, resultados ni Historial y no prende la cámara. El código sigue: para desarrollarlo y en las
+  // pruebas, index.html?camdev o localStorage dragtrim.camDev = true.
   const CAM_DEV = /[?&]camdev\b/.test(location.search) || LS.get('dragtrim.camDev', false) === true;
   if (!CAM_DEV) S.cam = false;
   // Árbol de la pista: Pro .400 o Full .500 (ya no hay "Automático"; quien lo tenía toma el de Práctica)
@@ -727,7 +728,7 @@
   // fila R/T de la boleta, KPI de reacción y sección "Semáforo"
   function htmlCam(run) {
     const c = run.cam;
-    if (!c) return { fila: '', kpi: '', seccion: '', sello: '' };
+    if (!c || !CAM_DEV) return { fila: '', kpi: '', seccion: '', sello: '' };   // corridas grabadas con la 0.6: sus datos se guardan, no se muestran
     const rt = c.rt, sec = c.sec, f = formatoRT(), otro = f === 'boleta' ? 'verde' : 'boleta';
     const fila = (k, val) => `<dt>${k}</dt><dd>${val}</dd>`;
     const otroCarril = c.cfg && c.cfg.carril === 'der' ? 'izq' : 'der';
@@ -1103,7 +1104,7 @@
     for (const r of runs) {
       const li = document.createElement('li'), b = document.createElement('button');
       const et = r.ok ? etPrincipal(r) : null;
-      const rt = camLeida(r) ? (r.cam.rt.roja ? ', roja' : `, RT ${txtRT(r.cam.rt, formatoRT())}`) : '';
+      const rt = CAM_DEV && camLeida(r) ? (r.cam.rt.roja ? ', roja' : `, RT ${txtRT(r.cam.rt, formatoRT())}`) : '';
       const sub = r.ok ? `${nombreDist(r.cfg.distancia_final)}, trampa ${fmtV(r.trampa_kmh, 0)} ${velU()}${rt}${r.demo ? ', simulada' : ''}${r.completo ? '' : ', incompleta'}`
         : 'Sin resultado' + (r.demo ? ', simulada' : '');
       b.innerHTML = `<span class="when">${esc(fechaCorta(r.fecha))}</span><span class="et">${r.ok ? fmtT(et.t) : '—'}</span><span class="sub">${esc(sub)}</span>`;
@@ -1243,7 +1244,7 @@
 
   // ------------------------------------------------------------ semáforo con cámara: controles
   function pintarCam() {
-    $('#campoCam').hidden = !CAM_DEV; $('#proximoCam').hidden = CAM_DEV; $('#ajCam').hidden = !CAM_DEV;
+    $('#campoCam').hidden = !CAM_DEV; $('#ajCam').hidden = !CAM_DEV;
     const on = !!S.cam;
     $('#inCam').checked = on;
     $('#camOpciones').hidden = !on;
