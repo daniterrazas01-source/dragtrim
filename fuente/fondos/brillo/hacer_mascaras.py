@@ -19,6 +19,10 @@ AQUI = pathlib.Path(__file__).resolve().parent
 FONDOS = AQUI.parent
 ANCHO = 540
 
+# Logos propios pegados con un script (forma exacta a 540 px): se prenden en verde y en rojo. Blanco y negro: los de
+# Rooster Racing (fondos/logos_rooster.py, 25 oct 2026; taparon JEGS, STRANGE y la cápsula NOS, que salieron de la lista).
+PROPIOS = {'blanco_negro': 'rooster-blanco_negro.png'}
+
 # Fondos con stickers de color: la base de ese color se recorta sola (como en build.py).
 COLOR_PROPIO = {'combinado': ('verde', 'rojo'), 'combinado_rojo': ('verde', 'rojo'), 'botella_nos': ('verde', 'rojo'), 'rojo': ('rojo',)}
 
@@ -139,14 +143,11 @@ LOGOS = {
     'blanco_negro': {
         'verde': {
             'base': [
-                ('JEGS', 386, 158),
                 ('2-STEP', 218, 299),
                 ('AEM', 273, 392),
                 ('BOOM', 58, 460),
                 ('NITROUS', 214, 489),
                 ('MSD', 329, 596),
-                ('STRANGE', 110, 698),
-                ('STRANGE', 124, 674),
                 ('NHRA', 229, 926),
                 ('EDELBROCK', 347, 1010),
                 ('HOOSIER', 44, 1107),
@@ -179,7 +180,6 @@ LOGOS = {
                 ('TRICK FLOW WEIAND', 35, 719),   # 1.32 % de la pantalla
                 ('WHIPPLE', 144, 261),   # 0.77 % de la pantalla
                 ('WELD', 491, 459),   # 0.47 % de la pantalla
-                ('NOS (cápsula)', 136, 610),   # 0.52 % de la pantalla
                 ('CALAVERA', 367, 940),   # 0.29 % de la pantalla
             ],
         },
@@ -401,6 +401,9 @@ def main():
                 else:
                     raise SystemExit(f'{fid} {color}: no encontré el logo {nombre} en ({x}, {y})')
                 n += 1
+            if fid in PROPIOS:
+                sale |= np.array(Image.open(AQUI / PROPIOS[fid]).convert('L').resize((etq.shape[1], etq.shape[0]), Image.NEAREST)) > 127
+                n += 2
             Image.fromarray((sale * 255).astype(np.uint8)).save(AQUI / f'{fid}-{color}.png', optimize=True)
             print(f'{fid:15} {color:5} {n:2} logos elegidos, cubren {sale.mean() * 100:4.1f} % de la pantalla')
 

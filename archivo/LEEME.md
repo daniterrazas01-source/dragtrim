@@ -11,6 +11,9 @@ Archivos tal como Daniel los mandó, sin modificar.
 | Archivo | Qué es | Cuándo |
 |---|---|---|
 | `ROOSTER_RACING.xlsx` | Calculadora de Excel (tiempos con peso, caballos y altitud) | 12 oct 2026 |
+| `logo_rooster_racing.png` | Logo de Rooster Racing (el equipo de Daniel): R roja con flamas y el texto | 25 oct 2026 |
+| `logo_rrg.png` | Logo RRG (Rooster Racing Garage) | 25 oct 2026 |
+| `fondo_marcas_blanco_negro_sin_rooster.png` | Fondo Blanco y negro como lo hizo Daniel, antes de pegarle esos logos (lo usa `fuente/fondos/logos_rooster.py`) | 25 oct 2026 |
 
 El script original de MATLAB Mobile (v1) con el que empezó el proyecto se mandó en un chat
 anterior que no quedó guardado aquí. Si se encuentra, va en esta carpeta.
