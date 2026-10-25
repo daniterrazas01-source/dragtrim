@@ -85,9 +85,10 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    y deja su forma y su huella en `brillo/rooster-gallos*.png`; `hacer_mascaras.py` (PROPIOS, LOGOS['gallos'] = los del
    Blanco y negro) prende esos logos en verde y en rojo y salta solos los que quedaron tapados (JEGS, STRANGE, cápsula
    NOS). Brillo: verde 12.1 %, rojo 15.3 %.
-   Con Gallos, la distancia (1/8–1/4), el botón grande de arriba de Medir (Activar sensores / Armar) y las pestañas usan
-   la letra del texto "Rooster Racing" del logo: **Saira Black Italic** (OFL, `fuente/app/src/fuentes/`; build.py la mete
-   en index.html como data URI). Lo demás (tarjetas, textos) con la letra normal, como pidió Daniel.
+   **Letra tipo Rooster Racing** (25 oct, con todos los fondos y sin fondo; primero era solo de Gallos): la distancia
+   (1/8–1/4), el botón grande de arriba de Medir (Activar sensores / Armar) y las pestañas usan **Saira Black Italic**
+   (OFL, la más parecida a la letra del logo; `fuente/app/src/fuentes/`; build.py la mete en index.html como data URI).
+   Lo demás (tarjetas, textos) con la letra normal, como pidió Daniel. Si manda el archivo de la letra original, cambiarla.
 
 8. **Primera prueba real** (11 oct 2026, autódromo, zip `dragtrim_20261011_143244`, rollout 0.5 ft):
    boleta 60ft 2.650 / 201 m 9.339 @132.40 / 402 m 14.043 @ 181.71 km/h (confirmado por Daniel;
@@ -229,7 +230,7 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
 caché del service worker; cambiarlo fuerza la actualización). En la rama, sin publicar: **beta 0.6.2** (el semáforo con
-cámara sale de la app; fondo nuevo "Gallos" con los logos de Rooster Racing; Práctica: botón "Mantén" más chico (19vh, 300 px de ancho en solo), cuadro de la reacción compacto y más abajo, focos que caben sin tocarlo). Publicada: **beta 0.6.1** (25 oct 2026: el semáforo con cámara vuelve a "en desarrollo"); 0.6 (25 oct 2026: semáforo real
+cámara sale de la app; fondo nuevo "Gallos" con los logos de Rooster Racing; Práctica: botón "Mantén" más chico (19vh, 300 px de ancho en solo), cuadro de la reacción compacto y más abajo, focos que caben sin tocarlo; letra tipo Rooster Racing en la distancia, el botón de arriba y las pestañas). Publicada: **beta 0.6.1** (25 oct 2026: el semáforo con cámara vuelve a "en desarrollo"); 0.6 (25 oct 2026: semáforo real
 con la cámara, punto 13; trae también la 0.5.4: tarjeta Race 1 vs 1 "en desarrollo"). Antes: **beta 0.5.3** (fondo de Práctica que responde a la reacción; 0.5.2: guía para instalar; 0.5.1: nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
 algoritmo v2.3.
 
