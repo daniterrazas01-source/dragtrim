@@ -117,36 +117,31 @@
     <h2>Práctica de salida</h2>
     <p class="muted">Un semáforo de arrancones para entrenar tu reacción, solo o contra alguien en el mismo teléfono.</p>
 
-    <div class="field">
+    <!-- Los cuatro en un solo panel; debajo de cada selector, solo la explicación de lo elegido (practica.js, EXPLICA) -->
+    <div class="field pt-opciones">
       <span class="lab">Modo</span>
-      <div class="seg" role="radiogroup" id="segPModo" style="margin-top:8px">
+      <div class="seg" role="radiogroup" id="segPModo">
         <button role="radio" data-v="solo">Solo</button>
         <button role="radio" data-v="duelo">1 vs 1</button>
       </div>
-    </div>
-    <div class="field">
       <span class="lab">Árbol</span>
-      <p class="hint">Pro: los tres ámbar encienden juntos y la verde 0.4 s después. Full: los ámbar bajan uno por uno cada 0.5 s.</p>
       <div class="seg" role="radiogroup" id="segPArbol">
         <button role="radio" data-v="pro">Pro .4</button>
         <button role="radio" data-v="full">Full .5</button>
       </div>
-    </div>
-    <div class="field">
+      <p class="hint pt-exp" id="expPArbol" aria-live="polite"></p>
       <span class="lab">Cómo sales</span>
-      <p class="hint">Soltar: mantén presionado para hacer stage y suelta con la verde, como un transbrake. Tocar: un toque para stage y otro para salir.</p>
       <div class="seg" role="radiogroup" id="segPSalida">
         <button role="radio" data-v="soltar">Soltar</button>
         <button role="radio" data-v="tocar">Tocar</button>
       </div>
-    </div>
-    <div class="field">
+      <p class="hint pt-exp" id="expPSalida" aria-live="polite"></p>
       <span class="lab">Formato de la reacción</span>
-      <p class="hint">Boleta: como el ticket de pista, desde el último ámbar (perfecta 0.400 con Pro, 0.500 con Full). Desde la verde: la diferencia contra la verde (perfecta 0.000). Siempre verás los dos; aquí eliges cuál sale en grande.</p>
       <div class="seg" role="radiogroup" id="segPFormato">
-        <button role="radio" data-v="boleta">Boleta (.400 / .500)</button>
-        <button role="radio" data-v="verde">Desde la verde (.000)</button>
+        <button role="radio" data-v="boleta">Boleta</button>
+        <button role="radio" data-v="verde">Desde la verde</button>
       </div>
+      <p class="hint pt-exp" id="expPFormato" aria-live="polite"></p>
     </div>
     <div class="field">
       <label class="lab" for="inPRetraso">Retraso de tu auto</label>

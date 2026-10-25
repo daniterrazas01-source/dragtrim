@@ -292,9 +292,19 @@
   }
 
   // ---------------------------------------------------------------- ajustes de práctica
+  // Explicación corta de la opción elegida (va debajo de su selector; así la sección ocupa menos)
+  const EXPLICA = {
+    arbol: { pro: 'Los tres ámbar encienden juntos y la verde sale 0.4 s después.', full: 'Los ámbar bajan uno por uno cada 0.5 s y luego sale la verde.' },
+    salida: { soltar: 'Mantén presionado para hacer stage y suelta con la verde, como un transbrake.', tocar: 'Un toque para hacer stage y otro para salir.' },
+    formato: { boleta: 'Desde el último ámbar, como el ticket: perfecta 0.400 en Pro y 0.500 en Full. El otro sale chico abajo.',
+               verde: 'Contra la verde: perfecta 0.000. El de la boleta sale chico abajo.' },
+  };
   function seg(id, key) {
-    const el = document.getElementById(id);
-    const pin = () => el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === P[key])));
+    const el = document.getElementById(id), exp = document.getElementById('exp' + id.slice(3));
+    const pin = () => {
+      el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === P[key])));
+      if (exp && EXPLICA[key]) exp.textContent = EXPLICA[key][P[key]] || '';
+    };
     el.querySelectorAll('button').forEach((b) => b.onclick = () => { P[key] = b.dataset.v; guardarCfg(); pin(); pintarStats(); });
     pin();
   }

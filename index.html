@@ -339,6 +339,11 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   .c-tabla tr.et td { font-size: 19px; }
 }
 .field > .lab:not(:first-child), .c-sub .lab, .howto .lab { display: block; font-weight: 600; margin: 14px 0 6px; }
+/* Práctica: Modo, Árbol, Cómo sales y Formato en un solo panel compacto, con la explicación de lo elegido debajo */
+.pt-opciones > .lab:not(:first-child) { margin: 12px 0 6px; }
+.pt-opciones > .lab:first-child { margin-bottom: 6px; }
+.pt-exp { margin: 6px 2px 0; font-size: 13px; line-height: 1.35; }
+.pt-opciones .seg button { padding-top: 9px; padding-bottom: 9px; }
 .field select { width: 100%; background: var(--asphalt); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 17px; }
 .c-sub { margin-top: 12px; }
 .c-sub > .ghost { margin-top: 0; }
@@ -764,36 +769,31 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     <h2>Práctica de salida</h2>
     <p class="muted">Un semáforo de arrancones para entrenar tu reacción, solo o contra alguien en el mismo teléfono.</p>
 
-    <div class="field">
+    <!-- Los cuatro en un solo panel; debajo de cada selector, solo la explicación de lo elegido (practica.js, EXPLICA) -->
+    <div class="field pt-opciones">
       <span class="lab">Modo</span>
-      <div class="seg" role="radiogroup" id="segPModo" style="margin-top:8px">
+      <div class="seg" role="radiogroup" id="segPModo">
         <button role="radio" data-v="solo">Solo</button>
         <button role="radio" data-v="duelo">1 vs 1</button>
       </div>
-    </div>
-    <div class="field">
       <span class="lab">Árbol</span>
-      <p class="hint">Pro: los tres ámbar encienden juntos y la verde 0.4 s después. Full: los ámbar bajan uno por uno cada 0.5 s.</p>
       <div class="seg" role="radiogroup" id="segPArbol">
         <button role="radio" data-v="pro">Pro .4</button>
         <button role="radio" data-v="full">Full .5</button>
       </div>
-    </div>
-    <div class="field">
+      <p class="hint pt-exp" id="expPArbol" aria-live="polite"></p>
       <span class="lab">Cómo sales</span>
-      <p class="hint">Soltar: mantén presionado para hacer stage y suelta con la verde, como un transbrake. Tocar: un toque para stage y otro para salir.</p>
       <div class="seg" role="radiogroup" id="segPSalida">
         <button role="radio" data-v="soltar">Soltar</button>
         <button role="radio" data-v="tocar">Tocar</button>
       </div>
-    </div>
-    <div class="field">
+      <p class="hint pt-exp" id="expPSalida" aria-live="polite"></p>
       <span class="lab">Formato de la reacción</span>
-      <p class="hint">Boleta: como el ticket de pista, desde el último ámbar (perfecta 0.400 con Pro, 0.500 con Full). Desde la verde: la diferencia contra la verde (perfecta 0.000). Siempre verás los dos; aquí eliges cuál sale en grande.</p>
       <div class="seg" role="radiogroup" id="segPFormato">
-        <button role="radio" data-v="boleta">Boleta (.400 / .500)</button>
-        <button role="radio" data-v="verde">Desde la verde (.000)</button>
+        <button role="radio" data-v="boleta">Boleta</button>
+        <button role="radio" data-v="verde">Desde la verde</button>
       </div>
+      <p class="hint pt-exp" id="expPFormato" aria-live="polite"></p>
     </div>
     <div class="field">
       <label class="lab" for="inPRetraso">Retraso de tu auto</label>
@@ -8540,9 +8540,19 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   }
 
   // ---------------------------------------------------------------- ajustes de práctica
+  // Explicación corta de la opción elegida (va debajo de su selector; así la sección ocupa menos)
+  const EXPLICA = {
+    arbol: { pro: 'Los tres ámbar encienden juntos y la verde sale 0.4 s después.', full: 'Los ámbar bajan uno por uno cada 0.5 s y luego sale la verde.' },
+    salida: { soltar: 'Mantén presionado para hacer stage y suelta con la verde, como un transbrake.', tocar: 'Un toque para hacer stage y otro para salir.' },
+    formato: { boleta: 'Desde el último ámbar, como el ticket: perfecta 0.400 en Pro y 0.500 en Full. El otro sale chico abajo.',
+               verde: 'Contra la verde: perfecta 0.000. El de la boleta sale chico abajo.' },
+  };
   function seg(id, key) {
-    const el = document.getElementById(id);
-    const pin = () => el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === P[key])));
+    const el = document.getElementById(id), exp = document.getElementById('exp' + id.slice(3));
+    const pin = () => {
+      el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === P[key])));
+      if (exp && EXPLICA[key]) exp.textContent = EXPLICA[key][P[key]] || '';
+    };
     el.querySelectorAll('button').forEach((b) => b.onclick = () => { P[key] = b.dataset.v; guardarCfg(); pin(); pintarStats(); });
     pin();
   }
