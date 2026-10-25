@@ -445,10 +445,11 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 @media (prefers-color-scheme: light) { :root[data-fondo]:not([data-theme]) .tabs { background: rgba(255, 255, 255, .96); } }
 :root[data-fondo] .tabs button[aria-current="page"] { font-style: italic; font-weight: 900; }
 /* La letra del texto "Rooster Racing" del logo (Saira Black Italic, licencia OFL: fuentes/OFL-Saira.txt; build.py la mete
-   en index.html) en lo que Daniel marcó: la distancia, el botón grande de arriba de Medir y las pestañas. Primero solo
-   con Gallos; desde el 25 oct con todos los fondos (y sin fondo). */
+   en index.html) en lo que Daniel marcó: títulos de cada pantalla, etiquetas (Modo, Árbol, Peso…), todos los selectores,
+   los botones principales y las pestañas, con cualquier fondo. Las letras chiquitas (ayudas, descripciones, datos) no.
+   font-synthesis: none para que el navegador no la incline otra vez donde el estilo pide cursiva. */
 @font-face { font-family: 'Rooster'; src: url("fuentes/saira-black-italic.woff2") format("woff2"); font-weight: 900; font-style: normal; font-display: swap; }
-:root :is(#segDist button, #btnSensores, #btnArmar, .tabs button) { font-family: 'Rooster', var(--num); font-style: normal; font-weight: 900; }
+:root :is(h2, .lab, .seg button, .primary, .tabs button) { font-family: 'Rooster', var(--num); font-style: normal; font-weight: 900; font-synthesis: none; }
 :root[data-fondo] .track { background: var(--surface); border: 2px solid var(--sticker); }
 :root[data-fondo] .slip { box-shadow: 0 0 0 3px var(--sticker), 0 8px 0 3px rgba(0, 0, 0, .55); transform: rotate(-.6deg); }
 
