@@ -29,7 +29,7 @@ async def main():
     try:
         async with async_playwright() as p:
             b = await p.chromium.launch()
-            for fondo in ('combinado', 'combinado_rojo', 'botella_nos', 'neon', 'rojo', 'blanco_negro', 'ninguno'):
+            for fondo in ('combinado', 'combinado_rojo', 'botella_nos', 'neon', 'rojo', 'blanco_negro', 'gallos', 'ninguno'):
                 ctx = await b.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, color_scheme='dark', device_scale_factor=2)
                 await ctx.add_init_script(f"localStorage.setItem('dragtrim.settings', JSON.stringify({{fondo: '{fondo}'}}))")
                 pg = await ctx.new_page(); errs = []

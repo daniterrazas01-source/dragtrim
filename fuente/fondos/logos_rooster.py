@@ -1,11 +1,14 @@
-"""Pega los logos de Rooster Racing (el equipo de Daniel) en el fondo Blanco y negro, como stickers (pedido del 25 oct 2026).
+"""Fondo "Gallos": el Blanco y negro con los logos de Rooster Racing (el equipo de Daniel) como stickers (25 oct 2026).
 
-- Logo 1 (archivo/originales/logo_rooster_racing.png): solo la R roja con flamas (sin el texto), sticker con borde blanco.
+- Logo 1 (archivo/originales/logo_rooster_racing.png): solo la R roja con flamas (sin el texto), sticker con borde
+  blanco y orilla negra; van tres.
 - Logo 2 (archivo/originales/logo_rrg.png): el logo RRG completo, sobre un sticker negro con borde blanco.
-Toma el fondo sin logos (archivo/originales/fondo_marcas_blanco_negro_sin_rooster.png) y escribe:
-  fuente/fondos/fondo_marcas_blanco_negro.png      el fondo con los logos (build.py lo pasa a WebP)
-  fuente/fondos/brillo/rooster-blanco_negro.png    la forma de los dos logos a 540 px de ancho: hacer_mascaras.py la
-                                                   suma al verde y al rojo, para que se prendan en Práctica
+Toma el Blanco y negro original (archivo/originales/fondo_marcas_blanco_negro_sin_rooster.png; el de la app no se
+toca) y escribe:
+  fuente/fondos/fondo_marcas_gallos.png              el fondo (build.py lo pasa a WebP y lo agrega a los fondos)
+  fuente/fondos/brillo/rooster-gallos.png            la forma de los logos a 540 px de ancho: hacer_mascaras.py la
+                                                     suma al verde y al rojo, para que se prendan en Práctica
+  fuente/fondos/brillo/rooster-gallos-huella.png     lo que tapan los stickers (esos logos de la lista se saltan)
 Uso: python3 logos_rooster.py && python3 brillo/hacer_mascaras.py
 Para moverlos: cambia LUGAR (centro a 540 px de ancho, ancho del logo, giro en grados). Quedan a los lados del árbol
 de Práctica (que ocupa más o menos x 208–332 a 540 px).
@@ -15,10 +18,12 @@ from PIL import Image, ImageDraw, ImageFilter, ImageChops, ImageStat
 
 AQUI = pathlib.Path(__file__).resolve().parent
 ORIG = AQUI.parent.parent / 'archivo' / 'originales'
-LUGAR = {
-    'r_flamas': dict(cx=106, cy=640, ancho=200, giro=6),
-    'rrg': dict(cx=434, cy=158, ancho=172, giro=-5),
-}
+LUGAR = [
+    ('rrg', dict(cx=434, cy=158, ancho=172, giro=-5)),       # arriba a la derecha
+    ('r_flamas', dict(cx=106, cy=640, ancho=200, giro=6)),   # izquierda, a media pantalla
+    ('r_flamas', dict(cx=100, cy=330, ancho=172, giro=-5)),  # izquierda, arriba
+    ('r_flamas', dict(cx=442, cy=600, ancho=172, giro=-8)),  # derecha, a media pantalla
+]
 K = 1290 / 540   # el fondo original mide 1290 px de ancho
 
 
@@ -84,21 +89,24 @@ def pegar(fondo, capa, forma, cx, cy, giro):
     fondo.paste(Image.new('RGB', capa.size, (0, 0, 0)), (x + 5, y + 8), sombra)
     fondo.paste(capa, (x, y), capa)
     m = Image.new('L', fondo.size, 0); m.paste(forma, (x, y))
-    return m
+    h = Image.new('L', fondo.size, 0); h.paste(capa.getchannel('A'), (x, y))
+    return m, h
 
 
 def main():
     fondo = Image.open(ORIG / 'fondo_marcas_blanco_negro_sin_rooster.png').convert('RGB')
-    brillo = Image.new('L', fondo.size, 0)
-    for clave, fn in (('r_flamas', sticker_r), ('rrg', sticker_rrg)):
-        L = LUGAR[clave]
-        im, alfa, tipo = fn()
+    brillo = Image.new('L', fondo.size, 0); huella = Image.new('L', fondo.size, 0)
+    for clave, L in LUGAR:
+        im, alfa, tipo = {'r_flamas': sticker_r, 'rrg': sticker_rrg}[clave]()
         capa, forma = armar(im, alfa, tipo, round(L['ancho'] * K))
-        brillo = ImageChops.lighter(brillo, pegar(fondo, capa, forma, L['cx'], L['cy'], L['giro']))
-    fondo.save(AQUI / 'fondo_marcas_blanco_negro.png', optimize=True)
-    b = brillo.resize((540, round(fondo.height * 540 / fondo.width)), Image.LANCZOS).point(lambda v: 255 if v > 90 else 0)
-    b.save(AQUI / 'brillo' / 'rooster-blanco_negro.png', optimize=True)
-    print('listo: fondo con los logos de Rooster Racing; brillo cubre', round(ImageStat.Stat(b).mean[0] / 255 * 100, 2), '% de la pantalla')
+        m, h = pegar(fondo, capa, forma, L['cx'], L['cy'], L['giro'])
+        brillo = ImageChops.lighter(brillo, m); huella = ImageChops.lighter(huella, h)
+    fondo.save(AQUI / 'fondo_marcas_gallos.png', optimize=True)
+    chico = (540, round(fondo.height * 540 / fondo.width))
+    b = brillo.resize(chico, Image.LANCZOS).point(lambda v: 255 if v > 90 else 0)
+    b.save(AQUI / 'brillo' / 'rooster-gallos.png', optimize=True)
+    huella.resize(chico, Image.LANCZOS).point(lambda v: 255 if v > 128 else 0).save(AQUI / 'brillo' / 'rooster-gallos-huella.png', optimize=True)
+    print('listo: fondo Gallos; los logos de Rooster Racing cubren', round(ImageStat.Stat(b).mean[0] / 255 * 100, 2), '% de la pantalla')
 
 
 if __name__ == '__main__':

@@ -19,9 +19,10 @@ AQUI = pathlib.Path(__file__).resolve().parent
 FONDOS = AQUI.parent
 ANCHO = 540
 
-# Logos propios pegados con un script (forma exacta a 540 px): se prenden en verde y en rojo. Blanco y negro: los de
-# Rooster Racing (fondos/logos_rooster.py, 25 oct 2026; taparon JEGS, STRANGE y la cápsula NOS, que salieron de la lista).
-PROPIOS = {'blanco_negro': 'rooster-blanco_negro.png'}
+# Fondos con logos propios pegados por un script (forma exacta a 540 px): esos logos se prenden en verde y en rojo, y
+# de la lista se saltan los logos que quedaron tapados (los que caen dentro de la huella de los stickers nuevos).
+# Gallos (25 oct 2026) = Blanco y negro + los logos de Rooster Racing, el equipo de Daniel (fondos/logos_rooster.py).
+PROPIOS = {'gallos': ('rooster-gallos.png', 'rooster-gallos-huella.png')}
 
 # Fondos con stickers de color: la base de ese color se recorta sola (como en build.py).
 COLOR_PROPIO = {'combinado': ('verde', 'rojo'), 'combinado_rojo': ('verde', 'rojo'), 'botella_nos': ('verde', 'rojo'), 'rojo': ('rojo',)}
@@ -143,11 +144,14 @@ LOGOS = {
     'blanco_negro': {
         'verde': {
             'base': [
+                ('JEGS', 386, 158),
                 ('2-STEP', 218, 299),
                 ('AEM', 273, 392),
                 ('BOOM', 58, 460),
                 ('NITROUS', 214, 489),
                 ('MSD', 329, 596),
+                ('STRANGE', 110, 698),
+                ('STRANGE', 124, 674),
                 ('NHRA', 229, 926),
                 ('EDELBROCK', 347, 1010),
                 ('HOOSIER', 44, 1107),
@@ -180,6 +184,7 @@ LOGOS = {
                 ('TRICK FLOW WEIAND', 35, 719),   # 1.32 % de la pantalla
                 ('WHIPPLE', 144, 261),   # 0.77 % de la pantalla
                 ('WELD', 491, 459),   # 0.47 % de la pantalla
+                ('NOS (cápsula)', 136, 610),   # 0.52 % de la pantalla
                 ('CALAVERA', 367, 940),   # 0.29 % de la pantalla
             ],
         },
@@ -225,6 +230,9 @@ LOGOS = {
         },
     },
 }
+
+LOGOS['gallos'] = LOGOS['blanco_negro']   # mismo fondo de abajo; los tapados se saltan solos (PROPIOS)
+
 
 # ---------------------------------------------------------------- componentes conexos (solo numpy)
 def etiquetar(m):
@@ -385,6 +393,10 @@ def main():
     for fid, por_color in LOGOS.items():
         im = Image.open(FONDOS / f'fondo_marcas_{fid}.png').convert('RGB')
         im = im.resize((ANCHO, round(im.height * ANCHO / im.width)), Image.LANCZOS)
+        propios = huella = None
+        if fid in PROPIOS:
+            leer = lambda f: np.array(Image.open(AQUI / f).convert('L').resize(im.size, Image.NEAREST)) > 127
+            propios, huella = leer(PROPIOS[fid][0]), leer(PROPIOS[fid][1])
         m, palabras = cuerpos(fid, im)
         etq, G, bb, area = grupos(m, palabras=palabras)
         de_comp = {c: r for r, comps in G.items() for c in comps}
@@ -393,6 +405,9 @@ def main():
             sale = color_propio(im, color) if color in COLOR_PROPIO.get(fid, ()) else np.zeros(etq.shape, bool)
             n = 0
             for nombre, x, y in listas['base'] + listas['extra']:
+                if huella is not None and huella[y, x]:
+                    print(f'{fid:15} {color:5} {nombre}: tapado por un logo propio, no se prende')
+                    continue
                 c = int(etq[y, x])
                 if c in de_comp:
                     sale |= np.isin(etq, G[de_comp[c]])
@@ -401,9 +416,8 @@ def main():
                 else:
                     raise SystemExit(f'{fid} {color}: no encontré el logo {nombre} en ({x}, {y})')
                 n += 1
-            if fid in PROPIOS:
-                sale |= np.array(Image.open(AQUI / PROPIOS[fid]).convert('L').resize((etq.shape[1], etq.shape[0]), Image.NEAREST)) > 127
-                n += 2
+            if propios is not None:
+                sale |= propios
             Image.fromarray((sale * 255).astype(np.uint8)).save(AQUI / f'{fid}-{color}.png', optimize=True)
             print(f'{fid:15} {color:5} {n:2} logos elegidos, cubren {sale.mean() * 100:4.1f} % de la pantalla')
 

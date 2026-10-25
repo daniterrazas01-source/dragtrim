@@ -1169,6 +1169,7 @@
     { id: 'neon', nombre: 'Neón', acento: '#d4ff00' },
     { id: 'rojo', nombre: 'Rojo', acento: '#ff3d2e' },
     { id: 'blanco_negro', nombre: 'Blanco y negro', acento: '#ffffff' },
+    { id: 'gallos', nombre: 'Gallos', acento: '#ff3d2e' },   // Blanco y negro + logos de Rooster Racing, el equipo de Daniel (0.6.2)
   ];
   // Fuerza máxima del brillo de Práctica por fondo: build.py la calcula según cuánto cubren los stickers.
   const BRILLO = {"__BRILLO__": 1};

@@ -8012,9 +8012,10 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     { id: 'neon', nombre: 'Neón', acento: '#d4ff00' },
     { id: 'rojo', nombre: 'Rojo', acento: '#ff3d2e' },
     { id: 'blanco_negro', nombre: 'Blanco y negro', acento: '#ffffff' },
+    { id: 'gallos', nombre: 'Gallos', acento: '#ff3d2e' },   // Blanco y negro + logos de Rooster Racing, el equipo de Daniel (0.6.2)
   ];
   // Fuerza máxima del brillo de Práctica por fondo: build.py la calcula según cuánto cubren los stickers.
-  const BRILLO = {"blanco_negro": {"rojo": 1.0, "verde": 1.0}, "botella_nos": {"rojo": 1.0, "verde": 1.0}, "combinado": {"rojo": 1.0, "verde": 1.0}, "combinado_rojo": {"rojo": 1.0, "verde": 1.0}, "neon": {"rojo": 1.0, "verde": 1.0}, "rojo": {"rojo": 1.0, "verde": 1.0}};
+  const BRILLO = {"blanco_negro": {"rojo": 1.0, "verde": 1.0}, "botella_nos": {"rojo": 1.0, "verde": 1.0}, "combinado": {"rojo": 1.0, "verde": 1.0}, "combinado_rojo": {"rojo": 1.0, "verde": 1.0}, "gallos": {"rojo": 1.0, "verde": 1.0}, "neon": {"rojo": 1.0, "verde": 1.0}, "rojo": {"rojo": 1.0, "verde": 1.0}};
   function aplicarFondo() {
     const f = FONDOS.find((x) => x.id === S.fondo);
     const raiz = document.documentElement;

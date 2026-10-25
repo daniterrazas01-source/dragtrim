@@ -71,18 +71,20 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
      Daniel quiere el logo de su calcomanía original; el redibujo v4 no lo convenció. No cambiar el
      logo de la app hasta que él lo retome.
 
-7. **Fondos de pantalla** (beta 0.4): 6 fondos sticker bomb que Daniel hizo (`fuente/fondos/*.png`,
+7. **Fondos de pantalla** (beta 0.4): 6 fondos sticker bomb que Daniel hizo (+ "Gallos" desde 0.6.2) (`fuente/fondos/*.png`,
    el build los convierte a WebP en `fondos/`). Con fondo, la app usa estilo sticker: paneles con
    borde blanco, títulos como etiqueta chueca, color principal según el fondo (neón / rojo / blanco).
    Ajustes: elegir fondo o "Sin fondo" y qué tanto se ve (velo). Por defecto: Combinado, nivel medio.
    En una corrida el velo sube a 0.92. Las luces del semáforo de Práctica no cambian.
    Ojo: los stickers tienen marcas reales (NOS, Holley, JEGS…); para tiendas de apps habría que cambiarlas.
-   **Blanco y negro con los logos de Rooster Racing** (0.6.2, pedido de Daniel el 25 oct: es su equipo): la R roja con
-   flamas (del logo 1, sin el texto; sticker con borde blanco y orilla negra) a la izquierda a media pantalla, y el
-   logo RRG completo (sticker negro con borde blanco) arriba a la derecha, a los lados del árbol de Práctica. Los pega
-   `fuente/fondos/logos_rooster.py` sobre el original guardado en `archivo/originales/` (para moverlos: LUGAR) y deja su
-   forma en `brillo/rooster-blanco_negro.png`; `hacer_mascaras.py` (PROPIOS) la suma al verde y al rojo, así que se
-   prenden con la reacción. Taparon JEGS, STRANGE y la cápsula NOS, que salieron de LOGOS. Brillo: verde 11.3 %, rojo 14.5 %.
+   **Fondo "Gallos"** (0.6.2, 25 oct; 7.º fondo, color principal rojo): el Blanco y negro original (que no cambia) + los
+   logos de Rooster Racing, el equipo de Daniel: **tres R rojas con flamas** (del logo 1, sin el texto; sticker con
+   borde blanco y orilla negra: izquierda arriba, izquierda a media pantalla, derecha a media pantalla) y el **logo RRG**
+   completo (sticker negro con borde blanco) arriba a la derecha, todos a los lados del árbol de Práctica. Los pega
+   `fuente/fondos/logos_rooster.py` (para moverlos: LUGAR) sobre `archivo/originales/fondo_marcas_blanco_negro_sin_rooster.png`
+   y deja su forma y su huella en `brillo/rooster-gallos*.png`; `hacer_mascaras.py` (PROPIOS, LOGOS['gallos'] = los del
+   Blanco y negro) prende esos logos en verde y en rojo y salta solos los que quedaron tapados (JEGS, STRANGE, cápsula
+   NOS). Brillo: verde 12.1 %, rojo 15.3 %.
 
 8. **Primera prueba real** (11 oct 2026, autódromo, zip `dragtrim_20261011_143244`, rollout 0.5 ft):
    boleta 60ft 2.650 / 201 m 9.339 @132.40 / 402 m 14.043 @ 181.71 km/h (confirmado por Daniel;
@@ -224,7 +226,7 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
 caché del service worker; cambiarlo fuerza la actualización). En la rama, sin publicar: **beta 0.6.2** (el semáforo con
-cámara sale de la app; logos de Rooster Racing en el fondo Blanco y negro). Publicada: **beta 0.6.1** (25 oct 2026: el semáforo con cámara vuelve a "en desarrollo"); 0.6 (25 oct 2026: semáforo real
+cámara sale de la app; fondo nuevo "Gallos" con los logos de Rooster Racing). Publicada: **beta 0.6.1** (25 oct 2026: el semáforo con cámara vuelve a "en desarrollo"); 0.6 (25 oct 2026: semáforo real
 con la cámara, punto 13; trae también la 0.5.4: tarjeta Race 1 vs 1 "en desarrollo"). Antes: **beta 0.5.3** (fondo de Práctica que responde a la reacción; 0.5.2: guía para instalar; 0.5.1: nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
 algoritmo v2.3.
 
