@@ -90,6 +90,13 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    títulos de cada pantalla (`h2`), etiquetas (`.lab`: Modo, Árbol, Peso…), todos los selectores (`.seg button`), botones
    principales (`.primary`) y pestañas, en todas las pantallas. Las letras chiquitas (ayudas, descripciones, datos,
    tarjetas) no. `font-synthesis: none` para que no se incline doble. Si manda el archivo de la letra original, cambiarla.
+   **Franja del notch / isla del iPhone** (0.6.2, 25 oct): `.notch` (index.template.html, style.css) es una copia del fondo
+   (con su velo) recortada a `env(safe-area-inset-top)`, encima del contenido: el fondo se ve detrás de la hora y la batería y
+   lo que se desliza pasa por debajo (antes se veía detrás de la hora). Sin fondo, el color de la app; en Android y computadora
+   mide 0. Ahí no caben GPS/Acel/Pantalla: iOS pone la hora y la batería a los lados de la isla. **No cambiar
+   `apple-mobile-web-app-status-bar-style`** (black-translucent desde 0.2): iOS lo lee al instalar y cambiarlo exigiría
+   reinstalar. Desde iOS 26.1 el sistema pone un degradado oscuro sobre la hora (no se puede quitar). La vista previa
+   "Drag Trim en iPhone" lo simula (iframe a pantalla completa 393×852 con las zonas seguras puestas a 59/34 px).
 
 8. **Primera prueba real** (11 oct 2026, autódromo, zip `dragtrim_20261011_143244`, rollout 0.5 ft):
    boleta 60ft 2.650 / 201 m 9.339 @132.40 / 402 m 14.043 @ 181.71 km/h (confirmado por Daniel;
@@ -231,7 +238,7 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
 caché del service worker; cambiarlo fuerza la actualización). En la rama, sin publicar: **beta 0.6.2** (el semáforo con
-cámara sale de la app; fondo nuevo "Gallos" con los logos de Rooster Racing; Práctica: botón "Mantén" más chico (19vh, 300 px de ancho en solo), cuadro de la reacción compacto y más abajo, focos que caben sin tocarlo; letra tipo Rooster Racing en títulos, etiquetas, selectores, botones principales y pestañas; Práctica: Modo, Árbol, Cómo sales y Formato en un solo panel con solo la explicación de lo elegido (EXPLICA en practica.js), 892 → 648 px de alto). Publicada: **beta 0.6.1** (25 oct 2026: el semáforo con cámara vuelve a "en desarrollo"); 0.6 (25 oct 2026: semáforo real
+cámara sale de la app; fondo nuevo "Gallos" con los logos de Rooster Racing; Práctica: botón "Mantén" más chico (19vh, 300 px de ancho en solo), cuadro de la reacción compacto y más abajo, focos que caben sin tocarlo; letra tipo Rooster Racing en títulos, etiquetas, selectores, botones principales y pestañas; Práctica: Modo, Árbol, Cómo sales y Formato en un solo panel con solo la explicación de lo elegido (EXPLICA en practica.js), 892 → 648 px de alto; el fondo también en la franja del notch del iPhone). Publicada: **beta 0.6.1** (25 oct 2026: el semáforo con cámara vuelve a "en desarrollo"); 0.6 (25 oct 2026: semáforo real
 con la cámara, punto 13; trae también la 0.5.4: tarjeta Race 1 vs 1 "en desarrollo"). Antes: **beta 0.5.3** (fondo de Práctica que responde a la reacción; 0.5.2: guía para instalar; 0.5.1: nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
 algoritmo v2.3.
 
