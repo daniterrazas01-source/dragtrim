@@ -511,6 +511,13 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 :where(.view, #medirIdle, #medirSesion) > :nth-child(6) { animation-delay: 175ms; }
 :where(.view, #medirIdle, #medirSesion) > :nth-child(7) { animation-delay: 210ms; }
 :where(.view, #medirIdle, #medirSesion) > :nth-child(n+8) { animation-delay: 240ms; }
+/* Deslizar entre pestañas (app.js): la pantalla sigue al dedo y la nueva entra de lado, de una pieza (sin la cascada) */
+:root.desliza-tab main { overflow-x: hidden; overflow-x: clip; }
+@keyframes entra-der { from { opacity: 0; transform: translateX(24%); } }
+@keyframes entra-izq { from { opacity: 0; transform: translateX(-24%); } }
+.view[data-entra="der"] { animation: entra-der .26s var(--ease-out) backwards; }
+.view[data-entra="izq"] { animation: entra-izq .26s var(--ease-out) backwards; }
+:where(.view[data-entra]) > *, :where(.view[data-entra] #medirIdle) > * { animation: none; }
 
 /* Logo: las luces se encienden una vez al abrir la app */
 .mark i { animation: enciende .25s ease-out both; }
