@@ -34,6 +34,7 @@ podría mezclar ajustes.
 | `drag_beta_0.5.2.html` | beta 0.5.2 | 702fe15 | Guía para instalar en iPhone, iPad y Android; calculadora con 1320 lb y 308 hp |
 | `drag_beta_0.5.3.html` | beta 0.5.3 | 7444dbc | Práctica: logos del fondo se prenden verde/rojo según la reacción, al soltar |
 | `drag_beta_0.6.html` | beta 0.6 | 44c4884 | Medir con el semáforo real (cámara, beta); tarjeta Race 1 vs 1 en desarrollo; página de prueba de la cámara |
+| `drag_beta_0.6.1.html` | beta 0.6.1 | 2118f28 | El semáforo con cámara vuelve a "en desarrollo" (oculto; `?camdev` lo muestra) |
 
 El código fuente editable de cada versión está en `fuente/` de ese commit:
 `git checkout <commit>` o, en GitHub, "Browse files" en el commit.
