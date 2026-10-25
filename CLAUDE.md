@@ -132,8 +132,9 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
 
 13. **Medir con el semáforo real** (beta 0.6, sin publicar al 25 oct): el teléfono va fijo en el carro y la cámara
     trasera ve el árbol (como un "tree reader", pero solo mide). En Medir: interruptor "Medir con el semáforo real"
-    (beta), árbol Auto/Pro/Full, "Apuntar la cámara" (tocar los focos de tu carril; revisa luz, foco y temblor; se ve
-    bien en horizontal) y "Armar" carril izquierdo o derecho. **Sigue neutral (punto 3):** armada, la cámara graba
+    (beta), árbol **Pro .400 / Full .500** (Daniel quitó "Automático" el 25 oct: en los autódromos solo hay esos dos;
+    quien tenía "auto" toma el de Práctica), "Apuntar la cámara" (tocar los focos de tu carril; revisa luz, foco y
+    temblor; se ve bien en horizontal) y "Armar" carril izquierdo o derecho. **Sigue neutral (punto 3):** armada, la cámara graba
     sin verse (video de 2×2 px, opacidad .01; nunca `display:none`, iOS deja de dar cuadros), no se analiza nada, no
     hay luces ni vibración; se apaga sola al detectar el arranque (o a los 30 min). Al terminar: "Leyendo el
     semáforo…" → reacción en boleta y desde la verde (el formato de Práctica manda cuál va primero), qué tan segura
@@ -150,7 +151,9 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
       columna o RT verde < 0. Si no se ve el stage: salida = tRo − δ (acelerómetro). δ = reloj de sensores −
       reloj de cámara: K1 lo mide en cada corrida con el cabeceo del arranque (cámara contra giroscopio); si
       no, el guardado por carril. La búsqueda se centra en el cruce de 1 ft de procesar() (`tHaz`), no en el
-      rollout configurado. K2: sesgo del acelerómetro aprendido de corridas con el stage visto (≥3, MAD < 30 ms).
+      rollout configurado. El árbol se ubica en la imagen sea Pro o Full; el tipo elegido decide qué secuencia se lee
+      y, si con él no hay ninguna, se lee el otro con el aviso "otro_arbol" (un Pro necesita los ámbares juntos y un
+      Full escalonados, así que uno no se lee como el otro). K2: sesgo del acelerómetro aprendido de corridas con el stage visto (≥3, MAD < 30 ms).
       K3: corrección con boletas oficiales (≥3) en Ajustes con botón "Usar". También mide el rollout real.
       Con PWM, el ajuste fino usa el rasgo por filas p solo si separa prendido de apagado (contraste ≥ 6; si no, la
       energía e) y su ancla es el primer cuadro prendido en los dos rasgos (un reflejo o el sol la movían ~190 ms).
@@ -175,6 +178,9 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
       cámara y boleta para calibrar (K3).
     - Reglamento: los lectores del árbol ("tree readers") están prohibidos en eventos sancionados; la app no da
       la salida ni avisa nada en vivo, solo mide después. En un evento sancionado, avisar al director técnico.
+    - Selectores (`.seg`) de toda la app: la marca que se desliza va a la posición y al ancho del botón elegido
+      (`marcaSeg` en app.js pone `--seg-x`/`--seg-w`). Antes suponía botones iguales y con textos largos
+      ("Atmosférico", "Automático" a 320 px) quedaba corrida; camara_test.py (H) lo revisa en todas las pestañas.
 
 ```
 index.html, sw.js, manifest.webmanifest, icon-*.png   ← lo publicado (generado, no editar a mano)

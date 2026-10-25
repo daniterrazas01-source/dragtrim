@@ -22,6 +22,8 @@ Fusión (sesgo aprendido -2.1 ms de 5): 16/16 fusionadas, error 3.0 ± 6.0 ms, p
   bien  rollout 0: misma reacción por cámara (6/6): 1.00 (meta ≥ 1)
   bien  CSV → reanalizar: misma RT (s): 0.00 (meta ≤ 0.000001)
   bien  árbol Pro .370/.350: verde usada y reacciones bien (4/4): 1.00 (meta ≥ 1)
+  bien  árbol elegido correcto: igual que leyendo los dos tipos (6/6): 1.00 (meta ≥ 1)
+  bien  árbol elegido equivocado: lee el otro y avisa (6/6): 1.00 (meta ≥ 1)
   bien  roja con RT −0.05 (6/6): 1.00 (meta ≥ 1)
 
 Todo cumple.

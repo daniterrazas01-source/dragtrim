@@ -128,7 +128,7 @@ with sync_playwright() as p:
         txt = pg.locator('.cam-prueba').inner_text()
         import re
         m = re.search(r'verde (\d\.\d{3}) s', txt)
-        ok('Full .5' in txt and m and abs(float(m.group(1)) - 0.5) <= 0.034, f"modo prueba: {txt}")
+        ok('Full .500' in txt and m and abs(float(m.group(1)) - 0.5) <= 0.034, f"modo prueba: {txt}")
     except Exception as ex:
         ok(False, f'modo prueba no leyó el árbol ({ex})')
     cal = pg.locator('.cam-calidad').inner_text()

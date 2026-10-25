@@ -216,8 +216,6 @@ a.ghost.boton { display: block; text-align: center; text-decoration: none; }
 .cam-cal p { margin: 6px 0; font-size: 14px; color: var(--chalk-dim); }
 .cam-cal p b { color: var(--chalk); }
 .cam-cal .ghost { margin-top: 6px; padding: 10px 14px; }
-/* "Automático" es más largo que "Pro .4": columnas según el texto (a 320 px se salía del botón) */
-#segCamArbol { grid-auto-columns: auto; }
 /* en el Semáforo los valores son largos ("640×360, 48.1 cuadros/s…"): las dos columnas se reparten y el valor también parte renglón */
 .quality.cam-res dl { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); }
 .quality.cam-res dd { white-space: normal; }
@@ -522,12 +520,14 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   .seg:has(> button:nth-child(3)) { --n: 3; }
   .seg:has(> button:nth-child(2)[aria-checked="true"]) { --i: 1; }
   .seg:has(> button:nth-child(3)[aria-checked="true"]) { --i: 2; }
+  /* app.js pone --seg-x/--seg-w con la posición y el ancho del botón elegido (un texto largo como "Atmosférico"
+     hace un botón más ancho); sin ellas, botones iguales. Se desliza solo después de la primera medida. */
   .seg::before {
-    content: ""; position: absolute; top: 4px; bottom: 4px; left: 4px; border-radius: 9px; background: var(--chalk);
-    width: calc((100% - 8px - (var(--n) - 1) * 4px) / var(--n));
-    transform: translateX(calc(var(--i) * (100% + 4px)));
-    transition: transform .32s var(--ease-out), opacity .2s;
+    content: ""; position: absolute; top: 4px; bottom: 4px; left: 0; border-radius: 9px; background: var(--chalk);
+    width: var(--seg-w, calc((100% - 8px - (var(--n) - 1) * 4px) / var(--n)));
+    transform: translateX(var(--seg-x, calc(4px + var(--i) * (100% + 4px))));
   }
+  .seg.seg-listo::before { transition: transform .32s var(--ease-out), width .32s var(--ease-out), opacity .2s; }
   .seg:not(:has(> button[aria-checked="true"]))::before { opacity: 0; }
   .seg button { position: relative; z-index: 1; }
   .seg button[aria-checked="true"] { background: transparent; }

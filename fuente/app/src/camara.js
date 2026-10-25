@@ -397,7 +397,7 @@
             // solo secuencias que ya terminaron hace ≥ 0.5 s (no se muestra nada "en vivo")
             const s = r.filter((x) => isFin(x.t_ambar_ref) && (isFin(x.t_verde_vista) ? x.t_verde_vista : x.t_ambar_ref + (x.delta_s || 0.4)) < tB - 0.5).pop();
             if (s) {
-              const nom = s.tipo === 'full' ? 'Full .5' : 'Pro .4';
+              const nom = s.tipo === 'full' ? 'Full .500' : 'Pro .400';
               textoPrueba = isFin(s.t_verde_vista) ? `Vi un árbol ${nom} en el carril ${LADO_TXT[carril]}: último ámbar → verde ${(s.t_verde_vista - s.t_ambar_ref).toFixed(3)} s` +
                 (isFin(s.s_ambar) ? ` (±${Math.max(1, Math.round(1000 * Math.hypot(s.s_ambar, s.s_verde || 0)))} ms)` : '') : `Vi un árbol ${nom} en el carril ${LADO_TXT[carril]}, sin la verde.`;
               prueba.textContent = 'Modo prueba: ' + textoPrueba;

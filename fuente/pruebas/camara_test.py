@@ -311,6 +311,40 @@ with sync_playwright() as p:
         ok(top['height'] < 90, f"G: encabezado con el chip Cám cabe ({top['height']:.0f} px a {nombre})")
         pg.screenshot(path=str(CAPT / f'camara_medir_{nombre}.png'), full_page=True)
         ctx.close()
+
+    # ---------------- H: árbol Pro .400 / Full .500 y la marca de los selectores sobre el botón elegido
+    MARCA = r"""() => [...document.querySelectorAll('.seg')].filter(s => s.offsetParent).map(s => {
+      const bs = [...s.querySelectorAll(':scope > button')], sel = bs.findIndex(b => b.getAttribute('aria-checked') === 'true');
+      if (sel < 0) return { id: s.id, err: 0 };
+      const cs = getComputedStyle(s, '::before'), r = s.getBoundingClientRect(), m = new DOMMatrixReadOnly(cs.transform === 'none' ? undefined : cs.transform);
+      const x = r.left + s.clientLeft + parseFloat(cs.left) + m.m41, w = parseFloat(cs.width), bb = bs[sel].getBoundingClientRect();
+      return { id: s.id, err: Math.max(Math.abs(x - bb.left), Math.abs(x + w - bb.right)) }; })"""
+    for w in (320, 390):
+        ctx = b.new_context(viewport={'width': w, 'height': 800}, color_scheme='dark')
+        ctx.add_init_script(f"localStorage.setItem('dragtrim.settings', {json.dumps(json.dumps(dict(AJUSTES, cam_arbol='auto', fondo='combinado_rojo')))});"
+                            "localStorage.setItem('dragtrim.practica.cfg', JSON.stringify({ arbol: 'full' }));")
+        pg = ctx.new_page(); errores = []; pg.on('pageerror', lambda e: errores.append(str(e)))
+        pg.goto(URL); pg.wait_for_timeout(700)
+        if w == 320:
+            txt = pg.locator('#segCamArbol button').all_inner_texts()
+            ok(txt == ['Pro .400', 'Full .500'], f'H: el árbol solo ofrece Pro .400 y Full .500 {txt}')
+            sel = pg.locator('#segCamArbol button[aria-checked="true"]').inner_text()
+            guard = pg.evaluate("JSON.parse(localStorage.getItem('dragtrim.settings')).cam_arbol")
+            ok(sel == 'Full .500' and guard == 'full', f'H: quien tenía "Automático" toma el árbol de Práctica ({sel}, guardado {guard})')
+        malos = []
+        for v in ['pro', 'full', 'pro', 'full']:
+            pg.click(f'#segCamArbol button[data-v="{v}"]'); pg.wait_for_timeout(450)
+            malos += [f"{x['id']} {x['err']:.1f}px" for x in pg.evaluate(MARCA) if x['err'] > 0.6]
+        for vista in ['vPractica', 'vCalc', 'vAjustes']:
+            pg.click(f'nav.tabs button[data-view="{vista}"]'); pg.wait_for_timeout(450)
+            malos += [f"{vista} {x['id']} {x['err']:.1f}px" for x in pg.evaluate(MARCA) if x['err'] > 0.6]
+        pg.click('nav.tabs button[data-view="vCalc"]'); pg.wait_for_timeout(300)
+        for v in ['atmos', 'nitro', 'turbo', 'atmos']:   # "Atmosférico" hace ese botón más ancho
+            pg.click(f'#segCMotor button[data-v="{v}"]'); pg.wait_for_timeout(450)
+            malos += [f"segCMotor({v}) {x['err']:.1f}px" for x in pg.evaluate(MARCA) if x['id'] == 'segCMotor' and x['err'] > 0.6]
+        ok(not malos, f'H: a {w} px la marca de cada selector cae sobre el botón elegido {malos[:4]}')
+        ok(not errores, f'H: sin errores a {w} px {errores[:3]}')
+        ctx.close()
     b.close()
 srv.shutdown()
 shutil.rmtree(raiz, ignore_errors=True)

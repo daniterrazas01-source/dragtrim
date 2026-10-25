@@ -14,11 +14,13 @@
   const DEF = { dist: 402.336, rollout_ft: 1, unidad: 'kmh', v_confirma_kmh: 50, t_confirma: 8, usar_acc: true, tema: 'auto', anim: true, fondo: 'combinado', velo: '0.78',
     // Semáforo con cámara (beta 0.6): zona del árbol por carril (normalizada al cuadro orig), cámara física elegida,
     // retraso cámara↔giroscopio medido por carril (últimos valores), sesgo del acelerómetro y correcciones con boleta (ms)
-    cam: false, cam_arbol: 'auto', cam_zona: { izq: null, der: null }, cam_orig: null, cam_camara: null, cam_info: null,
+    cam: false, cam_arbol: 'pro', cam_zona: { izq: null, der: null }, cam_orig: null, cam_camara: null, cam_info: null,
     cam_delta: { izq: [], der: [] }, cam_sesgo_acel: null, cam_ajuste: { camara_ms: 0, acel_ms: 0 }, cam_cuadros: true, cam_carril: 'izq' };
   const S = Object.assign({}, DEF, LS.get('dragtrim.settings', {}));
   for (const k of ['cam_zona', 'cam_delta', 'cam_ajuste']) S[k] = Object.assign({}, DEF[k], S[k] || {});
   const guardarAjustes = () => LS.set('dragtrim.settings', S);
+  // Árbol de la pista: Pro .400 o Full .500 (ya no hay "Automático"; quien lo tenía toma el de Práctica)
+  if (S.cam_arbol !== 'pro' && S.cam_arbol !== 'full') { S.cam_arbol = LS.get('dragtrim.practica.cfg', {}).arbol === 'full' ? 'full' : 'pro'; guardarAjustes(); }
 
   function cfgActual() {
     return {
@@ -464,7 +466,7 @@
     let cuadros = null, giro = null, info = ses.camInfo || {};
     if (ses.demo) {
       if (!window.SemaforoSim || !ses.demoSim) return null;
-      const rt = 0.02 + 0.45 * Math.random(), tipo = S.cam_arbol === 'full' ? 'full' : S.cam_arbol === 'pro' ? 'pro' : (Math.random() < 0.5 ? 'pro' : 'full');
+      const rt = 0.02 + 0.45 * Math.random(), tipo = S.cam_arbol === 'full' ? 'full' : 'pro';
       const sim = SemaforoSim.simular(SemaforoSim.desdeSesion(ses.demoSim, { rt_s: rt, tipo, carril, fps: 60, seed: Math.floor(Math.random() * 1e6),
         lat_imu_s: 0, t_inicio: ses.demoSim.verdad.t_ro_abs - 6.5, t_fin: ses.demoSim.verdad.t_ro_abs + 1.2 }));
       cuadros = sim.cuadros; giro = sim.giro;
@@ -710,6 +712,7 @@
   }
   function avisoCam(a) {
     if (/^intervalo /.test(a)) return `El árbol de esta pista tardó ${a.slice(10)} s del último ámbar a la verde.`;
+    if (/^otro_arbol /.test(a)) return `Se leyó un árbol ${a.slice(11) === 'full' ? 'Full .500' : 'Pro .400'}, no el que elegiste: revisa cuál usa la pista.`;
     return ({ carril_dudoso: 'Parece que corriste en el otro carril: revisa con "Cambiar carril".',
               flancos_debiles: 'Los focos se veían débiles (sol de frente o árbol lejos): lectura menos segura.',
               stage_movido: 'La imagen se movió justo al salir: el final de tu reacción se tomó del acelerómetro.',
@@ -726,7 +729,7 @@
     const otroCarril = c.cfg && c.cfg.carril === 'der' ? 'izq' : 'der';
     const acciones = c.tiene_datos ? `
         <button class="ghost" id="rCamCarril">Cambiar a carril ${LADO[otroCarril]}</button>
-        ${sec && sec.ok ? `<button class="ghost" id="rCamArbol">Leer como ${sec.tipo === 'full' ? 'Pro .4' : 'Full .5'}</button>` : ''}` : '';
+        ${sec && sec.ok ? `<button class="ghost" id="rCamArbol">Leer como ${sec.tipo === 'full' ? 'Pro .400' : 'Full .500'}</button>` : ''}` : '';
     const b = run.boleta || {};
     const vb = (x) => (isFin(x) ? String(x) : '');
     const boleta = `
@@ -772,7 +775,7 @@
         <div class="quality cam-res">
           <h3 style="margin-top:10px">Semáforo <span class="beta-tag">beta</span></h3>
           <dl>
-            ${fila('Árbol', `${sec.tipo === 'full' ? 'Full .5' : 'Pro .4'}, carril ${LADO[c.cfg.carril] || '—'}`)}
+            ${fila('Árbol', `${sec.tipo === 'full' ? 'Full .500' : 'Pro .400'}, carril ${LADO[c.cfg.carril] || '—'}`)}
             ${sec.delta_fuente === 'medido' ? fila('Último ámbar → verde', `${sec.delta_s.toFixed(3)} s`) : ''}
             ${fila('Fin de tu reacción', esc(metodo))}
             ${fila('Hora de cada cuadro', c.reloj && c.reloj.fuente === 'cap' ? 'de la cámara' : 'calculada')}
@@ -1133,6 +1136,26 @@
   seg('segDist', 'dist', Number);
   seg('segUnidad', 'unidad', String);
   seg('segTema', 'tema', String);
+  // La marca que se desliza en los selectores (todos, también Práctica y Calcular) va a la posición y el ancho del botón
+  // elegido: con un texto largo ("Atmosférico", "Automático" a 320 px) los botones no miden lo mismo y la marca, que
+  // los suponía iguales, quedaba corrida.
+  function marcaSeg(s) {
+    const b = s && s.querySelector(':scope > button[aria-checked="true"]');
+    if (!b || !b.offsetWidth) return;
+    const rb = b.getBoundingClientRect(), rs = s.getBoundingClientRect();   // con fracciones de píxel (offsetLeft redondea)
+    s.style.setProperty('--seg-x', (rb.left - rs.left - s.clientLeft).toFixed(2) + 'px');   // desde el borde interior
+    s.style.setProperty('--seg-w', rb.width.toFixed(2) + 'px');
+    if (!s.classList.contains('seg-listo')) requestAnimationFrame(() => s.classList.add('seg-listo'));   // se desliza después de la 1.ª medida
+  }
+  if (window.ResizeObserver && window.MutationObserver) {
+    const ro = new ResizeObserver((es) => es.forEach((e) => marcaSeg(e.target.closest('.seg'))));
+    const mo = new MutationObserver((ms) => ms.forEach((m) => marcaSeg(m.target.closest && m.target.closest('.seg'))));
+    document.querySelectorAll('.seg').forEach((s) => {
+      ro.observe(s); s.querySelectorAll(':scope > button').forEach((b) => ro.observe(b));
+      mo.observe(s, { subtree: true, attributes: true, attributeFilter: ['aria-checked'] });
+      marcaSeg(s);
+    });
+  }
   // ------------------------------------------------------------ fondos de pantalla (estilo sticker)
   const FONDOS = [
     { id: 'combinado', nombre: 'Combinado', acento: '#d4ff00' },

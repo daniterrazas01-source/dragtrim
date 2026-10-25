@@ -154,6 +154,24 @@ function desfTodo(a) { return Object.assign({}, a, { t: a.t.map((x) => x + LAT_I
   }
   meta(`árbol Pro .370/.350: verde usada y reacciones bien (${bien}/${n})`, bien / n, 1, '>=');
 }
+// 5c) Árbol elegido en Medir (Pro .400 o Full .500): con el correcto da lo mismo que leyendo los dos tipos; con el
+//     equivocado se lee el otro y se avisa ('otro_arbol'), con la misma reacción
+{
+  let n = 0, igual = 0, avisa = 0;
+  for (let k = 60; k < 66; k++) {
+    const tipo = k % 3 ? 'pro' : 'full', otro = tipo === 'pro' ? 'full' : 'pro';   // el mismo tipo que arma caso()
+    const c = caso(k);
+    if (!(c.A.rt && c.A.rt.ok)) continue;
+    n++;
+    const bien = S.analizar(c.r.cuadros, Object.assign({}, c.ctx, { arbol: tipo }));
+    const mal = S.analizar(c.r.cuadros, Object.assign({}, c.ctx, { arbol: otro }));
+    const av = (A) => (A.sec && A.sec.avisos) || [];
+    if (bien.rt && bien.rt.ok && Math.abs(bien.rt.rt_boleta - c.A.rt.rt_boleta) < 1e-6 && !av(bien).some((a) => /^otro_arbol/.test(a))) igual++;
+    if (mal.rt && mal.rt.ok && mal.sec.tipo === tipo && av(mal).includes('otro_arbol ' + tipo) && Math.abs(mal.rt.rt_boleta - c.A.rt.rt_boleta) < 1e-6) avisa++;
+  }
+  meta(`árbol elegido correcto: igual que leyendo los dos tipos (${igual}/${n})`, n ? igual / n : 0, 1, '>=');
+  meta(`árbol elegido equivocado: lee el otro y avisa (${avisa}/${n})`, n ? avisa / n : 0, 1, '>=');
+}
 // 6) Luz roja con RT de −0.05
 {
   let roja = 0, n = 0;

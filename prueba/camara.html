@@ -3104,7 +3104,17 @@ video.oculto { position: fixed; left: 0; top: 0; width: 2px; height: 2px; opacit
     if (!rasgos || !(rasgos.n > 0)) return secuenciaVacia('sin_arbol', carril, fuente);
     const base = { arbol: o.arbol, L_ref: o.L_ref, cfg, hora_quieto: o.hora_quieto };
     // sin L_ref se queda la última secuencia completa
-    const una = (c) => { const l = secuencias(rasgos, disp, Object.assign({ carril: c, carril_fuente: fuente }, base)); return l.length ? l[l.length - 1] : secuenciaVacia('sin_secuencia', c, fuente); };
+    const una0 = (c, arbol) => { const l = secuencias(rasgos, disp, Object.assign({ carril: c, carril_fuente: fuente }, base, { arbol })); return l.length ? l[l.length - 1] : secuenciaVacia('sin_secuencia', c, fuente); };
+    // El árbol elegido (Pro o Full) manda. Si con él no se lee nada, se prueba el otro y se avisa: un Pro necesita los
+    // ámbares juntos y un Full escalonados cada 0.5 s, así que uno no se lee como el otro (se te olvidó cambiarlo).
+    const una = (c) => {
+      const s = una0(c, o.arbol);
+      if (s.ok || (o.arbol !== 'pro' && o.arbol !== 'full')) return s;
+      const s2 = una0(c, o.arbol === 'pro' ? 'full' : 'pro');
+      if (!s2.ok) return s;
+      s2.avisos.push('otro_arbol ' + s2.tipo);
+      return s2;
+    };
     const sec = una(carril), otra = una(otroCarril(carril));
     delete otra.candidatos; otra.otra = null;
     sec.otra = otra || null;
@@ -3358,7 +3368,9 @@ video.oculto { position: fixed; left: 0; top: 0; width: 2px; height: 2px; opacit
       const evOn = V.eventos(cuadros, mov, { kA: bA, kB: bB, signo: +1, cfg });
       // manchas fijas (pre-stage y stage) en la ventana que elija la visión: [τ − 0.25, τ − 0.05]
       const fijas = (tA, tB) => V.manchasFijas(cuadros, mov, { tA, tB, cfg });
-      const disp = V.localizar(evOn, fijas, { carril: ctx.carril, arbol: ctx.arbol || 'auto', L_ref, hora_quieto: ctx.hora_quieto, cfg, cuadros, mov, T });
+      // El árbol se ubica en la imagen sea Pro o Full (así está probado); el tipo elegido solo decide qué secuencia se lee
+      // (buscarSecuencia): con el tipo equivocado tampoco se encontraba el árbol y no había cómo leer el otro.
+      const disp = V.localizar(evOn, fijas, { carril: ctx.carril, arbol: 'auto', L_ref, hora_quieto: ctx.hora_quieto, cfg, cuadros, mov, T });
       res.disp = disp;
       if (!tieneFocos(disp)) {
         // ¿quedó fuera de la zona? localización gruesa con la vista general
@@ -3367,7 +3379,7 @@ video.oculto { position: fixed; left: 0; top: 0; width: 2px; height: 2px; opacit
           try {
             const vt = vg.t, va = buscarIdx(vt, L_ref + W.buscar[0]), vb = Math.min(vg.n - 1, buscarIdx(vt, L_ref + W.buscar[1]));
             const ev2 = V.eventos(vg, null, { kA: va, kB: vb, signo: +1, cfg });
-            const d2 = V.localizar(ev2, [], { carril: ctx.carril, arbol: ctx.arbol || 'auto', L_ref, hora_quieto: ctx.hora_quieto, cfg, general: true });
+            const d2 = V.localizar(ev2, [], { carril: ctx.carril, arbol: 'auto', L_ref, hora_quieto: ctx.hora_quieto, cfg, general: true });
             if (d2 && d2.ok) { res.disp_general = d2; return fin('fuera_de_zona'); }
           } catch (e) { /* sin vista útil */ }
         }

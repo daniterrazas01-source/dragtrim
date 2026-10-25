@@ -232,8 +232,6 @@ a.ghost.boton { display: block; text-align: center; text-decoration: none; }
 .cam-cal p { margin: 6px 0; font-size: 14px; color: var(--chalk-dim); }
 .cam-cal p b { color: var(--chalk); }
 .cam-cal .ghost { margin-top: 6px; padding: 10px 14px; }
-/* "Automático" es más largo que "Pro .4": columnas según el texto (a 320 px se salía del botón) */
-#segCamArbol { grid-auto-columns: auto; }
 /* en el Semáforo los valores son largos ("640×360, 48.1 cuadros/s…"): las dos columnas se reparten y el valor también parte renglón */
 .quality.cam-res dl { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); }
 .quality.cam-res dd { white-space: normal; }
@@ -538,12 +536,14 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   .seg:has(> button:nth-child(3)) { --n: 3; }
   .seg:has(> button:nth-child(2)[aria-checked="true"]) { --i: 1; }
   .seg:has(> button:nth-child(3)[aria-checked="true"]) { --i: 2; }
+  /* app.js pone --seg-x/--seg-w con la posición y el ancho del botón elegido (un texto largo como "Atmosférico"
+     hace un botón más ancho); sin ellas, botones iguales. Se desliza solo después de la primera medida. */
   .seg::before {
-    content: ""; position: absolute; top: 4px; bottom: 4px; left: 4px; border-radius: 9px; background: var(--chalk);
-    width: calc((100% - 8px - (var(--n) - 1) * 4px) / var(--n));
-    transform: translateX(calc(var(--i) * (100% + 4px)));
-    transition: transform .32s var(--ease-out), opacity .2s;
+    content: ""; position: absolute; top: 4px; bottom: 4px; left: 0; border-radius: 9px; background: var(--chalk);
+    width: var(--seg-w, calc((100% - 8px - (var(--n) - 1) * 4px) / var(--n)));
+    transform: translateX(var(--seg-x, calc(4px + var(--i) * (100% + 4px))));
   }
+  .seg.seg-listo::before { transition: transform .32s var(--ease-out), width .32s var(--ease-out), opacity .2s; }
   .seg:not(:has(> button[aria-checked="true"]))::before { opacity: 0; }
   .seg button { position: relative; z-index: 1; }
   .seg button[aria-checked="true"] { background: transparent; }
@@ -706,9 +706,8 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
         <div id="camOpciones" hidden>
           <span class="lab cam-lab">Árbol</span>
           <div class="seg" role="radiogroup" aria-label="Árbol de la pista" id="segCamArbol">
-            <button role="radio" data-v="auto">Automático</button>
-            <button role="radio" data-v="pro">Pro .4</button>
-            <button role="radio" data-v="full">Full .5</button>
+            <button role="radio" data-v="pro">Pro .400</button>
+            <button role="radio" data-v="full">Full .500</button>
           </div>
           <p class="msg cam-estado" id="camEstado"></p>
           <button class="ghost" id="btnApuntar">Apuntar la cámara</button>
@@ -4711,7 +4710,17 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     if (!rasgos || !(rasgos.n > 0)) return secuenciaVacia('sin_arbol', carril, fuente);
     const base = { arbol: o.arbol, L_ref: o.L_ref, cfg, hora_quieto: o.hora_quieto };
     // sin L_ref se queda la última secuencia completa
-    const una = (c) => { const l = secuencias(rasgos, disp, Object.assign({ carril: c, carril_fuente: fuente }, base)); return l.length ? l[l.length - 1] : secuenciaVacia('sin_secuencia', c, fuente); };
+    const una0 = (c, arbol) => { const l = secuencias(rasgos, disp, Object.assign({ carril: c, carril_fuente: fuente }, base, { arbol })); return l.length ? l[l.length - 1] : secuenciaVacia('sin_secuencia', c, fuente); };
+    // El árbol elegido (Pro o Full) manda. Si con él no se lee nada, se prueba el otro y se avisa: un Pro necesita los
+    // ámbares juntos y un Full escalonados cada 0.5 s, así que uno no se lee como el otro (se te olvidó cambiarlo).
+    const una = (c) => {
+      const s = una0(c, o.arbol);
+      if (s.ok || (o.arbol !== 'pro' && o.arbol !== 'full')) return s;
+      const s2 = una0(c, o.arbol === 'pro' ? 'full' : 'pro');
+      if (!s2.ok) return s;
+      s2.avisos.push('otro_arbol ' + s2.tipo);
+      return s2;
+    };
     const sec = una(carril), otra = una(otroCarril(carril));
     delete otra.candidatos; otra.otra = null;
     sec.otra = otra || null;
@@ -4965,7 +4974,9 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
       const evOn = V.eventos(cuadros, mov, { kA: bA, kB: bB, signo: +1, cfg });
       // manchas fijas (pre-stage y stage) en la ventana que elija la visión: [τ − 0.25, τ − 0.05]
       const fijas = (tA, tB) => V.manchasFijas(cuadros, mov, { tA, tB, cfg });
-      const disp = V.localizar(evOn, fijas, { carril: ctx.carril, arbol: ctx.arbol || 'auto', L_ref, hora_quieto: ctx.hora_quieto, cfg, cuadros, mov, T });
+      // El árbol se ubica en la imagen sea Pro o Full (así está probado); el tipo elegido solo decide qué secuencia se lee
+      // (buscarSecuencia): con el tipo equivocado tampoco se encontraba el árbol y no había cómo leer el otro.
+      const disp = V.localizar(evOn, fijas, { carril: ctx.carril, arbol: 'auto', L_ref, hora_quieto: ctx.hora_quieto, cfg, cuadros, mov, T });
       res.disp = disp;
       if (!tieneFocos(disp)) {
         // ¿quedó fuera de la zona? localización gruesa con la vista general
@@ -4974,7 +4985,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
           try {
             const vt = vg.t, va = buscarIdx(vt, L_ref + W.buscar[0]), vb = Math.min(vg.n - 1, buscarIdx(vt, L_ref + W.buscar[1]));
             const ev2 = V.eventos(vg, null, { kA: va, kB: vb, signo: +1, cfg });
-            const d2 = V.localizar(ev2, [], { carril: ctx.carril, arbol: ctx.arbol || 'auto', L_ref, hora_quieto: ctx.hora_quieto, cfg, general: true });
+            const d2 = V.localizar(ev2, [], { carril: ctx.carril, arbol: 'auto', L_ref, hora_quieto: ctx.hora_quieto, cfg, general: true });
             if (d2 && d2.ok) { res.disp_general = d2; return fin('fuera_de_zona'); }
           } catch (e) { /* sin vista útil */ }
         }
@@ -6744,7 +6755,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
             // solo secuencias que ya terminaron hace ≥ 0.5 s (no se muestra nada "en vivo")
             const s = r.filter((x) => isFin(x.t_ambar_ref) && (isFin(x.t_verde_vista) ? x.t_verde_vista : x.t_ambar_ref + (x.delta_s || 0.4)) < tB - 0.5).pop();
             if (s) {
-              const nom = s.tipo === 'full' ? 'Full .5' : 'Pro .4';
+              const nom = s.tipo === 'full' ? 'Full .500' : 'Pro .400';
               textoPrueba = isFin(s.t_verde_vista) ? `Vi un árbol ${nom} en el carril ${LADO_TXT[carril]}: último ámbar → verde ${(s.t_verde_vista - s.t_ambar_ref).toFixed(3)} s` +
                 (isFin(s.s_ambar) ? ` (±${Math.max(1, Math.round(1000 * Math.hypot(s.s_ambar, s.s_verde || 0)))} ms)` : '') : `Vi un árbol ${nom} en el carril ${LADO_TXT[carril]}, sin la verde.`;
               prueba.textContent = 'Modo prueba: ' + textoPrueba;
@@ -6846,11 +6857,13 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   const DEF = { dist: 402.336, rollout_ft: 1, unidad: 'kmh', v_confirma_kmh: 50, t_confirma: 8, usar_acc: true, tema: 'auto', anim: true, fondo: 'combinado', velo: '0.78',
     // Semáforo con cámara (beta 0.6): zona del árbol por carril (normalizada al cuadro orig), cámara física elegida,
     // retraso cámara↔giroscopio medido por carril (últimos valores), sesgo del acelerómetro y correcciones con boleta (ms)
-    cam: false, cam_arbol: 'auto', cam_zona: { izq: null, der: null }, cam_orig: null, cam_camara: null, cam_info: null,
+    cam: false, cam_arbol: 'pro', cam_zona: { izq: null, der: null }, cam_orig: null, cam_camara: null, cam_info: null,
     cam_delta: { izq: [], der: [] }, cam_sesgo_acel: null, cam_ajuste: { camara_ms: 0, acel_ms: 0 }, cam_cuadros: true, cam_carril: 'izq' };
   const S = Object.assign({}, DEF, LS.get('dragtrim.settings', {}));
   for (const k of ['cam_zona', 'cam_delta', 'cam_ajuste']) S[k] = Object.assign({}, DEF[k], S[k] || {});
   const guardarAjustes = () => LS.set('dragtrim.settings', S);
+  // Árbol de la pista: Pro .400 o Full .500 (ya no hay "Automático"; quien lo tenía toma el de Práctica)
+  if (S.cam_arbol !== 'pro' && S.cam_arbol !== 'full') { S.cam_arbol = LS.get('dragtrim.practica.cfg', {}).arbol === 'full' ? 'full' : 'pro'; guardarAjustes(); }
 
   function cfgActual() {
     return {
@@ -7296,7 +7309,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     let cuadros = null, giro = null, info = ses.camInfo || {};
     if (ses.demo) {
       if (!window.SemaforoSim || !ses.demoSim) return null;
-      const rt = 0.02 + 0.45 * Math.random(), tipo = S.cam_arbol === 'full' ? 'full' : S.cam_arbol === 'pro' ? 'pro' : (Math.random() < 0.5 ? 'pro' : 'full');
+      const rt = 0.02 + 0.45 * Math.random(), tipo = S.cam_arbol === 'full' ? 'full' : 'pro';
       const sim = SemaforoSim.simular(SemaforoSim.desdeSesion(ses.demoSim, { rt_s: rt, tipo, carril, fps: 60, seed: Math.floor(Math.random() * 1e6),
         lat_imu_s: 0, t_inicio: ses.demoSim.verdad.t_ro_abs - 6.5, t_fin: ses.demoSim.verdad.t_ro_abs + 1.2 }));
       cuadros = sim.cuadros; giro = sim.giro;
@@ -7542,6 +7555,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   }
   function avisoCam(a) {
     if (/^intervalo /.test(a)) return `El árbol de esta pista tardó ${a.slice(10)} s del último ámbar a la verde.`;
+    if (/^otro_arbol /.test(a)) return `Se leyó un árbol ${a.slice(11) === 'full' ? 'Full .500' : 'Pro .400'}, no el que elegiste: revisa cuál usa la pista.`;
     return ({ carril_dudoso: 'Parece que corriste en el otro carril: revisa con "Cambiar carril".',
               flancos_debiles: 'Los focos se veían débiles (sol de frente o árbol lejos): lectura menos segura.',
               stage_movido: 'La imagen se movió justo al salir: el final de tu reacción se tomó del acelerómetro.',
@@ -7558,7 +7572,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     const otroCarril = c.cfg && c.cfg.carril === 'der' ? 'izq' : 'der';
     const acciones = c.tiene_datos ? `
         <button class="ghost" id="rCamCarril">Cambiar a carril ${LADO[otroCarril]}</button>
-        ${sec && sec.ok ? `<button class="ghost" id="rCamArbol">Leer como ${sec.tipo === 'full' ? 'Pro .4' : 'Full .5'}</button>` : ''}` : '';
+        ${sec && sec.ok ? `<button class="ghost" id="rCamArbol">Leer como ${sec.tipo === 'full' ? 'Pro .400' : 'Full .500'}</button>` : ''}` : '';
     const b = run.boleta || {};
     const vb = (x) => (isFin(x) ? String(x) : '');
     const boleta = `
@@ -7604,7 +7618,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
         <div class="quality cam-res">
           <h3 style="margin-top:10px">Semáforo <span class="beta-tag">beta</span></h3>
           <dl>
-            ${fila('Árbol', `${sec.tipo === 'full' ? 'Full .5' : 'Pro .4'}, carril ${LADO[c.cfg.carril] || '—'}`)}
+            ${fila('Árbol', `${sec.tipo === 'full' ? 'Full .500' : 'Pro .400'}, carril ${LADO[c.cfg.carril] || '—'}`)}
             ${sec.delta_fuente === 'medido' ? fila('Último ámbar → verde', `${sec.delta_s.toFixed(3)} s`) : ''}
             ${fila('Fin de tu reacción', esc(metodo))}
             ${fila('Hora de cada cuadro', c.reloj && c.reloj.fuente === 'cap' ? 'de la cámara' : 'calculada')}
@@ -7965,6 +7979,26 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   seg('segDist', 'dist', Number);
   seg('segUnidad', 'unidad', String);
   seg('segTema', 'tema', String);
+  // La marca que se desliza en los selectores (todos, también Práctica y Calcular) va a la posición y el ancho del botón
+  // elegido: con un texto largo ("Atmosférico", "Automático" a 320 px) los botones no miden lo mismo y la marca, que
+  // los suponía iguales, quedaba corrida.
+  function marcaSeg(s) {
+    const b = s && s.querySelector(':scope > button[aria-checked="true"]');
+    if (!b || !b.offsetWidth) return;
+    const rb = b.getBoundingClientRect(), rs = s.getBoundingClientRect();   // con fracciones de píxel (offsetLeft redondea)
+    s.style.setProperty('--seg-x', (rb.left - rs.left - s.clientLeft).toFixed(2) + 'px');   // desde el borde interior
+    s.style.setProperty('--seg-w', rb.width.toFixed(2) + 'px');
+    if (!s.classList.contains('seg-listo')) requestAnimationFrame(() => s.classList.add('seg-listo'));   // se desliza después de la 1.ª medida
+  }
+  if (window.ResizeObserver && window.MutationObserver) {
+    const ro = new ResizeObserver((es) => es.forEach((e) => marcaSeg(e.target.closest('.seg'))));
+    const mo = new MutationObserver((ms) => ms.forEach((m) => marcaSeg(m.target.closest && m.target.closest('.seg'))));
+    document.querySelectorAll('.seg').forEach((s) => {
+      ro.observe(s); s.querySelectorAll(':scope > button').forEach((b) => ro.observe(b));
+      mo.observe(s, { subtree: true, attributes: true, attributeFilter: ['aria-checked'] });
+      marcaSeg(s);
+    });
+  }
   // ------------------------------------------------------------ fondos de pantalla (estilo sticker)
   const FONDOS = [
     { id: 'combinado', nombre: 'Combinado', acento: '#d4ff00' },
