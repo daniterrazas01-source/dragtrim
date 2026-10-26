@@ -23,5 +23,9 @@ calcomanía; al retomar, preguntarle qué partes no coinciden.
   - `logo_b.svg`: igual con "Drag" / "ree" en minúsculas como en su imagen.
   - `logo_c.svg`: compacto, DRAG a todo lo ancho (pensado para el encabezado de la app).
   - `*_blanco.svg` para fondo oscuro; `hoja_claro.png` / `hoja_oscuro.png` las tres juntas.
-- Falta: que Daniel elija y diga qué cambiar; luego pasarlo al encabezado y a los íconos de la app.
+- **Daniel eligió la C** (26 oct) con dos cambios → `logo_c2.svg` / `logo_c2_blanco.svg` (`hoja_c2.png`): el árbol
+  inclinado al lado contrario de la letra y con colores: foquitos del pre-stage y del stage amarillos, dos filas ámbar,
+  verde y rojo (cada foco con un aro del color del árbol, como su caja). REE se separa lo justo para no chocar con
+  ningún foco (`derecha()` en hacer_logo.py). Colores en COLORES.
+- Falta: que Daniel lo apruebe; luego pasarlo al encabezado y a los íconos de la app.
 
