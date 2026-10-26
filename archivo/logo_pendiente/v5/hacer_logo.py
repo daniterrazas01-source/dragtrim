@@ -317,7 +317,7 @@ def cursiva(txt, ancho):
     k = ancho / x
     return [(d, dx * k) for d, dx in gl], ancho, arriba * k, -abajo * k, k
 
-def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag='inter', letra_ree='inter', giro=0.0, lema=None, crece=(1.0, 1.0), giro_t=0.0, yaw=0.0, inclina_t=None, junto=0.085):
+def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag='inter', letra_ree='inter', giro=0.0, lema=None, crece=(1.0, 1.0), giro_t=0.0, yaw=0.0, inclina_t=None, junto=0.085, lema_ancho=0.78):
     """C5 (26 oct, dibujo de Daniel): la T sube y se monta un poco sobre la D y la R de DRAG (va encima, con su
     contorno); R, E, E más largas hacia abajo, hasta el pie del árbol (se estiran a lo alto sin cambiar la
     inclinación); contorno más grueso. color: DRAG; tinta_tree/contorno: TREE y su contorno."""
@@ -381,7 +381,7 @@ def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag
         if lema:
             (p1x, p1y), (p2x, p2y) = rot(pie_ree[0], Y_b), rot(pie_ree[1], Y_b)
             y_pie = lambda x: p1y + (x - p1x) * (p2y - p1y) / (p2x - p1x)   # orilla de abajo de REE, ya girada
-            glifos, ancho_l, sube_l, baja_l, k = cursiva(lema, 0.78 * (pie_ree[1] - pie_ree[0]))
+            glifos, ancho_l, sube_l, baja_l, k = cursiva(lema, lema_ancho * (pie_ree[1] - pie_ree[0]))
             xd = p2x - 0.02 * C                                              # termina bajo la última E
             xi = xd - ancho_l
             base_l = y_pie(xi) + grueso * C + 0.07 * C + sube_l              # su parte de arriba, justo bajo REE
@@ -397,10 +397,11 @@ def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag
 APP = os.path.abspath(os.path.join(AQUI, '..', '..', '..', 'fuente', 'app', 'src'))
 FINAL = dict(drag='bloque', letra_ree='cuadrada', giro=8.0, crece=(1.9, 1.15), yaw=-42.0, junto=0.03)
 def logo_app():
-    """El logo de la barra de arriba (sin el lema: ahí no se lee) con clases en vez de colores, para que la app lo pinte
-    según el tema (lg-drag, lg-tree, lg-borde) y las luces se prendan al abrir (lz lz-0 … lz-5: stage, 3 ámbar, verde, rojo)."""
+    """El logo de la barra de arriba con clases en vez de colores, para que la app lo pinte según el tema (lg-drag, lg-tree,
+    lg-borde; el lema va del color de DRAG) y las luces se prendan al abrir (lz lz-0 … lz-5: stage, 3 ámbar, verde, rojo).
+    Desde 0.6.4 (Daniel) lleva "On the mark" abajo, un poco más grande que en el logo completo para que se lea chiquito."""
     import re
-    t = logo_c5('#a1a1a1', '#b2b2b2', '#c3c3c3', 0.07, **FINAL)
+    t = logo_c5('#a1a1a1', '#b2b2b2', '#c3c3c3', 0.07, lema='On the mark', lema_ancho=0.95, **FINAL)
     t = t.replace('fill="#c3c3c3" stroke="#c3c3c3"', 'class="lg-borde"').replace('fill="#a1a1a1"', 'class="lg-drag"').replace('fill="#b2b2b2"', 'class="lg-tree"')
     luces = set(COLORES.values()); n = [0]
     def clase(m):

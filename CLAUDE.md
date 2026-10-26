@@ -74,7 +74,8 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
      blanco; todo inclinado 8° hacia arriba; abajo "On the mark" en cursiva (Mr Dafoe, OFL; la calcomanía decía "On your
      mark"). Esas dos letras de dafont son solo de uso personal: **no usar sus archivos**, las letras están dibujadas en
      `hacer_logo.py`. Para cambiar el logo: editar `hacer_logo.py` y correrlo (regenera `fuente/app/src/logo.svg` y
-     `fuente/app/src/icono/*.png`), luego build. En la app: barra de arriba sin el lema (ahí no se lee), colores por tema
+     `fuente/app/src/icono/*.png`), luego build. En la app: barra de arriba (80 px de alto; desde 0.6.4 con "On the mark" abajo, un poco más grande, y sin la etiqueta
+     "beta": Daniel la quitó y la versión ya no dice "beta"), colores por tema
      (`--logo-drag/-tree/-borde`, `.lg-*`), las luces se prenden al abrir (`.lz-0…5`); ícono = el logo en fondo #24282c
      (build.py lo toma de `src/icono/`). En iPhone el ícono ya instalado no cambia (iOS lo guarda al instalar; no pedir
      reinstalar); las instalaciones nuevas sí lo traen.
@@ -257,7 +258,7 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Publicada: **beta 0.6.3** (26 oct 2026: el logo nuevo en la barra de arriba y en el ícono, punto 6); antes **beta 0.6.2** (25 oct 2026: el semáforo con
+caché del service worker; cambiarlo fuerza la actualización). En la rama, sin publicar: **0.6.4** ("On the mark" en la barra de arriba; sin la etiqueta "beta"; la versión se llama "0.6.4" y la caché `v-0.6.4`). Publicada: **beta 0.6.3** (26 oct 2026: el logo nuevo en la barra de arriba y en el ícono, punto 6); antes **beta 0.6.2** (25 oct 2026: el semáforo con
 cámara sale de la app; fondo nuevo "Gallos" con los logos de Rooster Racing; Práctica: botón "Mantén" más chico (19vh, 300 px de ancho en solo), cuadro de la reacción compacto y más abajo, focos que caben sin tocarlo; letra tipo Rooster Racing en títulos, etiquetas, selectores, botones principales y pestañas; Práctica: Modo, Árbol, Cómo sales y Formato en un solo panel con solo la explicación de lo elegido (EXPLICA en practica.js), 892 → 648 px de alto; el contenido también junto al notch del iPhone; deslizar el dedo entre pestañas); **beta 0.6.1** (25 oct 2026: el semáforo con cámara vuelve a "en desarrollo"); 0.6 (25 oct 2026: semáforo real
 con la cámara, punto 13; trae también la 0.5.4: tarjeta Race 1 vs 1 "en desarrollo"). Antes: **beta 0.5.3** (fondo de Práctica que responde a la reacción; 0.5.2: guía para instalar; 0.5.1: nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
 algoritmo v2.3.
