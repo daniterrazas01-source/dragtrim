@@ -118,7 +118,7 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    cursor, en un deslizador ni en algo que se recorre de lado (tablas de Calcular). Bloquea el clic del dedo 400 ms
    después de soltar. Sin animaciones: cambia al soltar, sin seguir al dedo. Código al final de la navegación en app.js.
    **Pantalla de carga** (0.6.4, 26 oct, Daniel): al abrir la app, 2 s en fondo #141618 con el logo mediano (con "On the
-   mark"; las luces se prenden en orden) y abajo "By" + el logo de Rooster Racing (`fuente/app/src/carga/`, copia de
+   mark"; las luces se prenden en orden) y abajo "By" a la izquierda del logo de Rooster Racing (desde 0.6.5; `fuente/app/src/carga/`, copia de
    `archivo/originales/logo_rooster_racing.png`; build.py lo recorta y lo mete como WebP). Se desvanece 0.3 s al final
    (sin animaciones solo se quita). `#carga` en index.template.html, `.carga` en style.css, el reloj al inicio de app.js.
    **En las pruebas automáticas no sale** (`navigator.webdriver`) salvo con `?carga` (carga_test.py), así las demás pruebas
@@ -265,7 +265,7 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.6.4** (26 oct 2026: pantalla de carga de 2 s con el logo y "By Rooster Racing"; "On the mark" en la barra de arriba; sin la etiqueta "beta": la versión se llama "0.6.4" y la caché `v-0.6.4`); antes **beta 0.6.3** (26 oct 2026: el logo nuevo en la barra de arriba y en el ícono, punto 6); antes **beta 0.6.2** (25 oct 2026: el semáforo con
+caché del service worker; cambiarlo fuerza la actualización). En la rama, sin publicar: **0.6.5** (pantalla de carga: "By" a la izquierda del logo de Rooster Racing). Publicada: **0.6.4** (26 oct 2026: pantalla de carga de 2 s con el logo y "By Rooster Racing"; "On the mark" en la barra de arriba; sin la etiqueta "beta": la versión se llama "0.6.4" y la caché `v-0.6.4`); antes **beta 0.6.3** (26 oct 2026: el logo nuevo en la barra de arriba y en el ícono, punto 6); antes **beta 0.6.2** (25 oct 2026: el semáforo con
 cámara sale de la app; fondo nuevo "Gallos" con los logos de Rooster Racing; Práctica: botón "Mantén" más chico (19vh, 300 px de ancho en solo), cuadro de la reacción compacto y más abajo, focos que caben sin tocarlo; letra tipo Rooster Racing en títulos, etiquetas, selectores, botones principales y pestañas; Práctica: Modo, Árbol, Cómo sales y Formato en un solo panel con solo la explicación de lo elegido (EXPLICA en practica.js), 892 → 648 px de alto; el contenido también junto al notch del iPhone; deslizar el dedo entre pestañas); **beta 0.6.1** (25 oct 2026: el semáforo con cámara vuelve a "en desarrollo"); 0.6 (25 oct 2026: semáforo real
 con la cámara, punto 13; trae también la 0.5.4: tarjeta Race 1 vs 1 "en desarrollo"). Antes: **beta 0.5.3** (fondo de Práctica que responde a la reacción; 0.5.2: guía para instalar; 0.5.1: nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
 algoritmo v2.3.

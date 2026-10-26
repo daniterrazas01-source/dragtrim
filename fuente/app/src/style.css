@@ -520,8 +520,8 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 }
 .carga-logo { align-self: center; width: min(64vw, 300px); animation: carga-entra .45s var(--ease-out) both; }
 .carga-logo svg { display: block; width: 100%; height: auto; overflow: visible; }
-.carga-pie { display: grid; justify-items: center; gap: 2px; animation: aparece .4s .25s ease-out both; }
-.carga-pie span { font: 900 17px/1 'Rooster', var(--num); font-synthesis: none; letter-spacing: .04em; }
+.carga-pie { display: flex; align-items: center; gap: 10px; animation: aparece .4s .25s ease-out both; }   /* "By" a la izquierda del logo */
+.carga-pie span { font: 900 26px/1 'Rooster', var(--num); font-synthesis: none; letter-spacing: .02em; margin-top: 14px; }
 .carga-pie img { display: block; width: min(48vw, 200px); height: auto; }
 .carga.fuera { opacity: 0; transition: opacity .3s ease; pointer-events: none; }
 @keyframes carga-entra { from { opacity: 0; transform: scale(.92); } }

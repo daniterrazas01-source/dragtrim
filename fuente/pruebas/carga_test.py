@@ -64,7 +64,7 @@ def main():
             chk(1.9 <= t['quitada'] / 1000 <= 2.7, f"A. dura unos 2 s ({t['quitada'] / 1000:.2f} s desde que se abrió)")
             pg.click('.tabs button[data-view="vAjustes"]', timeout=2000); pg.wait_for_timeout(300)
             chk(pg.evaluate("document.querySelector('main .view:not([hidden])').id") == 'vAjustes', 'A. después la app responde')
-            chk('0.6.4' in pg.evaluate("document.getElementById('verText').textContent") and 'beta' not in pg.evaluate("document.getElementById('verText').textContent"),
+            chk('0.6.5' in pg.evaluate("document.getElementById('verText').textContent") and 'beta' not in pg.evaluate("document.getElementById('verText').textContent"),
                 'A. la versión ya no dice "beta"')
             chk(not pg.evaluate("document.querySelector('.brand .beta')"), 'A. ya no está la etiqueta "beta" arriba')
             chk(not errs, 'A. sin errores en consola: ' + '; '.join(errs))
