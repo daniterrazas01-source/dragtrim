@@ -44,5 +44,10 @@ calcomanía; al retomar, preguntarle qué partes no coinciden.
   Esa letra es gratis solo para uso personal, así que **no se usa su archivo**: D, R, A, G están dibujadas a mano en
   `_letras_bloque()` (bloques con huecos angostos y esquinas cortadas). Si Daniel consigue la licencia comercial, se
   podría usar la letra real. `logo_c6.svg`, `logo_c6_oscuro.svg`, `logo_c6_encabezado.svg`, `hoja_c6.png`.
+- **C7** (26 oct, Daniel): R, E, E con la forma de **"Platinum Sign Over"** (imagex, dafont, solo uso personal:
+  `referencias/letra_platinum_sign.jpg`), dibujadas a mano en `ree_cuadrada()` **directo a lo alto** que ya tenían (no se
+  estiran: esquinas a 45° y gruesos parejos), mismo ancho total que antes y la inclinación de la T (9.4°). R con pata
+  diagonal y esquina cortada arriba a la derecha; E con esquina cortada arriba a la izquierda. TREE sigue negro con
+  contorno blanco. `logo_c7.svg`, `logo_c7_oscuro.svg`, `logo_c7_encabezado.svg`, `hoja_c7.png`.
 - Falta: que Daniel lo apruebe; luego pasarlo al encabezado y a los íconos de la app.
 
