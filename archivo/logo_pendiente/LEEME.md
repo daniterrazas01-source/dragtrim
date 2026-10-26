@@ -69,5 +69,8 @@ calcomanía; al retomar, preguntarle qué partes no coinciden.
   `inclina_t=0`: con el giro del logo queda ~8° con la punta de arriba a la izquierda), su pie **más pegado a la R**
   (`junto=0.03`) y **42°** de giro sobre el poste (`yaw=-42`). `logo_c12.svg`, `logo_c12_oscuro.svg`,
   `logo_c12_encabezado.svg`, `hoja_c12.png`.
+- **C13** (26 oct, Daniel: "recta, sin inclinación" → "la misma inclinación que la línea de la R"): el poste de la T
+  **paralelo a la R** (la inclinación de la letra, 9.4°; con el giro del logo se ve casi derecho), 42° de giro sobre el
+  poste y pegada a la R (`junto=0.03`). `logo_c13.svg`, `logo_c13_oscuro.svg`, `logo_c13_encabezado.svg`, `hoja_c13.png`.
 - Falta: que Daniel lo apruebe; luego pasarlo al encabezado y a los íconos de la app.
 

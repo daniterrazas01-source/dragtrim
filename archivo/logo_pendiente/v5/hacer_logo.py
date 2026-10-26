@@ -435,6 +435,11 @@ if __name__ == '__main__':
     for nombre, args in (('logo_c12', ('#111', '#111', '#fff', 0.035)), ('logo_c12_oscuro', ('#fff', '#111', '#fff', 0.035)),
                          ('logo_c12_encabezado', ('#fff', '#111', '#fff', 0.08))):
         open(os.path.join(AQUI, nombre + '.svg'), 'w').write(logo_c5(*args, 'bloque', 'cuadrada', giro=8.0, lema='On the mark', crece=(1.9, 1.15), yaw=-42.0, inclina_t=0.0, junto=0.03))
+    # c13 (26 oct): c12 con el poste de la T paralelo a la R (la misma inclinación de la letra, 9.4°; con el giro del
+    # logo se ve casi derecho)
+    for nombre, args in (('logo_c13', ('#111', '#111', '#fff', 0.035)), ('logo_c13_oscuro', ('#fff', '#111', '#fff', 0.035)),
+                         ('logo_c13_encabezado', ('#fff', '#111', '#fff', 0.08))):
+        open(os.path.join(AQUI, nombre + '.svg'), 'w').write(logo_c5(*args, 'bloque', 'cuadrada', giro=8.0, lema='On the mark', crece=(1.9, 1.15), yaw=-42.0, junto=0.03))
     # c4 (26 oct): la T más grande, inclinada como la letra, tres ámbar
     open(os.path.join(AQUI, 'logo_c4.svg'), 'w').write(logo('c4', '#111'))
     open(os.path.join(AQUI, 'logo_c4_oscuro.svg'), 'w').write(logo('c4', '#fff', '#111', '#fff', 0.02))
@@ -455,12 +460,12 @@ if __name__ == '__main__':
       .barra img{{height:76px}} .chips{{font:12px system-ui;color:#ddd;background:rgba(16,16,18,.93);border:1.5px solid rgba(255,255,255,.24);
             border-radius:99px;padding:5px 9px}}
     </style><main>
-      <section><img class="g" src="logo_c12.svg"><p>En fondo blanco</p></section>
-      <section class="os"><img class="g" src="logo_c12_oscuro.svg"><p>En fondo oscuro</p></section>
+      <section><img class="g" src="logo_c13.svg"><p>En fondo blanco</p></section>
+      <section class="os"><img class="g" src="logo_c13_oscuro.svg"><p>En fondo oscuro</p></section>
       <div class="app">
-        <div><div class="tel"><div class="barra"><img src="logo_c12_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
+        <div><div class="tel"><div class="barra"><img src="logo_c13_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
           <p>Arriba en la app, con el fondo Gallos</p></div>
-        <div><div class="tel sin"><div class="barra"><img src="logo_c12_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
+        <div><div class="tel sin"><div class="barra"><img src="logo_c13_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
           <p>Arriba en la app, sin fondo</p></div>
       </div>
     </main>"""
@@ -468,6 +473,6 @@ if __name__ == '__main__':
     with sync_playwright() as p:
         b = p.chromium.launch(); pg = b.new_page(viewport={'width': 1600, 'height': 900}, device_scale_factor=1)
         pg.goto('file://' + ruta); pg.wait_for_timeout(400)
-        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c12.png')); b.close()
+        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c13.png')); b.close()
     os.remove(ruta)
     print('listo')
