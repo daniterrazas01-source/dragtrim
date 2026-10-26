@@ -31,5 +31,9 @@ calcomanía; al retomar, preguntarle qué partes no coinciden.
   árbol sea la T; poste más grueso (0.16 C). En fondo oscuro TREE (árbol + REE) va **negro con contorno blanco delgado**
   (0.02 C; el contorno rodea la figura completa: `capas()`), DRAG blanco. `logo_c3.svg` (claro), `logo_c3_oscuro.svg`,
   `logo_c3_encabezado.svg` (contorno 0.06 C para que a 60 px de alto se vea de ~1 px), `hoja_c3.png`.
+- **C4** (26 oct, Daniel): la T **más grande** (×1.22 en anchos y focos), **inclinada como la letra** otra vez y con
+  **tres ámbar** + verde + rojo (5 filas; el poste baja lo justo). `logo_c4.svg`, `logo_c4_oscuro.svg`,
+  `logo_c4_encabezado.svg`, `hoja_c4.png`. Si "otro foco amarillo" eran los foquitos de la barra (3 por lado), se cambia
+  en `arbol()` (la lista de dx de la barra).
 - Falta: que Daniel lo apruebe; luego pasarlo al encabezado y a los íconos de la app.
 

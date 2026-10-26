@@ -41,24 +41,27 @@ def svg_palabra(txt, alto_cap, x, base, color):
 
 COLORES = {'stage': '#ffe066', 'ambar': '#ffa31a', 'verde': '#2fd36a', 'rojo': '#f0453a'}
 
-def arbol(C, Ht, color, lado=1, colores=False, una_barra=False):
+def arbol(C, Ht, color, lado=1, colores=False, una_barra=False, escala=1.0, filas=('ambar', 'ambar', 'verde', 'rojo')):
     """El árbol de la imagen de Daniel con origen en el centro de arriba (y hacia abajo; la línea base de las letras
     está en y = C). Los gruesos van en proporción a la mayúscula C (que pese igual que las letras); el largo es Ht.
     lado = 1: se inclina como la letra; -1: al lado contrario. Barras y poste se inclinan; los focos quedan redondos
     y solo su lugar sigue la inclinación. Con colores, cada foco tiene su caja (del color del árbol) y su luz de color:
     pre-stage y stage (foquitos), dos ámbar, verde y rojo. una_barra: pre-stage y stage en una sola barra con los
     foquitos adentro, para que el árbol se lea como una T.
-    Devuelve (barras y poste [sin fill], cajas de los focos [sin fill], luces de color, derecha(y), xmin, xmax)."""
-    barra_w = 0.92 * C
+    escala: el árbol más grande que las letras (anchos y focos); filas: colores de las filas de focos de arriba abajo.
+    Ht = None: el poste baja lo justo debajo de la última fila.
+    Devuelve (barras y poste [sin fill], cajas de los focos [sin fill], luces de color, derecha(y), xmin, xmax, Ht)."""
+    k = escala
+    barra_w = 0.92 * C * k
     if una_barra:
-        barra_h, rr, poste_w = 0.21 * C, 0.03 * C, 0.16 * C
-        filas_y0, paso = 0.43 * C, 0.215 * C
-        foco_dx_t = 0.265 * C   # filas un poco más angostas: REE queda más cerca de la T
+        barra_h, rr, poste_w = 0.21 * C * k, 0.03 * C * k, 0.16 * C * k
+        filas_y0, paso = 0.43 * C * k, 0.215 * C * k
+        foco_dx_t = 0.265 * C * k   # filas un poco más angostas: REE queda más cerca de la T
     else:
         barra_h, rr, poste_w = 0.15 * C, 0.025 * C, 0.11 * C
         filas_y0, paso = (0.74 * C, 0.226 * C) if Ht >= 1.9 * C else (0.64 * C, 0.19 * C)
     foquito_r = 0.05 * C
-    foco_r, foco_dx, union_h = 0.088 * C, 0.29 * C, 0.05 * C
+    foco_r, foco_dx, union_h = 0.088 * C * k, 0.29 * C * k, 0.05 * C * k
     if una_barra: foco_dx = foco_dx_t
     corre = lambda x, y: x + lado * TAN * (C - y)
     rectos, cajas, luces, xs, formas = [], [], [], [], []
@@ -73,18 +76,19 @@ def arbol(C, Ht, color, lado=1, colores=False, una_barra=False):
         x = corre(cx, cy); xs.extend((x - r, x + r)); formas.append(('c', x, cy, r))
         cajas.append(f'<circle cx="{x:.2f}" cy="{cy:.2f}" r="{r:.2f}"/>')
         luz(cx, cy, 0.72 * r, tono)
+    if Ht is None: Ht = filas_y0 + paso * (len(filas) - 1) + foco_r + 0.24 * C * k
     rect(-poste_w / 2, 0, poste_w, Ht)                                                                       # poste
     if una_barra:                                                                                            # la T
         rect(-barra_w / 2, 0, barra_w, barra_h, f' rx="{rr:.2f}"')
         for dx in (-0.36, -0.2, 0.2, 0.36):
-            luz(dx * C, barra_h / 2, 0.055 * C, 'stage')
+            luz(dx * C * k, barra_h / 2, 0.055 * C * k, 'stage')
     else:
         for y0 in (0.0, 0.33 * C):                                                                           # pre-stage y stage
             rect(-barra_w / 2, y0, barra_w, barra_h, f' rx="{rr:.2f}"')
             for dx in (-0.36, -0.18, 0.18, 0.36):
                 foco(dx * C, y0 + barra_h, foquito_r, 'stage')
-    for k, tono in enumerate(('ambar', 'ambar', 'verde', 'rojo')):
-        cy = filas_y0 + paso * k
+    for n, tono in enumerate(filas):
+        cy = filas_y0 + paso * n
         rect(-foco_dx, cy - union_h / 2, 2 * foco_dx, union_h)
         for sx in (-1, 1):
             foco(sx * foco_dx, cy, foco_r, tono)
@@ -96,7 +100,7 @@ def arbol(C, Ht, color, lado=1, colores=False, una_barra=False):
             else: continue
             d = v if d is None else max(d, v)
         return d
-    return ''.join(rectos), ''.join(cajas), ''.join(luces), derecha, min(xs), max(xs)
+    return ''.join(rectos), ''.join(cajas), ''.join(luces), derecha, min(xs), max(xs), Ht
 
 def capas(trazos, tinta, contorno, grueso):
     """Dibuja trazos (lista de (transform, svg sin fill)) en tinta; con contorno, primero todo en el color del contorno
@@ -126,12 +130,16 @@ def logo(variante, color='#111', tinta_tree=None, contorno=None, grueso=0.02):
         abajo, arriba = 'REE', 'DRAG'
         if variante in ('c2', 'c3'): lado, colores = -1, True
         if variante == 'c3': una = True
-    g_rectos, g_cajas, g_luces, derecha, xmin, xmax = arbol(C, Ht, color, lado, colores, una)
+    extra = {}
+    if variante == 'c4':   # c4 (26 oct): la T más grande, inclinada como la letra y con tres ámbar, verde y rojo
+        lado, colores, una, Ht = 1, True, True, None
+        extra = dict(escala=1.22, filas=('ambar', 'ambar', 'ambar', 'verde', 'rojo'))
+    g_rectos, g_cajas, g_luces, derecha, xmin, xmax, Ht = arbol(C, Ht, color, lado, colores, una, **extra)
     _, ancho_ree, izq_ree, der_ree, _ = palabra(abajo, C)
     base, tope = 0.0, -C
     # "REE" a la derecha del árbol: la R (su orilla izquierda sube inclinada) queda a "gap" de lo que le quede más
     # cerca del árbol a cualquier altura entre la línea base y la mayúscula (barras, focos o uniones).
-    gap = (0.07 + 2 * (grueso if contorno else 0)) * C
+    gap = (0.07 + (0.015 if variante == 'c4' else 0) + 2 * (grueso if contorno else 0)) * C   # c4: la T llega más cerca
     x_ree = max(d + gap - (izq_ree + TAN * (C - y)) for y in [C * k / 200 for k in range(201)] if (d := derecha(y)) is not None)
     trazos = [(f'translate(0 {base:.2f}) skewX({-lado * ANG:.3f}) translate(0 {-C:.2f})', g_rectos),
               (f'translate(0 {base - C:.2f})', g_cajas)] + trazos_palabra(abajo, C, x_ree, base)
@@ -171,6 +179,10 @@ if __name__ == '__main__':
     open(os.path.join(AQUI, 'logo_c3.svg'), 'w').write(logo('c3', '#111'))
     open(os.path.join(AQUI, 'logo_c3_oscuro.svg'), 'w').write(logo('c3', '#fff', '#111', '#fff', 0.02))
     open(os.path.join(AQUI, 'logo_c3_encabezado.svg'), 'w').write(logo('c3', '#fff', '#111', '#fff', 0.06))   # chiquito: contorno de ~1 px
+    # c4 (26 oct): la T más grande, inclinada como la letra, tres ámbar
+    open(os.path.join(AQUI, 'logo_c4.svg'), 'w').write(logo('c4', '#111'))
+    open(os.path.join(AQUI, 'logo_c4_oscuro.svg'), 'w').write(logo('c4', '#fff', '#111', '#fff', 0.02))
+    open(os.path.join(AQUI, 'logo_c4_encabezado.svg'), 'w').write(logo('c4', '#fff', '#111', '#fff', 0.06))
     if '--sin-hoja' in sys.argv: sys.exit()
     from playwright.sync_api import sync_playwright
     FONDO = os.path.abspath(os.path.join(AQUI, '..', '..', '..', 'fondos', 'gallos.webp'))
@@ -186,12 +198,12 @@ if __name__ == '__main__':
       .barra img{{height:60px}} .chips{{font:12px system-ui;color:#ddd;background:rgba(16,16,18,.93);border:1.5px solid rgba(255,255,255,.24);
             border-radius:99px;padding:5px 9px}}
     </style><main>
-      <section><img class="g" src="logo_c3.svg"><p>En fondo blanco</p></section>
-      <section class="os"><img class="g" src="logo_c3_oscuro.svg"><p>En fondo oscuro: TREE negro con contorno blanco</p></section>
+      <section><img class="g" src="logo_c4.svg"><p>En fondo blanco</p></section>
+      <section class="os"><img class="g" src="logo_c4_oscuro.svg"><p>En fondo oscuro: TREE negro con contorno blanco</p></section>
       <div class="app">
-        <div><div class="tel"><div class="barra"><img src="logo_c3_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
+        <div><div class="tel"><div class="barra"><img src="logo_c4_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
           <p>Arriba en la app, con el fondo Gallos</p></div>
-        <div><div class="tel sin"><div class="barra"><img src="logo_c3_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
+        <div><div class="tel sin"><div class="barra"><img src="logo_c4_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
           <p>Arriba en la app, sin fondo</p></div>
       </div>
     </main>"""
@@ -199,6 +211,6 @@ if __name__ == '__main__':
     with sync_playwright() as p:
         b = p.chromium.launch(); pg = b.new_page(viewport={'width': 1600, 'height': 900}, device_scale_factor=1)
         pg.goto('file://' + ruta); pg.wait_for_timeout(400)
-        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c3.png')); b.close()
+        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c4.png')); b.close()
     os.remove(ruta)
     print('listo')
