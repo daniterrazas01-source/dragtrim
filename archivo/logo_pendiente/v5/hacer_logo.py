@@ -233,6 +233,76 @@ def ree_cuadrada(x, base, H, ancho, C):
         xx += w + sep
     return [('', f'<path fill-rule="evenodd" d="{" ".join(d)}"/>')], xx - sep - x
 
+def arbol2(C, color, escala, filas, piv, yaw=0.0, giro_t=0.0, foco_dist=3.0):
+    """La T de c4–c9 (una barra con 4 foquitos, filas de focos, inclinada como la letra) armada con figuras ya
+    transformadas, para poder girarla (c10, 26 oct):
+      giro_t: girarla de frente sobre su centro, en grados, hacia la derecha (como manecilla de reloj);
+      yaw: girarla sobre el poste como eje, en grados, hacia la derecha (la mitad derecha se va hacia atrás), con
+           perspectiva (foco_dist = distancia de la cámara en veces el alto del árbol).
+    y hacia abajo desde arriba del árbol; la inclinación de la letra se hace alrededor de y = piv.
+    Devuelve (figuras [sin fill], cajas de los focos [sin fill], luces, derecha(y), xmin, xmax, alto)."""
+    k = escala
+    barra_w, barra_h, rr, poste_w = 0.92 * C * k, 0.21 * C * k, 0.03 * C * k, 0.16 * C * k
+    filas_y0, paso = 0.43 * C * k, 0.215 * C * k
+    foco_r, foco_dx, union_h = 0.088 * C * k, 0.265 * C * k, 0.05 * C * k
+    Ht = filas_y0 + paso * (len(filas) - 1) + foco_r + 0.24 * C * k
+    yc, f = Ht / 2, foco_dist * Ht
+    cy_, sy_ = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+    def plano(x, y):          # giro sobre el poste + perspectiva (sin la inclinación de la letra)
+        z = x * sy_; q = f / (f + z)
+        return x * cy_ * q, yc + (y - yc) * q
+    cx0, cy0 = plano(0, yc); cx0 += TAN * (piv - cy0)                 # centro del árbol (para girarlo de frente)
+    cg, sg = math.cos(math.radians(giro_t)), math.sin(math.radians(giro_t))
+    def girar(X, Y):
+        dx, dy = X - cx0, Y - cy0
+        return cx0 + dx * cg - dy * sg, cy0 + dx * sg + dy * cg
+    def P(x, y):
+        X, Y = plano(x, y); X += TAN * (piv - Y)
+        return girar(X, Y)
+    figuras, cajas, luces, puntos = [], [], [], []
+    def poligono(pts, n=6):
+        q = []
+        for (x1, y1), (x2, y2) in zip(pts, pts[1:] + pts[:1]):
+            for j in range(n):
+                q.append(P(x1 + (x2 - x1) * j / n, y1 + (y2 - y1) * j / n))
+        puntos.extend(q)
+        figuras.append('<path d="M' + ' L'.join(f'{a:.2f} {b:.2f}' for a, b in q) + ' Z"/>')
+    def caja_redonda(x, y, w, h, r, n=5):
+        pts = []
+        for (ax, ay, a0) in ((x + w - r, y + r, -90), (x + w - r, y + h - r, 0), (x + r, y + h - r, 90), (x + r, y + r, 180)):
+            for j in range(n + 1):
+                t = math.radians(a0 + 90 * j / n); pts.append((ax + r * math.cos(t), ay + r * math.sin(t)))
+        poligono(pts, 2)
+    def circulo(cx, cy, r, destino, tono=None):
+        X, Y = P(cx, cy)
+        # forma del círculo: se aplasta con el giro sobre el poste y gira con el árbol, pero no se inclina como la letra
+        e = 1e-3 * C
+        ax_, ay_ = plano(cx + e, cy); bx_, by_ = plano(cx, cy + e); ox, oy = plano(cx, cy)
+        a, b, c, d = (ax_ - ox) / e, (ay_ - oy) / e, (bx_ - ox) / e, (by_ - oy) / e
+        a, b, c, d = a * cg - b * sg, a * sg + b * cg, c * cg - d * sg, c * sg + d * cg
+        relleno = f' fill="{COLORES[tono]}"' if tono else ''
+        destino.append(f'<circle transform="matrix({a:.4f} {b:.4f} {c:.4f} {d:.4f} {X:.2f} {Y:.2f})" r="{r:.2f}"{relleno}/>')
+        if destino is cajas:
+            for j in range(24):
+                t = 2 * math.pi * j / 24; u, v = r * math.cos(t), r * math.sin(t)
+                puntos.append((X + a * u + c * v, Y + b * u + d * v))
+    poligono([(-poste_w / 2, 0), (poste_w / 2, 0), (poste_w / 2, Ht), (-poste_w / 2, Ht)], 20)
+    caja_redonda(-barra_w / 2, 0, barra_w, barra_h, rr)
+    for dx in (-0.36, -0.2, 0.2, 0.36):
+        circulo(dx * C * k, barra_h / 2, 0.055 * C * k, luces, 'stage')
+    for n, tono in enumerate(filas):
+        cy = filas_y0 + paso * n
+        poligono([(-foco_dx, cy - union_h / 2), (foco_dx, cy - union_h / 2), (foco_dx, cy + union_h / 2), (-foco_dx, cy + union_h / 2)], 8)
+        for sx in (-1, 1):
+            circulo(sx * foco_dx, cy, foco_r, cajas)
+            circulo(sx * foco_dx, cy, 0.72 * foco_r, luces, tono)
+    banda = 0.012 * C
+    def derecha(y):
+        v = [x for x, yy in puntos if abs(yy - y) <= banda]
+        return max(v) if v else None
+    xs = [x for x, _ in puntos]
+    return ''.join(figuras), ''.join(cajas), ''.join(luces), derecha, min(xs), max(xs), max(y for _, y in puntos)
+
 CURSIVA = os.path.join(AQUI, 'fuentes', 'MrDafoe-Regular.ttf')   # Mr Dafoe (OFL), letra a mano estilo hot rod
 def cursiva(txt, ancho):
     """Trazos del lema en cursiva para que mida 'ancho' px. Devuelve (glifos, ancho, alto sobre la base, bajo la base, escala)."""
@@ -245,7 +315,7 @@ def cursiva(txt, ancho):
     k = ancho / x
     return [(d, dx * k) for d, dx in gl], ancho, arriba * k, -abajo * k, k
 
-def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag='inter', letra_ree='inter', giro=0.0, lema=None, crece=(1.0, 1.0)):
+def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag='inter', letra_ree='inter', giro=0.0, lema=None, crece=(1.0, 1.0), giro_t=0.0, yaw=0.0):
     """C5 (26 oct, dibujo de Daniel): la T sube y se monta un poco sobre la D y la R de DRAG (va encima, con su
     contorno); R, E, E más largas hacia abajo, hasta el pie del árbol (se estiran a lo alto sin cambiar la
     inclinación); contorno más grueso. color: DRAG; tinta_tree/contorno: TREE y su contorno."""
@@ -260,6 +330,11 @@ def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag
     piv = Y_b - Y_t
     g_rectos, g_cajas, g_luces, derecha, xmin, xmax, Ht = arbol(C, None, tinta_tree, 1, True, True, 1.22,
                                                                 ('ambar', 'ambar', 'ambar', 'verde', 'rojo'), piv)
+    tf_rectos = f'translate(0 {Y_t + piv:.2f}) skewX({-ANG:.3f}) translate(0 {-piv:.2f})'
+    if giro_t or yaw:   # c10: la T girada (de frente o sobre su poste); las figuras ya vienen transformadas
+        g_rectos, g_cajas, g_luces, derecha, xmin, xmax, Ht = arbol2(C, tinta_tree, 1.22,
+                                                                     ('ambar', 'ambar', 'ambar', 'verde', 'rojo'), piv, yaw, giro_t)
+        tf_rectos = f'translate(0 {Y_t:.2f})'
     glifos, ancho_ree, izq_ree, der_ree, s = palabra('REE', C)
     gap = (0.085 + 2 * grueso) * C
     x_ree = max(d + gap - (izq_ree + TAN * (Y_b - Y)) for Y in [Y_top + (Y_b - Y_top) * k / 300 for k in range(301)]
@@ -273,7 +348,7 @@ def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag
         ree, ancho_q = ree_cuadrada(x_rq, Y_b, Y_b - Y_top, der_ree - izq_ree, C)
         pie_ree = (x_rq, x_rq + ancho_q)   # dónde pisa REE (para el lema)
         der_ree_total = x_rq + ancho_q + TAN * (Y_b - Y_top)
-    trazos = [(f'translate(0 {Y_t + piv:.2f}) skewX({-ANG:.3f}) translate(0 {-piv:.2f})', g_rectos),
+    trazos = [(tf_rectos, g_rectos),
               (f'translate(0 {Y_t:.2f})', g_cajas)] + ree
     izq_total = xmin
     der_total = der_ree_total
@@ -345,6 +420,10 @@ if __name__ == '__main__':
     for nombre, args in (('logo_c9', ('#111', '#111', '#fff', 0.035)), ('logo_c9_oscuro', ('#fff', '#111', '#fff', 0.035)),
                          ('logo_c9_encabezado', ('#fff', '#111', '#fff', 0.08))):
         open(os.path.join(AQUI, nombre + '.svg'), 'w').write(logo_c5(*args, 'bloque', 'cuadrada', giro=8.0, lema='On the mark', crece=(1.9, 1.15)))
+    # c10 (26 oct): c9 con la T girada hacia la derecha: a) de frente (8°: la barra queda derecha); b) sobre su poste (35°)
+    for sufijo, extra in (('a', dict(giro_t=8.0)), ('b', dict(yaw=35.0))):
+        for nombre, args in ((f'logo_c10{sufijo}', ('#111', '#111', '#fff', 0.035)), (f'logo_c10{sufijo}_oscuro', ('#fff', '#111', '#fff', 0.035))):
+            open(os.path.join(AQUI, nombre + '.svg'), 'w').write(logo_c5(*args, 'bloque', 'cuadrada', giro=8.0, lema='On the mark', crece=(1.9, 1.15), **extra))
     # c4 (26 oct): la T más grande, inclinada como la letra, tres ámbar
     open(os.path.join(AQUI, 'logo_c4.svg'), 'w').write(logo('c4', '#111'))
     open(os.path.join(AQUI, 'logo_c4_oscuro.svg'), 'w').write(logo('c4', '#fff', '#111', '#fff', 0.02))
@@ -352,31 +431,19 @@ if __name__ == '__main__':
     if '--sin-hoja' in sys.argv: sys.exit()
     from playwright.sync_api import sync_playwright
     FONDO = os.path.abspath(os.path.join(AQUI, '..', '..', '..', 'fondos', 'gallos.webp'))
-    html = f"""<!doctype html><meta charset="utf-8"><style>
-      body{{margin:0;font:600 22px system-ui;color:#555;background:#fff}}
-      main{{display:grid;grid-template-columns:1fr 1fr;gap:0}} section{{padding:40px 50px 30px}}
-      .os{{background:#141618;color:#aaa}} img.g{{width:100%}} p{{margin:16px 0 0;text-align:center}}
-      .app{{grid-column:1/3;background:#141618;color:#aaa;padding:30px 50px;display:flex;gap:40px;justify-content:center;align-items:end}}
-      .tel{{width:393px;border-radius:28px;overflow:hidden;position:relative;height:150px;background:url('file://{FONDO}') center top/cover}}
-      .tel.sin{{background:#24282c}}
-      .tel:not(.sin)::before{{content:"";position:absolute;inset:0;background:rgba(10,10,11,.78)}}
-      .barra{{position:absolute;left:16px;right:16px;top:62px;display:flex;align-items:center;justify-content:space-between}}
-      .barra img{{height:60px}} .chips{{font:12px system-ui;color:#ddd;background:rgba(16,16,18,.93);border:1.5px solid rgba(255,255,255,.24);
-            border-radius:99px;padding:5px 9px}}
+    html = """<!doctype html><meta charset="utf-8"><style>
+      body{margin:0;font:600 24px system-ui;color:#bbb;background:#141618}
+      main{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0} section{padding:36px 40px 26px}
+      img{width:100%} p{margin:14px 0 0;text-align:center}
     </style><main>
-      <section><img class="g" src="logo_c9.svg"><p>En fondo blanco</p></section>
-      <section class="os"><img class="g" src="logo_c9_oscuro.svg"><p>En fondo oscuro: TREE negro con contorno blanco</p></section>
-      <div class="app">
-        <div><div class="tel"><div class="barra"><img src="logo_c9_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
-          <p>Arriba en la app, con el fondo Gallos</p></div>
-        <div><div class="tel sin"><div class="barra"><img src="logo_c9_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
-          <p>Arriba en la app, sin fondo</p></div>
-      </div>
+      <section><img src="logo_c9_oscuro.svg"><p>Como estaba</p></section>
+      <section><img src="logo_c10a_oscuro.svg"><p>1 · Girada de frente hacia la derecha</p></section>
+      <section><img src="logo_c10b_oscuro.svg"><p>2 · Girada sobre su poste hacia la derecha</p></section>
     </main>"""
     ruta = os.path.join(AQUI, '_hoja.html'); open(ruta, 'w').write(html)
     with sync_playwright() as p:
-        b = p.chromium.launch(); pg = b.new_page(viewport={'width': 1600, 'height': 900}, device_scale_factor=1)
+        b = p.chromium.launch(); pg = b.new_page(viewport={'width': 1800, 'height': 900}, device_scale_factor=1)
         pg.goto('file://' + ruta); pg.wait_for_timeout(400)
-        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c9.png')); b.close()
+        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c10.png')); b.close()
     os.remove(ruta)
     print('listo')

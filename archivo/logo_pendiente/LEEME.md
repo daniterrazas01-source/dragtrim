@@ -58,5 +58,9 @@ calcomanía; al retomar, preguntarle qué partes no coinciden.
   hasta la G (×1.15): la orilla de arriba queda inclinada y llena la zona marcada (`crece=(1.9, 1.15)` en `logo_c5`;
   `svg_drag_bloque(f_izq, f_der)`; la esquina de arriba de la D cabe en el ancho del logo). `logo_c9.svg`,
   `logo_c9_oscuro.svg`, `logo_c9_encabezado.svg`, `hoja_c9.png`.
+- **C10** (26 oct, Daniel: "gírala sobre su propio eje hacia la derecha", con una raya a lo largo del poste): dos
+  lecturas, para que elija: `logo_c10a*` girada **de frente** 8° hacia la derecha (la barra queda derecha) y `logo_c10b*`
+  girada **sobre su poste** 35° hacia la derecha, con perspectiva (la mitad derecha se va hacia atrás). `arbol2()` arma la
+  T con figuras ya transformadas; REE se recorre solo para no chocar. `hoja_c10.png` (como estaba, 1 y 2).
 - Falta: que Daniel lo apruebe; luego pasarlo al encabezado y a los íconos de la app.
 
