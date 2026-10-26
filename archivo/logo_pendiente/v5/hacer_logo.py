@@ -393,6 +393,43 @@ def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{x0:.1f} {y0:.1f} {w:.1f} {h:.1f}" width="{w:.0f}" height="{h:.0f}">'
             + ''.join(piezas) + '</svg>')
 
+# ---------------------------------------------------------------- el logo final (C13) para la app (26 oct)
+APP = os.path.abspath(os.path.join(AQUI, '..', '..', '..', 'fuente', 'app', 'src'))
+FINAL = dict(drag='bloque', letra_ree='cuadrada', giro=8.0, crece=(1.9, 1.15), yaw=-42.0, junto=0.03)
+def logo_app():
+    """El logo de la barra de arriba (sin el lema: ahí no se lee) con clases en vez de colores, para que la app lo pinte
+    según el tema (lg-drag, lg-tree, lg-borde) y las luces se prendan al abrir (lz lz-0 … lz-5: stage, 3 ámbar, verde, rojo)."""
+    import re
+    t = logo_c5('#a1a1a1', '#b2b2b2', '#c3c3c3', 0.07, **FINAL)
+    t = t.replace('fill="#c3c3c3" stroke="#c3c3c3"', 'class="lg-borde"').replace('fill="#a1a1a1"', 'class="lg-drag"').replace('fill="#b2b2b2"', 'class="lg-tree"')
+    luces = set(COLORES.values()); n = [0]
+    def clase(m):
+        if m.group(2) not in luces: return m.group(0)
+        k = n[0]; n[0] += 1
+        fila = 0 if k < 4 else 1 + (k - 4) // 2
+        return f'{m.group(1)}fill="{m.group(2)}" class="lz lz-{fila}"/>'
+    t = re.sub(r'(<circle [^>]*?)fill="(#[0-9a-f]{6})"/>', clase, t)
+    t = re.sub(r' width="\d+" height="\d+">', ' aria-hidden="true" focusable="false">', t, count=1)
+    assert 'a1a1a1' not in t and 'b2b2b2' not in t and 'c3c3c3' not in t and n[0] == 14, n
+    return t
+
+def iconos_app():
+    """Ícono de la app (1024 px): el logo en fondo oscuro. Normal (iOS le redondea las esquinas) y 'maskable' (Android
+    lo recorta en círculo: el logo cabe en el 80 % del centro)."""
+    from playwright.sync_api import sync_playwright
+    svg = os.path.join(AQUI, '_icono.svg'); open(svg, 'w').write(logo_c5('#fff', '#111', '#fff', 0.05, **FINAL))
+    os.makedirs(os.path.join(APP, 'icono'), exist_ok=True)
+    with sync_playwright() as p:
+        b = p.chromium.launch(); pg = b.new_page(viewport={'width': 1024, 'height': 1024})
+        for nombre, lado in (('icono.png', 86), ('icono_maskable.png', 58)):
+            html = os.path.join(AQUI, '_icono.html')
+            open(html, 'w').write(f'<!doctype html><body style="margin:0;width:1024px;height:1024px;background:#24282c;display:grid;place-items:center">'
+                                  f'<img src="_icono.svg" style="max-width:{lado}%;max-height:{lado}%">')
+            pg.goto('file://' + html); pg.wait_for_timeout(300)
+            pg.screenshot(path=os.path.join(APP, 'icono', nombre))
+        b.close()
+    os.remove(svg); os.remove(os.path.join(AQUI, '_icono.html'))
+
 if __name__ == '__main__':
     VARIANTES = ('a', 'b', 'c', 'c2')
     for v in VARIANTES:
@@ -444,6 +481,9 @@ if __name__ == '__main__':
     open(os.path.join(AQUI, 'logo_c4.svg'), 'w').write(logo('c4', '#111'))
     open(os.path.join(AQUI, 'logo_c4_oscuro.svg'), 'w').write(logo('c4', '#fff', '#111', '#fff', 0.02))
     open(os.path.join(AQUI, 'logo_c4_encabezado.svg'), 'w').write(logo('c4', '#fff', '#111', '#fff', 0.06))
+    # el logo final en la app: barra de arriba e íconos
+    open(os.path.join(APP, 'logo.svg'), 'w').write(logo_app())
+    iconos_app()
     if '--sin-hoja' in sys.argv: sys.exit()
     from playwright.sync_api import sync_playwright
     FONDO = os.path.abspath(os.path.join(AQUI, '..', '..', '..', 'fondos', 'gallos.webp'))

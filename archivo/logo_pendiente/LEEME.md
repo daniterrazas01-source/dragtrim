@@ -1,7 +1,7 @@
 # Logo de Drag Tree (pendiente)
 
 Borradores del logo, guardados para retomarlos después (Daniel lo dejó para otro momento, 23 oct 2026).
-La app sigue con su logo de siempre; nada de esto está en uso.
+v1–v4 no se usan; **v5 (C13) es el logo de la app desde la beta 0.6.3**.
 
 - `referencias/bosquejo_daniel.jpg`: su bosquejo ("Drag" de grande a chico con rayitas, "Tree" vertical, árbol en T).
 - `referencias/foto_calcomania.jpg`: foto de la calcomanía original de "Drag Tree" que quiere usar por nostalgia
@@ -72,5 +72,6 @@ calcomanía; al retomar, preguntarle qué partes no coinciden.
 - **C13** (26 oct, Daniel: "recta, sin inclinación" → "la misma inclinación que la línea de la R"): el poste de la T
   **paralelo a la R** (la inclinación de la letra, 9.4°; con el giro del logo se ve casi derecho), 42° de giro sobre el
   poste y pegada a la R (`junto=0.03`). `logo_c13.svg`, `logo_c13_oscuro.svg`, `logo_c13_encabezado.svg`, `hoja_c13.png`.
-- Falta: que Daniel lo apruebe; luego pasarlo al encabezado y a los íconos de la app.
+- **Aprobado (C13) y en la app desde beta 0.6.3** (26 oct): `hacer_logo.py` también genera `fuente/app/src/logo.svg`
+  (barra de arriba, sin lema, con clases para los colores del tema) y `fuente/app/src/icono/icono*.png` (íconos).
 

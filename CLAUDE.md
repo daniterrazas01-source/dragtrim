@@ -67,9 +67,17 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
      sensor de cada teléfono: 20–60 ms por modelo), roja si cruza el rollout antes de la verde, "empate
      técnico" si la diferencia es menor al error. Primer paso: página de prueba aparte en sus teléfonos.
    - Más adelante: app nativa (Capacitor) para Play Store/App Store; GNSS externo.
-   - **Logo nuevo** (pendiente, 23 oct): borradores y referencias en `archivo/logo_pendiente/`.
-     Daniel quiere el logo de su calcomanía original; el redibujo v4 no lo convenció. No cambiar el
-     logo de la app hasta que él lo retome.
+   - **Logo nuevo** (26 oct, en la app desde **0.6.3**): el C13 de `archivo/logo_pendiente/v5/` (historia de cada cambio
+     en su LEEME). DRAG en letra de bloque dibujada a mano (forma de "Full Pack 2025") inclinada hacia atrás y creciendo de
+     la G a la D; TREE = el árbol como T (una barra con 4 foquitos de stage, 3 ámbar, verde, rojo; girado 42° sobre su
+     poste, paralelo a la R) + R, E, E cuadradas a lo alto (forma de "Platinum Sign Over"); TREE negro con contorno
+     blanco; todo inclinado 8° hacia arriba; abajo "On the mark" en cursiva (Mr Dafoe, OFL; la calcomanía decía "On your
+     mark"). Esas dos letras de dafont son solo de uso personal: **no usar sus archivos**, las letras están dibujadas en
+     `hacer_logo.py`. Para cambiar el logo: editar `hacer_logo.py` y correrlo (regenera `fuente/app/src/logo.svg` y
+     `fuente/app/src/icono/*.png`), luego build. En la app: barra de arriba sin el lema (ahí no se lee), colores por tema
+     (`--logo-drag/-tree/-borde`, `.lg-*`), las luces se prenden al abrir (`.lz-0…5`); ícono = el logo en fondo #24282c
+     (build.py lo toma de `src/icono/`). En iPhone el ícono ya instalado no cambia (iOS lo guarda al instalar; no pedir
+     reinstalar); las instalaciones nuevas sí lo traen.
 
 7. **Fondos de pantalla** (beta 0.4): 6 fondos sticker bomb que Daniel hizo (+ "Gallos" desde 0.6.2) (`fuente/fondos/*.png`,
    el build los convierte a WebP en `fondos/`). Con fondo, la app usa estilo sticker: paneles con
@@ -231,6 +239,7 @@ fuente/app/src/semaforo_vision.js, semaforo.js, semaforo_sim.js   semáforo real
 fuente/app/src/camara.js, camara.css   cámara en el navegador (DragCam) y pantalla Apuntar
 fuente/app/src/prueba_camara.template.html + tools/build_prueba.py   página de prueba prueba/camara.html
 fuente/app/src/index.template.html, style.css
+fuente/app/src/logo.svg, icono/  logo de la barra de arriba e ícono (los genera archivo/logo_pendiente/v5/hacer_logo.py)
 fuente/app/tools/build.py      junta todo en un index.html autocontenido + sw.js + íconos (sube VERSION al cambiar)
 fuente/publicar.sh             build + copia a la raíz
 fuente/matlab/                 script MATLAB Mobile v2.3 (mismo algoritmo); Drag_tree_v2_unico.m = todo en un archivo
@@ -248,8 +257,8 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Publicada: **beta 0.6.2** (25 oct 2026: el semáforo con
-cámara sale de la app; fondo nuevo "Gallos" con los logos de Rooster Racing; Práctica: botón "Mantén" más chico (19vh, 300 px de ancho en solo), cuadro de la reacción compacto y más abajo, focos que caben sin tocarlo; letra tipo Rooster Racing en títulos, etiquetas, selectores, botones principales y pestañas; Práctica: Modo, Árbol, Cómo sales y Formato en un solo panel con solo la explicación de lo elegido (EXPLICA en practica.js), 892 → 648 px de alto; el contenido también junto al notch del iPhone; deslizar el dedo entre pestañas); antes **beta 0.6.1** (25 oct 2026: el semáforo con cámara vuelve a "en desarrollo"); 0.6 (25 oct 2026: semáforo real
+caché del service worker; cambiarlo fuerza la actualización). Publicada: **beta 0.6.3** (26 oct 2026: el logo nuevo en la barra de arriba y en el ícono, punto 6); antes **beta 0.6.2** (25 oct 2026: el semáforo con
+cámara sale de la app; fondo nuevo "Gallos" con los logos de Rooster Racing; Práctica: botón "Mantén" más chico (19vh, 300 px de ancho en solo), cuadro de la reacción compacto y más abajo, focos que caben sin tocarlo; letra tipo Rooster Racing en títulos, etiquetas, selectores, botones principales y pestañas; Práctica: Modo, Árbol, Cómo sales y Formato en un solo panel con solo la explicación de lo elegido (EXPLICA en practica.js), 892 → 648 px de alto; el contenido también junto al notch del iPhone; deslizar el dedo entre pestañas); **beta 0.6.1** (25 oct 2026: el semáforo con cámara vuelve a "en desarrollo"); 0.6 (25 oct 2026: semáforo real
 con la cámara, punto 13; trae también la 0.5.4: tarjeta Race 1 vs 1 "en desarrollo"). Antes: **beta 0.5.3** (fondo de Práctica que responde a la reacción; 0.5.2: guía para instalar; 0.5.1: nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
 algoritmo v2.3.
 

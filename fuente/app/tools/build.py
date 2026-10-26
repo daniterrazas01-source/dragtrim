@@ -6,9 +6,11 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageStat
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC, DIST = ROOT / 'src', ROOT / 'dist'
 DIST.mkdir(exist_ok=True)
-VERSION = 'beta-0.6.2'
+VERSION = 'beta-0.6.3'
 
 html = (SRC / 'index.template.html').read_text(encoding='utf-8')
+assert html.count('<!--LOGO-->') == 1
+html = html.replace('<!--LOGO-->', (SRC / 'logo.svg').read_text(encoding='utf-8').strip())   # logo de la barra de arriba
 html = html.replace('/*CSS*/', (SRC / 'style.css').read_text(encoding='utf-8') + '\n' + (SRC / 'camara.css').read_text(encoding='utf-8'))
 # letra de Rooster Racing (fondo Gallos), dentro del index.html para que funcione sin internet
 _fuente = 'url("fuentes/saira-black-italic.woff2")'
@@ -59,29 +61,9 @@ self.addEventListener('fetch', (e) => {{
 (DIST / 'sw.js').write_text(sw, encoding='utf-8')
 
 def icono(size, maskable=False):
-    S = 1024
-    im = Image.new('RGBA', (S, S), (36, 40, 44, 255))
-    glow = Image.new('RGBA', (S, S), (0, 0, 0, 0))
-    gd = ImageDraw.Draw(glow)
-    d = ImageDraw.Draw(im)
-    scale = 0.72 if maskable else 0.86
-    housing_w, housing_h = 300 * scale, 900 * scale
-    cx, cy = S / 2, S / 2
-    x0, y0 = cx - housing_w / 2, cy - housing_h / 2
-    d.rounded_rectangle([x0, y0, x0 + housing_w, y0 + housing_h], radius=60 * scale, fill=(23, 25, 27, 255))
-    r = 92 * scale
-    colores = [(255, 176, 32), (255, 176, 32), (255, 176, 32), (54, 212, 107)]
-    gap = (housing_h - 8 * r) / 5
-    for i, col in enumerate(colores):
-        y = y0 + gap * (i + 1) + r * (2 * i + 1)
-        gd.ellipse([cx - r * 1.35, y - r * 1.35, cx + r * 1.35, y + r * 1.35], fill=col + (150,))
-    glow = glow.filter(ImageFilter.GaussianBlur(40 * scale))
-    im = Image.alpha_composite(im, glow)
-    d = ImageDraw.Draw(im)
-    for i, col in enumerate(colores):
-        y = y0 + gap * (i + 1) + r * (2 * i + 1)
-        d.ellipse([cx - r, y - r, cx + r, y + r], fill=col + (255,))
-    return im.resize((size, size), Image.LANCZOS).convert('RGB')
+    """Ícono de la app: el logo nuevo (archivo/logo_pendiente/v5/hacer_logo.py lo dibuja en src/icono/, 1024 px)."""
+    im = Image.open(SRC / 'icono' / ('icono_maskable.png' if maskable else 'icono.png')).convert('RGB')
+    return im.resize((size, size), Image.LANCZOS)
 
 icono(180).save(DIST / 'icon-180.png')
 icono(192).save(DIST / 'icon-192.png')
