@@ -126,6 +126,10 @@ p { margin: 0 0 12px; }
 .howto summary { padding: 12px 0; font-weight: 600; cursor: pointer; }
 .howto ul { margin: 0 0 14px; padding-left: 20px; }
 .howto li { margin-bottom: 8px; }
+/* Race 1 vs 1 (0.6.5): desplegable como "Antes de salir a la pista", para que Medir se vea menos cargada */
+.howto > p { margin: 0 0 14px; font-size: 14px; color: var(--chalk-dim); }
+.howto > p .beta-tag { margin-left: 0; margin-right: 4px; }
+.howto + .howto { margin-top: 10px; }
 
 /* Sesión */
 .ses-title { font: 700 40px/1.05 var(--num); margin: 10px 0 10px; }
@@ -562,7 +566,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 .hist button:active { background: var(--surface); }
 .stat .val { transition: color .3s; }
 .msg:not(:empty) { animation: entra .3s var(--ease-out) both; }
-.howto[open] ul { animation: entra .3s var(--ease-out) both; }
+.howto[open] :is(ul, p) { animation: entra .3s var(--ease-out) both; }
 .howto summary { transition: color .2s; }
 
 /* Selector segmentado y pestañas: la marca se desliza a la opción elegida */
@@ -753,10 +757,10 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
           <p class="hint cam-regla">Solo mide: no se conecta al auto ni da señales. En eventos con reglamento (NHRA, IHRA…) un teléfono que mira el árbol puede tomarse como "lector de árbol", que está prohibido: úsalo en práctica o test &amp; tune y avísale al director técnico.</p>
         </div>
       </div>
-      <div class="proximo">
-        <b>Race 1 vs 1</b> <span class="beta-tag">en desarrollo</span>
-        <p>Para pistas sin semáforo o un lugar controlado: dos autos, cada uno con la app en su teléfono. La app da la salida a los dos al mismo tiempo, mide los tiempos de ambos y al final imprime el ticket de la carrera en un solo teléfono.</p>
-      </div>
+      <details class="howto" id="race1v1">
+        <summary>Race 1 vs 1</summary>
+        <p><span class="beta-tag">en desarrollo</span> Para pistas sin semáforo o un lugar controlado: dos autos, cada uno con la app en su teléfono. La app da la salida a los dos al mismo tiempo, mide los tiempos de ambos y al final imprime el ticket de la carrera en un solo teléfono.</p>
+      </details>
 
       <details class="howto">
         <summary>Antes de salir a la pista</summary>
