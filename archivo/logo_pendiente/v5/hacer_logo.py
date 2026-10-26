@@ -41,7 +41,7 @@ def svg_palabra(txt, alto_cap, x, base, color):
 
 COLORES = {'stage': '#ffe066', 'ambar': '#ffa31a', 'verde': '#2fd36a', 'rojo': '#f0453a'}
 
-def arbol(C, Ht, color, lado=1, colores=False, una_barra=False, escala=1.0, filas=('ambar', 'ambar', 'verde', 'rojo')):
+def arbol(C, Ht, color, lado=1, colores=False, una_barra=False, escala=1.0, filas=('ambar', 'ambar', 'verde', 'rojo'), pivote=None):
     """El árbol de la imagen de Daniel con origen en el centro de arriba (y hacia abajo; la línea base de las letras
     está en y = C). Los gruesos van en proporción a la mayúscula C (que pese igual que las letras); el largo es Ht.
     lado = 1: se inclina como la letra; -1: al lado contrario. Barras y poste se inclinan; los focos quedan redondos
@@ -63,7 +63,8 @@ def arbol(C, Ht, color, lado=1, colores=False, una_barra=False, escala=1.0, fila
     foquito_r = 0.05 * C
     foco_r, foco_dx, union_h = 0.088 * C * k, 0.29 * C * k, 0.05 * C * k
     if una_barra: foco_dx = foco_dx_t
-    corre = lambda x, y: x + lado * TAN * (C - y)
+    piv = C if pivote is None else pivote   # altura (desde arriba del árbol) alrededor de la que se inclina
+    corre = lambda x, y: x + lado * TAN * (piv - y)
     rectos, cajas, luces, xs, formas = [], [], [], [], []
     def rect(x, y, w, h, extra=''):
         rectos.append(f'<rect x="{x:.2f}" y="{y:.2f}" width="{w:.2f}" height="{h:.2f}"{extra}/>')
@@ -170,6 +171,45 @@ def logo(variante, color='#111', tinta_tree=None, contorno=None, grueso=0.02):
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{x0:.1f} {y0:.1f} {w:.1f} {h:.1f}" width="{w:.0f}" height="{h:.0f}">'
             + ''.join(piezas) + '</svg>')
 
+def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035):
+    """C5 (26 oct, dibujo de Daniel): la T sube y se monta un poco sobre la D y la R de DRAG (va encima, con su
+    contorno); R, E, E más largas hacia abajo, hasta el pie del árbol (se estiran a lo alto sin cambiar la
+    inclinación); contorno más grueso. color: DRAG; tinta_tree/contorno: TREE y su contorno."""
+    C, m = 300.0, 60.0
+    sube = 0.32 * C                                  # cuánto sube la T: su barra se monta 0.12 C sobre DRAG
+    Y_top = -C                                       # arriba de R, E, E (donde estaba)
+    Y_t = Y_top - sube                               # arriba de la T
+    # el árbol (primero sin saber dónde queda la línea base de REE: su largo no depende de eso)
+    *_, Ht = arbol(C, None, tinta_tree, 1, True, True, 1.22, ('ambar', 'ambar', 'ambar', 'verde', 'rojo'))
+    Y_b = Y_t + Ht - 0.04 * C                        # línea base de R, E, E: casi al pie del árbol
+    v = (Y_b - Y_top) / C                            # cuánto se estiran a lo alto
+    piv = Y_b - Y_t
+    g_rectos, g_cajas, g_luces, derecha, xmin, xmax, Ht = arbol(C, None, tinta_tree, 1, True, True, 1.22,
+                                                                ('ambar', 'ambar', 'ambar', 'verde', 'rojo'), piv)
+    glifos, ancho_ree, izq_ree, der_ree, s = palabra('REE', C)
+    gap = (0.085 + 2 * grueso) * C
+    x_ree = max(d + gap - (izq_ree + TAN * (Y_b - Y)) for Y in [Y_top + (Y_b - Y_top) * k / 300 for k in range(301)]
+                if (d := derecha(Y - Y_t)) is not None)
+    cc = s * TAN * (v - 1)                           # estirar a lo alto conservando la inclinación de la letra
+    ree = [(f'matrix({s:.5f} 0 {cc:.5f} {-s * v:.5f} {x_ree + dx:.2f} {Y_b:.2f})', f'<path d="{d}"/>') for d, dx in glifos]
+    trazos = [(f'translate(0 {Y_t + piv:.2f}) skewX({-ANG:.3f}) translate(0 {-piv:.2f})', g_rectos),
+              (f'translate(0 {Y_t:.2f})', g_cajas)] + ree
+    izq_total = xmin
+    der_total = x_ree + der_ree + TAN * C * (v - 1)
+    # DRAG a todo lo ancho, del árbol a la última E; va abajo de la T (la T se monta encima)
+    _, _, izq_d, der_d, _ = palabra('DRAG', C)
+    Cd = C * (der_total - izq_total) / (der_d - izq_d)
+    _, _, izq_d, der_d, _ = palabra('DRAG', Cd)
+    base_d = Y_top - 0.2 * C
+    x_d = izq_total - izq_d
+    piezas = [svg_palabra('DRAG', Cd, x_d, base_d, color),
+              capas(trazos, tinta_tree, contorno, grueso * C), f'<g transform="translate(0 {Y_t:.2f})">{g_luces}</g>']
+    arriba_total, abajo_total = base_d - Cd, max(Y_b, Y_t + Ht)
+    x0, y0 = izq_total - m, arriba_total - m
+    w, h = max(der_total, x_d + der_d) - izq_total + 2 * m, abajo_total - arriba_total + 2 * m
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{x0:.1f} {y0:.1f} {w:.1f} {h:.1f}" width="{w:.0f}" height="{h:.0f}">'
+            + ''.join(piezas) + '</svg>')
+
 if __name__ == '__main__':
     VARIANTES = ('a', 'b', 'c', 'c2')
     for v in VARIANTES:
@@ -179,6 +219,10 @@ if __name__ == '__main__':
     open(os.path.join(AQUI, 'logo_c3.svg'), 'w').write(logo('c3', '#111'))
     open(os.path.join(AQUI, 'logo_c3_oscuro.svg'), 'w').write(logo('c3', '#fff', '#111', '#fff', 0.02))
     open(os.path.join(AQUI, 'logo_c3_encabezado.svg'), 'w').write(logo('c3', '#fff', '#111', '#fff', 0.06))   # chiquito: contorno de ~1 px
+    # c5 (26 oct): la T se monta sobre DRAG, REE más largas, contorno más grueso (en claro el contorno separa la T de DRAG)
+    open(os.path.join(AQUI, 'logo_c5.svg'), 'w').write(logo_c5('#111', '#111', '#fff', 0.035))
+    open(os.path.join(AQUI, 'logo_c5_oscuro.svg'), 'w').write(logo_c5('#fff', '#111', '#fff', 0.035))
+    open(os.path.join(AQUI, 'logo_c5_encabezado.svg'), 'w').write(logo_c5('#fff', '#111', '#fff', 0.08))
     # c4 (26 oct): la T más grande, inclinada como la letra, tres ámbar
     open(os.path.join(AQUI, 'logo_c4.svg'), 'w').write(logo('c4', '#111'))
     open(os.path.join(AQUI, 'logo_c4_oscuro.svg'), 'w').write(logo('c4', '#fff', '#111', '#fff', 0.02))
@@ -198,12 +242,12 @@ if __name__ == '__main__':
       .barra img{{height:60px}} .chips{{font:12px system-ui;color:#ddd;background:rgba(16,16,18,.93);border:1.5px solid rgba(255,255,255,.24);
             border-radius:99px;padding:5px 9px}}
     </style><main>
-      <section><img class="g" src="logo_c4.svg"><p>En fondo blanco</p></section>
-      <section class="os"><img class="g" src="logo_c4_oscuro.svg"><p>En fondo oscuro: TREE negro con contorno blanco</p></section>
+      <section><img class="g" src="logo_c5.svg"><p>En fondo blanco</p></section>
+      <section class="os"><img class="g" src="logo_c5_oscuro.svg"><p>En fondo oscuro: TREE negro con contorno blanco</p></section>
       <div class="app">
-        <div><div class="tel"><div class="barra"><img src="logo_c4_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
+        <div><div class="tel"><div class="barra"><img src="logo_c5_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
           <p>Arriba en la app, con el fondo Gallos</p></div>
-        <div><div class="tel sin"><div class="barra"><img src="logo_c4_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
+        <div><div class="tel sin"><div class="barra"><img src="logo_c5_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
           <p>Arriba en la app, sin fondo</p></div>
       </div>
     </main>"""
@@ -211,6 +255,6 @@ if __name__ == '__main__':
     with sync_playwright() as p:
         b = p.chromium.launch(); pg = b.new_page(viewport={'width': 1600, 'height': 900}, device_scale_factor=1)
         pg.goto('file://' + ruta); pg.wait_for_timeout(400)
-        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c4.png')); b.close()
+        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c5.png')); b.close()
     os.remove(ruta)
     print('listo')

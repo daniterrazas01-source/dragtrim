@@ -35,5 +35,9 @@ calcomanía; al retomar, preguntarle qué partes no coinciden.
   **tres ámbar** + verde + rojo (5 filas; el poste baja lo justo). `logo_c4.svg`, `logo_c4_oscuro.svg`,
   `logo_c4_encabezado.svg`, `hoja_c4.png`. Si "otro foco amarillo" eran los foquitos de la barra (3 por lado), se cambia
   en `arbol()` (la lista de dx de la barra).
+- **C5** (26 oct, dibujo de Daniel sobre la C4): la T **sube 0.32 C** y su barra se monta un poco sobre la D y la R
+  (TREE va encima de DRAG; en fondo claro el contorno blanco la separa); **R, E, E más largas hacia abajo** hasta casi el
+  pie del árbol (se estiran a lo alto ×~1.6 sin cambiar la inclinación: `matrix` en `logo_c5()`); **contorno más grueso**
+  (0.035 C; encabezado 0.08 C). `logo_c5.svg`, `logo_c5_oscuro.svg`, `logo_c5_encabezado.svg`, `hoja_c5.png`.
 - Falta: que Daniel lo apruebe; luego pasarlo al encabezado y a los íconos de la app.
 
