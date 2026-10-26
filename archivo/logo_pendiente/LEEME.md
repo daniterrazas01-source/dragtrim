@@ -49,5 +49,10 @@ calcomanía; al retomar, preguntarle qué partes no coinciden.
   estiran: esquinas a 45° y gruesos parejos), mismo ancho total que antes y la inclinación de la T (9.4°). R con pata
   diagonal y esquina cortada arriba a la derecha; E con esquina cortada arriba a la izquierda. TREE sigue negro con
   contorno blanco. `logo_c7.svg`, `logo_c7_oscuro.svg`, `logo_c7_encabezado.svg`, `hoja_c7.png`.
+- **C8** (26 oct, Daniel): todo el logo **inclinado 8° hacia arriba a la derecha** (como la calcomanía original) y abajo,
+  en el hueco bajo REE, **"On the mark" en cursiva** (Daniel lo escribió así; la calcomanía decía "On your mark"), derecho,
+  del color de DRAG, con la letra **Mr Dafoe** (OFL, `v5/fuentes/`). `logo_c5(..., giro=8, lema='On the mark')`.
+  `logo_c8.svg`, `logo_c8_oscuro.svg`, `logo_c8_encabezado.svg`, `hoja_c8.png`. En el encabezado de la app el lema no se
+  alcanza a leer: ahí convendría la versión sin lema.
 - Falta: que Daniel lo apruebe; luego pasarlo al encabezado y a los íconos de la app.
 

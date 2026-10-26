@@ -227,7 +227,19 @@ def ree_cuadrada(x, base, H, ancho, C):
         xx += w + sep
     return [('', f'<path fill-rule="evenodd" d="{" ".join(d)}"/>')], xx - sep - x
 
-def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag='inter', letra_ree='inter'):
+CURSIVA = os.path.join(AQUI, 'fuentes', 'MrDafoe-Regular.ttf')   # Mr Dafoe (OFL), letra a mano estilo hot rod
+def cursiva(txt, ancho):
+    """Trazos del lema en cursiva para que mida 'ancho' px. Devuelve (glifos, ancho, alto sobre la base, bajo la base, escala)."""
+    fc = TTFont(CURSIVA); gs, cm = fc.getGlyphSet(), fc.getBestCmap()
+    x, gl, arriba, abajo = 0.0, [], 0.0, 0.0
+    for ch in txt:
+        g = gs[cm[ord(ch)]]; pen = SVGPathPen(gs); g.draw(pen); bp = BoundsPen(gs); g.draw(bp)
+        if bp.bounds: arriba, abajo = max(arriba, bp.bounds[3]), min(abajo, bp.bounds[1])
+        gl.append((pen.getCommands(), x)); x += g.width
+    k = ancho / x
+    return [(d, dx * k) for d, dx in gl], ancho, arriba * k, -abajo * k, k
+
+def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag='inter', letra_ree='inter', giro=0.0, lema=None):
     """C5 (26 oct, dibujo de Daniel): la T sube y se monta un poco sobre la D y la R de DRAG (va encima, con su
     contorno); R, E, E más largas hacia abajo, hasta el pie del árbol (se estiran a lo alto sin cambiar la
     inclinación); contorno más grueso. color: DRAG; tinta_tree/contorno: TREE y su contorno."""
@@ -253,6 +265,7 @@ def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag
         x_rq = max(dd + gap - TAN * (Y_b - Y) for Y in [Y_top + (Y_b - Y_top) * k / 300 for k in range(301)]
                    if (dd := derecha(Y - Y_t)) is not None)
         ree, ancho_q = ree_cuadrada(x_rq, Y_b, Y_b - Y_top, der_ree - izq_ree, C)
+        pie_ree = (x_rq, x_rq + ancho_q)   # dónde pisa REE (para el lema)
         der_ree_total = x_rq + ancho_q + TAN * (Y_b - Y_top)
     trazos = [(f'translate(0 {Y_t + piv:.2f}) skewX({-ANG:.3f}) translate(0 {-piv:.2f})', g_rectos),
               (f'translate(0 {Y_t:.2f})', g_cajas)] + ree
@@ -271,8 +284,28 @@ def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag
         g_drag, der_drag = svg_palabra('DRAG', Cd, x_d, base_d, color), x_d + der_d
     piezas = [g_drag, capas(trazos, tinta_tree, contorno, grueso * C), f'<g transform="translate(0 {Y_t:.2f})">{g_luces}</g>']
     arriba_total, abajo_total = base_d - Cd, max(Y_b, Y_t + Ht)
-    x0, y0 = izq_total - m, arriba_total - m
-    w, h = max(der_total, der_drag) - izq_total + 2 * m, abajo_total - arriba_total + 2 * m
+    caja = [izq_total, arriba_total, max(der_total, der_drag), abajo_total]
+    if giro:
+        # c8 (26 oct): todo el logo sube hacia la derecha (giro°, como la calcomanía original) y abajo, en el hueco que
+        # queda bajo REE, el lema en cursiva (Mr Dafoe, OFL) derecho, del color de DRAG
+        cx, cy = (caja[0] + caja[2]) / 2, (caja[1] + caja[3]) / 2
+        ca, sa = math.cos(math.radians(giro)), math.sin(math.radians(giro))
+        rot = lambda x, y: (cx + (x - cx) * ca + (y - cy) * sa, cy - (x - cx) * sa + (y - cy) * ca)
+        esquinas = [rot(x, y) for x in (caja[0], caja[2]) for y in (caja[1], caja[3])]
+        piezas = [f'<g transform="rotate({-giro:.2f} {cx:.2f} {cy:.2f})">' + ''.join(piezas) + '</g>']
+        caja = [min(p[0] for p in esquinas), min(p[1] for p in esquinas), max(p[0] for p in esquinas), max(p[1] for p in esquinas)]
+        if lema:
+            (p1x, p1y), (p2x, p2y) = rot(pie_ree[0], Y_b), rot(pie_ree[1], Y_b)
+            y_pie = lambda x: p1y + (x - p1x) * (p2y - p1y) / (p2x - p1x)   # orilla de abajo de REE, ya girada
+            glifos, ancho_l, sube_l, baja_l, k = cursiva(lema, 0.78 * (pie_ree[1] - pie_ree[0]))
+            xd = p2x - 0.02 * C                                              # termina bajo la última E
+            xi = xd - ancho_l
+            base_l = y_pie(xi) + grueso * C + 0.07 * C + sube_l              # su parte de arriba, justo bajo REE
+            piezas.append(f'<g fill="{color}">' + ''.join(
+                f'<path transform="translate({xi + dx:.2f} {base_l:.2f}) scale({k:.5f} {-k:.5f})" d="{d}"/>' for d, dx in glifos) + '</g>')
+            caja = [min(caja[0], xi), caja[1], max(caja[2], xd), max(caja[3], base_l + baja_l)]
+    x0, y0 = caja[0] - m, caja[1] - m
+    w, h = caja[2] - caja[0] + 2 * m, caja[3] - caja[1] + 2 * m
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{x0:.1f} {y0:.1f} {w:.1f} {h:.1f}" width="{w:.0f}" height="{h:.0f}">'
             + ''.join(piezas) + '</svg>')
 
@@ -297,6 +330,10 @@ if __name__ == '__main__':
     open(os.path.join(AQUI, 'logo_c7.svg'), 'w').write(logo_c5('#111', '#111', '#fff', 0.035, 'bloque', 'cuadrada'))
     open(os.path.join(AQUI, 'logo_c7_oscuro.svg'), 'w').write(logo_c5('#fff', '#111', '#fff', 0.035, 'bloque', 'cuadrada'))
     open(os.path.join(AQUI, 'logo_c7_encabezado.svg'), 'w').write(logo_c5('#fff', '#111', '#fff', 0.08, 'bloque', 'cuadrada'))
+    # c8 (26 oct): c7 inclinado hacia arriba con "On the mark" en cursiva abajo
+    for nombre, args in (('logo_c8', ('#111', '#111', '#fff', 0.035)), ('logo_c8_oscuro', ('#fff', '#111', '#fff', 0.035)),
+                         ('logo_c8_encabezado', ('#fff', '#111', '#fff', 0.08))):
+        open(os.path.join(AQUI, nombre + '.svg'), 'w').write(logo_c5(*args, 'bloque', 'cuadrada', giro=8.0, lema='On the mark'))
     # c4 (26 oct): la T más grande, inclinada como la letra, tres ámbar
     open(os.path.join(AQUI, 'logo_c4.svg'), 'w').write(logo('c4', '#111'))
     open(os.path.join(AQUI, 'logo_c4_oscuro.svg'), 'w').write(logo('c4', '#fff', '#111', '#fff', 0.02))
@@ -316,12 +353,12 @@ if __name__ == '__main__':
       .barra img{{height:60px}} .chips{{font:12px system-ui;color:#ddd;background:rgba(16,16,18,.93);border:1.5px solid rgba(255,255,255,.24);
             border-radius:99px;padding:5px 9px}}
     </style><main>
-      <section><img class="g" src="logo_c7.svg"><p>En fondo blanco</p></section>
-      <section class="os"><img class="g" src="logo_c7_oscuro.svg"><p>En fondo oscuro: TREE negro con contorno blanco</p></section>
+      <section><img class="g" src="logo_c8.svg"><p>En fondo blanco</p></section>
+      <section class="os"><img class="g" src="logo_c8_oscuro.svg"><p>En fondo oscuro: TREE negro con contorno blanco</p></section>
       <div class="app">
-        <div><div class="tel"><div class="barra"><img src="logo_c7_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
+        <div><div class="tel"><div class="barra"><img src="logo_c8_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
           <p>Arriba en la app, con el fondo Gallos</p></div>
-        <div><div class="tel sin"><div class="barra"><img src="logo_c7_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
+        <div><div class="tel sin"><div class="barra"><img src="logo_c8_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
           <p>Arriba en la app, sin fondo</p></div>
       </div>
     </main>"""
@@ -329,6 +366,6 @@ if __name__ == '__main__':
     with sync_playwright() as p:
         b = p.chromium.launch(); pg = b.new_page(viewport={'width': 1600, 'height': 900}, device_scale_factor=1)
         pg.goto('file://' + ruta); pg.wait_for_timeout(400)
-        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c7.png')); b.close()
+        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c8.png')); b.close()
     os.remove(ruta)
     print('listo')
