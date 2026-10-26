@@ -233,15 +233,17 @@ def ree_cuadrada(x, base, H, ancho, C):
         xx += w + sep
     return [('', f'<path fill-rule="evenodd" d="{" ".join(d)}"/>')], xx - sep - x
 
-def arbol2(C, color, escala, filas, piv, yaw=0.0, giro_t=0.0, foco_dist=3.0):
+def arbol2(C, color, escala, filas, piv, yaw=0.0, giro_t=0.0, foco_dist=3.0, inclina=None):
     """La T de c4–c9 (una barra con 4 foquitos, filas de focos, inclinada como la letra) armada con figuras ya
     transformadas, para poder girarla (c10, 26 oct):
       giro_t: girarla de frente sobre su centro, en grados, hacia la derecha (como manecilla de reloj);
       yaw: girarla sobre el poste como eje, en grados, hacia la derecha (la mitad derecha se va hacia atrás), con
            perspectiva (foco_dist = distancia de la cámara en veces el alto del árbol).
     y hacia abajo desde arriba del árbol; la inclinación de la letra se hace alrededor de y = piv.
+    inclina: inclinación propia del árbol en grados (None = la de la letra, 9.4°; 0 = derecho dentro del logo).
     Devuelve (figuras [sin fill], cajas de los focos [sin fill], luces, derecha(y), xmin, xmax, alto)."""
     k = escala
+    TI = TAN if inclina is None else math.tan(math.radians(inclina))
     barra_w, barra_h, rr, poste_w = 0.92 * C * k, 0.21 * C * k, 0.03 * C * k, 0.16 * C * k
     filas_y0, paso = 0.43 * C * k, 0.215 * C * k
     foco_r, foco_dx, union_h = 0.088 * C * k, 0.265 * C * k, 0.05 * C * k
@@ -251,13 +253,13 @@ def arbol2(C, color, escala, filas, piv, yaw=0.0, giro_t=0.0, foco_dist=3.0):
     def plano(x, y):          # giro sobre el poste + perspectiva (sin la inclinación de la letra)
         z = x * sy_; q = f / (f + z)
         return x * cy_ * q, yc + (y - yc) * q
-    cx0, cy0 = plano(0, yc); cx0 += TAN * (piv - cy0)                 # centro del árbol (para girarlo de frente)
+    cx0, cy0 = plano(0, yc); cx0 += TI * (piv - cy0)                  # centro del árbol (para girarlo de frente)
     cg, sg = math.cos(math.radians(giro_t)), math.sin(math.radians(giro_t))
     def girar(X, Y):
         dx, dy = X - cx0, Y - cy0
         return cx0 + dx * cg - dy * sg, cy0 + dx * sg + dy * cg
     def P(x, y):
-        X, Y = plano(x, y); X += TAN * (piv - Y)
+        X, Y = plano(x, y); X += TI * (piv - Y)
         return girar(X, Y)
     figuras, cajas, luces, puntos = [], [], [], []
     def poligono(pts, n=6):
@@ -315,7 +317,7 @@ def cursiva(txt, ancho):
     k = ancho / x
     return [(d, dx * k) for d, dx in gl], ancho, arriba * k, -abajo * k, k
 
-def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag='inter', letra_ree='inter', giro=0.0, lema=None, crece=(1.0, 1.0), giro_t=0.0, yaw=0.0):
+def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag='inter', letra_ree='inter', giro=0.0, lema=None, crece=(1.0, 1.0), giro_t=0.0, yaw=0.0, inclina_t=None, junto=0.085):
     """C5 (26 oct, dibujo de Daniel): la T sube y se monta un poco sobre la D y la R de DRAG (va encima, con su
     contorno); R, E, E más largas hacia abajo, hasta el pie del árbol (se estiran a lo alto sin cambiar la
     inclinación); contorno más grueso. color: DRAG; tinta_tree/contorno: TREE y su contorno."""
@@ -333,10 +335,10 @@ def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag
     tf_rectos = f'translate(0 {Y_t + piv:.2f}) skewX({-ANG:.3f}) translate(0 {-piv:.2f})'
     if giro_t or yaw:   # c10: la T girada (de frente o sobre su poste); las figuras ya vienen transformadas
         g_rectos, g_cajas, g_luces, derecha, xmin, xmax, Ht = arbol2(C, tinta_tree, 1.22,
-                                                                     ('ambar', 'ambar', 'ambar', 'verde', 'rojo'), piv, yaw, giro_t)
+                                                                     ('ambar', 'ambar', 'ambar', 'verde', 'rojo'), piv, yaw, giro_t, inclina=inclina_t)
         tf_rectos = f'translate(0 {Y_t:.2f})'
     glifos, ancho_ree, izq_ree, der_ree, s = palabra('REE', C)
-    gap = (0.085 + 2 * grueso) * C
+    gap = (junto + 2 * grueso) * C                 # junto: aire entre el árbol y la R (sin contar el contorno)
     x_ree = max(d + gap - (izq_ree + TAN * (Y_b - Y)) for Y in [Y_top + (Y_b - Y_top) * k / 300 for k in range(301)]
                 if (d := derecha(Y - Y_t)) is not None)
     cc = s * TAN * (v - 1)                           # estirar a lo alto conservando la inclinación de la letra
@@ -428,6 +430,11 @@ if __name__ == '__main__':
     for nombre, args in (('logo_c11', ('#111', '#111', '#fff', 0.035)), ('logo_c11_oscuro', ('#fff', '#111', '#fff', 0.035)),
                          ('logo_c11_encabezado', ('#fff', '#111', '#fff', 0.08))):
         open(os.path.join(AQUI, nombre + '.svg'), 'w').write(logo_c5(*args, 'bloque', 'cuadrada', giro=8.0, lema='On the mark', crece=(1.9, 1.15), yaw=-48.0))
+    # c12 (26 oct): c11 con 42° de giro y el árbol derecho dentro del logo: con el giro del logo queda inclinado hacia
+    # atrás (~8°, como la raya de Daniel) y su pie más cerca de la R
+    for nombre, args in (('logo_c12', ('#111', '#111', '#fff', 0.035)), ('logo_c12_oscuro', ('#fff', '#111', '#fff', 0.035)),
+                         ('logo_c12_encabezado', ('#fff', '#111', '#fff', 0.08))):
+        open(os.path.join(AQUI, nombre + '.svg'), 'w').write(logo_c5(*args, 'bloque', 'cuadrada', giro=8.0, lema='On the mark', crece=(1.9, 1.15), yaw=-42.0, inclina_t=0.0, junto=0.03))
     # c4 (26 oct): la T más grande, inclinada como la letra, tres ámbar
     open(os.path.join(AQUI, 'logo_c4.svg'), 'w').write(logo('c4', '#111'))
     open(os.path.join(AQUI, 'logo_c4_oscuro.svg'), 'w').write(logo('c4', '#fff', '#111', '#fff', 0.02))
@@ -448,12 +455,12 @@ if __name__ == '__main__':
       .barra img{{height:76px}} .chips{{font:12px system-ui;color:#ddd;background:rgba(16,16,18,.93);border:1.5px solid rgba(255,255,255,.24);
             border-radius:99px;padding:5px 9px}}
     </style><main>
-      <section><img class="g" src="logo_c11.svg"><p>En fondo blanco</p></section>
-      <section class="os"><img class="g" src="logo_c11_oscuro.svg"><p>En fondo oscuro</p></section>
+      <section><img class="g" src="logo_c12.svg"><p>En fondo blanco</p></section>
+      <section class="os"><img class="g" src="logo_c12_oscuro.svg"><p>En fondo oscuro</p></section>
       <div class="app">
-        <div><div class="tel"><div class="barra"><img src="logo_c11_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
+        <div><div class="tel"><div class="barra"><img src="logo_c12_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
           <p>Arriba en la app, con el fondo Gallos</p></div>
-        <div><div class="tel sin"><div class="barra"><img src="logo_c11_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
+        <div><div class="tel sin"><div class="barra"><img src="logo_c12_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
           <p>Arriba en la app, sin fondo</p></div>
       </div>
     </main>"""
@@ -461,6 +468,6 @@ if __name__ == '__main__':
     with sync_playwright() as p:
         b = p.chromium.launch(); pg = b.new_page(viewport={'width': 1600, 'height': 900}, device_scale_factor=1)
         pg.goto('file://' + ruta); pg.wait_for_timeout(400)
-        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c11.png')); b.close()
+        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c12.png')); b.close()
     os.remove(ruta)
     print('listo')

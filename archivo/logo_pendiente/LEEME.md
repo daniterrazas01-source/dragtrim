@@ -65,5 +65,9 @@ calcomanía; al retomar, preguntarle qué partes no coinciden.
 - **C11** (26 oct, Daniel eligió la 2 de C10): girada sobre su poste **hacia el otro lado y con más vuelta**
   (`yaw=-48`: la mitad izquierda se va hacia atrás, la derecha queda al frente y más grande). `logo_c11.svg`,
   `logo_c11_oscuro.svg`, `logo_c11_encabezado.svg`, `hoja_c11.png`.
+- **C12** (26 oct, Daniel dibujó la raya del poste): el árbol **inclinado hacia atrás** (derecho dentro del logo,
+  `inclina_t=0`: con el giro del logo queda ~8° con la punta de arriba a la izquierda), su pie **más pegado a la R**
+  (`junto=0.03`) y **42°** de giro sobre el poste (`yaw=-42`). `logo_c12.svg`, `logo_c12_oscuro.svg`,
+  `logo_c12_encabezado.svg`, `hoja_c12.png`.
 - Falta: que Daniel lo apruebe; luego pasarlo al encabezado y a los íconos de la app.
 
