@@ -265,6 +265,13 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
                                se mide en pista), dragtree-medicion (algoritmo y cómo cambiarlo),
                                dragtree-datos-reales (zips + boleta: analizar.js, calibrar.js),
                                dragtree-publicar (probar_todo.sh y pasos para publicar)
+                               + de diseño, de otros autores (26 oct, Daniel: "moderno, retro e impecable"):
+                               impeccable (pulir/revisar; sus agentes en .claude/agents/), ui-ux-pro-max
+                               (catálogo de estilos retro y modernos), apple-design, mobile-native,
+                               review-animations (Emil Kowalski). Origen, licencias y cambios: .claude/skills/EXTERNAS.md.
+                               Las decisiones de este archivo mandan sobre lo que digan esas skills (p. ej.
+                               pantalla de medición neutral, no cambiar apple-mobile-web-app-status-bar-style,
+                               identidad sticker/logo/Saira).
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
