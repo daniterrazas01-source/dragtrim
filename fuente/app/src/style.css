@@ -510,13 +510,28 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 :where(.view[data-entra]) > *, :where(.view[data-entra] #medirIdle) > * { animation: none; }
 
 /* Logo: las luces se encienden una vez al abrir la app */
-.brand .lz { animation: lz-prende .22s ease-out both; }
+/* Pantalla de carga (0.6.4): al abrir la app, 2 s con el logo y "By Rooster Racing" (app.js la quita); siempre oscura.
+   Las luces del árbol se prenden en orden: stage, los tres ámbar, verde y rojo. */
+.carga {
+  position: fixed; inset: 0; z-index: 50; background: #141618; color: #c8cbce;
+  display: grid; grid-template-rows: 1fr auto; justify-items: center;
+  padding: env(safe-area-inset-top) 24px calc(30px + env(safe-area-inset-bottom));
+  --logo-drag: #ffffff; --logo-tree: #111111; --logo-borde: #ffffff;
+}
+.carga-logo { align-self: center; width: min(64vw, 300px); animation: carga-entra .45s var(--ease-out) both; }
+.carga-logo svg { display: block; width: 100%; height: auto; overflow: visible; }
+.carga-pie { display: grid; justify-items: center; gap: 2px; animation: aparece .4s .25s ease-out both; }
+.carga-pie span { font: 900 17px/1 'Rooster', var(--num); font-synthesis: none; letter-spacing: .04em; }
+.carga-pie img { display: block; width: min(48vw, 200px); height: auto; }
+.carga.fuera { opacity: 0; transition: opacity .3s ease; pointer-events: none; }
+@keyframes carga-entra { from { opacity: 0; transform: scale(.92); } }
+.carga .lz { animation: lz-prende .2s ease-out both; }
 @keyframes lz-prende { from { fill: var(--bulb-off); } }
-.brand .lz-0 { animation-delay: .2s; }
-.brand .lz-1 { animation-delay: .4s; }
-.brand .lz-2 { animation-delay: .55s; }
-.brand .lz-3 { animation-delay: .7s; }
-.brand .lz-4, .brand .lz-5 { animation-delay: .9s; }
+.carga .lz-0 { animation-delay: .35s; }
+.carga .lz-1 { animation-delay: .6s; }
+.carga .lz-2 { animation-delay: .8s; }
+.carga .lz-3 { animation-delay: 1s; }
+.carga .lz-4, .carga .lz-5 { animation-delay: 1.25s; }
 
 /* Sensores: el punto cambia de color suave y da un "ping" al conectarse */
 .chip { transition: color .3s; }

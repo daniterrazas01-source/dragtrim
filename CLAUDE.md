@@ -117,6 +117,12 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    semáforo de Práctica, cámara), desde la orilla (24 px: gesto de "atrás" de iPhone y Android), en un campo con el
    cursor, en un deslizador ni en algo que se recorre de lado (tablas de Calcular). Bloquea el clic del dedo 400 ms
    después de soltar. Sin animaciones: cambia al soltar, sin seguir al dedo. Código al final de la navegación en app.js.
+   **Pantalla de carga** (0.6.4, 26 oct, Daniel): al abrir la app, 2 s en fondo #141618 con el logo mediano (con "On the
+   mark"; las luces se prenden en orden) y abajo "By" + el logo de Rooster Racing (`fuente/app/src/carga/`, copia de
+   `archivo/originales/logo_rooster_racing.png`; build.py lo recorta y lo mete como WebP). Se desvanece 0.3 s al final
+   (sin animaciones solo se quita). `#carga` en index.template.html, `.carga` en style.css, el reloj al inicio de app.js.
+   **En las pruebas automáticas no sale** (`navigator.webdriver`) salvo con `?carga` (carga_test.py), así las demás pruebas
+   no esperan los 2 s.
 
 8. **Primera prueba real** (11 oct 2026, autódromo, zip `dragtrim_20261011_143244`, rollout 0.5 ft):
    boleta 60ft 2.650 / 201 m 9.339 @132.40 / 402 m 14.043 @ 181.71 km/h (confirmado por Daniel;
@@ -240,7 +246,8 @@ fuente/app/src/semaforo_vision.js, semaforo.js, semaforo_sim.js   semáforo real
 fuente/app/src/camara.js, camara.css   cámara en el navegador (DragCam) y pantalla Apuntar
 fuente/app/src/prueba_camara.template.html + tools/build_prueba.py   página de prueba prueba/camara.html
 fuente/app/src/index.template.html, style.css
-fuente/app/src/logo.svg, icono/  logo de la barra de arriba e ícono (los genera archivo/logo_pendiente/v5/hacer_logo.py)
+fuente/app/src/logo.svg, icono/  logo de la barra de arriba y de la carga, e ícono (los genera archivo/logo_pendiente/v5/hacer_logo.py)
+fuente/app/src/carga/          logo de Rooster Racing para la pantalla de carga
 fuente/app/tools/build.py      junta todo en un index.html autocontenido + sw.js + íconos (sube VERSION al cambiar)
 fuente/publicar.sh             build + copia a la raíz
 fuente/matlab/                 script MATLAB Mobile v2.3 (mismo algoritmo); Drag_tree_v2_unico.m = todo en un archivo
@@ -258,7 +265,7 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). En la rama, sin publicar: **0.6.4** ("On the mark" en la barra de arriba; sin la etiqueta "beta"; la versión se llama "0.6.4" y la caché `v-0.6.4`). Publicada: **beta 0.6.3** (26 oct 2026: el logo nuevo en la barra de arriba y en el ícono, punto 6); antes **beta 0.6.2** (25 oct 2026: el semáforo con
+caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.6.4** (26 oct 2026: pantalla de carga de 2 s con el logo y "By Rooster Racing"; "On the mark" en la barra de arriba; sin la etiqueta "beta": la versión se llama "0.6.4" y la caché `v-0.6.4`); antes **beta 0.6.3** (26 oct 2026: el logo nuevo en la barra de arriba y en el ícono, punto 6); antes **beta 0.6.2** (25 oct 2026: el semáforo con
 cámara sale de la app; fondo nuevo "Gallos" con los logos de Rooster Racing; Práctica: botón "Mantén" más chico (19vh, 300 px de ancho en solo), cuadro de la reacción compacto y más abajo, focos que caben sin tocarlo; letra tipo Rooster Racing en títulos, etiquetas, selectores, botones principales y pestañas; Práctica: Modo, Árbol, Cómo sales y Formato en un solo panel con solo la explicación de lo elegido (EXPLICA en practica.js), 892 → 648 px de alto; el contenido también junto al notch del iPhone; deslizar el dedo entre pestañas); **beta 0.6.1** (25 oct 2026: el semáforo con cámara vuelve a "en desarrollo"); 0.6 (25 oct 2026: semáforo real
 con la cámara, punto 13; trae también la 0.5.4: tarjeta Race 1 vs 1 "en desarrollo"). Antes: **beta 0.5.3** (fondo de Práctica que responde a la reacción; 0.5.2: guía para instalar; 0.5.1: nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
 algoritmo v2.3.
@@ -282,6 +289,7 @@ python3 calc_test.py     # pestaña Calcular en Chromium (GPS y clima falsos, si
 python3 brillo_test.py   # Práctica: brillo verde/rojo por fondo y que no cambie durante el árbol
 python3 instalar_test.py # guía de instalación por teléfono/navegador, iPad vertical/horizontal, contraste de pestañas
 python3 deslizar_test.py # deslizar el dedo entre pestañas (toques reales por CDP): pasa, regresa, orillas, corrida, semáforo
+python3 carga_test.py    # pantalla de carga: logo + "By" Rooster Racing, 2 s, se desvanece, sin "beta" (con ?carga)
 python3 mcheck.py ../matlab/*.m   # revisión estructural de MATLAB (aquí no hay MATLAB/Octave)
 node semaforo_sim_test.js   # simulador del árbol y la cámara
 node reaccion.js            # semáforo punta a punta: sesión simulada + árbol + análisis (~75 s)

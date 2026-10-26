@@ -9,8 +9,16 @@ DIST.mkdir(exist_ok=True)
 VERSION = 'v-0.6.4'
 
 html = (SRC / 'index.template.html').read_text(encoding='utf-8')
-assert html.count('<!--LOGO-->') == 1
-html = html.replace('<!--LOGO-->', (SRC / 'logo.svg').read_text(encoding='utf-8').strip())   # logo de la barra de arriba
+assert html.count('<!--LOGO-->') == 2
+html = html.replace('<!--LOGO-->', (SRC / 'logo.svg').read_text(encoding='utf-8').strip())   # logo: barra de arriba y pantalla de carga
+def _rooster():   # logo de Rooster Racing para la pantalla de carga: recortado, 440 px de ancho, WebP con transparencia
+    import io
+    im = Image.open(SRC / 'carga' / 'logo_rooster_racing.png').convert('RGBA')
+    im = im.crop(im.getbbox()); im = im.resize((440, round(im.height * 440 / im.width)), Image.LANCZOS)
+    b = io.BytesIO(); im.save(b, 'WEBP', quality=86, method=6)
+    return 'data:image/webp;base64,' + base64.b64encode(b.getvalue()).decode()
+assert html.count('ROOSTER_URL') == 1
+html = html.replace('ROOSTER_URL', _rooster())
 html = html.replace('/*CSS*/', (SRC / 'style.css').read_text(encoding='utf-8') + '\n' + (SRC / 'camara.css').read_text(encoding='utf-8'))
 # letra de Rooster Racing (fondo Gallos), dentro del index.html para que funcione sin internet
 _fuente = 'url("fuentes/saira-black-italic.woff2")'

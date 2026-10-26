@@ -53,6 +53,15 @@
 
   // ------------------------------------------------------------ animaciones
   const conAnim = () => S.anim !== false && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // Pantalla de carga (0.6.4): el logo y "By Rooster Racing" 2 s al abrir la app; se desvanece al final (sin animaciones,
+  // solo se quita). En las pruebas automáticas (navigator.webdriver) no sale, salvo con ?carga.
+  (() => {
+    const c = document.getElementById('carga');
+    if (!c) return;
+    if (navigator.webdriver && !/[?&]carga\b/.test(location.search)) { c.remove(); return; }
+    if (conAnim()) setTimeout(() => c.classList.add('fuera'), 1700);
+    setTimeout(() => c.remove(), 2000);
+  })();
   // Los números marcados con data-cnt cuentan desde 0 hasta su valor (solo es visual; el valor final es el mismo).
   function contar(raiz, retraso = 250, dur = 750) {
     if (!conAnim()) return;
