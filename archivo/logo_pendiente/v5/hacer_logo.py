@@ -171,7 +171,40 @@ def logo(variante, color='#111', tinta_tree=None, contorno=None, grueso=0.02):
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{x0:.1f} {y0:.1f} {w:.1f} {h:.1f}" width="{w:.0f}" height="{h:.0f}">'
             + ''.join(piezas) + '</svg>')
 
-def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035):
+# DRAG en letra de bloque (26 oct): dibujada aquí, inspirada en la forma de "Full Pack 2025" (imagex) que mandó Daniel
+# (esa letra es solo para uso personal, por eso no se usa su archivo). Letras derechas en unidades de su altura (y hacia
+# arriba desde la línea base); se inclinan HACIA ATRÁS (arriba a la izquierda) ATRAS grados. Huecos con evenodd.
+ATRAS = 20.0
+def _letras_bloque():
+    D, R, A, G = 1.05, 1.0, 1.0, 1.05
+    letras = {
+        'D': (D, [[(0, 0), (D - 0.3, 0), (D, 0.3), (D, 0.7), (D - 0.3, 1), (0, 1)],
+                  [(0.3, 0.37), (D - 0.33, 0.37), (D - 0.33, 0.63), (0.3, 0.63)]]),
+        'R': (R, [[(0, 0), (0.3, 0), (0.3, 0.34), (0.6, 0.34), (0.6, 0), (R, 0), (R, 0.4), (R - 0.16, 0.48), (R, 0.56),
+                   (R, 0.8), (R - 0.2, 1), (0, 1)],
+                  [(0.3, 0.6), (0.72, 0.6), (0.72, 0.78), (0.3, 0.78)]]),
+        'A': (A, [[(0, 0), (0.3, 0), (0.3, 0.3), (0.7, 0.3), (0.7, 0), (A, 0), (A, 1), (0.36, 1), (0, 0.64)],
+                  [(0.3, 0.52), (0.7, 0.52), (0.7, 0.72), (0.34, 0.72)]]),
+        'G': (G, [[(0.18, 0), (G, 0), (G, 0.55), (0.56, 0.55), (0.56, 0.28), (0.3, 0.28), (0.3, 0.72), (G, 0.72), (G, 0.84),
+                   (G - 0.16, 1), (0, 1), (0, 0.18)]]),
+    }
+    return letras
+def svg_drag_bloque(izq, der, base, color):
+    """DRAG en bloque inclinada hacia atrás, que llena de izq a der (tinta); línea base en base. Devuelve (svg, alto)."""
+    L, sep, t = _letras_bloque(), 0.1, math.tan(math.radians(ATRAS))
+    total = sum(L[c][0] for c in 'DRAG') + 3 * sep
+    H = (der - izq) / (total + t)              # arriba a la izquierda sobresale t·H
+    x0 = izq + t * H
+    d, x = [], 0.0
+    for c in 'DRAG':
+        w, polis = L[c]
+        for pts in polis:
+            q = [(x0 + H * (x + px - t * py), base - H * py) for px, py in pts]
+            d.append('M' + ' L'.join(f'{a:.2f} {b:.2f}' for a, b in q) + ' Z')
+        x += w + sep
+    return f'<path fill="{color}" fill-rule="evenodd" d="{" ".join(d)}"/>', H
+
+def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag='inter'):
     """C5 (26 oct, dibujo de Daniel): la T sube y se monta un poco sobre la D y la R de DRAG (va encima, con su
     contorno); R, E, E más largas hacia abajo, hasta el pie del árbol (se estiran a lo alto sin cambiar la
     inclinación); contorno más grueso. color: DRAG; tinta_tree/contorno: TREE y su contorno."""
@@ -197,16 +230,20 @@ def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035):
     izq_total = xmin
     der_total = x_ree + der_ree + TAN * C * (v - 1)
     # DRAG a todo lo ancho, del árbol a la última E; va abajo de la T (la T se monta encima)
-    _, _, izq_d, der_d, _ = palabra('DRAG', C)
-    Cd = C * (der_total - izq_total) / (der_d - izq_d)
-    _, _, izq_d, der_d, _ = palabra('DRAG', Cd)
     base_d = Y_top - 0.2 * C
-    x_d = izq_total - izq_d
-    piezas = [svg_palabra('DRAG', Cd, x_d, base_d, color),
-              capas(trazos, tinta_tree, contorno, grueso * C), f'<g transform="translate(0 {Y_t:.2f})">{g_luces}</g>']
+    if drag == 'bloque':   # c6: DRAG en letra de bloque inclinada hacia atrás
+        g_drag, Cd = svg_drag_bloque(izq_total, der_total, base_d, color)
+        der_drag = der_total
+    else:
+        _, _, izq_d, der_d, _ = palabra('DRAG', C)
+        Cd = C * (der_total - izq_total) / (der_d - izq_d)
+        _, _, izq_d, der_d, _ = palabra('DRAG', Cd)
+        x_d = izq_total - izq_d
+        g_drag, der_drag = svg_palabra('DRAG', Cd, x_d, base_d, color), x_d + der_d
+    piezas = [g_drag, capas(trazos, tinta_tree, contorno, grueso * C), f'<g transform="translate(0 {Y_t:.2f})">{g_luces}</g>']
     arriba_total, abajo_total = base_d - Cd, max(Y_b, Y_t + Ht)
     x0, y0 = izq_total - m, arriba_total - m
-    w, h = max(der_total, x_d + der_d) - izq_total + 2 * m, abajo_total - arriba_total + 2 * m
+    w, h = max(der_total, der_drag) - izq_total + 2 * m, abajo_total - arriba_total + 2 * m
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{x0:.1f} {y0:.1f} {w:.1f} {h:.1f}" width="{w:.0f}" height="{h:.0f}">'
             + ''.join(piezas) + '</svg>')
 
@@ -223,6 +260,10 @@ if __name__ == '__main__':
     open(os.path.join(AQUI, 'logo_c5.svg'), 'w').write(logo_c5('#111', '#111', '#fff', 0.035))
     open(os.path.join(AQUI, 'logo_c5_oscuro.svg'), 'w').write(logo_c5('#fff', '#111', '#fff', 0.035))
     open(os.path.join(AQUI, 'logo_c5_encabezado.svg'), 'w').write(logo_c5('#fff', '#111', '#fff', 0.08))
+    # c6 (26 oct): como c5 pero DRAG en letra de bloque inclinada hacia atrás
+    open(os.path.join(AQUI, 'logo_c6.svg'), 'w').write(logo_c5('#111', '#111', '#fff', 0.035, 'bloque'))
+    open(os.path.join(AQUI, 'logo_c6_oscuro.svg'), 'w').write(logo_c5('#fff', '#111', '#fff', 0.035, 'bloque'))
+    open(os.path.join(AQUI, 'logo_c6_encabezado.svg'), 'w').write(logo_c5('#fff', '#111', '#fff', 0.08, 'bloque'))
     # c4 (26 oct): la T más grande, inclinada como la letra, tres ámbar
     open(os.path.join(AQUI, 'logo_c4.svg'), 'w').write(logo('c4', '#111'))
     open(os.path.join(AQUI, 'logo_c4_oscuro.svg'), 'w').write(logo('c4', '#fff', '#111', '#fff', 0.02))
@@ -242,12 +283,12 @@ if __name__ == '__main__':
       .barra img{{height:60px}} .chips{{font:12px system-ui;color:#ddd;background:rgba(16,16,18,.93);border:1.5px solid rgba(255,255,255,.24);
             border-radius:99px;padding:5px 9px}}
     </style><main>
-      <section><img class="g" src="logo_c5.svg"><p>En fondo blanco</p></section>
-      <section class="os"><img class="g" src="logo_c5_oscuro.svg"><p>En fondo oscuro: TREE negro con contorno blanco</p></section>
+      <section><img class="g" src="logo_c6.svg"><p>En fondo blanco</p></section>
+      <section class="os"><img class="g" src="logo_c6_oscuro.svg"><p>En fondo oscuro: TREE negro con contorno blanco</p></section>
       <div class="app">
-        <div><div class="tel"><div class="barra"><img src="logo_c5_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
+        <div><div class="tel"><div class="barra"><img src="logo_c6_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
           <p>Arriba en la app, con el fondo Gallos</p></div>
-        <div><div class="tel sin"><div class="barra"><img src="logo_c5_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
+        <div><div class="tel sin"><div class="barra"><img src="logo_c6_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
           <p>Arriba en la app, sin fondo</p></div>
       </div>
     </main>"""
@@ -255,6 +296,6 @@ if __name__ == '__main__':
     with sync_playwright() as p:
         b = p.chromium.launch(); pg = b.new_page(viewport={'width': 1600, 'height': 900}, device_scale_factor=1)
         pg.goto('file://' + ruta); pg.wait_for_timeout(400)
-        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c5.png')); b.close()
+        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c6.png')); b.close()
     os.remove(ruta)
     print('listo')

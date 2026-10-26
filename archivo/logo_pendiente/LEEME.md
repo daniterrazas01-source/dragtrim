@@ -39,5 +39,10 @@ calcomanía; al retomar, preguntarle qué partes no coinciden.
   (TREE va encima de DRAG; en fondo claro el contorno blanco la separa); **R, E, E más largas hacia abajo** hasta casi el
   pie del árbol (se estiran a lo alto ×~1.6 sin cambiar la inclinación: `matrix` en `logo_c5()`); **contorno más grueso**
   (0.035 C; encabezado 0.08 C). `logo_c5.svg`, `logo_c5_oscuro.svg`, `logo_c5_encabezado.svg`, `hoja_c5.png`.
+- **C6** (26 oct, Daniel): DRAG con la forma de la letra **"Full Pack 2025"** (imagex, dafont;
+  `referencias/letra_full_pack_2025.jpg`) pero **inclinada hacia atrás** (ATRAS = 20°) y en blanco (negro en fondo claro).
+  Esa letra es gratis solo para uso personal, así que **no se usa su archivo**: D, R, A, G están dibujadas a mano en
+  `_letras_bloque()` (bloques con huecos angostos y esquinas cortadas). Si Daniel consigue la licencia comercial, se
+  podría usar la letra real. `logo_c6.svg`, `logo_c6_oscuro.svg`, `logo_c6_encabezado.svg`, `hoja_c6.png`.
 - Falta: que Daniel lo apruebe; luego pasarlo al encabezado y a los íconos de la app.
 
