@@ -27,5 +27,9 @@ calcomanía; al retomar, preguntarle qué partes no coinciden.
   inclinado al lado contrario de la letra y con colores: foquitos del pre-stage y del stage amarillos, dos filas ámbar,
   verde y rojo (cada foco con un aro del color del árbol, como su caja). REE se separa lo justo para no chocar con
   ningún foco (`derecha()` en hacer_logo.py). Colores en COLORES.
+- **C3** (26 oct, Daniel): pre-stage y stage en **una sola barra** (con sus 4 foquitos amarillos adentro) para que el
+  árbol sea la T; poste más grueso (0.16 C). En fondo oscuro TREE (árbol + REE) va **negro con contorno blanco delgado**
+  (0.02 C; el contorno rodea la figura completa: `capas()`), DRAG blanco. `logo_c3.svg` (claro), `logo_c3_oscuro.svg`,
+  `logo_c3_encabezado.svg` (contorno 0.06 C para que a 60 px de alto se vea de ~1 px), `hoja_c3.png`.
 - Falta: que Daniel lo apruebe; luego pasarlo al encabezado y a los íconos de la app.
 
