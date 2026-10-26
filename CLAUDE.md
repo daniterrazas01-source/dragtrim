@@ -268,7 +268,8 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
                                + de diseño, de otros autores (26 oct, Daniel: "moderno, retro e impecable"):
                                impeccable (pulir/revisar; sus agentes en .claude/agents/), ui-ux-pro-max
                                (catálogo de estilos retro y modernos), apple-design, mobile-native,
-                               review-animations (Emil Kowalski). Origen, licencias y cambios: .claude/skills/EXTERNAS.md.
+                               review-animations (Emil Kowalski), no-ui-slop (UXKIN, sin su servidor de paga).
+                               Origen, licencias y cambios: .claude/skills/EXTERNAS.md.
                                Las decisiones de este archivo mandan sobre lo que digan esas skills (p. ej.
                                pantalla de medición neutral, no cambiar apple-mobile-web-app-status-bar-style,
                                identidad sticker/logo/Saira).
