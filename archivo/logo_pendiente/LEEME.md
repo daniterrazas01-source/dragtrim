@@ -62,5 +62,8 @@ calcomanía; al retomar, preguntarle qué partes no coinciden.
   lecturas, para que elija: `logo_c10a*` girada **de frente** 8° hacia la derecha (la barra queda derecha) y `logo_c10b*`
   girada **sobre su poste** 35° hacia la derecha, con perspectiva (la mitad derecha se va hacia atrás). `arbol2()` arma la
   T con figuras ya transformadas; REE se recorre solo para no chocar. `hoja_c10.png` (como estaba, 1 y 2).
+- **C11** (26 oct, Daniel eligió la 2 de C10): girada sobre su poste **hacia el otro lado y con más vuelta**
+  (`yaw=-48`: la mitad izquierda se va hacia atrás, la derecha queda al frente y más grande). `logo_c11.svg`,
+  `logo_c11_oscuro.svg`, `logo_c11_encabezado.svg`, `hoja_c11.png`.
 - Falta: que Daniel lo apruebe; luego pasarlo al encabezado y a los íconos de la app.
 

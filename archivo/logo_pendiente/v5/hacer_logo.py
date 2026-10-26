@@ -424,6 +424,10 @@ if __name__ == '__main__':
     for sufijo, extra in (('a', dict(giro_t=8.0)), ('b', dict(yaw=35.0))):
         for nombre, args in ((f'logo_c10{sufijo}', ('#111', '#111', '#fff', 0.035)), (f'logo_c10{sufijo}_oscuro', ('#fff', '#111', '#fff', 0.035))):
             open(os.path.join(AQUI, nombre + '.svg'), 'w').write(logo_c5(*args, 'bloque', 'cuadrada', giro=8.0, lema='On the mark', crece=(1.9, 1.15), **extra))
+    # c11 (26 oct): la 2 de c10 (sobre su poste) pero hacia el otro lado y con más vuelta (−48°: la mitad izquierda se va atrás)
+    for nombre, args in (('logo_c11', ('#111', '#111', '#fff', 0.035)), ('logo_c11_oscuro', ('#fff', '#111', '#fff', 0.035)),
+                         ('logo_c11_encabezado', ('#fff', '#111', '#fff', 0.08))):
+        open(os.path.join(AQUI, nombre + '.svg'), 'w').write(logo_c5(*args, 'bloque', 'cuadrada', giro=8.0, lema='On the mark', crece=(1.9, 1.15), yaw=-48.0))
     # c4 (26 oct): la T más grande, inclinada como la letra, tres ámbar
     open(os.path.join(AQUI, 'logo_c4.svg'), 'w').write(logo('c4', '#111'))
     open(os.path.join(AQUI, 'logo_c4_oscuro.svg'), 'w').write(logo('c4', '#fff', '#111', '#fff', 0.02))
@@ -431,19 +435,32 @@ if __name__ == '__main__':
     if '--sin-hoja' in sys.argv: sys.exit()
     from playwright.sync_api import sync_playwright
     FONDO = os.path.abspath(os.path.join(AQUI, '..', '..', '..', 'fondos', 'gallos.webp'))
-    html = """<!doctype html><meta charset="utf-8"><style>
-      body{margin:0;font:600 24px system-ui;color:#bbb;background:#141618}
-      main{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0} section{padding:36px 40px 26px}
-      img{width:100%} p{margin:14px 0 0;text-align:center}
+    FONDO = os.path.abspath(os.path.join(AQUI, '..', '..', '..', 'fondos', 'gallos.webp'))
+    html = f"""<!doctype html><meta charset="utf-8"><style>
+      body{{margin:0;font:600 22px system-ui;color:#555;background:#fff}}
+      main{{display:grid;grid-template-columns:1fr 1fr;gap:0}} section{{padding:40px 50px 30px}}
+      .os{{background:#141618;color:#aaa}} img.g{{width:100%}} p{{margin:16px 0 0;text-align:center}}
+      .app{{grid-column:1/3;background:#141618;color:#aaa;padding:30px 50px;display:flex;gap:40px;justify-content:center;align-items:end}}
+      .tel{{width:393px;border-radius:28px;overflow:hidden;position:relative;height:150px;background:url('file://{FONDO}') center top/cover}}
+      .tel.sin{{background:#24282c}}
+      .tel:not(.sin)::before{{content:"";position:absolute;inset:0;background:rgba(10,10,11,.78)}}
+      .barra{{position:absolute;left:16px;right:16px;top:58px;display:flex;align-items:center;justify-content:space-between}}
+      .barra img{{height:76px}} .chips{{font:12px system-ui;color:#ddd;background:rgba(16,16,18,.93);border:1.5px solid rgba(255,255,255,.24);
+            border-radius:99px;padding:5px 9px}}
     </style><main>
-      <section><img src="logo_c9_oscuro.svg"><p>Como estaba</p></section>
-      <section><img src="logo_c10a_oscuro.svg"><p>1 · Girada de frente hacia la derecha</p></section>
-      <section><img src="logo_c10b_oscuro.svg"><p>2 · Girada sobre su poste hacia la derecha</p></section>
+      <section><img class="g" src="logo_c11.svg"><p>En fondo blanco</p></section>
+      <section class="os"><img class="g" src="logo_c11_oscuro.svg"><p>En fondo oscuro</p></section>
+      <div class="app">
+        <div><div class="tel"><div class="barra"><img src="logo_c11_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
+          <p>Arriba en la app, con el fondo Gallos</p></div>
+        <div><div class="tel sin"><div class="barra"><img src="logo_c11_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
+          <p>Arriba en la app, sin fondo</p></div>
+      </div>
     </main>"""
     ruta = os.path.join(AQUI, '_hoja.html'); open(ruta, 'w').write(html)
     with sync_playwright() as p:
-        b = p.chromium.launch(); pg = b.new_page(viewport={'width': 1800, 'height': 900}, device_scale_factor=1)
+        b = p.chromium.launch(); pg = b.new_page(viewport={'width': 1600, 'height': 900}, device_scale_factor=1)
         pg.goto('file://' + ruta); pg.wait_for_timeout(400)
-        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c10.png')); b.close()
+        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c11.png')); b.close()
     os.remove(ruta)
     print('listo')
