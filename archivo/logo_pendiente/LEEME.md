@@ -11,3 +11,17 @@ La app sigue con su logo de siempre; nada de esto está en uso.
 
 Comentario de Daniel sobre v4: "el logo es diferente al que me diste" — no se parece lo suficiente a la
 calcomanía; al retomar, preguntarle qué partes no coinciden.
+
+## v5 (26 oct 2026, Daniel retomó el logo)
+
+- `referencias/drag_racing_marcado_v5.jpg`: la imagen que mandó (logo "Drag [árbol] Racing" con "Racing" tachado y su
+  dibujo encima): usar esa letra, "DRAG" arriba de "TREE" y el árbol de salidas como la T; agregar R, E, E.
+- `v5/hacer_logo.py` arma los SVG: letra **Inter Black Italic** (OFL, la más parecida a la de su imagen; las letras van
+  como trazos, no hace falta la letra), el árbol se dibuja igual que el de su imagen (2 barras con foquitos + 4 filas de
+  focos) con barras y poste inclinados como la letra (9.4°) y focos redondos.
+  - `logo_a.svg`: como su dibujo (DRAG arriba de REE, árbol largo que baja como la T).
+  - `logo_b.svg`: igual con "Drag" / "ree" en minúsculas como en su imagen.
+  - `logo_c.svg`: compacto, DRAG a todo lo ancho (pensado para el encabezado de la app).
+  - `*_blanco.svg` para fondo oscuro; `hoja_claro.png` / `hoja_oscuro.png` las tres juntas.
+- Falta: que Daniel elija y diga qué cambiar; luego pasarlo al encabezado y a los íconos de la app.
+
