@@ -54,5 +54,9 @@ calcomanía; al retomar, preguntarle qué partes no coinciden.
   del color de DRAG, con la letra **Mr Dafoe** (OFL, `v5/fuentes/`). `logo_c5(..., giro=8, lema='On the mark')`.
   `logo_c8.svg`, `logo_c8_oscuro.svg`, `logo_c8_encabezado.svg`, `hoja_c8.png`. En el encabezado de la app el lema no se
   alcanza a leer: ahí convendría la versión sin lema.
+- **C9** (26 oct, Daniel marcó la zona): DRAG **más grande**, de la D (×1.9 del alto de antes) bajando en línea recta
+  hasta la G (×1.15): la orilla de arriba queda inclinada y llena la zona marcada (`crece=(1.9, 1.15)` en `logo_c5`;
+  `svg_drag_bloque(f_izq, f_der)`; la esquina de arriba de la D cabe en el ancho del logo). `logo_c9.svg`,
+  `logo_c9_oscuro.svg`, `logo_c9_encabezado.svg`, `hoja_c9.png`.
 - Falta: que Daniel lo apruebe; luego pasarlo al encabezado y a los íconos de la app.
 

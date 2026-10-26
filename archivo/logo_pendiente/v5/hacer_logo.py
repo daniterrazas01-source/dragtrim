@@ -189,20 +189,26 @@ def _letras_bloque():
                    (G - 0.16, 1), (0, 1), (0, 0.18)]]),
     }
     return letras
-def svg_drag_bloque(izq, der, base, color):
-    """DRAG en bloque inclinada hacia atrás, que llena de izq a der (tinta); línea base en base. Devuelve (svg, alto)."""
+def svg_drag_bloque(izq, der, base, color, f_izq=1.0, f_der=1.0):
+    """DRAG en bloque inclinada hacia atrás, que llena de izq a der (tinta); línea base en base. Devuelve (svg, alto).
+    f_izq/f_der (c9): alto en la orilla izquierda y derecha, en veces el alto de antes; en medio va en línea recta, así la
+    D queda más grande y las letras bajan hasta la G (la orilla de arriba queda inclinada, como la marcó Daniel)."""
     L, sep, t = _letras_bloque(), 0.1, math.tan(math.radians(ATRAS))
     total = sum(L[c][0] for c in 'DRAG') + 3 * sep
-    H = (der - izq) / (total + t)              # arriba a la izquierda sobresale t·H
-    x0 = izq + t * H
-    d, x = [], 0.0
+    H = (der - izq) / (total + t * f_izq)      # arriba a la izquierda sobresale t·(alto de la D): cabe de izq a der
+    x0 = izq + t * H * f_izq
+    alto = lambda u: H * (f_izq + (f_der - f_izq) * u / (total * H))   # alto de las letras a la distancia u del inicio
+    d, x, hmax = [], 0.0, 0.0
     for c in 'DRAG':
         w, polis = L[c]
         for pts in polis:
-            q = [(x0 + H * (x + px - t * py), base - H * py) for px, py in pts]
+            q = []
+            for px, py in pts:
+                u = H * (x + px); y = py * alto(u); hmax = max(hmax, y)
+                q.append((x0 + u - t * y, base - y))
             d.append('M' + ' L'.join(f'{a:.2f} {b:.2f}' for a, b in q) + ' Z')
         x += w + sep
-    return f'<path fill="{color}" fill-rule="evenodd" d="{" ".join(d)}"/>', H
+    return f'<path fill="{color}" fill-rule="evenodd" d="{" ".join(d)}"/>', hmax, x0 - t * alto(0)
 
 # REE cuadrada (26 oct): dibujada aquí, inspirada en la forma de "Platinum Sign Over" (imagex) que mandó Daniel (solo
 # uso personal: no se usa su archivo). Se dibuja directo a lo alto que ya tenía REE (no se estira: esquinas a 45° y
@@ -239,7 +245,7 @@ def cursiva(txt, ancho):
     k = ancho / x
     return [(d, dx * k) for d, dx in gl], ancho, arriba * k, -abajo * k, k
 
-def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag='inter', letra_ree='inter', giro=0.0, lema=None):
+def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag='inter', letra_ree='inter', giro=0.0, lema=None, crece=(1.0, 1.0)):
     """C5 (26 oct, dibujo de Daniel): la T sube y se monta un poco sobre la D y la R de DRAG (va encima, con su
     contorno); R, E, E más largas hacia abajo, hasta el pie del árbol (se estiran a lo alto sin cambiar la
     inclinación); contorno más grueso. color: DRAG; tinta_tree/contorno: TREE y su contorno."""
@@ -274,8 +280,9 @@ def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag
     # DRAG a todo lo ancho, del árbol a la última E; va abajo de la T (la T se monta encima)
     base_d = Y_top - 0.2 * C
     if drag == 'bloque':   # c6: DRAG en letra de bloque inclinada hacia atrás
-        g_drag, Cd = svg_drag_bloque(izq_total, der_total, base_d, color)
+        g_drag, Cd, izq_drag = svg_drag_bloque(izq_total, der_total, base_d, color, *crece)
         der_drag = der_total
+        izq_total = min(izq_total, izq_drag)   # la D más alta sobresale a la izquierda (va inclinada hacia atrás)
     else:
         _, _, izq_d, der_d, _ = palabra('DRAG', C)
         Cd = C * (der_total - izq_total) / (der_d - izq_d)
@@ -334,6 +341,10 @@ if __name__ == '__main__':
     for nombre, args in (('logo_c8', ('#111', '#111', '#fff', 0.035)), ('logo_c8_oscuro', ('#fff', '#111', '#fff', 0.035)),
                          ('logo_c8_encabezado', ('#fff', '#111', '#fff', 0.08))):
         open(os.path.join(AQUI, nombre + '.svg'), 'w').write(logo_c5(*args, 'bloque', 'cuadrada', giro=8.0, lema='On the mark'))
+    # c9 (26 oct): c8 con DRAG más grande, de la D (×1.9) a la G (×1.15), llenando la zona que marcó Daniel
+    for nombre, args in (('logo_c9', ('#111', '#111', '#fff', 0.035)), ('logo_c9_oscuro', ('#fff', '#111', '#fff', 0.035)),
+                         ('logo_c9_encabezado', ('#fff', '#111', '#fff', 0.08))):
+        open(os.path.join(AQUI, nombre + '.svg'), 'w').write(logo_c5(*args, 'bloque', 'cuadrada', giro=8.0, lema='On the mark', crece=(1.9, 1.15)))
     # c4 (26 oct): la T más grande, inclinada como la letra, tres ámbar
     open(os.path.join(AQUI, 'logo_c4.svg'), 'w').write(logo('c4', '#111'))
     open(os.path.join(AQUI, 'logo_c4_oscuro.svg'), 'w').write(logo('c4', '#fff', '#111', '#fff', 0.02))
@@ -353,12 +364,12 @@ if __name__ == '__main__':
       .barra img{{height:60px}} .chips{{font:12px system-ui;color:#ddd;background:rgba(16,16,18,.93);border:1.5px solid rgba(255,255,255,.24);
             border-radius:99px;padding:5px 9px}}
     </style><main>
-      <section><img class="g" src="logo_c8.svg"><p>En fondo blanco</p></section>
-      <section class="os"><img class="g" src="logo_c8_oscuro.svg"><p>En fondo oscuro: TREE negro con contorno blanco</p></section>
+      <section><img class="g" src="logo_c9.svg"><p>En fondo blanco</p></section>
+      <section class="os"><img class="g" src="logo_c9_oscuro.svg"><p>En fondo oscuro: TREE negro con contorno blanco</p></section>
       <div class="app">
-        <div><div class="tel"><div class="barra"><img src="logo_c8_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
+        <div><div class="tel"><div class="barra"><img src="logo_c9_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
           <p>Arriba en la app, con el fondo Gallos</p></div>
-        <div><div class="tel sin"><div class="barra"><img src="logo_c8_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
+        <div><div class="tel sin"><div class="barra"><img src="logo_c9_encabezado.svg"><span class="chips">● GPS ● Acel ● Pantalla</span></div></div>
           <p>Arriba en la app, sin fondo</p></div>
       </div>
     </main>"""
@@ -366,6 +377,6 @@ if __name__ == '__main__':
     with sync_playwright() as p:
         b = p.chromium.launch(); pg = b.new_page(viewport={'width': 1600, 'height': 900}, device_scale_factor=1)
         pg.goto('file://' + ruta); pg.wait_for_timeout(400)
-        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c8.png')); b.close()
+        pg.locator('main').screenshot(path=os.path.join(AQUI, 'hoja_c9.png')); b.close()
     os.remove(ruta)
     print('listo')
