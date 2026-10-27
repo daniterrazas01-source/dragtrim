@@ -6882,7 +6882,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = '0.6.5';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
+  const APP_VERSION = '0.6.6';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -8502,11 +8502,11 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   }
 
   function textoZona(c) {
-    if (st.fase === 'resultado') return P.salida === 'soltar' ? 'Mantén para otra salida' : 'Toca para otra salida';
+    if (st.fase === 'resultado') return P.salida === 'soltar' ? 'Mantén para otra salida' : 'Toca para pre-stage';
     if (c.salio) return c.rojo ? 'Luz roja' : 'Salida';
     if (c.staged) return P.salida === 'soltar' ? 'STAGED · suelta con la verde' : 'STAGED · toca con la verde';
-    if (c.preStage) return 'Pre-stage…';
-    return P.salida === 'soltar' ? 'Mantén presionado para hacer stage' : 'Toca para hacer stage';
+    if (c.preStage) return P.salida === 'soltar' ? 'Pre-stage…' : 'Pre-stage · toca para stage';
+    return P.salida === 'soltar' ? 'Mantén presionado para hacer stage' : 'Toca para pre-stage';
   }
 
   function bucle(ts) {
@@ -8640,8 +8640,11 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
       if (st.fase === 'idle') hacerStage(k);
       pintar(performance.now());
     } else {
-      if (!c.preStage && st.fase === 'idle') hacerStage(k);
-      else if (c.staged && !c.salio && (st.fase === 'espera' || st.fase === 'arbol')) salida(k, e.timeStamp || performance.now());
+      // como alinearse en pista (0.6.6, Daniel): 1.er toque pre-stage, 2.º stage (y el árbol baja solo), 3.º la salida
+      if (st.fase === 'idle') {
+        if (!c.preStage) { c.preStage = true; pintar(performance.now()); }
+        else if (!c.staged) { c.staged = true; pintar(performance.now()); revisarTodosStaged(); }
+      } else if (c.staged && !c.salio && (st.fase === 'espera' || st.fase === 'arbol')) salida(k, e.timeStamp || performance.now());
     }
   }
   function arriba(k, e) {
@@ -8707,7 +8710,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   // Explicación corta de la opción elegida (va debajo de su selector; así la sección ocupa menos)
   const EXPLICA = {
     arbol: { pro: 'Los tres ámbar encienden juntos y la verde sale 0.4 s después.', full: 'Los ámbar bajan uno por uno cada 0.5 s y luego sale la verde.' },
-    salida: { soltar: 'Mantén presionado para hacer stage y suelta con la verde, como un transbrake.', tocar: 'Un toque para hacer stage y otro para salir.' },
+    salida: { soltar: 'Mantén presionado para hacer stage y suelta con la verde, como un transbrake.', tocar: 'Como al alinearte en pista: un toque para pre-stage, otro para stage y el último para salir con la verde.' },
     formato: { boleta: 'Desde el último ámbar, como el ticket: perfecta 0.400 en Pro y 0.500 en Full. El otro sale chico abajo.',
                verde: 'Contra la verde: perfecta 0.000. El de la boleta sale chico abajo.' },
   };

@@ -6,7 +6,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageStat
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC, DIST = ROOT / 'src', ROOT / 'dist'
 DIST.mkdir(exist_ok=True)
-VERSION = 'v-0.6.5'
+VERSION = 'v-0.6.6'
 
 html = (SRC / 'index.template.html').read_text(encoding='utf-8')
 assert html.count('<!--LOGO-->') == 2
