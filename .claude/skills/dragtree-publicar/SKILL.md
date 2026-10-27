@@ -30,7 +30,7 @@ Por grupos:
 | `dragcore.js`, `drag_*.m` | `algoritmo matlab ui` | mc.js, inicio.js, spike.js, mcheck.py, archivo único al día, uitest demo/real |
 | `practica.js`, fondos, brillo | `practica` | pt_test.py, brillo_test.py |
 | `rooster.js`, `calculadora.js` | `calc` | calc.js, calc_test.py |
-| Guía de instalación, pestañas (también deslizar entre ellas), tema | `instalar ui` | instalar_test.py, deslizar_test.py, uitest |
+| Guía de instalación, pestañas (también deslizar entre ellas), tema, franja de la hora en Android (theme-color) | `instalar ui` | instalar_test.py, deslizar_test.py, carga_test.py, barra_test.py, uitest |
 | `semaforo*.js`, `camara.js/.css`, la página de prueba | `semaforo ui` | semaforo_sim_test.js, reaccion.js, semaforo_mc.js rapido (contra `archivo/ideas/semaforo_real/resultados_mc.txt`), camara_lector_test.py, camara_test.py, prueba_camara_test.py |
 | `app.js`, `style.css`, `index.template.html` | `ui practica instalar semaforo` | lo de navegador |
 | Solo texto/docs/skills | `rapido` | lo que no usa navegador |

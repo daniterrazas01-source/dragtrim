@@ -111,6 +111,19 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    `apple-mobile-web-app-status-bar-style`** (black-translucent desde 0.2): iOS lo lee al instalar y cambiarlo exigiría
    reinstalar. Desde iOS 26.1 el sistema pone un degradado oscuro sobre la hora (no se puede quitar). La vista previa
    "Drag Trim en iPhone" lo simula (iframe a pantalla completa 393×852 con las zonas seguras puestas a 59/34 px).
+   **Franja de la hora y la cámara en Android** (0.6.7, 27 oct, Daniel: "optimízalo para el notch de Samsung", trae un
+   S22 Ultra y un S25): en Android la app instalada **no se puede dibujar detrás de la hora** (Chrome todavía no lo deja en
+   apps instaladas; lo están arreglando; abajo, en la barra de gestos, sí llega desde Android 15). Esa franja, donde va el
+   hoyito de la cámara, la pinta el sistema del color de `<meta name="theme-color">`: `pintarBarra()` en app.js le pone el
+   color que queda arriba (lo de arriba del fondo con su velo, `ARRIBA` que calcula build.py con las filas 0.5–4 % de cada
+   fondo; sin fondo, el color de la app; corrida = velo 0.92; Práctica, cámara y carga encima) y cambia sola
+   (MutationObserver + cambio de modo oscuro del teléfono). Manifiesto: background_color y theme_color #141618 (la carga).
+   Cuando Chrome lo arregle, el CSS de iPhone (`env(safe-area-inset-*)`) ya lo deja como en iPhone (barra_test.py H lo
+   simula). En iPhone no cambia nada. Vistas previas "Drag Tree en Samsung" (S25 y S22 Ultra) y "Drag Tree en S26 Ultra"
+   (tres modos: hoy, pantalla completa, como iPhone). Daniel pidió lo mismo que en iPhone (fondo detrás y pantalla activa):
+   hoy solo se acerca **pantalla completa** (`display: fullscreen` o la API de pantalla completa + viewport-fit=cover: el
+   fondo llega a la cámara y se toca, pero Android esconde la hora y la batería; sin probar en teléfono) o la **app nativa**
+   (APK con Capacitor: ahí sí como iPhone). Pendiente que Daniel elija; no hacerlo sin que lo pida.
    **Deslizar entre pestañas** (0.6.2, 25 oct, Daniel lo pidió "como nativa de iPhone"): con el dedo a la izquierda/derecha
    se pasa a la pestaña de al lado. Al tomar el dedo de lado, las pestañas de los lados ya se pintan (`prepararVista`,
    `data-entra` = sin la cascada de entrada) a ±ancho y se mueven pegadas a la actual; cada una se pone a la altura donde
@@ -304,6 +317,7 @@ python3 brillo_test.py   # Práctica: brillo verde/rojo por fondo y que no cambi
 python3 instalar_test.py # guía de instalación por teléfono/navegador, iPad vertical/horizontal, contraste de pestañas
 python3 deslizar_test.py # deslizar el dedo entre pestañas (toques reales por CDP): pasa, regresa, orillas, corrida, semáforo
 python3 carga_test.py    # pantalla de carga: logo + "By" Rooster Racing, 2 s, se desvanece, sin "beta" (con ?carga)
+python3 barra_test.py    # Android: color de la franja de la hora/cámara (theme-color) por fondo, velo, tema, corrida, Práctica, carga; pantallas de Samsung
 python3 mcheck.py ../matlab/*.m   # revisión estructural de MATLAB (aquí no hay MATLAB/Octave)
 node semaforo_sim_test.js   # simulador del árbol y la cámara
 node reaccion.js            # semáforo punta a punta: sesión simulada + árbol + análisis (~75 s)

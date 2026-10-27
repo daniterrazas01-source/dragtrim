@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = '0.6.6';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
+  const APP_VERSION = '0.6.7';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -1348,10 +1348,39 @@
     document.documentElement.toggleAttribute('data-sin-anim', S.anim === false);
     if (S.tema === 'auto') document.documentElement.removeAttribute('data-theme');
     else document.documentElement.setAttribute('data-theme', S.tema);
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = getComputedStyle(document.documentElement).getPropertyValue('--asphalt').trim();
   }
   aplicarTema();
+
+  // ------------------------------------------------------------ franja de la hora y la cámara en Android (0.6.7)
+  // En Android (Samsung y los demás) la app instalada no se dibuja detrás de la hora y la batería: el sistema pinta esa
+  // franja, la del hoyito de la cámara, del color de theme-color. Se le da el color que queda arriba de la pantalla
+  // (el fondo con su velo, la corrida, Práctica, la carga) para que se vea como parte de la app. En iPhone no cambia
+  // nada: ahí la app ya se ve detrás de la hora (black-translucent).
+  const ARRIBA = {"__ARRIBA__": 1};   // build.py: color promedio de lo de arriba de cada fondo
+  const rgba = (txt) => { const m = String(txt).match(/[\d.]+/g) || []; return [+m[0] || 0, +m[1] || 0, +m[2] || 0, m.length > 3 ? +m[3] : 1]; };
+  const encima = (c, abajo) => abajo.map((x, i) => c[i] * c[3] + x * (1 - c[3]));
+  function pintarBarra() {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) return;
+    const raiz = document.documentElement, fid = raiz.getAttribute('data-fondo');
+    let c;
+    if (fid && ARRIBA[fid]) {
+      const velo = document.body.classList.contains('sesion') ? 0.92 : (parseFloat(raiz.style.getPropertyValue('--velo')) || 0.78);
+      c = encima([...rgba(getComputedStyle(raiz).getPropertyValue('--velo-color')).slice(0, 3), velo], ARRIBA[fid]);
+    } else c = rgba(getComputedStyle(document.body).backgroundColor).slice(0, 3);
+    // lo que tapa la pantalla completa, de abajo hacia arriba
+    for (const el of [document.body.classList.contains('practica') && $('#ptOverlay'), $('#camApuntar'), $('#carga')])
+      if (el && !el.hidden) c = encima(rgba(getComputedStyle(el).backgroundColor), c);
+    const hex = '#' + c.map((x) => Math.round(x).toString(16).padStart(2, '0')).join('');
+    if (meta.content !== hex) meta.content = hex;
+  }
+  // cambia sola con el tema, el fondo, el velo, la corrida, Práctica, la cámara y al quitarse la carga
+  // (la clase de <html> no se vigila: cambia al deslizar entre pestañas y ahí no debe hacer trabajo de más)
+  const vigiaBarra = new MutationObserver(pintarBarra);
+  vigiaBarra.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-fondo', 'style'] });
+  vigiaBarra.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true });
+  matchMedia('(prefers-color-scheme: light)').addEventListener('change', pintarBarra);
+  pintarBarra();
   const inR = $('#inRollout');
   inR.value = S.rollout_ft;
   inR.onchange = () => { let x = parseFloat(String(inR.value).replace(',', '.')); if (!isFin(x)) x = DEF.rollout_ft; x = Math.round(Math.min(2, Math.max(0, x)) * 10) / 10; S.rollout_ft = x; S.cam_sesgo_acel = null; inR.value = x; guardarAjustes(); };

@@ -54,11 +54,12 @@ if quiere calc;      then correr "calc_test.py"     'FALLAS: 0'           python
 if quiere ui;        then correr "uitest.py demo"   'ERRORES: ninguno'    python3 uitest.py demo
                           correr "uitest.py real"   'ERRORES: ninguno'    python3 uitest.py real; fi
 if quiere practica;  then correr "pt_test.py"       'errores: ninguno'    python3 pt_test.py
-if quiere practica;  then correr "pt_tocar_test.py"       'FALLAS: 0'          python3 pt_tocar_test.py
+                          correr "pt_tocar_test.py" 'FALLAS: 0'           python3 pt_tocar_test.py
                           correr "brillo_test.py"   'FALLAS: 0'           python3 brillo_test.py; fi
 if quiere instalar;  then correr "instalar_test.py" 'FALLAS: 0'           python3 instalar_test.py; fi
 if quiere instalar;  then correr "deslizar_test.py" 'FALLAS: 0'           python3 deslizar_test.py; fi
 if quiere instalar;  then correr "carga_test.py"    'FALLAS: 0'           python3 carga_test.py; fi
+if quiere instalar;  then correr "barra_test.py"    'FALLAS: 0'           python3 barra_test.py; fi
 # Semáforo real (cámara). El Monte Carlo se compara contra la salida guardada (varios criterios del plan todavía no se
 # cumplen: PWM, 30 fps, sol); si un cambio lo mejora a propósito, guarda la salida nueva en resultados_mc.txt.
 if quiere semaforo || quiere semaforo_node; then

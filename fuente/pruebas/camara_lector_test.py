@@ -17,6 +17,7 @@ y4m = os.path.join(raiz, 'arbol.y4m')
 info = json.loads(subprocess.check_output(['node', str(AQUI / 'arbol_y4m.js'), y4m, '--tipo', 'full', '--fps', '30', '--seg', '6']).decode())
 for f in ['semaforo_vision.js', 'semaforo.js', 'camara.js', 'camara.css', 'style.css']:
     shutil.copy(SRC / f, raiz)
+shutil.copytree(SRC / 'fuentes', os.path.join(raiz, 'fuentes'))   # la letra de Rooster de style.css (0.6.2)
 with open(os.path.join(raiz, 'p.html'), 'w', encoding='utf-8') as f:
     f.write("""<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="style.css"><link rel="stylesheet" href="camara.css"></head><body><main><p>página de prueba</p></main>

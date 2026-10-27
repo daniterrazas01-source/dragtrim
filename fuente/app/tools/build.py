@@ -6,7 +6,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageStat
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC, DIST = ROOT / 'src', ROOT / 'dist'
 DIST.mkdir(exist_ok=True)
-VERSION = 'v-0.6.6'
+VERSION = 'v-0.6.7'
 
 html = (SRC / 'index.template.html').read_text(encoding='utf-8')
 assert html.count('<!--LOGO-->') == 2
@@ -39,7 +39,8 @@ manifest = {
     "name": "Drag Tree", "short_name": "Drag Tree",
     "description": "Medidor de 1/8 y 1/4 de milla con GPS y acelerómetro.",
     "lang": "es", "start_url": "./", "scope": "./", "display": "standalone",
-    "orientation": "portrait", "background_color": "#24282c", "theme_color": "#24282c",
+    # #141618 = la pantalla de carga: en Android la de arranque del sistema y la franja de la hora ya salen de ese color (0.6.7)
+    "orientation": "portrait", "background_color": "#141618", "theme_color": "#141618",
     "icons": [
         {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
         {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
@@ -81,6 +82,7 @@ icono(512, maskable=True).save(DIST / 'icon-maskable-512.png')
 # Fondos de pantalla: WebP ligeros (el original PNG pesa ~1.7 MB) + miniatura para Ajustes
 FONDOS_SRC = ROOT.parent / 'fondos'
 BRILLO = {}
+ARRIBA = {}
 if FONDOS_SRC.exists():
     (DIST / 'fondos').mkdir(exist_ok=True)
     for png in sorted(FONDOS_SRC.glob('fondo_marcas_*.png')):
@@ -88,6 +90,9 @@ if FONDOS_SRC.exists():
         im = Image.open(png).convert('RGB')
         im.resize((1080, round(im.height * 1080 / im.width)), Image.LANCZOS).save(DIST / 'fondos' / f'{fid}.webp', quality=72, method=6)
         im.resize((180, round(im.height * 180 / im.width)), Image.LANCZOS).save(DIST / 'fondos' / f'{fid}_mini.webp', quality=70, method=6)
+        # Android (0.6.7): color promedio de lo de arriba del fondo (filas de 0.5 a 4 %, lo que queda pegado a la franja
+        # de la hora y la cámara en un Samsung); app.js lo junta con el velo y pinta esa franja de ese color.
+        ARRIBA[fid] = [round(c) for c in ImageStat.Stat(im.crop((0, round(im.height * 0.005), im.width, round(im.height * 0.04)))).mean]
         # Práctica: formas de los stickers verdes y rojos del fondo, para encenderlos según la reacción.
         # Fondos de un solo color (Neón, Blanco y negro, y el verde de Rojo): logos elegidos a mano en
         # fuente/fondos/brillo/. Los demás se recortan solos por color.
@@ -119,6 +124,9 @@ if FONDOS_SRC.exists():
             Image.merge('RGBA', (blanco, blanco, blanco, m)).save(DIST / 'fondos' / f'{fid}_brillo_{nombre}.webp', quality=70, alpha_quality=60, method=6)
 # Fuerza máxima del brillo de cada fondo en Práctica (la usa app.js)
 html = html.replace('{"__BRILLO__": 1}', json.dumps(BRILLO, sort_keys=True))
+assert '{"__ARRIBA__": 1}' in html, 'falta ARRIBA en app.js'
+html = html.replace('{"__ARRIBA__": 1}', json.dumps(ARRIBA, sort_keys=True))
 (DIST / 'index.html').write_text(html, encoding='utf-8')
 print('brillo por fondo:', BRILLO)
+print('color de arriba por fondo:', ARRIBA)
 print('ok', sorted(os.listdir(DIST)), len(html), 'bytes html')

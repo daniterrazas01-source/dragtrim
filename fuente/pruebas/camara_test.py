@@ -309,7 +309,8 @@ with sync_playwright() as p:
         pg = ctx.new_page(); pg.goto(URL); pg.wait_for_timeout(600)
         ok(pg.evaluate('document.documentElement.scrollWidth') <= vp['width'], f'G: Medir sin scroll horizontal a {nombre}')
         top = pg.locator('header.top').bounding_box()
-        ok(top['height'] < 90, f"G: encabezado con el chip Cám cabe ({top['height']:.0f} px a {nombre})")
+        # el logo mide 80 px desde 0.6.4 (+ 18 de margen = 98): con el chip Cám no debe crecer a otro renglón
+        ok(top['height'] < 105, f"G: encabezado con el chip Cám cabe ({top['height']:.0f} px a {nombre})")
         pg.screenshot(path=str(CAPT / f'camara_medir_{nombre}.png'), full_page=True)
         ctx.close()
 
