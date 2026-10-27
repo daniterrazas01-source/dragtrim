@@ -51,7 +51,8 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    - Sección **"Medir con el semáforo real"** (Daniel lo pidió el 24 oct): publicada en beta 0.6 (25 oct) y
      en 0.6.1 quedó como tarjeta "en desarrollo" y **desde 0.6.2 está fuera de la app** (Daniel: "presentó uno que
      otro fallo"; se sigue trabajando más adelante, la idea y el código se quedan; no enfocarse en eso hasta que lo
-     retome). No se ve en Medir, Ajustes, resultados ni Historial (las corridas grabadas con la 0.6 guardan sus datos
+     retome; 27 oct, Daniel: "descártalo por ahora": no revisarlo ni correr sus pruebas, o sea probar con
+     `probar_todo.sh algoritmo calc ui practica instalar matlab`, sin el grupo `semaforo`). No se ve en Medir, Ajustes, resultados ni Historial (las corridas grabadas con la 0.6 guardan sus datos
      de cámara, no se muestran), la cámara no se prende y `prueba/camara.html` ya no se publica (líneas comentadas
      en publicar.sh). Con `index.html?camdev` (o localStorage `dragtrim.camDev = true`) vuelve todo;
      cómo funciona y qué falta en el punto 13. Especificación en `archivo/ideas/semaforo_real/plan.md`

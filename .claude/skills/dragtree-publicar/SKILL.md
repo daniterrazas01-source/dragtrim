@@ -23,6 +23,8 @@ capturas, y decirle qué tan seguro estás.
 `bash .claude/skills/dragtree-publicar/scripts/probar_todo.sh` corre todas (≈15 min; el Monte Carlo del semáforo tarda ~7), arma
 `fuente/app/dist` y da un resumen OK/FALLA; los registros quedan en `fuente/pruebas/capturas/registros/`.
 Si falta Playwright de Python lo instala en la misma versión que el de Node (nunca `playwright install`).
+**Por ahora (27 oct, Daniel): sin el semáforo con cámara.** Correr `probar_todo.sh algoritmo calc ui practica instalar matlab`
+(sin el grupo `semaforo`) y no revisar esa parte hasta que Daniel la retome.
 Por grupos:
 
 | Cambiaste… | Grupo | Pruebas |
