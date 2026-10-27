@@ -42,6 +42,7 @@ podría mezclar ajustes.
 | `drag_beta_0.6.3.html` | beta 0.6.3 | dd83a4b | Logo nuevo (DRAG / árbol como T + REE, "On the mark") en la barra de arriba y en el ícono |
 | `drag_0.6.4.html` | 0.6.4 | 2209032 | Pantalla de carga (logo + "By Rooster Racing", 2 s); "On the mark" en la barra; sin la etiqueta "beta" |
 | `drag_0.6.5.html` | 0.6.5 | ff1c732 | "By" a la izquierda en la pantalla de carga; Calcular sin la nota de "buena salida"; Race 1 vs 1 desplegable |
+| `drag_0.6.6.html` | 0.6.6 | 3c8ebfe | Práctica con "Tocar" en tres toques: pre-stage, stage y salida |
 
 El código fuente editable de cada versión está en `fuente/` de ese commit:
 `git checkout <commit>` o, en GitHub, "Browse files" en el commit.
