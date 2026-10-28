@@ -43,6 +43,7 @@ podría mezclar ajustes.
 | `drag_0.6.4.html` | 0.6.4 | 2209032 | Pantalla de carga (logo + "By Rooster Racing", 2 s); "On the mark" en la barra; sin la etiqueta "beta" |
 | `drag_0.6.5.html` | 0.6.5 | ff1c732 | "By" a la izquierda en la pantalla de carga; Calcular sin la nota de "buena salida"; Race 1 vs 1 desplegable |
 | `drag_0.6.6.html` | 0.6.6 | 3c8ebfe | Práctica con "Tocar" en tres toques: pre-stage, stage y salida |
+| `drag_0.6.7.html` | 0.6.7 | 0f766e1 | En Android (Samsung) la franja de la hora y la cámara toma el color de lo que hay debajo |
 
 El código fuente editable de cada versión está en `fuente/` de ese commit:
 `git checkout <commit>` o, en GitHub, "Browse files" en el commit.
