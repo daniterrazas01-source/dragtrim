@@ -62,5 +62,10 @@ Diseño propuesto (pedir visto bueno a Daniel antes de hacerlo):
   mismo lugar; el ruido de 2 m/s² empeora la gravedad medida y el inicio.
 - **GNSS externo** 10–25 Hz: con 10 Hz el error "solo GPS" baja mucho y la fusión mejora (ver
   `mc.js` con 10 Hz). Web Bluetooth solo en Android Chrome; iPhone necesita app nativa.
+- **Más lecturas del GPS del teléfono** (Daniel, 28 oct: a ratos marca 2 Hz; ¿se puede fijar en 2–3?): desde la web
+  no se puede pedir más (ya va `enableHighAccuracy: true, maximumAge: 0`; el navegador decide). En simulación casi no
+  ayuda: 1/4 con acelerómetro, prom/peor en ms, retraso 0.6 s: 1 Hz 13/36, 2 Hz 12/28, 3 Hz 13/39, 5 Hz 11/38,
+  10 Hz 9/39 (60 sesiones, semillas 5000+). Lo que pesa en la realidad es el retraso/filtro del GPS del teléfono y el
+  rollout (+0.14/+0.16 s), no las lecturas por segundo; un GNSS externo ayuda sobre todo porque no trae ese retraso.
 - **Dos teléfonos en el mismo auto**: promediar o comparar ayuda a separar errores del teléfono de
   errores de la boleta.
