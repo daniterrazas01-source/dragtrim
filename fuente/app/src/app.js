@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = '0.6.7';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
+  const APP_VERSION = '0.6.8';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -1490,6 +1490,15 @@
   };
   pintarCam();
   $('#btnDemo').onclick = iniciarDemo;
+  // Atajos de Medir (0.6.8): "Race 1 vs 1" y "Antes de la pista" abren su explicación abajo, una a la vez
+  const atajos = [...document.querySelectorAll('.atajos [aria-controls]')];
+  for (const b of atajos) b.onclick = () => {
+    const abrir = b.getAttribute('aria-expanded') !== 'true';
+    for (const o of atajos) {
+      o.setAttribute('aria-expanded', String(abrir && o === b));
+      document.getElementById(o.getAttribute('aria-controls')).hidden = !(abrir && o === b);
+    }
+  };
   $('#btnCancelar').onclick = () => { salirSesion(); };
   $('#btnTerminar').onclick = () => finCorrida('manual');
 

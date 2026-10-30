@@ -110,10 +110,23 @@ p { margin: 0 0 12px; }
 .howto summary { padding: 12px 0; font-weight: 600; cursor: pointer; }
 .howto ul { margin: 0 0 14px; padding-left: 20px; }
 .howto li { margin-bottom: 8px; }
-/* Race 1 vs 1 (0.6.5): desplegable como "Antes de salir a la pista", para que Medir se vea menos cargada */
 .howto > p { margin: 0 0 14px; font-size: 14px; color: var(--chalk-dim); }
-.howto > p .beta-tag { margin-left: 0; margin-right: 4px; }
 .howto + .howto { margin-top: 10px; }
+/* Atajos de Medir (0.6.8, Daniel): "Corrida simulada", "Race 1 vs 1" y "Antes de la pista" en una fila de tres botones
+   chicos para que se vea más el fondo; los dos últimos abren su explicación abajo, una a la vez (app.js) */
+.atajos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+.atajo {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  min-height: 48px; padding: 6px 8px; border-radius: 12px; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--line); color: var(--chalk);
+  font: 600 12.5px/1.15 var(--body); text-align: left;
+}
+.atajo svg { width: 18px; height: 18px; flex: none; }
+@media (max-width: 360px) { .atajo { gap: 5px; padding: 6px 5px; font-size: 12px; } .atajo svg { width: 16px; height: 16px; } }
+.atajo[aria-expanded="true"] { border-color: var(--amber); box-shadow: inset 0 -3px 0 var(--amber); }
+.atajo-panel { margin-top: 10px; padding: 12px 16px 2px; }
+.atajo-panel > .atajo-tit { margin: 0 0 8px; font-weight: 700; font-size: 15px; color: var(--chalk); }
+.atajo-tit .beta-tag { margin-left: 6px; }
 
 /* Sesión */
 .ses-title { font: 700 40px/1.05 var(--num); margin: 10px 0 10px; }
@@ -445,6 +458,8 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   font-style: italic; font-weight: 900; font-size: 20px; margin-top: 16px;
 }
 :root[data-fondo] .ghost { background: var(--surface); border: 2px solid var(--sticker); font-weight: 700; box-shadow: 0 4px 0 rgba(0, 0, 0, .5); }
+:root[data-fondo] .atajo { border: 2px solid var(--sticker); font-weight: 700; box-shadow: 0 3px 0 rgba(0, 0, 0, .5); }
+:root[data-fondo] .atajo[aria-expanded="true"] { border-color: var(--acento); box-shadow: 0 3px 0 rgba(0, 0, 0, .5), inset 0 -3px 0 var(--acento); }
 :root[data-fondo] .danger { background: var(--surface); border-width: 2px; }
 :root[data-fondo] .seg button[aria-checked="true"], :root[data-fondo] .seg::before { background: var(--acento); color: #0e0e0f; }
 :root[data-fondo] .seg button[aria-checked="true"] { color: #0e0e0f; }
@@ -510,7 +525,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
    vienen pintadas (data-entra): sin la cascada de entrada, que se queda apagada hasta que se ocultan. */
 :root.desliza-tab main { position: relative; overflow-x: clip; }
 :root.desliza-tab main > .view:not([hidden]) { will-change: transform; }
-:where(.view[data-entra]) > *, :where(.view[data-entra] #medirIdle) > * { animation: none; }
+:where(.view[data-entra]) > *, :where(.view[data-entra] #medirIdle) > *, :where(.view[data-entra] .atajo-panel) > * { animation: none; }
 
 /* Logo: las luces se encienden una vez al abrir la app */
 /* Pantalla de carga (0.6.4): al abrir la app, 2 s con el logo y "By Rooster Racing" (app.js la quita); siempre oscura.
@@ -542,15 +557,16 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 .chip.on::before { color: var(--green); animation: ping .7s ease-out; }
 
 /* Botones: respuesta al toque */
-.primary, .ghost, .danger, .seg button, .tabs button, .pt-x, .hist button {
+.primary, .ghost, .danger, .atajo, .seg button, .tabs button, .pt-x, .hist button {
   transition: transform .14s var(--ease-out), background-color .2s, color .2s, opacity .2s, box-shadow .2s;
 }
-.primary:active:not(:disabled), .ghost:active, .danger:active, .pt-x:active { transform: scale(.97); }
+.primary:active:not(:disabled), .ghost:active, .danger:active, .atajo:active, .pt-x:active { transform: scale(.97); }
 .seg button:active, .tabs button:active { transform: scale(.94); }
 .hist button:active { background: var(--surface); }
 .stat .val { transition: color .3s; }
 .msg:not(:empty) { animation: entra .3s var(--ease-out) both; }
 .howto[open] :is(ul, p) { animation: entra .3s var(--ease-out) both; }
+.atajo-panel:not([hidden]) > * { animation: entra .3s var(--ease-out) both; }
 .howto summary { transition: color .2s; }
 
 /* Selector segmentado y pestañas: la marca se desliza a la opción elegida */
