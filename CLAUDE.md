@@ -125,12 +125,14 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    hoy solo se acerca **pantalla completa** (`display: fullscreen` o la API de pantalla completa + viewport-fit=cover: el
    fondo llega a la cámara y se toca, pero Android esconde la hora y la batería; sin probar en teléfono) o la **app nativa**
    (APK con Capacitor: ahí sí como iPhone). Pendiente que Daniel elija; no hacerlo sin que lo pida.
-   **Atajos de Medir** (0.6.8, 30 oct, Daniel: "que los botones sean más chicos… para que se vea más el fondo", y luego
-   "ponlos de manera vertical"): "Corrida simulada" (`#btnDemo`), "Race 1 vs 1" y "Antes de salir a la pista" pasaron de
-   tres renglones grandes (~190 px) a tres botones delgados (40 px, ícono a la izquierda, uno debajo de otro; 132 px en
-   total; `.atajos`/`.atajo`). Race 1 vs 1 (`#race1v1`) y Antes de salir a la pista (`#antesPista`, con `#howtoCam`
-   adentro) ya no son `<details>`: los botones (`aria-expanded`/`aria-controls`, flechita que gira) abren su explicación
-   justo debajo, una a la vez (código junto a `#btnDemo` en app.js). Se probó antes en una fila horizontal (48 px).
+   **Atajos de Medir** (0.6.8, 30 oct, Daniel: "que los botones sean más chicos… para que se vea más el fondo", luego
+   "ponlos de manera vertical" y al final "más cuadrados, que parezcan como semáforos en vertical"): "Corrida simulada"
+   (`#btnDemo`), "Race 1 vs 1" y "Antes de la pista" son tres botones cuadrados de 72 px (ícono arriba, nombre abajo), uno
+   encima de otro a la izquierda, dentro de una caja oscura como el árbol de Práctica (`.atajos-arbol`, 88 px de ancho;
+   con fondo, borde blanco de sticker). A la derecha queda libre y se ve el fondo. Race 1 vs 1 (`#race1v1`) y Antes de
+   salir a la pista (`#antesPista`, con `#howtoCam` adentro) ya no son `<details>`: su botón (`aria-expanded`/
+   `aria-controls`) se prende con el color del fondo (sin fondo, ámbar) y abre su explicación a la derecha del semáforo,
+   una a la vez (código junto a `#btnDemo` en app.js). Antes se probaron una fila horizontal y botones largos delgados.
    **Deslizar entre pestañas** (0.6.2, 25 oct, Daniel lo pidió "como nativa de iPhone"): con el dedo a la izquierda/derecha
    se pasa a la pestaña de al lado. Al tomar el dedo de lado, las pestañas de los lados ya se pintan (`prepararVista`,
    `data-entra` = sin la cascada de entrada) a ±ancho y se mueven pegadas a la actual; cada una se pone a la altura donde
@@ -325,7 +327,7 @@ python3 instalar_test.py # guía de instalación por teléfono/navegador, iPad v
 python3 deslizar_test.py # deslizar el dedo entre pestañas (toques reales por CDP): pasa, regresa, orillas, corrida, semáforo
 python3 carga_test.py    # pantalla de carga: logo + "By" Rooster Racing, 2 s, se desvanece, sin "beta" (con ?carga)
 python3 barra_test.py    # Android: color de la franja de la hora/cámara (theme-color) por fondo, velo, tema, corrida, Práctica, carga; pantallas de Samsung
-python3 atajos_test.py   # Medir: Corrida simulada / Race 1 vs 1 / Antes de salir a la pista, delgados y uno debajo de otro; abren su explicación una a la vez
+python3 atajos_test.py   # Medir: Corrida simulada / Race 1 vs 1 / Antes de la pista como semáforo (3 cuadros a la izquierda); abren su explicación a la derecha, una a la vez
 python3 mcheck.py ../matlab/*.m   # revisión estructural de MATLAB (aquí no hay MATLAB/Octave)
 node semaforo_sim_test.js   # simulador del árbol y la cámara
 node reaccion.js            # semáforo punta a punta: sesión simulada + árbol + análisis (~75 s)

@@ -78,25 +78,29 @@
           <p class="hint cam-regla">Solo mide: no se conecta al auto ni da señales. En eventos con reglamento (NHRA, IHRA…) un teléfono que mira el árbol puede tomarse como "lector de árbol", que está prohibido: úsalo en práctica o test &amp; tune y avísale al director técnico.</p>
         </div>
       </div>
-      <!-- Atajos (0.6.8, Daniel): tres botones delgados, uno debajo de otro, para que se vea más el fondo; Race 1 vs 1 y
-           "Antes de salir a la pista" abren su explicación justo debajo, una a la vez -->
-      <div class="atajos" role="group" aria-label="Más opciones">
-        <button type="button" class="atajo" id="btnDemo">
-          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.2 6.6 13.6 10l-5.4 3.4z" fill="currentColor"/></svg>
-          <span>Corrida simulada</span>
-        </button>
-        <button type="button" class="atajo" id="atRace" aria-expanded="false" aria-controls="race1v1">
-          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 18V2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4.9 3h11.6v8.4H4.9z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4.9 3h2.9v2.8H4.9zm5.8 0h2.9v2.8h-2.9zM7.8 5.8h2.9v2.8H7.8zm5.8 0h2.9v2.8h-2.9zM4.9 8.6h2.9v2.8H4.9zm5.8 0h2.9v2.8h-2.9z" fill="currentColor"/></svg>
-          <span>Race 1 vs 1</span>
-        </button>
-        <div class="howto atajo-panel" id="race1v1" hidden>
-          <p><span class="beta-tag">en desarrollo</span> Para pistas sin semáforo o un lugar controlado: dos autos, cada uno con la app en su teléfono. La app da la salida a los dos al mismo tiempo, mide los tiempos de ambos y al final imprime el ticket de la carrera en un solo teléfono.</p>
+      <!-- Atajos (0.6.8, Daniel): tres botones cuadrados uno encima de otro, en una caja oscura como un semáforo, para que
+           se vea más el fondo; Race 1 vs 1 y "Antes de salir a la pista" se prenden y abren su explicación a la derecha -->
+      <div class="atajos">
+        <div class="atajos-arbol" role="group" aria-label="Más opciones">
+          <button type="button" class="atajo" id="btnDemo">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.2 6.6 13.6 10l-5.4 3.4z" fill="currentColor"/></svg>
+            <span>Corrida simulada</span>
+          </button>
+          <button type="button" class="atajo" id="atRace" aria-expanded="false" aria-controls="race1v1">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 18V2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4.9 3h11.6v8.4H4.9z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4.9 3h2.9v2.8H4.9zm5.8 0h2.9v2.8h-2.9zM7.8 5.8h2.9v2.8H7.8zm5.8 0h2.9v2.8h-2.9zM4.9 8.6h2.9v2.8H4.9zm5.8 0h2.9v2.8h-2.9z" fill="currentColor"/></svg>
+            <span>Race 1 vs 1</span>
+          </button>
+          <button type="button" class="atajo" id="atAntes" aria-expanded="false" aria-controls="antesPista">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m2.6 5 1.6 1.6L7 3.6M2.6 12l1.6 1.6L7 10.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.6 5.4h7.8M9.6 12.4h7.8M9.6 17h7.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span>Antes de la pista</span>
+          </button>
         </div>
-        <button type="button" class="atajo" id="atAntes" aria-expanded="false" aria-controls="antesPista">
-          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m2.6 5 1.6 1.6L7 3.6M2.6 12l1.6 1.6L7 10.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.6 5.4h7.8M9.6 12.4h7.8M9.6 17h7.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          <span>Antes de salir a la pista</span>
-        </button>
+        <div class="howto atajo-panel" id="race1v1" hidden>
+          <p class="atajo-tit">Race 1 vs 1 <span class="beta-tag">en desarrollo</span></p>
+          <p>Para pistas sin semáforo o un lugar controlado: dos autos, cada uno con la app en su teléfono. La app da la salida a los dos al mismo tiempo, mide los tiempos de ambos y al final imprime el ticket de la carrera en un solo teléfono.</p>
+        </div>
         <div class="howto atajo-panel" id="antesPista" hidden>
+          <p class="atajo-tit">Antes de salir a la pista</p>
           <ul>
             <li>Pon el teléfono en un soporte firme (parabrisas o tablero) con vista al cielo. La orientación no importa, pero no lo muevas durante la sesión.</li>
             <li>Activa la ubicación precisa y apaga el ahorro de batería.</li>
