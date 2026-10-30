@@ -78,8 +78,8 @@
           <p class="hint cam-regla">Solo mide: no se conecta al auto ni da señales. En eventos con reglamento (NHRA, IHRA…) un teléfono que mira el árbol puede tomarse como "lector de árbol", que está prohibido: úsalo en práctica o test &amp; tune y avísale al director técnico.</p>
         </div>
       </div>
-      <!-- Atajos (0.6.8, Daniel): tres botones chicos en una fila para que se vea más el fondo; Race 1 vs 1 y
-           "Antes de salir a la pista" abren su explicación abajo, una a la vez -->
+      <!-- Atajos (0.6.8, Daniel): tres botones delgados, uno debajo de otro, para que se vea más el fondo; Race 1 vs 1 y
+           "Antes de salir a la pista" abren su explicación justo debajo, una a la vez -->
       <div class="atajos" role="group" aria-label="Más opciones">
         <button type="button" class="atajo" id="btnDemo">
           <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.2 6.6 13.6 10l-5.4 3.4z" fill="currentColor"/></svg>
@@ -87,33 +87,31 @@
         </button>
         <button type="button" class="atajo" id="atRace" aria-expanded="false" aria-controls="race1v1">
           <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 18V2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4.9 3h11.6v8.4H4.9z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4.9 3h2.9v2.8H4.9zm5.8 0h2.9v2.8h-2.9zM7.8 5.8h2.9v2.8H7.8zm5.8 0h2.9v2.8h-2.9zM4.9 8.6h2.9v2.8H4.9zm5.8 0h2.9v2.8h-2.9z" fill="currentColor"/></svg>
-          <span>Race 1&nbsp;vs&nbsp;1</span>
+          <span>Race 1 vs 1</span>
         </button>
+        <div class="howto atajo-panel" id="race1v1" hidden>
+          <p><span class="beta-tag">en desarrollo</span> Para pistas sin semáforo o un lugar controlado: dos autos, cada uno con la app en su teléfono. La app da la salida a los dos al mismo tiempo, mide los tiempos de ambos y al final imprime el ticket de la carrera en un solo teléfono.</p>
+        </div>
         <button type="button" class="atajo" id="atAntes" aria-expanded="false" aria-controls="antesPista">
           <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m2.6 5 1.6 1.6L7 3.6M2.6 12l1.6 1.6L7 10.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.6 5.4h7.8M9.6 12.4h7.8M9.6 17h7.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          <span>Antes de la pista</span>
+          <span>Antes de salir a la pista</span>
         </button>
-      </div>
-      <div class="howto atajo-panel" id="race1v1" hidden>
-        <p class="atajo-tit">Race 1 vs 1 <span class="beta-tag">en desarrollo</span></p>
-        <p>Para pistas sin semáforo o un lugar controlado: dos autos, cada uno con la app en su teléfono. La app da la salida a los dos al mismo tiempo, mide los tiempos de ambos y al final imprime el ticket de la carrera en un solo teléfono.</p>
-      </div>
-      <div class="howto atajo-panel" id="antesPista" hidden>
-        <p class="atajo-tit">Antes de salir a la pista</p>
-        <ul>
-          <li>Pon el teléfono en un soporte firme (parabrisas o tablero) con vista al cielo. La orientación no importa, pero no lo muevas durante la sesión.</li>
-          <li>Activa la ubicación precisa y apaga el ahorro de batería.</li>
-          <li>Deja la app abierta con la pantalla encendida. Si cambias de app o se bloquea la pantalla, el GPS se pausa.</li>
-          <li>La app no da la salida: arranca con el semáforo de la pista. Arma la medición cuando quieras, incluso antes del burnout; el arranque se detecta solo.</li>
-          <li>Las tablets solo-WiFi no tienen GPS y no sirven para medir.</li>
-        </ul>
-        <ul id="howtoCam" hidden>
-          <li>Con la cámara: pon el teléfono <b>horizontal</b>, con la cámara de atrás viendo al frente por el parabrisas, sin que la tapen el soporte, el limpiaparabrisas ni la franja polarizada.</li>
-          <li>El árbol queda a un lado (unos 20°). Con el teléfono horizontal lo ves en los dos carriles sin girarlo.</li>
-          <li>Limpia la lente y el parabrisas; un trapo oscuro en el tablero evita reflejos.</li>
-          <li>Arma la medición en la fila, eligiendo tu carril: la cámara solo graba mientras está armada (máx. 30 min).</li>
-          <li>Apaga el modo de bajo consumo y no dejes el teléfono al sol.</li>
-        </ul>
+        <div class="howto atajo-panel" id="antesPista" hidden>
+          <ul>
+            <li>Pon el teléfono en un soporte firme (parabrisas o tablero) con vista al cielo. La orientación no importa, pero no lo muevas durante la sesión.</li>
+            <li>Activa la ubicación precisa y apaga el ahorro de batería.</li>
+            <li>Deja la app abierta con la pantalla encendida. Si cambias de app o se bloquea la pantalla, el GPS se pausa.</li>
+            <li>La app no da la salida: arranca con el semáforo de la pista. Arma la medición cuando quieras, incluso antes del burnout; el arranque se detecta solo.</li>
+            <li>Las tablets solo-WiFi no tienen GPS y no sirven para medir.</li>
+          </ul>
+          <ul id="howtoCam" hidden>
+            <li>Con la cámara: pon el teléfono <b>horizontal</b>, con la cámara de atrás viendo al frente por el parabrisas, sin que la tapen el soporte, el limpiaparabrisas ni la franja polarizada.</li>
+            <li>El árbol queda a un lado (unos 20°). Con el teléfono horizontal lo ves en los dos carriles sin girarlo.</li>
+            <li>Limpia la lente y el parabrisas; un trapo oscuro en el tablero evita reflejos.</li>
+            <li>Arma la medición en la fila, eligiendo tu carril: la cámara solo graba mientras está armada (máx. 30 min).</li>
+            <li>Apaga el modo de bajo consumo y no dejes el teléfono al sol.</li>
+          </ul>
+        </div>
       </div>
     </div>
 

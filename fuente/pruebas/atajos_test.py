@@ -1,6 +1,6 @@
-# Prueba de los atajos de Medir (0.6.8, Daniel): "Corrida simulada", "Race 1 vs 1" y "Antes de la pista" en una fila de
-# tres botones chicos (antes eran tres renglones grandes) para que se vea más el fondo. Race 1 vs 1 y Antes de la pista
-# abren su explicación abajo, una a la vez. Uso: python3 atajos_test.py -> capturas/atajos_*.png; código 1 si algo falla.
+# Prueba de los atajos de Medir (0.6.8, Daniel): "Corrida simulada", "Race 1 vs 1" y "Antes de salir a la pista" como
+# botones delgados, uno debajo de otro (antes eran tres renglones grandes), para que se vea más el fondo. Race 1 vs 1 y
+# Antes de salir a la pista abren su explicación justo debajo de su botón, una a la vez. Uso: python3 atajos_test.py -> capturas/atajos_*.png; código 1 si algo falla.
 import json, os, subprocess, sys, time
 from playwright.sync_api import sync_playwright
 
@@ -25,10 +25,11 @@ def abrir(b, ajustes, ancho, alto, esquema='dark'):
     return ctx, pg, errs
 
 FILA = """(() => { const t = [...document.querySelectorAll('.atajo')].map(x => x.getBoundingClientRect());
-    const fila = document.querySelector('.atajos').getBoundingClientRect();
-    return { n: t.length, mismaFila: t.every(r => Math.abs(r.top - t[0].top) < 1), alto: Math.round(fila.height),
-             dentro: t.every(r => r.left >= 0 && r.right <= innerWidth), ancho: document.documentElement.scrollWidth <= innerWidth,
-             cortado: [...document.querySelectorAll('.atajo span')].some(s => s.scrollWidth > s.clientWidth + 1) }; })()"""
+    const grupo = document.querySelector('.atajos').getBoundingClientRect(), sens = document.getElementById('btnSensores').getBoundingClientRect();
+    return { n: t.length, vertical: t.every((r, i) => !i || r.top >= t[i - 1].bottom), mismoAncho: t.every(r => Math.abs(r.width - sens.width) < 1),
+             altos: t.map(r => Math.round(r.height)), alto: Math.round(grupo.height), dentro: t.every(r => r.left >= 0 && r.right <= innerWidth),
+             ancho: document.documentElement.scrollWidth <= innerWidth,
+             cortado: [...document.querySelectorAll('.atajo span')].some(s => s.scrollWidth > s.clientWidth + 1 || s.getBoundingClientRect().height > 20) }; })()"""
 estado = lambda pg: pg.evaluate("[['atRace', 'race1v1'], ['atAntes', 'antesPista']].map(([b, p]) => [document.getElementById(b).getAttribute('aria-expanded'), !document.getElementById(p).hidden])")
 
 def main():
@@ -37,14 +38,14 @@ def main():
     try:
         with sync_playwright() as p:
             b = p.chromium.launch()
-            # A. una sola fila de botones chicos en teléfonos de 320 a 430 de ancho, con y sin fondo, claro y oscuro
+            # A. uno debajo de otro, delgados, en teléfonos de 320 a 430 de ancho, con y sin fondo, claro y oscuro
             for ancho, alto in ((320, 568), (384, 832), (393, 852), (430, 932)):
                 for fondo, tema in (('gallos', 'dark'), ('combinado', 'light'), ('ninguno', 'dark')):
                     ctx, pg, errs = abrir(b, {'fondo': fondo, 'tema': tema}, ancho, alto)
                     r = pg.evaluate(FILA)
-                    chk(r['n'] == 3 and r['mismaFila'] and r['dentro'] and r['ancho'] and not r['cortado'],
-                        f'A. {ancho} {fondo} {tema}: tres botones en una fila, sin salirse ni cortar el texto ({r})')
-                    chk(r['alto'] <= (64 if ancho <= 360 else 52), f'A. {ancho} {fondo}: la fila es chica ({r["alto"]} px; antes eran ~190)')
+                    chk(r['n'] == 3 and r['vertical'] and r['mismoAncho'] and r['dentro'] and r['ancho'] and not r['cortado'],
+                        f'A. {ancho} {fondo} {tema}: tres botones uno debajo de otro, del ancho de la pantalla, sin cortar el texto ({r})')
+                    chk(max(r['altos']) <= 44 and r['alto'] <= 136, f'A. {ancho} {fondo}: delgados ({r["altos"]} px, todo junto {r["alto"]}; antes eran ~190)')
                     if ancho == 393: pg.screenshot(path=SH + f'atajos_{fondo}_{tema}.png')
                     chk(not errs, f'A. {ancho} {fondo} sin errores: ' + '; '.join(errs))
                     ctx.close()
@@ -54,10 +55,12 @@ def main():
             pg.click('#atRace'); pg.wait_for_timeout(350)
             chk(estado(pg) == [['true', True], ['false', False]], f'B. Race 1 vs 1 abre la suya ({estado(pg)})')
             chk('en desarrollo' in pg.inner_text('#race1v1') and 'dos autos' in pg.inner_text('#race1v1'), 'B. dice "en desarrollo" y la explicación')
-            arr = pg.evaluate("[document.querySelector('.atajos').getBoundingClientRect().bottom, document.getElementById('race1v1').getBoundingClientRect().top]")
-            chk(arr[1] >= arr[0], f'B. la explicación sale abajo de los botones ({arr})')
+            arr = pg.evaluate("['atRace', 'race1v1', 'atAntes'].map(i => document.getElementById(i).getBoundingClientRect()).map(r => [Math.round(r.top), Math.round(r.bottom)])")
+            chk(arr[0][1] <= arr[1][0] <= arr[0][1] + 8 and arr[1][1] <= arr[2][0], f'B. la explicación sale justo debajo de su botón, antes del siguiente ({arr})')
             pg.click('#atAntes'); pg.wait_for_timeout(350)
             chk(estado(pg) == [['false', False], ['true', True]], f'B. Antes de la pista abre la suya y cierra la otra ({estado(pg)})')
+            arr = pg.evaluate("['atAntes', 'antesPista'].map(i => document.getElementById(i).getBoundingClientRect()).map(r => [Math.round(r.top), Math.round(r.bottom)])")
+            chk(arr[0][1] <= arr[1][0] <= arr[0][1] + 8, f'B. la de Antes de salir a la pista también sale justo debajo ({arr})')
             chk('soporte firme' in pg.inner_text('#antesPista') and pg.evaluate("document.getElementById('howtoCam').hidden"), 'B. trae los consejos (sin los de la cámara)')
             pg.screenshot(path=SH + 'atajos_abierto.png', full_page=True)
             pg.click('#atAntes'); pg.wait_for_timeout(250)
