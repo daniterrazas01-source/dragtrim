@@ -126,7 +126,7 @@ def main():
             t0 = time.time()
             sin_señal('callar', cod, 'invitado', 7000)
             chk(esperar(B, "/Sin señal/.test(document.getElementById('rcChip').textContent)", 9000), f'D. el invitado nota solo que no hay señal ({time.time() - t0:.1f} s)')
-            chk(esperar(A, "/Esperando al otro teléfono/.test(document.getElementById('rcChip').textContent)", 6000), 'D. el anfitrión ve que el otro no está')
+            chk(esperar(A, "/Esperando rival/.test(document.getElementById('rcChip').textContent)", 6000), 'D. el anfitrión ve que el otro no está')
             A.screenshot(path=SH + 'sala_sin_senal.png')
             chk(esperar(A, CONECTADOS, 20000) and esperar(B, CONECTADOS, 20000), f'D. al volver la señal se reconecta solo ({time.time() - t0:.1f} s)')
 
@@ -148,7 +148,7 @@ def main():
 
             # ---------------- F. el invitado sale y vuelve a entrar con el código
             B.click('#rcSalir')
-            chk(esperar(A, "/salió de la carrera/.test(document.getElementById('rcChip').textContent)", 6000) and cod in A.inner_text('#rcMsg'),
+            chk(esperar(A, "/rival salió/.test(document.getElementById('rcChip').textContent)", 6000) and cod in A.inner_text('#rcMsg'),
                 f'F. el anfitrión ve que el otro salió y con qué código puede volver ({A.inner_text("#rcMsg")})')
             B.click('#atRace'); B.click('#rcUnirSala'); teclear_codigo(B, cod)
             chk(esperar(A, CONECTADOS, 10000) and esperar(B, EN_SALA, 10000), 'F. vuelve a entrar con el mismo código y los dos quedan conectados')

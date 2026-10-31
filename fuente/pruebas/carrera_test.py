@@ -201,7 +201,7 @@ def main():
             A.click('#rcOtra'); B.click('#rcOtra'); A.wait_for_timeout(500)
             chk(visible(A, '#rcSala') and visible(B, '#rcSala') and '1' in A.inner_text('#rcMarcador'), f'C. "Otra carrera" regresa a la sala y el marcador cuenta ({A.inner_text("#rcMarcador")})')
             B.close()
-            chk(esperar(A, "/Sin conexión|salió de la carrera/.test(document.getElementById('rcChip').textContent)", 25000), f'C. al cerrar el otro teléfono se ve que se perdió la conexión ({A.inner_text("#rcChip")})')
+            chk(esperar(A, "/Sin conexión|rival salió/.test(document.getElementById('rcChip').textContent)", 25000), f'C. al cerrar el otro teléfono se ve que se perdió la conexión ({A.inner_text("#rcChip")})')
             chk(not eA and not eB, 'C. sin errores: ' + '; '.join(eA + eB))
             cA.close(); cB.close()
             b.close()

@@ -301,7 +301,7 @@
       if (est === 'fallo') { aviso($(esAnfitrion() ? '#rcCodigoMsg' : '#rcUnirMsg'), motivo || 'No se pudo conectar con la sala.', true); return; }
       if (est === 'esperando') {
         if (esAnfitrion()) { chip(''); $('#rcCodigoEspera').hidden = false; aviso($('#rcCodigoMsg'), ''); }
-        else { entrarSala(); chip('Esperando al otro teléfono…', 'mal'); }
+        else { entrarSala(); chip('Esperando rival…', 'mal'); }
         return;
       }
       if (est === 'desconectado') { chip('Sin señal, reintentando…', 'mal'); return; }
@@ -322,7 +322,7 @@
     } else if (est === 'esperando') {
       // por la sala: este teléfono sigue dentro, el otro se salió o perdió la señal (lo que mande al volver, llega)
       R.otro.listo = false;
-      chip(R.otro.seFue ? 'El otro teléfono salió de la carrera' : 'Esperando al otro teléfono…', 'mal');
+      chip(R.otro.seFue ? 'El rival salió' : 'Esperando rival…', 'mal');
       if (R.fase === 'sala') pintarSala();
     } else if (est === 'desconectado') {
       chip(esSala() ? 'Sin señal, reintentando…' : 'Sin conexión, reintentando…', 'mal');
@@ -372,7 +372,7 @@
         if (m.ronda === R.ronda && m.res) { R.resOtro = m.res; alResultadoOtro(); }
         break;
       case 'adios':
-        chip('El otro teléfono salió de la carrera', 'mal');
+        chip('El rival salió', 'mal');
         R.otro.listo = false; R.otro.seFue = true;
         if (R.fase === 'sala') pintarSala();
         break;

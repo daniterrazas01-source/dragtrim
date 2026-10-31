@@ -667,8 +667,9 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
   --line: rgba(255, 255, 255, .24); --sticker: #ffffff; --tinta: #0e0e0f; --amber: var(--acento);
 }
 .rc-top { display: flex; align-items: center; gap: 10px; max-width: 560px; margin: 0 auto; padding: 10px 16px; }
-.rc-tit { flex: 1; font: 900 21px/1 'Rooster', var(--num); font-style: italic; font-synthesis: none; }
-.rc-chip { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 99px; border: 1px solid var(--line); color: var(--chalk-dim); white-space: nowrap; }
+.rc-tit { flex: 0 0 auto; white-space: nowrap; font: 900 21px/1 'Rooster', var(--num); font-style: italic; font-synthesis: none; }
+/* el aviso va a la derecha y, si no cabe, se recorta con "…" (el título nunca se parte) */
+.rc-chip { margin-left: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 99px; border: 1px solid var(--line); color: var(--chalk-dim); white-space: nowrap; }
 .rc-chip.ok { border-color: var(--green); color: #8be3a9; }
 .rc-chip.mal { border-color: var(--red); color: #ff8d84; }
 .rc.en-arbol .rc-chip { display: none; }
