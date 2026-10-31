@@ -61,7 +61,7 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
      antes de publicar) ya se cumplió hasta la revisión final (25 oct, esfuerzo max sin agentes, como pidió
      Daniel) y se publicó en la 0.6.
    - **Race 1 vs 1** (idea de Daniel, 24 oct; "en desarrollo" en Medir desde 0.5.4, desplegable desde 0.6.5, botón chico desde 0.6.8;
-     **programado desde el 31 oct (0.7, sin publicar), ver punto 14**): dos autos, cada uno con la app en su teléfono, en pista sin semáforo o lugar
+     **publicado en la 0.7, 31 oct, ver punto 14**): dos autos, cada uno con la app en su teléfono, en pista sin semáforo o lugar
      controlado; la app da la salida a los dos a la vez (excepción a propósito al punto 3, solo en este modo),
      mide reacción y tiempos de ambos y el ticket de los dos sale en un teléfono. Diseño ya estudiado en
      `archivo/ideas/race_1vs1.md` (no repetir el análisis): (31 oct: ahora la conexión principal es una sala por internet con código, punto 14) hotspot de un teléfono + WebRTC emparejado con
@@ -129,10 +129,10 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    "ponlos de manera vertical" y al final "más cuadrados, que parezcan como semáforos en vertical"): "Corrida simulada"
    (`#btnDemo`), "Race 1 vs 1" y "Antes de la pista" son tres botones cuadrados de 72 px (ícono arriba, nombre abajo), uno
    encima de otro a la izquierda, dentro de una caja oscura como el árbol de Práctica (`.atajos-arbol`, 88 px de ancho;
-   con fondo, borde blanco de sticker). A la derecha queda libre y se ve el fondo. Race 1 vs 1 (`#race1v1`) y Antes de
-   salir a la pista (`#antesPista`, con `#howtoCam` adentro) ya no son `<details>`: su botón (`aria-expanded`/
-   `aria-controls`) se prende con el color del fondo (sin fondo, ámbar) y abre su explicación a la derecha del semáforo,
-   una a la vez (código junto a `#btnDemo` en app.js). Antes se probaron una fila horizontal y botones largos delgados.
+   con fondo, borde blanco de sticker). A la derecha queda libre y se ve el fondo. Antes de salir a la pista (`#antesPista`, con
+   `#howtoCam` adentro) ya no es `<details>`: su botón (`aria-expanded`/`aria-controls`) se prende con el color del fondo
+   (sin fondo, ámbar) y abre su explicación a la derecha del semáforo (código junto a `#btnDemo` en app.js). Race 1 vs 1
+   (`#atRace`) abre desde la 0.7 su pantalla completa (punto 14). Antes se probaron una fila horizontal y botones largos delgados.
    **Deslizar entre pestañas** (0.6.2, 25 oct, Daniel lo pidió "como nativa de iPhone"): con el dedo a la izquierda/derecha
    se pasa a la pestaña de al lado. Al tomar el dedo de lado, las pestañas de los lados ya se pintan (`prepararVista`,
    `data-entra` = sin la cascada de entrada) a ±ancho y se mueven pegadas a la actual; cada una se pone a la altura donde
@@ -360,7 +360,9 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.6.7** (28 oct 2026: en Android/Samsung la franja de la hora y la cámara toma el color de lo que hay debajo, punto 7); antes **0.6.6** (27 oct 2026: Práctica con "Tocar": pre-stage, stage y salida en tres toques); antes **0.6.5** (26 oct 2026: pantalla de carga: "By" a la izquierda del logo de Rooster Racing; en Calcular se quitó la nota "Para un auto con buena salida…" entre "Tiempo estimado" y "Peso para un tiempo meta", Daniel la pidió quitar; lo mismo sigue explicado en "Cómo calcula"; en Medir, Race 1 vs 1 es un desplegable como "Antes de salir a la pista" (`#race1v1`): cerrado solo dice el nombre y al abrirlo "en desarrollo" y la explicación, para que Medir se vea menos cargada); antes **0.6.4** (26 oct 2026: pantalla de carga de 2 s con el logo y "By Rooster Racing"; "On the mark" en la barra de arriba; sin la etiqueta "beta": la versión se llama "0.6.4" y la caché `v-0.6.4`); antes **beta 0.6.3** (26 oct 2026: el logo nuevo en la barra de arriba y en el ícono, punto 6); antes **beta 0.6.2** (25 oct 2026: el semáforo con
+caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.7** (31 oct 2026: Race 1 vs 1, punto 14: sala
+por internet con código de 5 letras (o QR por Wi-Fi sin señal), "Listo" de los dos, pre-stage, stage y árbol en los dos
+teléfonos, boleta de los dos carriles; trae la 0.6.8: atajos de Medir como semáforo vertical, punto 7); antes **0.6.7** (28 oct 2026: en Android/Samsung la franja de la hora y la cámara toma el color de lo que hay debajo, punto 7); antes **0.6.6** (27 oct 2026: Práctica con "Tocar": pre-stage, stage y salida en tres toques); antes **0.6.5** (26 oct 2026: pantalla de carga: "By" a la izquierda del logo de Rooster Racing; en Calcular se quitó la nota "Para un auto con buena salida…" entre "Tiempo estimado" y "Peso para un tiempo meta", Daniel la pidió quitar; lo mismo sigue explicado en "Cómo calcula"; en Medir, Race 1 vs 1 es un desplegable como "Antes de salir a la pista" (`#race1v1`): cerrado solo dice el nombre y al abrirlo "en desarrollo" y la explicación, para que Medir se vea menos cargada); antes **0.6.4** (26 oct 2026: pantalla de carga de 2 s con el logo y "By Rooster Racing"; "On the mark" en la barra de arriba; sin la etiqueta "beta": la versión se llama "0.6.4" y la caché `v-0.6.4`); antes **beta 0.6.3** (26 oct 2026: el logo nuevo en la barra de arriba y en el ícono, punto 6); antes **beta 0.6.2** (25 oct 2026: el semáforo con
 cámara sale de la app; fondo nuevo "Gallos" con los logos de Rooster Racing; Práctica: botón "Mantén" más chico (19vh, 300 px de ancho en solo), cuadro de la reacción compacto y más abajo, focos que caben sin tocarlo; letra tipo Rooster Racing en títulos, etiquetas, selectores, botones principales y pestañas; Práctica: Modo, Árbol, Cómo sales y Formato en un solo panel con solo la explicación de lo elegido (EXPLICA en practica.js), 892 → 648 px de alto; el contenido también junto al notch del iPhone; deslizar el dedo entre pestañas); **beta 0.6.1** (25 oct 2026: el semáforo con cámara vuelve a "en desarrollo"); 0.6 (25 oct 2026: semáforo real
 con la cámara, punto 13; trae también la 0.5.4: tarjeta Race 1 vs 1 "en desarrollo"). Antes: **beta 0.5.3** (fondo de Práctica que responde a la reacción; 0.5.2: guía para instalar; 0.5.1: nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
 algoritmo v2.3.
