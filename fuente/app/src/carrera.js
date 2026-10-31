@@ -100,7 +100,9 @@
     R.resYo = null; R.resOtro = null; R.runYo = null; R.prog = null;
     R.marcador = { izq: 0, der: 0 }; R.contadas = new Set(); R.ronda = 0;
     mostrarOverlay(false);
-    if (A().fase() !== 'idle') A().salir();
+    // siempre de regreso a Medir: la boleta de la carrera puede seguir en pantalla aunque la medición ya se haya cerrado
+    // (al cancelar ya corriendo o con "No salió"); antes "Salir de la carrera" no hacía nada ahí (Daniel, 31 oct)
+    A().salir();
   }
   function botonSalir() {
     if (R.fase === 'arbol') { cancelarRonda('Cancelaste la salida.', true); return; }
@@ -110,7 +112,7 @@
   // Desde el resultado o el historial: regresa a la sala de la carrera abierta
   function volver() {
     if (!R.E) { terminar(); abrir(); return; }
-    if (A().fase() !== 'idle') A().salir();
+    A().salir();   // debajo de la sala queda Medir, no la boleta anterior
     R.yo.listo = false; enviarEstado();
     entrarSala();
   }

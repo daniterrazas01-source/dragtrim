@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = '0.7';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
+  const APP_VERSION = '0.7.1';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
