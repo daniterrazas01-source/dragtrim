@@ -644,7 +644,7 @@
     const txt = g ? g.texto : (espera ? 'Esperando el resultado del otro carril…' : '');
     const win = (c) => (g && g.ganador === c ? '<b class="rc-win">WIN</b>' : '');
     return `<div class="slip rc-slip">
-        <header><b>DRAG TREE · RACE 1 VS 1</b><span>${esc(hora)} &nbsp; ${rc.arbol === 'full' ? 'FULL .500' : 'PRO .400'} &nbsp; ${rc.dist < 300 ? '1/8 MI' : '1/4 MI'}</span></header>
+        <header><b>DRAG&nbsp;TREE · RACE&nbsp;1&nbsp;VS&nbsp;1</b><span>${esc(hora)} &nbsp; ${rc.arbol === 'full' ? 'FULL&nbsp;.500' : 'PRO&nbsp;.400'} &nbsp; ${rc.dist < 300 ? '1/8&nbsp;MI' : '1/4&nbsp;MI'}</span></header>
         <table>
           <tr class="hd"><td></td><td>IZQ · ${quien('izq')}</td><td>DER · ${quien('der')}</td></tr>
           ${filas.map((f) => `<tr class="${esc(f.clase || '')}"><td>${esc(f.etiqueta)}</td><td>${esc(f.izq)}</td><td>${esc(f.der)}</td></tr>`).join('')}

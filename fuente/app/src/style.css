@@ -95,16 +95,17 @@ p { margin: 0 0 12px; }
 .danger { background: transparent; border: 1px solid var(--red); color: var(--red); font-weight: 600; font-size: 16px; padding: 14px 16px; }
 
 .status { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border-radius: 14px; overflow: hidden; margin: 16px 0 4px; }
-.stat { background: var(--surface); padding: 12px 14px; }
+.stat { background: var(--surface); padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between; }   /* el valor abajo aunque el nombre ocupe dos renglones */
 .stat .k { display: block; font-size: 13px; color: var(--chalk-dim); }
 .stat .val { display: block; font: 700 26px/1.15 var(--num); font-variant-numeric: tabular-nums; }
 .stat .val.good { color: var(--green); }
 .stat .val.meh { color: var(--amber); }
 .stat .val.bad { color: var(--red); }
 
-.msg { margin: 12px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--surface); border-left: 4px solid var(--amber); }
+/* aviso: recuadro con un tinte del color (antes una raya gruesa a la izquierda; impeccable, 31 oct) */
+.msg { margin: 12px 0 0; padding: 12px 14px; border-radius: 12px; background: color-mix(in srgb, var(--amber) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--amber) 50%, transparent); }
 .msg:empty { display: none; }
-.msg.err { border-left-color: var(--red); }
+.msg.err { background: color-mix(in srgb, var(--red) 10%, var(--surface)); border-color: color-mix(in srgb, var(--red) 55%, transparent); }
 
 .howto { margin-top: 20px; background: var(--surface); border-radius: 14px; padding: 4px 16px; }
 .howto summary { padding: 12px 0; font-weight: 600; cursor: pointer; }
@@ -191,7 +192,7 @@ p { margin: 0 0 12px; }
 .quality dt { color: var(--chalk-dim); }
 .quality dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .avisos { list-style: none; padding: 0; margin: 4px 0 10px; font-size: 14px; }
-.avisos li { padding: 8px 10px; border-left: 3px solid var(--amber); background: var(--surface-2); border-radius: 6px; margin-top: 6px; }
+.avisos li { padding: 8px 10px; border: 1px solid color-mix(in srgb, var(--amber) 45%, transparent); background: color-mix(in srgb, var(--amber) 8%, var(--surface-2)); border-radius: 8px; margin-top: 6px; }
 
 .actions { display: grid; gap: 0; margin: 10px 0 20px; }
 
@@ -437,7 +438,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 :root[data-fondo] :is(.status, .kpis) { background: var(--sticker); gap: 2px; }
 :root[data-fondo] .field .seg { box-shadow: none; border-width: 1.5px; }
 :root[data-fondo] .proximo { background: var(--surface); border-style: dashed; }
-:root[data-fondo] .msg { border-left-width: 2px; }
+:root[data-fondo] .msg { border-width: 1.5px; }
 :root[data-fondo] .hist button { background: var(--surface); border-radius: 12px; margin: 8px 0; padding: 12px 14px; border: 2px solid var(--sticker); }
 :root[data-fondo] .hist li { border-top: 0; }
 :root[data-fondo] .empty { background: var(--surface); border-radius: 12px; padding: 16px; }
@@ -506,7 +507,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
      falsearía la reacción.
    - La pantalla de medición sigue neutral: nada parpadea ni parece una salida.
    - Se apagan con "Animaciones" en Ajustes o con "reducir movimiento" del sistema. */
-:root { --ease-out: cubic-bezier(.22, 1, .36, 1); --ease-pop: cubic-bezier(.3, 1.5, .5, 1); }
+:root { --ease-out: cubic-bezier(.22, 1, .36, 1); --ease-pop: cubic-bezier(.16, 1, .3, 1); }   /* pop: frena suave, sin rebote */
 @keyframes entra { from { opacity: 0; transform: translateY(10px); } }
 @keyframes aparece { from { opacity: 0; } }
 @keyframes desliza { from { opacity: 0; transform: translateX(-12px); } }
@@ -841,7 +842,8 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
   :root.acostada .rc-arbol .pb.s { width: 3.4vh; height: 3.4vh; }
   :root.acostada .rc-fase { font-size: 24px; }
   /* boleta de la carrera: los dos carriles a la izquierda; quién ganó y los botones a la derecha */
-  :root.acostada .rc-res { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); column-gap: 22px; align-items: start; }
+  :root.acostada .rc-res { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); column-gap: 22px; align-items: start; }
+  :root.acostada .rc-res .rc-slip header b { font-size: 15px; letter-spacing: .08em; }
   :root.acostada .rc-res > .slip { grid-row: 1 / span 2; max-width: 420px; width: 100%; margin: 8px 0 0; }
   :root.acostada .rc-res > .rc-ganador { grid-column: 2; margin-top: 14px; font-size: 19px; }
   :root.acostada .rc-res > .rc-ganador.dudosa { font-size: 16px; }
@@ -906,3 +908,9 @@ html.girada .tabs { position: sticky; bottom: 0; flex: none; }
 html.girada body.sesion #marco { padding-bottom: var(--sa-b); }
 html.girada .pb { width: min(calc(7.4 * var(--u)), 60px); height: min(calc(7.4 * var(--u)), 60px); }
 html.girada .pb.s { width: min(calc(3 * var(--u)), 22px); height: min(calc(3 * var(--u)), 22px); }
+
+/* Lo que no dibuja la app también lleva sus colores: selección de texto, cursor y deslizadores (impeccable, 31 oct) */
+::selection { background: color-mix(in srgb, var(--amber) 38%, transparent); }
+input, textarea { caret-color: var(--amber); }
+input[type="range"] { accent-color: var(--amber); }
+:root[data-fondo] input[type="range"] { accent-color: var(--acento); }

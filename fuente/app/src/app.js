@@ -921,7 +921,7 @@
       const fila = (k, val) => `<dt>${k}</dt><dd>${val}</dd>`;
       v.innerHTML = `${race}
         <div class="slip">
-          <header><b>DRAG TREE</b><span>${esc(fechaCorta(run.fecha))} &nbsp; ${Df < 300 ? '1/8 MI' : '1/4 MI'}</span></header>
+          <header><b>DRAG TREE</b><span>${esc(fechaCorta(run.fecha))} &nbsp; ${Df < 300 ? '1/8&nbsp;MI' : '1/4&nbsp;MI'}</span></header>
           <table>
             <tr class="hd"><td></td><td>TIEMPO</td><td>${velU().toUpperCase()}</td></tr>
             ${cam.fila}
