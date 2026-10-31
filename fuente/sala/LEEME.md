@@ -13,7 +13,11 @@ La sala no decide nada de la carrera: da la hora (para que los dos relojes se si
 un teléfono al otro y guarda el último de cada tipo (hola, config, estado, resultado). Quien manda la salida es el
 teléfono que creó la sala (`fuente/app/src/carrera.js`). No guarda nombres ni ubicaciones.
 
-## Publicarla (una sola vez)
+**Publicada el 31 oct 2026:** `https://dragtree-sala.dani-terrazas01.workers.dev` (la app la usa como
+`wss://…`; `SALA_PUBLICADA` en `fuente/app/src/carrera.js`). Después de cada publicación, el flujo de GitHub corre
+`fuente/pruebas/sala_real_test.mjs` contra ella.
+
+## Publicarla (una sola vez; ya hecho)
 
 Daniel, desde el navegador del teléfono o la computadora:
 

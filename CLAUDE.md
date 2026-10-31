@@ -281,10 +281,14 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
       depende de la sincronía (cada carril contra su verde); la sincronía solo dice qué tan juntas se prenden las verdes.
       Servidor: `fuente/sala/` (Cloudflare Worker + Durable Object con SQLite, plan gratis; `nucleo.js` = la lógica;
       guarda el último hola/config/estado/resultado de cada teléfono para quien se reconecte; se borra al día sin uso;
-      solo acepta la app publicada y localhost). **Aún no publicado**: `SALA_PUBLICADA = ''` en carrera.js ("Crear sala"
-      avisa y abre lo del QR). Para publicarlo, Daniel crea la cuenta de Cloudflare y pone dos secretos en GitHub
-      (`fuente/sala/LEEME.md`); `.github/workflows/sala.yml` publica con wrangler. Pruebas: `?sala=ws://localhost:PUERTO`
-      con `fuente/pruebas/sala_local.mjs` (misma lógica; `/cortar` y `/callar` simulan perder la señal).
+      solo acepta la app publicada y localhost). **Publicada el 31 oct** en la cuenta de Cloudflare de Daniel (la creó con
+      Claude en Chrome siguiendo `fuente/sala/PARA_EL_AGENTE.md`): `https://dragtree-sala.dani-terrazas01.workers.dev`
+      (`SALA_PUBLICADA` en carrera.js). Secretos CLOUDFLARE_API_TOKEN y CLOUDFLARE_ACCOUNT_ID en GitHub;
+      `.github/workflows/sala.yml` la vuelve a publicar con wrangler al cambiar `fuente/sala/` (en main o en la rama de
+      trabajo) y luego corre `fuente/pruebas/sala_real_test.mjs` contra ella (desde el contenedor de Claude no se llega a
+      workers.dev: revisar el resultado en el registro de Actions). Sin internet, "Crear sala" vuelve al inicio con lo del
+      QR abierto. Pruebas: `?sala=ws://localhost:PUERTO` con `fuente/pruebas/sala_local.mjs` (misma lógica; `/cortar` y
+      `/callar` simulan perder la señal); `?sala=` = como si no hubiera sala.
     - Emparejar con dos QR (`DragQR`, qr.js + vendor/jsQR.js y vendor/qrcode.js, licencias en vendor/LICENCIAS.md): el que
       crea muestra su código (oferta WebRTC, "DT1o…"); el otro lo escanea y muestra el suyo ("DT1a…"); el primero lo escanea
       ("Ya lo escaneó: leer su código"). Respaldo: copiar y pegar el código en texto. Antes de armar cada código se pide la
@@ -309,7 +313,7 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
       se reenvían solos.
     - Rival simulado: otro teléfono de mentira que contesta como el real (su resultado sale de una sesión simulada); si no
       hay sensores, el auto propio también es simulado. Pruebas: `?simsens` hace simulado el auto propio con rival real.
-    - Falta: publicar la sala (cuenta de Cloudflare de Daniel); probarlo con dos teléfonos reales (por la sala con datos, y
+    - Falta: probarlo con dos teléfonos reales (por la sala con datos, y
       por QR con hotspot de iPhone o Android, iPhone con Android); calibrar el retraso de pantalla de cada modelo (hoy 0 ms,
       `ajusteMs`).
 

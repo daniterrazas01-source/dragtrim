@@ -13,7 +13,7 @@
   const RE_CODIGO = /^[A-HJ-NP-Z2-9]{5}$/;
   const ESPERAS = [500, 1000, 2000, 3000, 5000];          // reintentos al perder la señal
   const SIN_RESPUESTA_MS = 4000;   // la sala contesta cada ping: 4 s callada = conexión muerta (el teléfono a veces no se entera)
-  const ENTRADA_MS = 10000;        // para entrar (abrir + bienvenida)
+  const ENTRADA_MS = 6000;         // para entrar (abrir + bienvenida); sin respuesta, otro intento
   const TXT = {
     ocupada: 'Ese código ya es de otra sala.',
     no_existe: 'No hay ninguna sala con ese código. Revisa las letras.',
@@ -65,6 +65,7 @@
     function abrir() {
       if (cerrado) return;
       if (!url) { fallar('sin_url'); return; }
+      if (!entro && typeof navigator !== 'undefined' && navigator.onLine === false) { fallar('sin_red'); return; }   // sin red: no esperar
       ponerEstado(entro ? 'desconectado' : 'conectando');
       const dir = `${url}/sala/${S.codigo}?rol=${encodeURIComponent(S.rol)}&id=${encodeURIComponent(o.id)}${o.crear && !entro ? '&crear=1' : ''}`;
       let w;

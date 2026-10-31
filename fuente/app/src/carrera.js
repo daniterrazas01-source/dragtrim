@@ -18,10 +18,10 @@
   };
   const PARAMS = new URLSearchParams(location.search);
   const SIM_SENS = PARAMS.has('simsens');   // pruebas: el auto de este teléfono es simulado aunque el rival sea real
-  // Sala por internet (fuente/sala/, en la cuenta de Cloudflare de Daniel). Vacía mientras no esté publicada: entonces
-  // "Crear sala" avisa y queda la conexión con QR. ?sala=ws://… pone otra (pruebas con fuente/pruebas/sala_local.mjs).
-  const SALA_PUBLICADA = '';
-  const SALA_URL = PARAMS.get('sala') || SALA_PUBLICADA;
+  // Sala por internet (fuente/sala/, en la cuenta de Cloudflare de Daniel, publicada el 31 oct con .github/workflows/sala.yml).
+  // ?sala=ws://… pone otra (pruebas con fuente/pruebas/sala_local.mjs); ?sala= (vacía) hace como si no hubiera sala.
+  const SALA_PUBLICADA = 'wss://dragtree-sala.dani-terrazas01.workers.dev';
+  const SALA_URL = PARAMS.has('sala') ? PARAMS.get('sala') : SALA_PUBLICADA;
   const ANTICIPO_MS = 1500;                 // el anfitrión manda la salida con este tiempo de anticipación (Wi-Fi)
   const ANTICIPO_SALA_MS = 2500;            // por internet la salida pasa por la sala y el otro confirma: más tiempo
   const SIN_SALIDA_S = 25;                  // si no arrancó a los 25 s de la verde, cuenta como "no salió"
@@ -133,10 +133,13 @@
   function nuevoEnlace(rol) { const E = DragEnlace.crear({ rol }); R.E = E; return escuchar(E); }
 
   // ---- sala por internet: uno la crea y le dice el código al otro (sin hotspot; cada teléfono con sus datos)
-  function sinSala() {
-    aviso($('#rcInicioMsg'), DragSala.TXT.sin_url + ' Por ahora usen "¿Sin señal en la pista? Conectar con QR".', true);
+  function sinSala(texto) {
+    R.fase = 'inicio'; R.rol = null; verPaso('rcInicio'); chip('');
+    aviso($('#rcInicioMsg'), texto || (DragSala.TXT.sin_url + ' Por ahora usen "¿Sin señal en la pista? Conectar con QR".'), true);
     $('.rc-sinred').open = true;
   }
+  // sin internet no hay sala: de regreso al inicio, con lo del QR abierto
+  const sinInternet = (e) => sinSala(`${(e && e.message) || DragSala.TXT.sin_red} Sin internet, conéctense con QR por Wi-Fi:`);
   async function crearSala() {
     if (!window.DragSala) return;
     if (!SALA_URL) { sinSala(); return; }
@@ -147,7 +150,11 @@
     aviso($('#rcCodigoMsg'), 'Creando la sala…');
     let S;
     try { S = await DragSala.crearSala({ url: SALA_URL, id: idTelefono() }); }
-    catch (e) { if (tok === R.intento) aviso($('#rcCodigoMsg'), (e && e.message) || 'No se pudo crear la sala.', true); return; }
+    catch (e) {
+      if (tok !== R.intento) return;
+      if (e && e.causa === 'sin_red') sinInternet(e); else aviso($('#rcCodigoMsg'), (e && e.message) || 'No se pudo crear la sala.', true);
+      return;
+    }
     if (tok !== R.intento) { S.cerrar(); return; }   // salió mientras se creaba
     R.E = escuchar(S);
     $('#rcCodigoTxt').textContent = S.codigo; $('#rcCopiarCodigo').hidden = false;
@@ -174,7 +181,9 @@
     let S;
     try { S = await DragSala.unirse({ url: SALA_URL, codigo: cod, id: idTelefono() }); }
     catch (e) {
-      if (tok === R.intento) { $('#rcEntrar').disabled = false; aviso($('#rcUnirMsg'), (e && e.message) || 'No se pudo entrar a la sala.', true); }
+      if (tok !== R.intento) return;
+      $('#rcEntrar').disabled = false;
+      if (e && e.causa === 'sin_red') sinInternet(e); else aviso($('#rcUnirMsg'), (e && e.message) || 'No se pudo entrar a la sala.', true);
       return;
     }
     if (tok !== R.intento) { S.cerrar(); return; }

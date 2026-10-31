@@ -1,6 +1,7 @@
 # Prueba de la sala por internet de Race 1 vs 1 (sin hotspot; cada teléfono con sus datos) en Chromium, con la sala de
 # pruebas en esta computadora (sala_local.mjs, misma lógica que la de Cloudflare: fuente/sala/nucleo.js):
-#  A. sin sala publicada: "Crear sala" avisa y abre "¿Sin señal en la pista? Conectar con QR".
+#  A. sin sala (?sala=): "Crear sala" avisa y abre "¿Sin señal en la pista? Conectar con QR"; sala que no contesta (sin
+#     internet): vuelve al inicio con el aviso y lo del QR abierto; la app trae la dirección de la sala publicada.
 #  B. el anfitrión crea la sala y ve su código de 5; el invitado lo teclea (en minúsculas) y entra solo; los dos se
 #     sincronizan contra la sala; Full y 1/8; los dos Listo; las verdes casi juntas; la misma boleta en los dos.
 #  C. errores al teclear: código con 0, sala que no existe, sala llena.
@@ -40,10 +41,16 @@ def main():
         with sync_playwright() as p:
             b = p.chromium.launch(args=ARGS_MEDIOS)
             # ---------------- A. sin sala publicada
-            c0 = contexto(b); P, e0 = pagina(c0, URL)
+            c0 = contexto(b); P, e0 = pagina(c0, URL + '?sala=')
             P.click('#atRace'); P.click('#rcCrearSala'); P.wait_for_timeout(200)
             chk('todavía no está publicada' in P.inner_text('#rcInicioMsg') and P.evaluate("document.querySelector('.rc-sinred').open"),
-                f'A. sin sala publicada, "Crear sala" avisa y abre la conexión con QR ({P.inner_text("#rcInicioMsg")})')
+                f'A. sin sala, "Crear sala" avisa y abre la conexión con QR ({P.inner_text("#rcInicioMsg")})')
+            P.goto(URL + '?sala=ws://localhost:8794'); P.wait_for_timeout(300)
+            P.click('#atRace'); P.click('#rcCrearSala')
+            chk(esperar(P, "/No se pudo conectar con la sala/.test(document.getElementById('rcInicioMsg').textContent) && !document.getElementById('rcInicio').hidden && document.querySelector('.rc-sinred').open", 12000),
+                f'A. sala que no contesta: vuelve al inicio con el aviso y lo del QR abierto ({P.inner_text("#rcInicioMsg")})')
+            chk('wss://dragtree-sala.dani-terrazas01.workers.dev' in open(os.path.join(DIST, 'index.html'), encoding='utf-8').read(),
+                'A. la app trae la dirección de la sala publicada')
             P.screenshot(path=SH + 'sala_sin_publicar.png')
             chk(not errores(e0), 'A. sin errores: ' + '; '.join(e0))
             c0.close()

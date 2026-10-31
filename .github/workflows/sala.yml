@@ -7,7 +7,7 @@ name: Sala Race 1 vs 1
 on:
   push:
     branches: [main, claude/youthful-johnson-t02s8o]
-    paths: ['fuente/sala/**', '.github/workflows/sala.yml']
+    paths: ['fuente/sala/**', 'fuente/pruebas/sala_real_test.mjs', '.github/workflows/sala.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -23,6 +23,7 @@ jobs:
       - uses: actions/checkout@v4
         if: env.HAY_CUENTA == 'true'
       - name: Publicar en Cloudflare
+        id: publicar
         if: env.HAY_CUENTA == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
@@ -31,3 +32,13 @@ jobs:
           workingDirectory: fuente/sala
           wranglerVersion: '4'
           command: deploy
+      # Dos "teléfonos" de prueba entran a la sala recién publicada (crear, unirse, reloj, mensajes, reconexión)
+      - uses: actions/setup-node@v4
+        if: env.HAY_CUENTA == 'true'
+        with:
+          node-version: 22
+      - name: Probar la sala publicada
+        if: env.HAY_CUENTA == 'true'
+        run: |
+          sleep 5
+          node fuente/pruebas/sala_real_test.mjs "${{ steps.publicar.outputs.deployment-url }}"
