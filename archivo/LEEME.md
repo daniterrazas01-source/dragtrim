@@ -45,6 +45,7 @@ podría mezclar ajustes.
 | `drag_0.6.6.html` | 0.6.6 | 3c8ebfe | Práctica con "Tocar" en tres toques: pre-stage, stage y salida |
 | `drag_0.6.7.html` | 0.6.7 | 0f766e1 | En Android (Samsung) la franja de la hora y la cámara toma el color de lo que hay debajo |
 | `drag_0.7.html` | 0.7 | 430f8f9 | Race 1 vs 1: sala por internet con código (o QR por Wi-Fi), árbol en los dos teléfonos y boleta de los dos carriles; atajos de Medir como semáforo (0.6.8) |
+| `drag_0.7.1.html` | 0.7.1 | 6fef966 | Race 1 vs 1: "Salir de la carrera" desde la boleta de una corrida cancelada regresa a Medir |
 
 El código fuente editable de cada versión está en `fuente/` de ese commit:
 `git checkout <commit>` o, en GitHub, "Browse files" en el commit.
