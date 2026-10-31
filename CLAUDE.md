@@ -170,7 +170,10 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    no abre sin eso); las sombras duras que marca son del estilo sticker (a propósito). **Propuesta de rediseño "Drag Tree
    2026"** (UI/UX Pro Max: OLED + bloques + pestañas de cristal flotantes; Barlow Condensed para números, Saira para títulos;
    colores del árbol: ámbar acción, verde listo, rojo falla): solo maqueta, artefacto claude.ai/artifact/KvvibEKpijqMBP73b4xhFF;
-   la app no cambió. Pendiente que Daniel diga si la quiere.
+   la app no cambió. Daniel (31 oct): "Me gustó el rediseño"; hacerlo **con los fondos y sus colores** (el color principal de
+   cada fondo, `--acento`, en vez del ámbar de la maqueta; sin fondo, el de la app) y **sin cambiar la letra** ("esa sí no la
+   quiero que se mueva": Saira Black Italic donde está hoy, p. ej. "1/8 de milla", "1/4 de milla", "Armar medición"; nada de
+   Barlow). Luego lo dejó **para otro día**: no empezar hasta que lo pida (esa semana prueba la 0.7.3 y avisa si ve fallos).
    **Deslizar entre pestañas** (0.6.2, 25 oct, Daniel lo pidió "como nativa de iPhone"): con el dedo a la izquierda/derecha
    se pasa a la pestaña de al lado. Al tomar el dedo de lado, las pestañas de los lados ya se pintan (`prepararVista`,
    `data-entra` = sin la cascada de entrada) a ±ancho y se mueven pegadas a la actual; cada una se pone a la altura donde
