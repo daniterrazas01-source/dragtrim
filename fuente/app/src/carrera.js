@@ -25,7 +25,7 @@
   const ANTICIPO_MS = 1500;                 // el anfitrión manda la salida con este tiempo de anticipación (Wi-Fi)
   const ANTICIPO_SALA_MS = 2500;            // por internet la salida pasa por la sala y el otro confirma: más tiempo
   const SIN_SALIDA_S = 25;                  // si no arrancó a los 25 s de la verde, cuenta como "no salió"
-  // Nadie corre solo (1 nov 2026, sincronia_test.py): con un corte total de señal justo al mandar la salida, el árbol bajaba
+  // Nadie corre solo (31 oct 2026, sincronia_test.py): con un corte total de señal justo al mandar la salida, el árbol bajaba
   // en un solo teléfono (su "sí" o el "cancela" del otro se quedaban atorados). Ahora, mientras corre la cuenta, cada
   // teléfono le manda al otro un latido cada 250 ms; 1 s antes de los ámbar, si alguno lleva más de 1.5 s sin oír al otro,
   // cancela en los dos (el aviso llega antes de los ámbar). Solo con un otro teléfono que también late (0.7.4 o más nueva).

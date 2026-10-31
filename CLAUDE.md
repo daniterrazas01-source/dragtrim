@@ -359,7 +359,7 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
     - Falta: probarlo con dos teléfonos reales (por la sala con datos, y
       por QR con hotspot de iPhone o Android, iPhone con Android); calibrar el retraso de pantalla de cada modelo (hoy 0 ms,
       `ajusteMs`).
-    - **¿Las dos verdes salen juntas con señal mala?** (1 nov, Daniel: "que aunque esté baja la señal, ambos celulares suelten
+    - **¿Las dos verdes salen juntas con señal mala?** (31 oct, Daniel: "que aunque esté baja la señal, ambos celulares suelten
       el semáforo al mismo tiempo… que algún celular salga antes"). `sincronia_test.py` (dos teléfonos por la sala local, cada
       uno detrás de `red_mala.mjs`: retraso, variación, picos y cortes por dirección, como red celular; mide con el reloj de la
       computadora cuándo programó y pintó cada uno su verde). Resultados (4 carreras por escenario): Wi-Fi bueno 0.2–1.0 ms
@@ -370,7 +370,7 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
       teléfono la cuenta con su propio reloj, así que un pico de señal en el momento del árbol no la mueve. Además, en
       pantalla: un cuadro (8–17 ms) y el retraso de la pantalla de cada modelo (sin calibrar, `ajusteMs`). La boleta es justa
       igual (cada quien contra su verde).
-      **Fallo encontrado y corregido en 0.7.4 (sin publicar al escribir esto):** con un corte total de señal de ~6 s justo al
+      **Fallo encontrado y corregido en la 0.7.4 (publicada el 31 oct, Daniel: "Sí, publica la 0.7.4"):** con un corte total de señal de ~6 s justo al
       mandar la salida, el árbol bajaba en un solo teléfono (el invitado; su "sí" o el "cancela" del anfitrión se quedaban
       atorados). Ahora, durante la cuenta, cada teléfono manda un `latido` cada 250 ms (`LATIDO_MS`) y 1 s antes de los ámbar
       (`REVISION_MS`) revisa que oyó al otro en los últimos 1.5 s (`SILENCIO_MS`); si no, cancela en los dos (el aviso llega
@@ -424,7 +424,9 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.7.3** (31 oct 2026: pulido con impeccable:
+caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.7.4** (31 oct 2026: Race 1 vs 1, nunca baja el
+árbol en un solo teléfono: latidos entre los dos durante la cuenta y revisión 1 s antes de los ámbar; si aun así bajó en uno,
+la carrera queda anulada; sincronia_test.py + red_mala.mjs, punto 14); antes **0.7.3** (31 oct 2026: pulido con impeccable:
 avisos como recuadro con tinte, sin rebote, sensores alineados, boletas sin cortes y la boleta de la carrera más ancha de lado,
 colores de selección/cursor/deslizadores; punto 7); antes **0.7.2** (31 oct 2026: la app con el teléfono
 acostado y Ajustes → Orientación "No girar" / "Solo Medir" / "Toda la app", punto 7 "Teléfono acostado"); antes **0.7.1** (31 oct 2026: Race 1 vs 1, "Salir de la

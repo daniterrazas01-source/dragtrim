@@ -1,4 +1,4 @@
-# ¿Las dos verdes del Race 1 vs 1 salen al mismo tiempo aunque la señal esté mala? (1 nov 2026, Daniel: "que aunque esté
+# ¿Las dos verdes del Race 1 vs 1 salen al mismo tiempo aunque la señal esté mala? (31 oct 2026, Daniel: "que aunque esté
 # baja la señal, ambos celulares suelten el semáforo al mismo tiempo… que en alguna situación algún celular salga antes")
 #
 # Dos teléfonos (Chromium) por la sala local (sala_local.mjs), cada uno a través de red_mala.mjs, que retrasa sus

@@ -7337,7 +7337,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = '0.7.3';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
+  const APP_VERSION = '0.7.4';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -11414,16 +11414,21 @@ var qrcode=function(){var t=function(t,r){var e=t,n=a[r],o=null,i=0,f=null,w=[],
   const ANTICIPO_MS = 1500;                 // el anfitrión manda la salida con este tiempo de anticipación (Wi-Fi)
   const ANTICIPO_SALA_MS = 2500;            // por internet la salida pasa por la sala y el otro confirma: más tiempo
   const SIN_SALIDA_S = 25;                  // si no arrancó a los 25 s de la verde, cuenta como "no salió"
+  // Nadie corre solo (31 oct 2026, sincronia_test.py): con un corte total de señal justo al mandar la salida, el árbol bajaba
+  // en un solo teléfono (su "sí" o el "cancela" del otro se quedaban atorados). Ahora, mientras corre la cuenta, cada
+  // teléfono le manda al otro un latido cada 250 ms; 1 s antes de los ámbar, si alguno lleva más de 1.5 s sin oír al otro,
+  // cancela en los dos (el aviso llega antes de los ámbar). Solo con un otro teléfono que también late (0.7.4 o más nueva).
+  const LATIDO_MS = 250, REVISION_MS = 1000, SILENCIO_MS = 1500;
   const otroCarril = (c) => (c === 'izq' ? 'der' : 'izq');
 
   // lo que se sabe del otro teléfono (err: cota de su reloj contra la sala; seFue: tocó "Salir")
-  const otroNuevo = () => ({ listo: false, sensores: false, sinc: false, err: null, app: null, visto: false, seFue: false });
+  const otroNuevo = () => ({ listo: false, sensores: false, sinc: false, err: null, app: null, visto: false, seFue: false, late: false });
   const R = {
     fase: 'cerrado',   // cerrado | inicio | emparejar | sala | arbol | corriendo | boleta | detalle (viendo su corrida)
     rol: null, simulado: false, E: null, id: '', carrilAnf: 'izq', intento: 0,
     cfg: Object.assign({ arbol: 'pro', dist: 402.336 }, LS.get('dragtrim.carrera.cfg', {})),
     yo: { listo: false }, otro: otroNuevo(),
-    ronda: 0, prog: null, tVerde: NaN, tUltAmbar: NaN, raf: 0, timers: [], okSalida: false,
+    ronda: 0, prog: null, tVerde: NaN, tUltAmbar: NaN, raf: 0, timers: [], okSalida: false, tOtro: 0, anulada: 0,
     resYo: null, resOtro: null, runYo: null, marcador: { izq: 0, der: 0 }, contadas: new Set(),
     escaner: null, cam: null, codigoMio: '', autoSim: false,
   };
@@ -11486,7 +11491,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=a[r],o=null,i=0,f=null,w=[],
     if (E) { try { E.enviar({ tipo: 'adios' }); } catch (e) { /* */ } try { E.cerrar(); } catch (e) { /* */ } }
     R.rol = null; R.simulado = false; R.fase = 'cerrado'; R.intento++;
     R.yo.listo = false; R.otro = otroNuevo();
-    R.resYo = null; R.resOtro = null; R.runYo = null; R.prog = null;
+    R.resYo = null; R.resOtro = null; R.runYo = null; R.prog = null; R.anulada = 0;
     R.marcador = { izq: 0, der: 0 }; R.contadas = new Set(); R.ronda = 0;
     mostrarOverlay(false);
     // siempre de regreso a Medir: la boleta de la carrera puede seguir en pantalla aunque la medición ya se haya cerrado
@@ -11705,7 +11710,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=a[r],o=null,i=0,f=null,w=[],
     }
     if (est === 'conectado') {
       chip('');
-      enviar({ tipo: 'hola', app: A().version, rol: R.rol, id: R.id });
+      enviar({ tipo: 'hola', app: A().version, rol: R.rol, id: R.id, late: true });
       enviarConfig(); enviarEstado();
       reenviarResultado();
       if (R.fase === 'emparejar') { apagarCamara(); limpiarTimers(); entrarSala(); }
@@ -11728,7 +11733,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=a[r],o=null,i=0,f=null,w=[],
     if (!m || typeof m.tipo !== 'string') return;
     switch (m.tipo) {
       case 'hola':
-        R.otro.visto = true; R.otro.app = m.app || null; R.otro.seFue = false;
+        R.otro.visto = true; R.otro.app = m.app || null; R.otro.seFue = false; R.otro.late = !!m.late;
         if (R.fase === 'sala') pintarSala();
         break;
       case 'config':
@@ -11752,12 +11757,21 @@ var qrcode=function(){var t=function(t,r){var e=t,n=a[r],o=null,i=0,f=null,w=[],
         if (!esAnfitrion()) recibirSalida(m);
         break;
       case 'salida_ok':
-        if (m.ronda === R.ronda) R.okSalida = true;
+        if (m.ronda === R.ronda) { R.okSalida = true; R.tOtro = performance.now(); }
+        break;
+      case 'latido':
+        if (m.ronda === R.ronda) R.tOtro = performance.now();
         break;
       case 'cancelar':
         // solo antes de la verde: ya corriendo, cada carril termina su corrida
         if (!esAnfitrion() && isFin(m.ronda) && m.ronda > R.ronda && R.fase === 'sala') R.ronda = m.ronda;   // la salida no llegó aquí
         if (m.ronda === R.ronda && (R.fase === 'sala' || (R.fase === 'arbol' && !isFin(R.tVerde)))) cancelarRonda(m.motivo || 'El otro carril canceló la salida.', false);
+        // el árbol ya había bajado aquí pero en el otro no (se perdió la señal en el peor momento): esta carrera no cuenta
+        else if (m.ronda === R.ronda && R.ronda !== R.anulada && ['arbol', 'corriendo', 'boleta', 'detalle'].includes(R.fase)) {
+          R.anulada = R.ronda;
+          if (R.runYo) { R.runYo.race = datosRace(); A().guardar(R.runYo); }
+          if (R.fase === 'boleta') pantallaBoleta(R.runYo);
+        }
         break;
       case 'resultado':
         if (m.ronda === R.ronda && m.res) { R.resOtro = m.res; alResultadoOtro(); }
@@ -11890,6 +11904,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=a[r],o=null,i=0,f=null,w=[],
     limpiarTimers();
     R.prog = prog; R.tVerde = NaN; R.tUltAmbar = NaN;
     R.fase = 'arbol';
+    R.tOtro = performance.now();   // acaba de oírlo: el anfitrión su "Listo", el invitado la salida
     R.yo.listo = false; R.otro.listo = false;   // cada salida usa los dos "Listo": para la siguiente se vuelven a tocar
     R.autoSim = usaSimulado();
     verPaso('rcArbol');
@@ -11902,6 +11917,23 @@ var qrcode=function(){var t=function(t,r){var e=t,n=a[r],o=null,i=0,f=null,w=[],
     R.raf = requestAnimationFrame(dibujar);
     despues(Math.max(0, prog.tFin - performance.now()), finArbol);
     despues(Math.max(0, prog.tVerde - performance.now()) + SIN_SALIDA_S * 1000, revisarSinSalida);
+    if (!R.simulado) {
+      latir();
+      despues(Math.max(0, prog.tArbol - REVISION_MS - performance.now()), revisarOtro);
+    }
+  }
+  // mientras corre la cuenta: "sigo aquí" al otro teléfono, hasta que bajan los ámbar
+  function latir() {
+    if (R.fase !== 'arbol' || !R.prog) return;
+    enviar({ tipo: 'latido', ronda: R.ronda });
+    if (performance.now() < R.prog.tArbol) despues(LATIDO_MS, latir);
+  }
+  // 1 s antes de los ámbar: si no se ha oído al otro teléfono, se perdió la señal; no baja en ninguno
+  function revisarOtro() {
+    if (R.fase !== 'arbol' || R.simulado || !R.otro.late) return;
+    if (performance.now() - R.tOtro <= SILENCIO_MS) return;
+    enviar({ tipo: 'cancelar', ronda: R.ronda, motivo: 'Se perdió la señal entre los dos teléfonos antes del árbol.' });
+    cancelarRonda('Se perdió la señal con el otro teléfono antes del árbol: no bajó en ninguno. Vuelvan a tocar Listo.', false);
   }
   function luz(id, on) { const e = document.getElementById(id); if (e) e.classList.toggle('on', !!on); }
   function dibujar(ts) {
@@ -11973,9 +12005,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=a[r],o=null,i=0,f=null,w=[],
       conexion: R.simulado ? 'simulada' : (sala ? 'internet' : 'wifi'), sala: sala ? R.E.codigo : null,
       // por la sala: offset y rtt de este teléfono contra ella; error = la cota de los dos juntos
       sincronia: rel && rel.listo ? { offset_ms: rel.offset_ms, error_ms: errSinc(), rtt_ms: rel.rtt_ms } : null,
-      propio: R.resYo, rival: R.resOtro, app_rival: R.otro.app,
+      propio: R.resYo, rival: R.resOtro, app_rival: R.otro.app, anulada: R.anulada === R.ronda,
     };
-    rc.ganador = rc.propio && rc.rival ? N.ganador(...lados(rc)) : null;
+    rc.ganador = rc.propio && rc.rival && !rc.anulada ? N.ganador(...lados(rc)) : null;
     return rc;
   }
   const lados = (rc) => (rc.carril === 'izq' ? [rc.propio, rc.rival] : [rc.rival, rc.propio]);
@@ -11990,7 +12022,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=a[r],o=null,i=0,f=null,w=[],
     else if (R.fase === 'sala') pintarSala();
   }
   function contar() {
-    if (!R.resYo || !R.resOtro || R.contadas.has(R.ronda)) return;
+    if (!R.resYo || !R.resOtro || R.contadas.has(R.ronda) || R.anulada === R.ronda) return;
     const [izq, der] = miCarril() === 'izq' ? [R.resYo, R.resOtro] : [R.resOtro, R.resYo];
     const g = N.ganador(izq, der);
     if (g && g.ganador) R.marcador[g.ganador]++;
@@ -12023,14 +12055,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=a[r],o=null,i=0,f=null,w=[],
     const rc = rcDado || (run && run.race);
     if (!rc) return '';
     const [izq, der] = lados(rc);
-    const g = izq && der ? N.ganador(izq, der) : null;
+    const g = izq && der && !rc.anulada ? N.ganador(izq, der) : null;
     let filas = [];
     try { filas = N.filasTicket(izq || null, der || null, { dist: rc.dist, formato: A().formatoRT(), unidad: A().ajustes.unidad }); } catch (e) { filas = []; }
     const quien = (c) => (c === rc.carril ? 'TÚ' : (rc.simulado ? 'SIMULADO' : 'RIVAL'));
     const fecha = run && run.fecha ? new Date(run.fecha) : new Date();
     const hora = fecha.toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-    const espera = !izq || !der;
-    const txt = g ? g.texto : (espera ? 'Esperando el resultado del otro carril…' : '');
+    const espera = (!izq || !der) && !rc.anulada;
+    const txt = rc.anulada ? 'Se perdió la señal en el momento de la salida y en el otro teléfono no bajó el árbol: esta carrera no cuenta.'
+      : g ? g.texto : (espera ? 'Esperando el resultado del otro carril…' : '');
     const win = (c) => (g && g.ganador === c ? '<b class="rc-win">WIN</b>' : '');
     return `<div class="slip rc-slip">
         <header><b>DRAG&nbsp;TREE · RACE&nbsp;1&nbsp;VS&nbsp;1</b><span>${esc(hora)} &nbsp; ${rc.arbol === 'full' ? 'FULL&nbsp;.500' : 'PRO&nbsp;.400'} &nbsp; ${rc.dist < 300 ? '1/8&nbsp;MI' : '1/4&nbsp;MI'}</span></header>
@@ -12048,6 +12081,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=a[r],o=null,i=0,f=null,w=[],
   function resumenHist(run) {
     const rc = run.race;
     if (!rc) return '';
+    if (rc.anulada) return 'Race 1 vs 1, no contó (sin señal en la salida)';
     if (!rc.rival) return 'Race 1 vs 1, sin el otro carril';
     const g = rc.ganador || N.ganador(...lados(rc));
     if (!g || !g.ganador) return 'Race 1 vs 1, empate';
