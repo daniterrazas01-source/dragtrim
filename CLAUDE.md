@@ -133,6 +133,18 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    `#howtoCam` adentro) ya no es `<details>`: su botón (`aria-expanded`/`aria-controls`) se prende con el color del fondo
    (sin fondo, ámbar) y abre su explicación a la derecha del semáforo (código junto a `#btnDemo` en app.js). Race 1 vs 1
    (`#atRace`) abre desde la 0.7 su pantalla completa (punto 14). Antes se probaron una fila horizontal y botones largos delgados.
+   **Teléfono acostado** (0.7.2, 31 oct, Daniel: "en el soporte para celulares la mayor parte de las veces lo ponemos de forma
+   horizontal"; pidió Medir y Race 1 vs 1, y lo demás "como tú la veas"): manifiesto `orientation: any` (en Android la app
+   instalada lo toma cuando Chrome la actualiza, puede tardar ~1 día; en iPhone gira ya, sin el candado de rotación). Solo
+   con `(orientation: landscape) and (max-height: 500px)` (teléfonos de lado; vertical y tablets no cambian), al final de
+   style.css: logo, indicadores y pestañas en un **riel a la izquierda** (`--riel`; .top fijo arriba del riel, .tabs de
+   arriba abajo con su indicador vertical); Medir en dos lados (el semáforo de atajos a la izquierda; distancia, los 4
+   sensores en fila y el botón a la derecha; "Antes de la pista" ocupa ese lado mientras está abierto); midiendo: texto a la
+   izquierda, velocidad y botones a la derecha; resultado: la boleta flota a la izquierda; Race 1 vs 1: cada pantalla en dos
+   lados con `.rc-lado` (en vertical `display: contents`, no cambia nada), árbol más grande, boleta de los dos carriles a la
+   izquierda y quién ganó + botones a la derecha; Práctica: zonas para los pulgares a los lados del árbol (solo: a la
+   derecha); carga más chica. Respeta las zonas seguras (isla del iPhone a un lado). `horizontal_test.py` (iPhone 852×393
+   con zonas 59/59/21, S24 Ultra 915×412, chico 667×375).
    **Deslizar entre pestañas** (0.6.2, 25 oct, Daniel lo pidió "como nativa de iPhone"): con el dedo a la izquierda/derecha
    se pasa a la pestaña de al lado. Al tomar el dedo de lado, las pestañas de los lados ya se pintan (`prepararVista`,
    `data-entra` = sin la cascada de entrada) a ±ancho y se mueven pegadas a la actual; cada una se pone a la altura donde
@@ -364,7 +376,8 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.7.1** (31 oct 2026: Race 1 vs 1, "Salir de la
+caché del service worker; cambiarlo fuerza la actualización). En la rama, sin publicar: **0.7.2** (la app de lado, punto 7
+"Teléfono acostado"). Publicada: **0.7.1** (31 oct 2026: Race 1 vs 1, "Salir de la
 carrera" desde la boleta de una corrida cancelada ya corriendo (o "No salió") no hacía nada y la boleta vieja reaparecía:
 `terminar()` y `volver()` en carrera.js ahora siempre regresan a Medir; carrera_test.py E); antes **0.7** (31 oct 2026: Race 1 vs 1, punto 14: sala
 por internet con código de 5 letras (o QR por Wi-Fi sin señal), "Listo" de los dos, pre-stage, stage y árbol en los dos
@@ -396,6 +409,7 @@ python3 deslizar_test.py # deslizar el dedo entre pestañas (toques reales por C
 python3 carga_test.py    # pantalla de carga: logo + "By" Rooster Racing, 2 s, se desvanece, sin "beta" (con ?carga)
 python3 barra_test.py    # Android: color de la franja de la hora/cámara (theme-color) por fondo, velo, tema, corrida, Práctica, carga; pantallas de Samsung
 python3 atajos_test.py   # Medir: Corrida simulada / Race 1 vs 1 / Antes de la pista como semáforo (3 cuadros a la izquierda); abren su explicación a la derecha, una a la vez
+python3 horizontal_test.py  # teléfono acostado (iPhone, S24 Ultra, chico): riel, Medir, midiendo, resultado, Race 1 vs 1, Práctica, carga; vertical igual
 node carrera_nucleo_test.js; node qr_test.js; node enlace_test.js; node sala_nucleo_test.mjs   # Race 1 vs 1 sin navegador
 python3 carrera_test.py  # Race 1 vs 1: rival simulado, roja, dos teléfonos por WebRTC (códigos en texto) y QR con la cámara
 python3 sala_test.py     # Race 1 vs 1 por la sala en internet (sala_local.mjs): crear, unirse, carrera, errores, sin señal

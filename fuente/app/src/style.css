@@ -674,7 +674,9 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
 .rc-chip.mal { border-color: var(--red); color: #ff8d84; }
 .rc.en-arbol .rc-chip { display: none; }
 .rc-paso { max-width: 560px; margin: 0 auto; padding: 4px 16px 16px; display: grid; gap: 10px; align-content: start; }
-.rc-paso > .primary, .rc-paso > .ghost { margin-top: 0; }
+.rc-paso > .primary, .rc-paso > .ghost, .rc-lado > .primary, .rc-lado > .ghost { margin-top: 0; }
+/* grupos de cada pantalla para acomodarlos en dos lados con el teléfono acostado; en vertical no cambian nada */
+.rc-lado { display: contents; }
 .rc-intro { margin: 0 0 4px; color: var(--chalk-dim); }
 .rc-red { display: flex; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
 .rc-red svg { width: 60px; height: 38px; flex: none; color: #8be3a9; }
@@ -737,3 +739,134 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
 .rc-sinred { margin-top: 6px; }
 .rc-sinred > .ghost { margin-top: 8px; }
 .rc-sinred > .ghost:last-child { margin-bottom: 14px; }
+
+/* ======================================================================================================================
+   Teléfono acostado (0.7.2, 31 oct, Daniel: "en el soporte para celulares la mayor parte de las veces lo ponemos de forma
+   horizontal"). Solo teléfonos (alto ≤ 500 px): en vertical y en tablets no cambia nada. El logo, los indicadores y las
+   pestañas van en un riel a la izquierda; Medir y Race 1 vs 1 en dos lados para que lo principal quepa sin desplazarse;
+   en Práctica las zonas para los pulgares quedan a los lados del árbol. Respeta las zonas seguras (la isla del iPhone
+   queda a un lado). horizontal_test.py lo revisa en iPhone y Samsung.
+   ====================================================================================================================== */
+@media (orientation: landscape) and (max-height: 500px) {
+  :root { --riel: 104px; --riel-arriba: 116px; }
+  body { padding: env(safe-area-inset-top) env(safe-area-inset-right) calc(8px + env(safe-area-inset-bottom)) calc(var(--riel) + env(safe-area-inset-left)); }
+  body.sesion { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+
+  /* riel: el fondo lo pone .tabs de arriba abajo; el logo y los indicadores van encima, en su parte de arriba */
+  .top {
+    position: fixed; top: 0; left: 0; z-index: 6; width: calc(var(--riel) + env(safe-area-inset-left)); height: var(--riel-arriba);
+    max-width: none; margin: 0; padding: calc(8px + env(safe-area-inset-top)) 4px 0 calc(4px + env(safe-area-inset-left));
+    flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; align-items: center; gap: 6px;
+  }
+  .brand .logo { height: 50px; }
+  .top .sensors { margin-left: 0; flex-direction: column; align-items: flex-start; gap: 1px; }
+  :root[data-fondo] .sensors { padding: 4px 8px; border-radius: 10px; }
+  .sensors .chip { font-size: 11px; }
+  .tabs {
+    top: 0; bottom: 0; right: auto; width: calc(var(--riel) + env(safe-area-inset-left));
+    grid-template-columns: 1fr; grid-template-rows: repeat(5, minmax(0, 1fr));
+    padding: calc(var(--riel-arriba) + env(safe-area-inset-top)) 0 env(safe-area-inset-bottom) env(safe-area-inset-left);
+    border-top: 0; border-right: 1px solid var(--line);
+  }
+  :root[data-fondo] .tabs { border-top: 0; border-right: 2px solid var(--sticker); }
+  .tabs button { padding: 2px 6px 2px 14px; text-align: left; }
+  .tabs button[aria-current="page"] { box-shadow: inset 3px 0 0 var(--amber); }
+  .tabs::before {
+    top: calc(var(--riel-arriba) + env(safe-area-inset-top)); left: env(safe-area-inset-left); width: 3px; border-radius: 0 3px 3px 0;
+    height: calc((100% - var(--riel-arriba) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) / 5); transform: translateY(calc(var(--i) * 100%));
+  }
+
+  main { max-width: 900px; padding: 0 18px; }
+  h2 { margin-top: 6px; }
+
+  /* ---- Medir: el semáforo de atajos a la izquierda; distancia, sensores y el botón a la derecha */
+  #medirIdle { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 18px; align-items: start; }
+  #medirIdle > * { grid-column: 2; }
+  #medirIdle > .atajos { display: contents; }
+  #medirIdle .atajos-arbol { grid-column: 1; grid-row: 1 / span 9; margin-top: 4px; }
+  #medirIdle .atajos > .atajo-panel { grid-column: 2; grid-row: 1 / span 9; margin-top: 4px; }
+  #medirIdle:has(#antesPista:not([hidden])) > :not(.atajos) { display: none; }   /* "Antes de la pista" ocupa ese lado */
+  .seg.big button { padding: 13px 6px; }
+  .status { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 12px 0 2px; }
+  .stat { padding: 9px 12px; }
+  .stat .val { font-size: 24px; }
+
+  /* ---- Midiendo: el texto a la izquierda; la velocidad y los botones a la derecha */
+  #medirSesion {
+    display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: 26px; align-items: start;
+    grid-template-areas: "tit big" "txt big" "gps sub" "log track" "log term" "log canc";
+  }
+  #sesTitulo { grid-area: tit; font-size: 34px; margin-top: 8px; }
+  #sesTexto { grid-area: txt; margin-bottom: 6px; }
+  #liveMain { grid-area: big; align-self: center; margin-top: 8px; }
+  #liveSub { grid-area: sub; }
+  #gpsLine { grid-area: gps; }
+  #track { grid-area: track; }
+  #eventLog { grid-area: log; margin-top: 8px; }
+  #btnTerminar { grid-area: term; }
+  #btnCancelar { grid-area: canc; }
+
+  /* ---- Resultado: la boleta a la izquierda; lo demás a su lado (y a todo lo ancho más abajo) */
+  #vResultado > .slip:not(.rc-slip) { float: left; width: min(46%, 360px); margin: 8px 22px 14px 0; }
+  #vResultado > :is(.chart, .quality, h2, .msg, .avisos) { display: flow-root; }
+  #vResultado > .kpis { margin-top: 8px; }
+  #vResultado > .kpis div { padding: 10px 12px; }
+  #vResultado > .kpis b { font-size: 22px; }
+  #vResultado > .actions { clear: both; }
+
+  /* ---- Race 1 vs 1: cada pantalla en dos lados */
+  .rc { padding: env(safe-area-inset-top) env(safe-area-inset-right) calc(10px + env(safe-area-inset-bottom)) env(safe-area-inset-left); }
+  .rc-top, .rc-paso { max-width: 900px; }
+  .rc-top { padding: 8px 18px 4px; }
+  .rc-paso { padding: 4px 18px 10px; }
+  :is(#rcInicio, #rcCodigo, #rcSala, #rcQr, #rcEscaner) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 24px; }
+  .rc-lado { display: grid; gap: 10px; align-content: start; }
+  #rcInicio > .rc-a { grid-column: 1; grid-row: 1; }
+  #rcInicio > .rc-b { grid-column: 2; grid-row: 1 / span 2; }
+  #rcInicio > .rc-nota { grid-column: 1; grid-row: 2; }
+  #rcCodigo > .rc-a { grid-column: 1; grid-row: 1; }
+  #rcCodigo > .rc-b { grid-column: 2; grid-row: 1; align-self: center; }
+  .rc-codigo { min-width: 0; width: 100%; font-size: 46px; }
+  #rcSala > .rc-a { grid-column: 1; grid-row: 1 / span 2; }
+  #rcSala > .rc-b { grid-column: 2; grid-row: 1; }
+  #rcSala > #rcSalaCod { grid-column: 2; grid-row: 2; }
+  #rcQr > .rc-qr, #rcEscaner > .rc-visor { grid-column: 1; grid-row: 1 / span 2; width: min(66vh, 300px); }
+  :is(#rcQr, #rcEscaner) > .rc-b { grid-column: 2; grid-row: 1; }
+  :is(#rcQr, #rcEscaner) > .rc-c { grid-column: 2; grid-row: 2; }
+  #rcUnir { max-width: 520px; }
+  .rc-codin { padding: 10px; font-size: 34px; }
+  .rc-arbol { min-height: calc(100dvh - 62px - env(safe-area-inset-bottom)); gap: 8px; padding-bottom: 4px; }
+  .rc-arbol .pt-lane { gap: 1.2vh; padding: 9px 11px; }
+  .rc-arbol .pb { width: 8vh; height: 8vh; }
+  .rc-arbol .pb.s { width: 3.4vh; height: 3.4vh; }
+  .rc-fase { font-size: 24px; }
+  /* boleta de la carrera: los dos carriles a la izquierda; quién ganó y los botones a la derecha */
+  .rc-res { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); column-gap: 22px; align-items: start; }
+  .rc-res > .slip { grid-row: 1 / span 2; max-width: 420px; width: 100%; margin: 8px 0 0; }
+  .rc-res > .rc-ganador { grid-column: 2; margin-top: 14px; font-size: 19px; }
+  .rc-res > .rc-ganador.dudosa { font-size: 16px; }
+  .rc-res > .actions { grid-column: 2; }
+
+  /* ---- Práctica: el árbol al centro y las zonas para mantener el dedo a los lados (los pulgares) */
+  .pt {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "top top top" "zl tree zr" "zl res zr" "zl msg zr";
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .pt > .pt-top { grid-area: top; padding: 6px 14px; }
+  .pt > .pt-tree { grid-area: tree; padding: 0 12px; }
+  .pt > .pt-res { grid-area: res; padding-top: 6px; min-height: 0; column-gap: 14px; }
+  .pt > .pt-msg { grid-area: msg; margin-bottom: 8px; }
+  .pt > .pt-zones { display: contents; }
+  .pt .pt-zone.l { grid-area: zl; margin: 0 0 10px 10px; }
+  .pt .pt-zone.r { grid-area: zr; margin: 0 10px 10px 0; }
+  .pt.solo { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "top top" "tree zl" "res zl" "msg zl"; }
+  .pt.solo .pt-zone { width: auto; justify-self: stretch; margin: 0 10px 10px 0; }
+  .pt .pb { width: 7.6vh; height: 7.6vh; }
+  .pt .pb.s { width: 3.2vh; height: 3.2vh; }
+
+  /* ---- pantalla de carga: el logo y "By Rooster Racing" caben a lo alto */
+  .carga { padding: 10px 24px calc(14px + env(safe-area-inset-bottom)); }
+  .carga-logo { width: min(52vh, 220px); }
+  .carga-pie img { width: min(40vw, 170px); }
+}

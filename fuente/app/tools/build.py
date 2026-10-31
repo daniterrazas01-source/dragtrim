@@ -6,7 +6,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageStat
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC, DIST = ROOT / 'src', ROOT / 'dist'
 DIST.mkdir(exist_ok=True)
-VERSION = 'v-0.7.1'
+VERSION = 'v-0.7.2'
 
 html = (SRC / 'index.template.html').read_text(encoding='utf-8')
 assert html.count('<!--LOGO-->') == 2
@@ -49,8 +49,8 @@ manifest = {
     "name": "Drag Tree", "short_name": "Drag Tree",
     "description": "Medidor de 1/8 y 1/4 de milla con GPS y acelerómetro.",
     "lang": "es", "start_url": "./", "scope": "./", "display": "standalone",
-    # #141618 = la pantalla de carga: en Android la de arranque del sistema y la franja de la hora ya salen de ese color (0.6.7)
-    "orientation": "portrait", "background_color": "#141618", "theme_color": "#141618",
+    # orientation any (0.7.2, Daniel): de lado en el soporte del carro. #141618 = la pantalla de carga: en Android la de arranque del sistema y la franja de la hora ya salen de ese color (0.6.7)
+    "orientation": "any", "background_color": "#141618", "theme_color": "#141618",
     "icons": [
         {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
         {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},

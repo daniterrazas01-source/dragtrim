@@ -61,6 +61,7 @@ if quiere instalar;  then correr "deslizar_test.py" 'FALLAS: 0'           python
 if quiere instalar;  then correr "carga_test.py"    'FALLAS: 0'           python3 carga_test.py; fi
 if quiere instalar;  then correr "barra_test.py"    'FALLAS: 0'           python3 barra_test.py; fi
 if quiere ui;        then correr "atajos_test.py"   'FALLAS: 0'           python3 atajos_test.py; fi
+if quiere ui;        then correr "horizontal_test.py" 'FALLAS: 0'         python3 horizontal_test.py; fi
 # Race 1 vs 1: reglas, QR, enlace WebRTC, sala por internet (con la sala de pruebas sala_local.mjs) y la carrera en la app
 if quiere carrera || quiere carrera_node; then
   correr "carrera_nucleo_test.js" 'FALLAS: 0' node carrera_nucleo_test.js
