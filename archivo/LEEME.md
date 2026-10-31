@@ -48,6 +48,7 @@ podría mezclar ajustes.
 | `drag_0.7.1.html` | 0.7.1 | 6fef966 | Race 1 vs 1: "Salir de la carrera" desde la boleta de una corrida cancelada regresa a Medir |
 | `drag_0.7.2.html` | 0.7.2 | 7330997 | La app con el teléfono acostado (riel a la izquierda, Medir completa, Race 1 vs 1 y Práctica de lado) y Ajustes → Orientación: No girar / Solo Medir / Toda la app |
 | `drag_0.7.3.html` | 0.7.3 | e022cbe | Pulido de la interfaz (impeccable): avisos como recuadro con tinte, animaciones sin rebote, sensores alineados, boletas sin cortes (la de la carrera más ancha de lado), colores de selección, cursor y deslizadores |
+| `drag_0.7.4.html` | 0.7.4 | c75eca1 | Race 1 vs 1: nunca baja el árbol en un solo teléfono (latidos entre los dos durante la cuenta; si se pierde la señal antes de los ámbar, se cancela en los dos; si aun así bajó en uno, la carrera no cuenta) |
 
 El código fuente editable de cada versión está en `fuente/` de ese commit:
 `git checkout <commit>` o, en GitHub, "Browse files" en el commit.
