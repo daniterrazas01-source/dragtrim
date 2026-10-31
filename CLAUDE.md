@@ -389,8 +389,8 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). En la rama, sin publicar: **0.7.2** (la app de lado, punto 7
-"Teléfono acostado"). Publicada: **0.7.1** (31 oct 2026: Race 1 vs 1, "Salir de la
+caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.7.2** (31 oct 2026: la app con el teléfono
+acostado y Ajustes → Orientación "No girar" / "Solo Medir" / "Toda la app", punto 7 "Teléfono acostado"); antes **0.7.1** (31 oct 2026: Race 1 vs 1, "Salir de la
 carrera" desde la boleta de una corrida cancelada ya corriendo (o "No salió") no hacía nada y la boleta vieja reaparecía:
 `terminar()` y `volver()` en carrera.js ahora siempre regresan a Medir; carrera_test.py E); antes **0.7** (31 oct 2026: Race 1 vs 1, punto 14: sala
 por internet con código de 5 letras (o QR por Wi-Fi sin señal), "Listo" de los dos, pre-stage, stage y árbol en los dos
