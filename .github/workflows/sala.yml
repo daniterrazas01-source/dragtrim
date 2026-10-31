@@ -1,11 +1,12 @@
 # Publica la sala de Race 1 vs 1 (fuente/sala/: Cloudflare Worker + Durable Object) en la cuenta de Cloudflare de Daniel
-# cuando cambia en main, o a mano desde la pestaña Actions ("Run workflow").
-# Usa dos secretos del repositorio: CLOUDFLARE_API_TOKEN y CLOUDFLARE_ACCOUNT_ID (cómo sacarlos: fuente/sala/LEEME.md).
-# Sin ellos no publica nada y termina en verde con un aviso.
+# cuando cambia en main o en la rama de trabajo de Race 1 vs 1 (mientras no está en main); también "Re-run all jobs" en
+# la pestaña Actions sobre la última corrida.
+# Usa dos secretos del repositorio: CLOUDFLARE_API_TOKEN y CLOUDFLARE_ACCOUNT_ID (cómo sacarlos: fuente/sala/LEEME.md y
+# fuente/sala/PARA_EL_AGENTE.md). Sin ellos no publica nada y termina en verde con un aviso.
 name: Sala Race 1 vs 1
 on:
   push:
-    branches: [main]
+    branches: [main, claude/youthful-johnson-t02s8o]
     paths: ['fuente/sala/**', '.github/workflows/sala.yml']
   workflow_dispatch:
 permissions:
