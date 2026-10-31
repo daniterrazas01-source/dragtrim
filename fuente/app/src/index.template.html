@@ -23,6 +23,8 @@
   <div class="carga-pie"><span>By</span><img src="ROOSTER_URL" alt="Rooster Racing"></div>
 </div>
 <div class="fondo" id="fondo" aria-hidden="true"></div>
+<!-- #marco: en vertical no cambia nada (display: contents); con la app girada (Ajustes → Orientación) es lo que se desplaza -->
+<div id="marco">
 <header class="top">
   <div class="brand"><span class="logo" role="img" aria-label="Drag Tree, On the mark"><!--LOGO--></span></div>
   <div class="sensors" aria-label="Estado de sensores">
@@ -326,6 +328,16 @@
     </div>
 
     <div class="field">
+      <span class="lab">Orientación</span>
+      <p class="hint" id="orientHint">Con el teléfono acostado (por ejemplo, en el soporte del carro): "No girar" deja la app siempre vertical; "Solo Medir" acuesta Medir y Race 1 vs 1; "Toda la app" acuesta todo.</p>
+      <div class="seg" role="radiogroup" aria-label="Orientación" id="segOrient">
+        <button role="radio" data-v="no">No girar</button>
+        <button role="radio" data-v="medir">Solo Medir</button>
+        <button role="radio" data-v="todo">Toda la app</button>
+      </div>
+    </div>
+
+    <div class="field">
       <span class="lab">Unidades de velocidad</span>
       <div class="seg" role="radiogroup" id="segUnidad" style="margin-top:8px">
         <button role="radio" data-v="kmh">km/h</button>
@@ -579,6 +591,7 @@
   <button data-view="vHistorial">Historial</button>
   <button data-view="vAjustes">Ajustes</button>
 </nav>
+</div>
 
 <script>
 /*CORE*/

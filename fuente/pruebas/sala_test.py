@@ -12,7 +12,7 @@
 import os, subprocess, sys, time, urllib.request
 from playwright.sync_api import sync_playwright
 from carrera_test import (contexto, pagina, visible, esperar, boleta, ganador_esperado, rt_de, chk, fallas, SH, DIST,
-                          ARGS_MEDIOS)
+                          ARGS_MEDIOS, TARDE)
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 PUERTO, PSALA = 8797, 8796
@@ -100,7 +100,9 @@ def main():
             chk(bA and ('izquierdo' if g == 'izq' else 'derecho') in bA['ganador'].lower().split('gana')[-1], f'B. gana quien llega primero (reacción + ET): {g} → "{bA and bA["ganador"]}"')
             try: rI = float(rt_de(bA, 1).split()[-1]); rD = float(rt_de(bA, 2).split()[-1])
             except Exception: rI = rD = float('nan')
-            chk(abs(rI - 0.620) < 0.04 and abs(rD - 0.760) < 0.04, f'B. reacciones en boleta Full: izq ~0.620 ({rI}), der ~0.760 ({rD})')
+            tA, tB = A.evaluate(TARDE), B.evaluate(TARDE)   # verde pintada tarde en esta máquina: ver carrera_test.TARDE
+            chk(abs(rI - (0.620 - tA)) < 0.04 and abs(rD - (0.760 - tB)) < 0.04,
+                f'B. reacciones en boleta Full: izq ~0.620 ({rI}), der ~0.760 ({rD}); verdes pintadas {tA * 1000:+.0f} / {tB * 1000:+.0f} ms')
             race = A.evaluate("window.__dragtrim.DB.todos().then(rs => rs[0] && rs[0].race && { conexion: rs[0].race.conexion, sala: rs[0].race.sala, sinc: rs[0].race.sincronia })")
             chk(race and race['conexion'] == 'internet' and race['sala'] == cod and race['sinc'], f'B. la corrida guarda que fue por internet, su sala y la sincronía ({race})')
             A.wait_for_timeout(1500); A.screenshot(path=SH + 'sala_boleta.png', full_page=True)

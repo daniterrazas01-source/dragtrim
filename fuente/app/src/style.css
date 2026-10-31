@@ -37,8 +37,8 @@ html, body { margin: 0; }
 body {
   background: var(--asphalt); color: var(--chalk);
   font: 16px/1.45 var(--body);
-  min-height: 100dvh;
-  padding: env(safe-area-inset-top) 0 calc(64px + env(safe-area-inset-bottom));
+  min-height: var(--alto);
+  padding: var(--sa-t) 0 calc(64px + var(--sa-b));
   -webkit-tap-highlight-color: transparent;
 }
 button, input, select { font: inherit; color: inherit; }
@@ -220,12 +220,12 @@ p { margin: 0 0 12px; }
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
   display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
   background: var(--surface); border-top: 1px solid var(--line);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: var(--sa-b);
 }
 .tabs button { background: none; border: 0; padding: 14px 2px 16px; font-size: 15px; font-weight: 600; color: var(--chalk-dim); cursor: pointer; }
 .tabs button[aria-current="page"] { color: var(--chalk); box-shadow: inset 0 3px 0 var(--amber); }
 body.sesion .tabs { display: none; }
-body.sesion { padding-bottom: env(safe-area-inset-bottom); }
+body.sesion { padding-bottom: var(--sa-b); }
 
 /* Próximamente */
 .proximo { margin-top: 14px; border: 1px dashed var(--line); border-radius: 14px; padding: 12px 14px; color: var(--chalk-dim); }
@@ -265,18 +265,18 @@ body.practica { overflow: hidden; }
 body.practica .tabs, body.practica .top, body.practica main { display: none; }
 .pt {
   position: fixed; inset: 0; z-index: 20; background: #141618; color: #eceee9;
-  display: grid; grid-template-rows: auto 1fr auto auto minmax(108px, 19vh);   /* botón de abajo más bajo: se ve más el fondo (0.6.2) */
-  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  display: grid; grid-template-rows: auto 1fr auto auto minmax(108px, calc(19 * var(--u)));   /* botón de abajo más bajo: se ve más el fondo (0.6.2) */
+  padding: var(--sa-t) 0 var(--sa-b);
   user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none;
 }
 .pt-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; font-size: 14px; color: #a5abb0; }
 .pt-x { background: none; border: 1px solid #4a5158; color: #eceee9; border-radius: 10px; padding: 8px 14px; font-weight: 600; }
 .pt-score { font: 700 24px/1 var(--num); color: #eceee9; min-width: 60px; text-align: right; }
 .pt-tree { display: flex; justify-content: center; align-items: center; gap: 18px; min-height: 0; }
-.pt-lane { display: grid; justify-items: center; gap: min(1.2vh, 9px); background: #0b0c0d; padding: 12px 12px; border-radius: 16px; box-shadow: inset 0 0 0 2px #050606; }
+.pt-lane { display: grid; justify-items: center; gap: min(calc(1.2 * var(--u)), 9px); background: #0b0c0d; padding: 12px 12px; border-radius: 16px; box-shadow: inset 0 0 0 2px #050606; }
 .pt-pair { display: flex; gap: 8px; }
-.pb { display: block; width: min(7.4vh, 60px); height: min(7.4vh, 60px);   /* el árbol cabe sin tocar la reacción */ border-radius: 50%; background: #26292c; box-shadow: inset 0 -4px 0 rgba(0,0,0,.45); }
-.pb.s { width: min(3vh, 22px); height: min(3vh, 22px); }
+.pb { display: block; width: min(calc(7.4 * var(--u)), 60px); height: min(calc(7.4 * var(--u)), 60px);   /* el árbol cabe sin tocar la reacción */ border-radius: 50%; background: #26292c; box-shadow: inset 0 -4px 0 rgba(0,0,0,.45); }
+.pb.s { width: min(calc(3 * var(--u)), 22px); height: min(calc(3 * var(--u)), 22px); }
 @media (max-height: 700px) { .pb { width: 6.6vh; height: 6.6vh; } }   /* teléfonos chicos (SE): en 1 vs 1 el árbol tocaba la reacción */
 .pb.w.on { background: #fff3c9; box-shadow: 0 0 12px 2px rgba(255,243,201,.6); }
 .pb.y.on { background: #ffb020; box-shadow: 0 0 20px 5px rgba(255,176,32,.6); }
@@ -539,7 +539,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 .carga {
   position: fixed; inset: 0; z-index: 50; background: #141618; color: #c8cbce;
   display: grid; grid-template-rows: 1fr auto; justify-items: center;
-  padding: env(safe-area-inset-top) 24px calc(30px + env(safe-area-inset-bottom));
+  padding: var(--sa-t) 24px calc(30px + var(--sa-b));
   --logo-drag: #ffffff; --logo-tree: #111111; --logo-borde: #ffffff;
 }
 .carga-logo { align-self: center; width: min(64vw, 300px); animation: carga-entra .45s var(--ease-out) both; }
@@ -660,7 +660,7 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
   --amber: #ffb020; --green: #36d46b; --red: #f0453a; color-scheme: dark;
   position: fixed; inset: 0; z-index: 20; background: #141618; color: var(--chalk);
   overflow-y: auto; overscroll-behavior: contain;
-  padding: env(safe-area-inset-top) 0 calc(18px + env(safe-area-inset-bottom));
+  padding: var(--sa-t) 0 calc(18px + var(--sa-b));
 }
 :root[data-fondo] .rc {
   background: rgba(10, 10, 11, .86); --surface: rgba(16, 16, 18, .93); --surface-2: rgba(38, 38, 42, .94);
@@ -715,7 +715,7 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
 .rc-cfg { margin-top: 0; }
 .rc-cfg .seg button:disabled { opacity: .55; }
 /* árbol: los dos carriles, como Práctica; "Tú" debajo de tu carril */
-.rc-arbol { display: grid; justify-items: center; align-content: center; gap: 14px; min-height: calc(100dvh - 90px - env(safe-area-inset-top)); padding-bottom: 20px; }
+.rc-arbol { display: grid; justify-items: center; align-content: center; gap: 14px; min-height: calc(var(--alto) - 90px - var(--sa-t)); padding-bottom: 20px; }
 .rc-arbol .pt-tree { gap: 22px; }
 .rc-col { display: grid; justify-items: center; gap: 10px; }
 .rc-quien-arbol { font: 900 18px/1 'Rooster', var(--num); font-style: italic; font-synthesis: none; color: var(--chalk-dim); }
@@ -748,125 +748,161 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
    queda a un lado). horizontal_test.py lo revisa en iPhone y Samsung.
    ====================================================================================================================== */
 @media (orientation: landscape) and (max-height: 500px) {
-  :root { --riel: 104px; --riel-arriba: 116px; }
-  body { padding: env(safe-area-inset-top) env(safe-area-inset-right) calc(8px + env(safe-area-inset-bottom)) calc(var(--riel) + env(safe-area-inset-left)); }
-  body.sesion { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+  :root.acostada { --riel: 104px; --riel-arriba: 116px; }
+  :root.acostada body { padding: var(--sa-t) var(--sa-r) calc(8px + var(--sa-b)) calc(var(--riel) + var(--sa-l)); }
+  :root.acostada body.sesion { padding-bottom: calc(8px + var(--sa-b)); }
 
   /* riel: el fondo lo pone .tabs de arriba abajo; el logo y los indicadores van encima, en su parte de arriba */
-  .top {
-    position: fixed; top: 0; left: 0; z-index: 6; width: calc(var(--riel) + env(safe-area-inset-left)); height: var(--riel-arriba);
-    max-width: none; margin: 0; padding: calc(8px + env(safe-area-inset-top)) 4px 0 calc(4px + env(safe-area-inset-left));
+  :root.acostada .top {
+    position: fixed; top: 0; left: 0; z-index: 6; width: calc(var(--riel) + var(--sa-l)); height: var(--riel-arriba);
+    max-width: none; margin: 0; padding: calc(8px + var(--sa-t)) 4px 0 calc(4px + var(--sa-l));
     flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; align-items: center; gap: 6px;
   }
-  .brand .logo { height: 50px; }
-  .top .sensors { margin-left: 0; flex-direction: column; align-items: flex-start; gap: 1px; }
-  :root[data-fondo] .sensors { padding: 4px 8px; border-radius: 10px; }
-  .sensors .chip { font-size: 11px; }
-  .tabs {
-    top: 0; bottom: 0; right: auto; width: calc(var(--riel) + env(safe-area-inset-left));
+  :root.acostada .brand .logo { height: 50px; }
+  :root.acostada .top .sensors { margin-left: 0; flex-direction: column; align-items: flex-start; gap: 1px; }
+  :root.acostada[data-fondo] .sensors { padding: 4px 8px; border-radius: 10px; }
+  :root.acostada .sensors .chip { font-size: 11px; }
+  :root.acostada .tabs {
+    top: 0; bottom: 0; right: auto; width: calc(var(--riel) + var(--sa-l));
     grid-template-columns: 1fr; grid-template-rows: repeat(5, minmax(0, 1fr));
-    padding: calc(var(--riel-arriba) + env(safe-area-inset-top)) 0 env(safe-area-inset-bottom) env(safe-area-inset-left);
+    padding: calc(var(--riel-arriba) + var(--sa-t)) 0 var(--sa-b) var(--sa-l);
     border-top: 0; border-right: 1px solid var(--line);
   }
-  :root[data-fondo] .tabs { border-top: 0; border-right: 2px solid var(--sticker); }
-  .tabs button { padding: 2px 6px 2px 14px; text-align: left; }
-  .tabs button[aria-current="page"] { box-shadow: inset 3px 0 0 var(--amber); }
-  .tabs::before {
-    top: calc(var(--riel-arriba) + env(safe-area-inset-top)); left: env(safe-area-inset-left); width: 3px; border-radius: 0 3px 3px 0;
-    height: calc((100% - var(--riel-arriba) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) / 5); transform: translateY(calc(var(--i) * 100%));
+  :root.acostada[data-fondo] .tabs { border-top: 0; border-right: 2px solid var(--sticker); }
+  :root.acostada .tabs button { padding: 2px 6px 2px 14px; text-align: left; }
+  :root.acostada .tabs button[aria-current="page"] { box-shadow: inset 3px 0 0 var(--amber); }
+  :root.acostada .tabs::before {
+    top: calc(var(--riel-arriba) + var(--sa-t)); left: var(--sa-l); width: 3px; border-radius: 0 3px 3px 0;
+    height: calc((100% - var(--riel-arriba) - var(--sa-t) - var(--sa-b)) / 5); transform: translateY(calc(var(--i) * 100%));
   }
 
-  main { max-width: 900px; padding: 0 18px; }
-  h2 { margin-top: 6px; }
+  :root.acostada main { max-width: 900px; padding: 0 18px; }
+  :root.acostada h2 { margin-top: 6px; }
 
   /* ---- Medir: el semáforo de atajos a la izquierda; distancia, sensores y el botón a la derecha */
-  #medirIdle { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 18px; align-items: start; }
-  #medirIdle > * { grid-column: 2; }
-  #medirIdle > .atajos { display: contents; }
-  #medirIdle .atajos-arbol { grid-column: 1; grid-row: 1 / span 9; margin-top: 4px; }
-  #medirIdle .atajos > .atajo-panel { grid-column: 2; grid-row: 1 / span 9; margin-top: 4px; }
-  #medirIdle:has(#antesPista:not([hidden])) > :not(.atajos) { display: none; }   /* "Antes de la pista" ocupa ese lado */
-  .seg.big button { padding: 13px 6px; }
-  .status { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 12px 0 2px; }
-  .stat { padding: 9px 12px; }
-  .stat .val { font-size: 24px; }
+  :root.acostada #medirIdle { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 18px; align-items: start; }
+  :root.acostada #medirIdle > * { grid-column: 2; }
+  :root.acostada #medirIdle > .atajos { display: contents; }
+  :root.acostada #medirIdle .atajos-arbol { grid-column: 1; grid-row: 1 / span 9; margin-top: 4px; }
+  :root.acostada #medirIdle .atajos > .atajo-panel { grid-column: 2; grid-row: 1 / span 9; margin-top: 4px; }
+  :root.acostada #medirIdle:has(#antesPista:not([hidden])) > :not(.atajos) { display: none; }   /* "Antes de la pista" ocupa ese lado */
+  :root.acostada .seg.big button { padding: 13px 6px; }
+  :root.acostada .status { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 12px 0 2px; }
+  :root.acostada .stat { padding: 9px 12px; }
+  :root.acostada .stat .val { font-size: 24px; }
 
   /* ---- Midiendo: el texto a la izquierda; la velocidad y los botones a la derecha */
-  #medirSesion {
+  :root.acostada #medirSesion {
     display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: 26px; align-items: start;
     grid-template-areas: "tit big" "txt big" "gps sub" "log track" "log term" "log canc";
   }
-  #sesTitulo { grid-area: tit; font-size: 34px; margin-top: 8px; }
-  #sesTexto { grid-area: txt; margin-bottom: 6px; }
-  #liveMain { grid-area: big; align-self: center; margin-top: 8px; }
-  #liveSub { grid-area: sub; }
-  #gpsLine { grid-area: gps; }
-  #track { grid-area: track; }
-  #eventLog { grid-area: log; margin-top: 8px; }
-  #btnTerminar { grid-area: term; }
-  #btnCancelar { grid-area: canc; }
+  :root.acostada #sesTitulo { grid-area: tit; font-size: 34px; margin-top: 8px; }
+  :root.acostada #sesTexto { grid-area: txt; margin-bottom: 6px; }
+  :root.acostada #liveMain { grid-area: big; align-self: center; margin-top: 8px; }
+  :root.acostada #liveSub { grid-area: sub; }
+  :root.acostada #gpsLine { grid-area: gps; }
+  :root.acostada #track { grid-area: track; }
+  :root.acostada #eventLog { grid-area: log; margin-top: 8px; }
+  :root.acostada #btnTerminar { grid-area: term; }
+  :root.acostada #btnCancelar { grid-area: canc; }
 
   /* ---- Resultado: la boleta a la izquierda; lo demás a su lado (y a todo lo ancho más abajo) */
-  #vResultado > .slip:not(.rc-slip) { float: left; width: min(46%, 360px); margin: 8px 22px 14px 0; }
-  #vResultado > :is(.chart, .quality, h2, .msg, .avisos) { display: flow-root; }
-  #vResultado > .kpis { margin-top: 8px; }
-  #vResultado > .kpis div { padding: 10px 12px; }
-  #vResultado > .kpis b { font-size: 22px; }
-  #vResultado > .actions { clear: both; }
+  :root.acostada #vResultado > .slip:not(.rc-slip) { float: left; width: min(46%, 360px); margin: 8px 22px 14px 0; }
+  :root.acostada #vResultado > :is(.chart, .quality, h2, .msg, .avisos) { display: flow-root; }
+  :root.acostada #vResultado > .kpis { margin-top: 8px; }
+  :root.acostada #vResultado > .kpis div { padding: 10px 12px; }
+  :root.acostada #vResultado > .kpis b { font-size: 22px; }
+  :root.acostada #vResultado > .actions { clear: both; }
 
   /* ---- Race 1 vs 1: cada pantalla en dos lados */
-  .rc { padding: env(safe-area-inset-top) env(safe-area-inset-right) calc(10px + env(safe-area-inset-bottom)) env(safe-area-inset-left); }
-  .rc-top, .rc-paso { max-width: 900px; }
-  .rc-top { padding: 8px 18px 4px; }
-  .rc-paso { padding: 4px 18px 10px; }
-  :is(#rcInicio, #rcCodigo, #rcSala, #rcQr, #rcEscaner) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 24px; }
-  .rc-lado { display: grid; gap: 10px; align-content: start; }
-  #rcInicio > .rc-a { grid-column: 1; grid-row: 1; }
-  #rcInicio > .rc-b { grid-column: 2; grid-row: 1 / span 2; }
-  #rcInicio > .rc-nota { grid-column: 1; grid-row: 2; }
-  #rcCodigo > .rc-a { grid-column: 1; grid-row: 1; }
-  #rcCodigo > .rc-b { grid-column: 2; grid-row: 1; align-self: center; }
-  .rc-codigo { min-width: 0; width: 100%; font-size: 46px; }
-  #rcSala > .rc-a { grid-column: 1; grid-row: 1 / span 2; }
-  #rcSala > .rc-b { grid-column: 2; grid-row: 1; }
-  #rcSala > #rcSalaCod { grid-column: 2; grid-row: 2; }
-  #rcQr > .rc-qr, #rcEscaner > .rc-visor { grid-column: 1; grid-row: 1 / span 2; width: min(66vh, 300px); }
-  :is(#rcQr, #rcEscaner) > .rc-b { grid-column: 2; grid-row: 1; }
-  :is(#rcQr, #rcEscaner) > .rc-c { grid-column: 2; grid-row: 2; }
-  #rcUnir { max-width: 520px; }
-  .rc-codin { padding: 10px; font-size: 34px; }
-  .rc-arbol { min-height: calc(100dvh - 62px - env(safe-area-inset-bottom)); gap: 8px; padding-bottom: 4px; }
-  .rc-arbol .pt-lane { gap: 1.2vh; padding: 9px 11px; }
-  .rc-arbol .pb { width: 8vh; height: 8vh; }
-  .rc-arbol .pb.s { width: 3.4vh; height: 3.4vh; }
-  .rc-fase { font-size: 24px; }
+  :root.acostada .rc { padding: var(--sa-t) var(--sa-r) calc(10px + var(--sa-b)) var(--sa-l); }
+  :root.acostada .rc-top, :root.acostada .rc-paso { max-width: 900px; }
+  :root.acostada .rc-top { padding: 8px 18px 4px; }
+  :root.acostada .rc-paso { padding: 4px 18px 10px; }
+  :root.acostada :is(#rcInicio, #rcCodigo, #rcSala, #rcQr, #rcEscaner) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 24px; }
+  :root.acostada .rc-lado { display: grid; gap: 10px; align-content: start; }
+  :root.acostada #rcInicio > .rc-a { grid-column: 1; grid-row: 1; }
+  :root.acostada #rcInicio > .rc-b { grid-column: 2; grid-row: 1 / span 2; }
+  :root.acostada #rcInicio > .rc-nota { grid-column: 1; grid-row: 2; }
+  :root.acostada #rcCodigo > .rc-a { grid-column: 1; grid-row: 1; }
+  :root.acostada #rcCodigo > .rc-b { grid-column: 2; grid-row: 1; align-self: center; }
+  :root.acostada .rc-codigo { min-width: 0; width: 100%; font-size: 46px; }
+  :root.acostada #rcSala > .rc-a { grid-column: 1; grid-row: 1 / span 2; }
+  :root.acostada #rcSala > .rc-b { grid-column: 2; grid-row: 1; }
+  :root.acostada #rcSala > #rcSalaCod { grid-column: 2; grid-row: 2; }
+  :root.acostada #rcQr > .rc-qr, :root.acostada #rcEscaner > .rc-visor { grid-column: 1; grid-row: 1 / span 2; width: min(66vh, 300px); }
+  :root.acostada :is(#rcQr, #rcEscaner) > .rc-b { grid-column: 2; grid-row: 1; }
+  :root.acostada :is(#rcQr, #rcEscaner) > .rc-c { grid-column: 2; grid-row: 2; }
+  :root.acostada #rcUnir { max-width: 520px; }
+  :root.acostada .rc-codin { padding: 10px; font-size: 34px; }
+  :root.acostada .rc-arbol { min-height: calc(var(--alto) - 62px - var(--sa-b)); gap: 8px; padding-bottom: 4px; }
+  :root.acostada .rc-arbol .pt-lane { gap: 1.2vh; padding: 9px 11px; }
+  :root.acostada .rc-arbol .pb { width: 8vh; height: 8vh; }
+  :root.acostada .rc-arbol .pb.s { width: 3.4vh; height: 3.4vh; }
+  :root.acostada .rc-fase { font-size: 24px; }
   /* boleta de la carrera: los dos carriles a la izquierda; quién ganó y los botones a la derecha */
-  .rc-res { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); column-gap: 22px; align-items: start; }
-  .rc-res > .slip { grid-row: 1 / span 2; max-width: 420px; width: 100%; margin: 8px 0 0; }
-  .rc-res > .rc-ganador { grid-column: 2; margin-top: 14px; font-size: 19px; }
-  .rc-res > .rc-ganador.dudosa { font-size: 16px; }
-  .rc-res > .actions { grid-column: 2; }
+  :root.acostada .rc-res { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); column-gap: 22px; align-items: start; }
+  :root.acostada .rc-res > .slip { grid-row: 1 / span 2; max-width: 420px; width: 100%; margin: 8px 0 0; }
+  :root.acostada .rc-res > .rc-ganador { grid-column: 2; margin-top: 14px; font-size: 19px; }
+  :root.acostada .rc-res > .rc-ganador.dudosa { font-size: 16px; }
+  :root.acostada .rc-res > .actions { grid-column: 2; }
 
   /* ---- Práctica: el árbol al centro y las zonas para mantener el dedo a los lados (los pulgares) */
-  .pt {
+  :root.acostada .pt {
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto;
     grid-template-areas: "top top top" "zl tree zr" "zl res zr" "zl msg zr";
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    padding: var(--sa-t) var(--sa-r) var(--sa-b) var(--sa-l);
   }
-  .pt > .pt-top { grid-area: top; padding: 6px 14px; }
-  .pt > .pt-tree { grid-area: tree; padding: 0 12px; }
-  .pt > .pt-res { grid-area: res; padding-top: 6px; min-height: 0; column-gap: 14px; }
-  .pt > .pt-msg { grid-area: msg; margin-bottom: 8px; }
-  .pt > .pt-zones { display: contents; }
-  .pt .pt-zone.l { grid-area: zl; margin: 0 0 10px 10px; }
-  .pt .pt-zone.r { grid-area: zr; margin: 0 10px 10px 0; }
-  .pt.solo { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "top top" "tree zl" "res zl" "msg zl"; }
-  .pt.solo .pt-zone { width: auto; justify-self: stretch; margin: 0 10px 10px 0; }
-  .pt .pb { width: 7.6vh; height: 7.6vh; }
-  .pt .pb.s { width: 3.2vh; height: 3.2vh; }
+  :root.acostada .pt > .pt-top { grid-area: top; padding: 6px 14px; }
+  :root.acostada .pt > .pt-tree { grid-area: tree; padding: 0 12px; }
+  :root.acostada .pt > .pt-res { grid-area: res; padding-top: 6px; min-height: 0; column-gap: 14px; }
+  :root.acostada .pt > .pt-msg { grid-area: msg; margin-bottom: 8px; }
+  :root.acostada .pt > .pt-zones { display: contents; }
+  :root.acostada .pt .pt-zone.l { grid-area: zl; margin: 0 0 10px 10px; }
+  :root.acostada .pt .pt-zone.r { grid-area: zr; margin: 0 10px 10px 0; }
+  :root.acostada .pt.solo { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "top top" "tree zl" "res zl" "msg zl"; }
+  :root.acostada .pt.solo .pt-zone { width: auto; justify-self: stretch; margin: 0 10px 10px 0; }
+  :root.acostada .pt .pb { width: 7.6vh; height: 7.6vh; }
+  :root.acostada .pt .pb.s { width: 3.2vh; height: 3.2vh; }
 
   /* ---- pantalla de carga: el logo y "By Rooster Racing" caben a lo alto */
-  .carga { padding: 10px 24px calc(14px + env(safe-area-inset-bottom)); }
-  .carga-logo { width: min(52vh, 220px); }
-  .carga-pie img { width: min(40vw, 170px); }
+  :root.acostada .carga { padding: 10px 24px calc(14px + var(--sa-b)); }
+  :root.acostada .carga-logo { width: min(52vh, 220px); }
+  :root.acostada .carga-pie img { width: min(40vw, 170px); }
+
 }
+
+/* ======================================================================================================================
+   Ajustes → Orientación (0.7.2, Daniel: "si no lo activas, la aplicación no se acuesta"; "Solo Medir" o "Toda la app").
+   Donde el teléfono no deja fijar la orientación (iPhone; en Android, si no se pudo), la app se gira al revés y queda
+   derecha respecto al teléfono, como si estuviera fijada: html.girada (y .girada-270 si el teléfono se giró al otro lado),
+   que pone app.js. Zonas seguras (--sa-*), alto (--alto) y la unidad --u (1vh) se cambian a los del teléfono acostado.
+   ====================================================================================================================== */
+:root {
+  --sa-t: env(safe-area-inset-top); --sa-r: env(safe-area-inset-right); --sa-b: env(safe-area-inset-bottom); --sa-l: env(safe-area-inset-left);
+  --alto: 100dvh; --u: 1vh;
+}
+#marco { display: contents; }
+html.girada {
+  --alto: 100vw; --u: 1vw; overflow: hidden; height: 100%;
+  --sa-t: env(safe-area-inset-left); --sa-r: env(safe-area-inset-top); --sa-b: env(safe-area-inset-right); --sa-l: env(safe-area-inset-bottom);
+}
+html.girada.girada-270 {
+  --sa-t: env(safe-area-inset-right); --sa-r: env(safe-area-inset-bottom); --sa-b: env(safe-area-inset-left); --sa-l: env(safe-area-inset-top);
+}
+html.girada body {
+  position: fixed; top: 0; left: 0; width: 100vh; height: 100vw; min-height: 0; margin: 0; padding: 0; overflow: hidden;
+  transform-origin: 0 0; transform: translateY(100vh) rotate(-90deg);
+}
+html.girada.girada-270 body { transform: translateX(100vw) rotate(90deg); }
+/* lo que se desplaza es #marco; las pestañas quedan pegadas abajo de la app */
+html.girada #marco {
+  display: flex; flex-direction: column; height: 100%; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch; padding: var(--sa-t) var(--sa-r) 0 var(--sa-l);
+}
+html.girada #marco > main { flex: 1 0 auto; width: 100%; }
+html.girada #marco > .top { width: 100%; }
+html.girada .tabs { position: sticky; bottom: 0; flex: none; }
+html.girada body.sesion #marco { padding-bottom: var(--sa-b); }
+html.girada .pb { width: min(calc(7.4 * var(--u)), 60px); height: min(calc(7.4 * var(--u)), 60px); }
+html.girada .pb.s { width: min(calc(3 * var(--u)), 22px); height: min(calc(3 * var(--u)), 22px); }

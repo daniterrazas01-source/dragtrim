@@ -54,6 +54,10 @@ def vigilar_arbol(pg, ms=9000):
             if (performance.now() - t0 < 12000) requestAnimationFrame(ver); };
         requestAnimationFrame(ver); }""")
 
+# Cuánto después de lo programado se pintó la verde (s). El auto simulado arranca contra la programada y la app mide
+# contra el cuadro en que se pintó (como con un auto de verdad): si ese cuadro llega tarde, la reacción medida es más corta.
+TARDE = """(() => { const R = window.__carrera.R; return (R.tVerde - R.prog.tVerde) / 1000; })()"""
+
 def boleta(pg):
     return pg.evaluate("""(() => { const s = document.querySelector('.rc-slip'); if (!s) return null;
         const filas = [...s.querySelectorAll('tr')].map(tr => [...tr.children].map(td => td.textContent.trim()));
@@ -123,7 +127,8 @@ def main():
             chk(bo is not None and rt is not None, f'A. la boleta trae R/T del carril izquierdo ({rt})')
             try: rtv = float(rt.split()[-1].replace('+', ''))
             except Exception: rtv = float('nan')
-            chk(abs(rtv - 0.550) < 0.035, f'A. tu reacción ~0.150 desde la verde = 0.550 en boleta Pro ({rtv})')
+            tarde = pg.evaluate(TARDE)   # la verde se pintó tarde en esta máquina: el auto simulado salió contra la programada
+            chk(abs(rtv - (0.550 - tarde)) < 0.035, f'A. tu reacción ~0.150 desde la verde = 0.550 en boleta Pro ({rtv}; verde pintada {tarde * 1000:+.0f} ms)')
             g = ganador_esperado(bo, 0.4, '1/4')
             chk(('izquierdo' if g == 'izq' else 'derecho') in bo['ganador'].lower().split('gana')[-1] and bo['wins'] == 1,
                 f'A. gana quien llega primero a la meta (reacción + ET): {g} → "{bo["ganador"]}"')
@@ -222,7 +227,9 @@ def main():
                 f'C. gana quien llega primero a la meta en 1/8 (reacción + ET): {g} → "{bA and bA["ganador"]}"')
             try: rI = float(rt_de(bA, 1).split()[-1]); rD = float(rt_de(bA, 2).split()[-1])
             except Exception: rI = rD = float('nan')
-            chk(abs(rI - 0.620) < 0.04 and abs(rD - 0.760) < 0.04, f'C. reacciones en boleta Full: izq ~0.620 ({rI}), der ~0.760 ({rD})')
+            tA, tB = A.evaluate(TARDE), B.evaluate(TARDE)
+            chk(abs(rI - (0.620 - tA)) < 0.04 and abs(rD - (0.760 - tB)) < 0.04,
+                f'C. reacciones en boleta Full: izq ~0.620 ({rI}), der ~0.760 ({rD}); verdes pintadas {tA * 1000:+.0f} / {tB * 1000:+.0f} ms')
             A.wait_for_timeout(1500)
             A.screenshot(path=SH + 'carrera_boleta_anfitrion.png', full_page=True); B.screenshot(path=SH + 'carrera_boleta_invitado.png', full_page=True)
             A.click('#rcOtra'); B.click('#rcOtra'); A.wait_for_timeout(500)

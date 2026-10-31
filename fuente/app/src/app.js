@@ -11,7 +11,7 @@
     get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
   };
-  const DEF = { dist: 402.336, rollout_ft: 1, unidad: 'kmh', v_confirma_kmh: 50, t_confirma: 8, usar_acc: true, tema: 'auto', anim: true, fondo: 'combinado', velo: '0.78',
+  const DEF = { dist: 402.336, rollout_ft: 1, unidad: 'kmh', orientacion: 'no', v_confirma_kmh: 50, t_confirma: 8, usar_acc: true, tema: 'auto', anim: true, fondo: 'combinado', velo: '0.78',
     // Semáforo con cámara (beta 0.6): zona del árbol por carril (normalizada al cuadro orig), cámara física elegida,
     // retraso cámara↔giroscopio medido por carril (últimos valores), sesgo del acelerómetro y correcciones con boleta (ms)
     cam: false, cam_arbol: 'pro', cam_zona: { izq: null, der: null }, cam_orig: null, cam_camara: null, cam_info: null,
@@ -19,6 +19,46 @@
   const S = Object.assign({}, DEF, LS.get('dragtrim.settings', {}));
   for (const k of ['cam_zona', 'cam_delta', 'cam_ajuste']) S[k] = Object.assign({}, DEF[k], S[k] || {});
   const guardarAjustes = () => LS.set('dragtrim.settings', S);
+
+  // ------------------------------------------------------------ orientación (Ajustes → Orientación, 0.7.2, Daniel)
+  // 'no': la app nunca se acuesta; 'medir': solo Medir (midiendo, su resultado y Race 1 vs 1); 'todo': toda la app.
+  // Acostada se usa el diseño de lado (:root.acostada en style.css). Si no se permite: donde el teléfono deja fijar la
+  // orientación (Android con la app instalada) se fija en vertical; donde no (iPhone, pestaña del navegador), la app se
+  // gira al revés con CSS (html.girada) y queda derecha respecto al teléfono, como si estuviera fijada.
+  const mqLado = window.matchMedia ? matchMedia('(orientation: landscape) and (max-height: 500px)') : null;
+  const enApp = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  let fijada = false, noSeFija = false;
+  function permiteAcostar() {
+    const o = S.orientacion;
+    if (o === 'todo') return true;
+    if (o !== 'medir') return false;
+    const b = document.body.classList;
+    if (b.contains('carrera')) return true;
+    if (b.contains('practica')) return false;
+    const v = document.querySelector('main > .view:not([hidden])');
+    const id = v ? v.id : 'vMedir';
+    return id === 'vMedir' || (id === 'vResultado' && b.contains('sesion'));
+  }
+  // hacia dónde se giró el teléfono: 90 = a la izquierda (lo de arriba del teléfono queda a la izquierda), 270 = a la derecha
+  function anguloTelefono() {
+    let a = Number(window.orientation);
+    if (!Number.isFinite(a) && screen.orientation) a = Number(screen.orientation.angle);
+    return Number.isFinite(a) ? ((a % 360) + 360) % 360 : 90;
+  }
+  function aplicarOrientacion() {
+    const quiere = permiteAcostar(), so = screen.orientation;
+    if (so && typeof so.lock === 'function' && enApp()) {
+      if (!quiere && !fijada && !noSeFija) {
+        so.lock('portrait-primary').then(() => { fijada = true; aplicarOrientacion(); }, () => { noSeFija = true; aplicarOrientacion(); });
+      } else if (quiere && fijada) { try { so.unlock(); } catch (e) { /* */ } fijada = false; }
+    }
+    const lado = !!(mqLado && mqLado.matches), girar = lado && !quiere, r = document.documentElement.classList;
+    r.toggle('acostada', lado && quiere);
+    r.toggle('girada', girar);
+    r.toggle('girada-270', girar && anguloTelefono() === 270);
+  }
+  // arriba del todo (con la app girada lo que se desplaza es #marco)
+  function subir() { window.scrollTo(0, 0); const m = document.getElementById('marco'); if (m) m.scrollTop = 0; }
   // "Medir con el semáforo real" está fuera de la app (0.6.2, Daniel: presentó fallos; se retoma más adelante): no se ve
   // en Medir, Ajustes, resultados ni Historial y no prende la cámara. El código sigue: para desarrollarlo y en las
   // pruebas, index.html?camdev o localStorage dragtrim.camDev = true.
@@ -931,7 +971,7 @@
     $('#medirSesion').hidden = true;
     document.body.classList.toggle('sesion', !!enSesion);
     mostrarVista('vResultado', !enSesion ? 'vHistorial' : null);
-    window.scrollTo(0, 0);
+    subir();
     if (run.ok) { requestAnimationFrame(() => graficas(run)); contar(v); }
     const on = (id, fn) => { const b = document.getElementById(id); if (b) b.onclick = fn; };
     on('rNueva', () => { if (ses.demo) iniciarDemo(); else armar(); });
@@ -1141,6 +1181,7 @@
     for (const b of document.querySelectorAll('.tabs button')) {
       if (b.dataset.view === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     }
+    aplicarOrientacion();
   }
   // Lo que prepara cada pestaña al abrirse (también al asomarse cuando se desliza el dedo).
   function prepararVista(v) {
@@ -1149,7 +1190,7 @@
     if (v === 'vAjustes') pintarAjCam();
   }
   for (const b of document.querySelectorAll('.tabs button')) {
-    b.onclick = () => { const v = b.dataset.view; prepararVista(v); mostrarVista(v); window.scrollTo(0, 0); };
+    b.onclick = () => { const v = b.dataset.view; prepararVista(v); mostrarVista(v); subir(); };
   }
 
   // Deslizar el dedo a la izquierda o a la derecha pasa a la pestaña de al lado, como en una app del iPhone: las
@@ -1165,7 +1206,7 @@
     let g = null, tapaClic = -Infinity, ocupado = false;   // tapaClic: hora del último soltar después de deslizar
     const actual = () => Math.max(0, botones.findIndex((b) => b.hasAttribute('aria-current')));
     const hayPestanas = () => getComputedStyle(barra).display !== 'none' && !document.body.classList.contains('practica')
-      && !document.body.classList.contains('sesion') && !raiz.classList.contains('cam-abierta');
+      && !document.body.classList.contains('sesion') && !raiz.classList.contains('cam-abierta') && !raiz.classList.contains('girada');
     const deLado = (el) => {
       for (; el && el !== document.body; el = el.parentElement) {
         if (el.scrollWidth > el.clientWidth + 1 && /auto|scroll/.test(getComputedStyle(el).overflowX)) return true;
@@ -1288,6 +1329,14 @@
   seg('segDist', 'dist', Number);
   seg('segUnidad', 'unidad', String);
   seg('segTema', 'tema', String);
+  seg('segOrient', 'orientacion', String);
+  $('#segOrient').addEventListener('click', () => setTimeout(aplicarOrientacion, 0));
+  // la orientación se revisa al girar el teléfono, al cambiar de pantalla (Práctica, Race 1 vs 1, midiendo) y al iniciar
+  if (mqLado) mqLado.addEventListener('change', aplicarOrientacion);
+  if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', aplicarOrientacion);
+  window.addEventListener('orientationchange', aplicarOrientacion);
+  new MutationObserver(aplicarOrientacion).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  aplicarOrientacion();
   // La marca que se desliza en los selectores (todos, también Práctica y Calcular) va a la posición y el ancho del botón
   // elegido: con un texto largo ("Atmosférico", "Automático" a 320 px) los botones no miden lo mismo y la marca, que
   // los suponía iguales, quedaba corrida.
@@ -1617,7 +1666,7 @@
     $('#medirSesion').hidden = true;
     document.body.classList.add('sesion');
     mostrarVista('vResultado');
-    window.scrollTo(0, 0);
+    subir();
     return v;
   }
   window.DragApp = {

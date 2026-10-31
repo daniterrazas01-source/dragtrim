@@ -144,7 +144,20 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    lados con `.rc-lado` (en vertical `display: contents`, no cambia nada), árbol más grande, boleta de los dos carriles a la
    izquierda y quién ganó + botones a la derecha; Práctica: zonas para los pulgares a los lados del árbol (solo: a la
    derecha); carga más chica. Respeta las zonas seguras (isla del iPhone a un lado). `horizontal_test.py` (iPhone 852×393
-   con zonas 59/59/21, S24 Ultra 915×412, chico 667×375).
+   con zonas 59/59/21, S24 Ultra 915×412, chico 667×375, S25 con la barra de arriba 780×336).
+   **Ajustes → Orientación** (0.7.2, Daniel: "si no lo activas, la aplicación no se acuesta"): `S.orientacion` = 'no'
+   (de inicio: "No girar"), 'medir' ("Solo Medir": Medir, midiendo y su resultado, y Race 1 vs 1; no Práctica, Calcular,
+   Historial ni Ajustes) o 'todo' ("Toda la app"). `aplicarOrientacion()` al principio de app.js (al girar, al cambiar de
+   pestaña y con la clase de body): si se permite y el teléfono está de lado, `html.acostada` (el diseño de lado del bloque
+   `@media (orientation: landscape) and (max-height: 500px)` solo aplica con `:root.acostada`). Si no se permite: con la app
+   instalada en Android intenta `screen.orientation.lock('portrait-primary')` (fija de verdad); si no se puede (iPhone no
+   deja; pestaña del navegador), `html.girada` gira la app al revés con CSS y queda derecha respecto al teléfono, como si
+   estuviera fijada (body fijo, rotado ±90° según `window.orientation`/`screen.orientation.angle`: 90 → rotate(−90deg),
+   270 → `.girada-270`, rotate(90deg); `#marco` = envoltura de encabezado, contenido y pestañas: en vertical `display:
+   contents`, girada es lo que se desplaza y las pestañas van `sticky` abajo; zonas seguras `--sa-t/r/b/l`, alto `--alto` y
+   unidad `--u` (1vh) se cambian a las del teléfono; `subir()` en vez de `window.scrollTo(0, 0)`; sin deslizar entre
+   pestañas). Las ventanas encima (Práctica, Race 1 vs 1, carga) se giran con la app. Al girar, iPhone anima su giro y la app
+   se compensa al terminar.
    **Deslizar entre pestañas** (0.6.2, 25 oct, Daniel lo pidió "como nativa de iPhone"): con el dedo a la izquierda/derecha
    se pasa a la pestaña de al lado. Al tomar el dedo de lado, las pestañas de los lados ya se pintan (`prepararVista`,
    `data-entra` = sin la cascada de entrada) a ±ancho y se mueven pegadas a la actual; cada una se pone a la altura donde
