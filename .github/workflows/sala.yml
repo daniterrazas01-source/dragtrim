@@ -1,0 +1,32 @@
+# Publica la sala de Race 1 vs 1 (fuente/sala/: Cloudflare Worker + Durable Object) en la cuenta de Cloudflare de Daniel
+# cuando cambia en main, o a mano desde la pestaña Actions ("Run workflow").
+# Usa dos secretos del repositorio: CLOUDFLARE_API_TOKEN y CLOUDFLARE_ACCOUNT_ID (cómo sacarlos: fuente/sala/LEEME.md).
+# Sin ellos no publica nada y termina en verde con un aviso.
+name: Sala Race 1 vs 1
+on:
+  push:
+    branches: [main]
+    paths: ['fuente/sala/**', '.github/workflows/sala.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    env:
+      HAY_CUENTA: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+    steps:
+      - name: Falta la cuenta de Cloudflare
+        if: env.HAY_CUENTA != 'true'
+        run: echo "::notice::Faltan los secretos CLOUDFLARE_API_TOKEN y CLOUDFLARE_ACCOUNT_ID; la sala no se publica (ver fuente/sala/LEEME.md)."
+      - uses: actions/checkout@v4
+        if: env.HAY_CUENTA == 'true'
+      - name: Publicar en Cloudflare
+        if: env.HAY_CUENTA == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: fuente/sala
+          wranglerVersion: '4'
+          command: deploy

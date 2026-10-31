@@ -1,9 +1,10 @@
-/* carrera.js — Race 1 vs 1 (0.7): dos autos, cada uno con Drag Tree en su teléfono. Se emparejan con dos QR (WebRTC por
-   la misma red Wi-Fi, sin internet), Daniel alinea los autos, los dos tocan "Listo" y la app prende pre-stage, stage y
+/* carrera.js — Race 1 vs 1 (0.7): dos autos, cada uno con Drag Tree en su teléfono. Se juntan en una sala por internet
+   con un código de 5 letras (cada teléfono con sus datos, sin hotspot: sala.js y fuente/sala/) o, sin señal, con dos QR
+   (WebRTC por la misma red Wi-Fi). Daniel alinea los autos, los dos tocan "Listo" y la app prende pre-stage, stage y
    baja el árbol en los dos teléfonos a la vez (relojes sincronizados). Cada quien se mide contra su propia verde con la
    medición de siempre (app.js) y al final la boleta junta los dos carriles con las reglas de pista.
-   Piezas: DragQR (qr.js), DragEnlace (enlace.js), DragCarreraNucleo (carrera_nucleo.js) y DragApp (app.js).
-   Diseño: archivo/ideas/race_1vs1.md y race_1vs1_programa.md. */
+   Piezas: DragSala (sala.js), DragQR (qr.js), DragEnlace (enlace.js), DragCarreraNucleo (carrera_nucleo.js) y DragApp.
+   Diseño: archivo/ideas/race_1vs1.md, race_1vs1_programa.md y race_1vs1_notas.md (la sala por internet). */
 (function () {
   'use strict';
   const $ = (s) => document.querySelector(s);
@@ -17,15 +18,22 @@
   };
   const PARAMS = new URLSearchParams(location.search);
   const SIM_SENS = PARAMS.has('simsens');   // pruebas: el auto de este teléfono es simulado aunque el rival sea real
-  const ANTICIPO_MS = 1500;                 // el anfitrión manda la salida con este tiempo de anticipación
+  // Sala por internet (fuente/sala/, en la cuenta de Cloudflare de Daniel). Vacía mientras no esté publicada: entonces
+  // "Crear sala" avisa y queda la conexión con QR. ?sala=ws://… pone otra (pruebas con fuente/pruebas/sala_local.mjs).
+  const SALA_PUBLICADA = '';
+  const SALA_URL = PARAMS.get('sala') || SALA_PUBLICADA;
+  const ANTICIPO_MS = 1500;                 // el anfitrión manda la salida con este tiempo de anticipación (Wi-Fi)
+  const ANTICIPO_SALA_MS = 2500;            // por internet la salida pasa por la sala y el otro confirma: más tiempo
   const SIN_SALIDA_S = 25;                  // si no arrancó a los 25 s de la verde, cuenta como "no salió"
   const otroCarril = (c) => (c === 'izq' ? 'der' : 'izq');
 
+  // lo que se sabe del otro teléfono (err: cota de su reloj contra la sala; seFue: tocó "Salir")
+  const otroNuevo = () => ({ listo: false, sensores: false, sinc: false, err: null, app: null, visto: false, seFue: false });
   const R = {
     fase: 'cerrado',   // cerrado | inicio | emparejar | sala | arbol | corriendo | boleta | detalle (viendo su corrida)
-    rol: null, simulado: false, E: null, id: '', carrilAnf: 'izq',
+    rol: null, simulado: false, E: null, id: '', carrilAnf: 'izq', intento: 0,
     cfg: Object.assign({ arbol: 'pro', dist: 402.336 }, LS.get('dragtrim.carrera.cfg', {})),
-    yo: { listo: false }, otro: { listo: false, sensores: false, sinc: false, app: null, visto: false },
+    yo: { listo: false }, otro: otroNuevo(),
     ronda: 0, prog: null, tVerde: NaN, tUltAmbar: NaN, raf: 0, timers: [], okSalida: false,
     resYo: null, resOtro: null, runYo: null, marcador: { izq: 0, der: 0 }, contadas: new Set(),
     escaner: null, cam: null, codigoMio: '', autoSim: false,
@@ -33,12 +41,29 @@
   const miCarril = () => (R.rol === 'invitado' ? otroCarril(R.carrilAnf) : R.carrilAnf);
   const esAnfitrion = () => R.rol === 'anfitrion';
   const usaSimulado = () => SIM_SENS || (R.simulado && !A().sensoresActivos());
+  const esSala = () => !!(R.E && R.E.tipo === 'sala');
+  // Reloj del programa del árbol: por la sala, la hora de la sala; por Wi-Fi, la del teléfono que creó la carrera
+  const enRef = () => !!R.E && (esSala() || !esAnfitrion());
+  const aRef = (t) => (enRef() ? R.E.aOtro(t) : t);
+  const deRef = (t) => (enRef() ? R.E.aLocal(t) : t);
+  // Qué tan parejas salen las dos verdes (cota, ms): por la sala se suman la de los dos teléfonos contra ella
+  function errSinc() {
+    const r = R.E && R.E.reloj;
+    if (!r || !r.listo || !isFin(r.error_ms)) return NaN;
+    return esSala() ? r.error_ms + (isFin(R.otro.err) ? R.otro.err : 0) : r.error_ms;
+  }
+  // Identidad de este teléfono para la sala (así lo reconoce si se reconecta)
+  function idTelefono() {
+    let id = LS.get('dragtrim.carrera.id', '');
+    if (!id) { id = 'T' + Math.random().toString(36).slice(2, 12); LS.set('dragtrim.carrera.id', id); }
+    return id;
+  }
 
   function despues(ms, fn) { const id = setTimeout(fn, ms); R.timers.push(id); return id; }
   function limpiarTimers() { R.timers.forEach(clearTimeout); R.timers = []; cancelAnimationFrame(R.raf); R.raf = 0; }
 
   // ---------------------------------------------------------------- pantallas
-  const PASOS = ['rcInicio', 'rcQr', 'rcEscaner', 'rcTexto', 'rcSala', 'rcArbol'];
+  const PASOS = ['rcInicio', 'rcCodigo', 'rcUnir', 'rcQr', 'rcEscaner', 'rcTexto', 'rcSala', 'rcArbol'];
   function verPaso(id) {
     for (const p of PASOS) $('#' + p).hidden = p !== id;
     $('#rc').classList.toggle('en-arbol', id === 'rcArbol');
@@ -58,7 +83,7 @@
   function abrir() {
     if (R.fase !== 'cerrado') { volver(); return; }
     R.fase = 'inicio';
-    verPaso('rcInicio'); chip('');
+    verPaso('rcInicio'); chip(''); aviso($('#rcInicioMsg'), '');
     mostrarOverlay(true);
   }
   function apagarCamara() {
@@ -68,9 +93,10 @@
   // Termina la carrera por completo: cierra la conexión, desarma la medición y vuelve a Medir
   function terminar() {
     limpiarTimers(); apagarCamara();
-    if (R.E) { try { R.E.enviar({ tipo: 'adios' }); } catch (e) { /* */ } try { R.E.cerrar(); } catch (e) { /* */ } }
-    R.E = null; R.rol = null; R.simulado = false; R.fase = 'cerrado';
-    R.yo.listo = false; R.otro = { listo: false, sensores: false, sinc: false, app: null, visto: false };
+    const E = R.E; R.E = null;   // primero se suelta: lo que avise al cerrarse ya no toca las pantallas
+    if (E) { try { E.enviar({ tipo: 'adios' }); } catch (e) { /* */ } try { E.cerrar(); } catch (e) { /* */ } }
+    R.rol = null; R.simulado = false; R.fase = 'cerrado'; R.intento++;
+    R.yo.listo = false; R.otro = otroNuevo();
     R.resYo = null; R.resOtro = null; R.runYo = null; R.prog = null;
     R.marcador = { izq: 0, der: 0 }; R.contadas = new Set(); R.ronda = 0;
     mostrarOverlay(false);
@@ -89,23 +115,77 @@
     entrarSala();
   }
 
-  // ---------------------------------------------------------------- emparejar (dos QR)
-  function nuevoEnlace(rol) {
-    const E = DragEnlace.crear({ rol });
-    E.on('estado', alEstado);
-    E.on('mensaje', alMensaje);
+  // ---------------------------------------------------------------- conexión: sala por internet o dos QR
+  // Los dos caminos (DragSala y DragEnlace) se portan igual: estado, mensaje, reloj, enviar, aLocal/aOtro, cerrar.
+  function escuchar(E) {
+    E.on('estado', (s, info) => { if (R.E === E) alEstado(s, info); });
+    E.on('mensaje', (m) => { if (R.E === E) alMensaje(m); });
     let sincAntes = false, tEstado = 0;
     E.on('reloj', (rel) => {
-      if (R.fase === 'sala') pintarSala();
+      if (R.E !== E) return;
+      if (R.fase === 'sala') { pintarSala(); revisarSalida(); }
+      // cómo va su reloj: el que no decide la salida (por la sala, los dos: cada uno se sincroniza con ella)
       const ahora = performance.now();
-      if (!esAnfitrion() && (!!(rel && rel.listo) !== sincAntes || ahora - tEstado > 3000)) { sincAntes = !!(rel && rel.listo); tEstado = ahora; enviarEstado(); }
+      if ((!esAnfitrion() || esSala()) && (!!(rel && rel.listo) !== sincAntes || ahora - tEstado > (esSala() ? 10000 : 3000))) { sincAntes = !!(rel && rel.listo); tEstado = ahora; enviarEstado(); }
     });
     return E;
+  }
+  function nuevoEnlace(rol) { const E = DragEnlace.crear({ rol }); R.E = E; return escuchar(E); }
+
+  // ---- sala por internet: uno la crea y le dice el código al otro (sin hotspot; cada teléfono con sus datos)
+  function sinSala() {
+    aviso($('#rcInicioMsg'), DragSala.TXT.sin_url + ' Por ahora usen "¿Sin señal en la pista? Conectar con QR".', true);
+    $('.rc-sinred').open = true;
+  }
+  async function crearSala() {
+    if (!window.DragSala) return;
+    if (!SALA_URL) { sinSala(); return; }
+    const tok = ++R.intento;
+    R.rol = 'anfitrion'; R.simulado = false; R.id = Math.random().toString(36).slice(2, 10); R.fase = 'emparejar';
+    verPaso('rcCodigo');
+    $('#rcCodigoTxt').textContent = '· · · · ·'; $('#rcCopiarCodigo').hidden = true; $('#rcCodigoEspera').hidden = true;
+    aviso($('#rcCodigoMsg'), 'Creando la sala…');
+    let S;
+    try { S = await DragSala.crearSala({ url: SALA_URL, id: idTelefono() }); }
+    catch (e) { if (tok === R.intento) aviso($('#rcCodigoMsg'), (e && e.message) || 'No se pudo crear la sala.', true); return; }
+    if (tok !== R.intento) { S.cerrar(); return; }   // salió mientras se creaba
+    R.E = escuchar(S);
+    $('#rcCodigoTxt').textContent = S.codigo; $('#rcCopiarCodigo').hidden = false;
+    aviso($('#rcCodigoMsg'), '');
+    alEstado(S.estado, { motivo: S.motivo });
+  }
+  function unirSala() {
+    if (!window.DragSala) return;
+    if (!SALA_URL) { sinSala(); return; }
+    R.intento++;
+    R.rol = 'invitado'; R.simulado = false; R.fase = 'emparejar';
+    verPaso('rcUnir');
+    aviso($('#rcUnirMsg'), 'Son 5 letras y números; te lo dice el que creó la sala.');
+    $('#rcEntrar').disabled = false;
+    const inp = $('#rcCodIn'); inp.value = '';
+    setTimeout(() => { try { inp.focus(); } catch (e) { /* */ } }, 60);
+  }
+  async function entrarConCodigo() {
+    const cod = $('#rcCodIn').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (cod.length !== 5) { aviso($('#rcUnirMsg'), 'El código tiene 5 letras y números.', true); return; }
+    if (!DragSala.RE_CODIGO.test(cod)) { aviso($('#rcUnirMsg'), 'Revisa el código: no lleva O, I, 0 ni 1.', true); return; }
+    const tok = ++R.intento;
+    $('#rcEntrar').disabled = true; aviso($('#rcUnirMsg'), 'Entrando a la sala…');
+    let S;
+    try { S = await DragSala.unirse({ url: SALA_URL, codigo: cod, id: idTelefono() }); }
+    catch (e) {
+      if (tok === R.intento) { $('#rcEntrar').disabled = false; aviso($('#rcUnirMsg'), (e && e.message) || 'No se pudo entrar a la sala.', true); }
+      return;
+    }
+    if (tok !== R.intento) { S.cerrar(); return; }
+    $('#rcEntrar').disabled = false;
+    R.E = escuchar(S);
+    alEstado(S.estado, { motivo: S.motivo });
   }
   async function crear() {
     if (!window.DragEnlace || !window.DragQR) return;
     R.rol = 'anfitrion'; R.simulado = false; R.id = Math.random().toString(36).slice(2, 10);
-    R.fase = 'emparejar';
+    R.fase = 'emparejar'; R.intento++;
     verPaso('rcQr');
     $('#rcQrPaso').textContent = 'Paso 1 de 2'; $('#rcQrTit').textContent = 'Escanea este código con el otro teléfono';
     aviso($('#rcQrTxt'), 'Preparando el código…');
@@ -114,7 +194,7 @@
     // con permiso de cámara el navegador pone las IP reales en el código (sin él puede no conectar)
     R.cam = await DragQR.pedirCamara();
     try {
-      R.E = nuevoEnlace('anfitrion');
+      nuevoEnlace('anfitrion');
       R.codigoMio = await R.E.oferta();
     } catch (e) {
       aviso($('#rcQrTxt'), 'No se pudo preparar la conexión: ' + (e && e.message || e), true);
@@ -163,10 +243,10 @@
       } else {
         verPaso('rcQr'); $('#rcQrPaso').textContent = 'Paso 2 de 2'; $('#rcQrTit').textContent = 'Ahora el otro teléfono escanea este código';
         aviso($('#rcQrTxt'), 'Preparando tu código…'); $('#rcLeerResp').hidden = true; $('#rcQrEspera').hidden = true; limpiarQr();
-        if (R.E) { try { R.E.cerrar(); } catch (e) { /* */ } }
+        if (R.E) { const viejo = R.E; R.E = null; try { viejo.cerrar(); } catch (e) { /* */ } }
         // la cámara sigue prendida mientras se arma la respuesta: así el código lleva la IP real
         if (!R.cam && !R.escaner) R.cam = await DragQR.pedirCamara();
-        R.E = nuevoEnlace('invitado');
+        nuevoEnlace('invitado');
         R.codigoMio = await R.E.responder(codigo);
         apagarCamara();
         DragQR.dibujar($('#rcQrCanvas'), R.codigoMio);
@@ -202,10 +282,21 @@
   function enviar(m) { return R.E ? R.E.enviar(m) : false; }
   function enviarEstado() {
     const rel = R.E && R.E.reloj;
-    enviar({ tipo: 'estado', listo: R.yo.listo, sensores: usaSimulado() || A().sensoresActivos(), sinc: !!(rel && rel.listo), err: rel && isFin(rel.error_ms) ? +rel.error_ms.toFixed(1) : null });
+    enviar({ tipo: 'estado', ronda: R.ronda, listo: R.yo.listo, sensores: usaSimulado() || A().sensoresActivos(), sinc: !!(rel && rel.listo), err: rel && isFin(rel.error_ms) ? +rel.error_ms.toFixed(1) : null });
   }
   function enviarConfig() { if (esAnfitrion()) enviar({ tipo: 'config', arbol: R.cfg.arbol, dist: R.cfg.dist, carrilAnf: R.carrilAnf }); }
   function alEstado(est, info) {
+    const motivo = (info && info.motivo) || '';
+    if (esSala() && R.fase === 'emparejar') {
+      // por la sala: el anfitrión espera con su código en pantalla; el invitado entra a la sala aunque el otro aún no esté
+      if (est === 'fallo') { aviso($(esAnfitrion() ? '#rcCodigoMsg' : '#rcUnirMsg'), motivo || 'No se pudo conectar con la sala.', true); return; }
+      if (est === 'esperando') {
+        if (esAnfitrion()) { chip(''); $('#rcCodigoEspera').hidden = false; aviso($('#rcCodigoMsg'), ''); }
+        else { entrarSala(); chip('Esperando al otro teléfono…', 'mal'); }
+        return;
+      }
+      if (est === 'desconectado') { chip('Sin señal, reintentando…', 'mal'); return; }
+    }
     if ((est === 'fallo' || est === 'cerrado') && R.fase === 'emparejar') {
       apagarCamara();
       verPaso('rcQr'); $('#rcLeerResp').hidden = true; $('#rcQrEspera').hidden = true;
@@ -219,8 +310,13 @@
       reenviarResultado();
       if (R.fase === 'emparejar') { apagarCamara(); limpiarTimers(); entrarSala(); }
       else if (R.fase === 'sala') pintarSala();
+    } else if (est === 'esperando') {
+      // por la sala: este teléfono sigue dentro, el otro se salió o perdió la señal (lo que mande al volver, llega)
+      R.otro.listo = false;
+      chip(R.otro.seFue ? 'El otro teléfono salió de la carrera' : 'Esperando al otro teléfono…', 'mal');
+      if (R.fase === 'sala') pintarSala();
     } else if (est === 'desconectado') {
-      chip('Sin conexión, reintentando…', 'mal');
+      chip(esSala() ? 'Sin señal, reintentando…' : 'Sin conexión, reintentando…', 'mal');
       if (R.fase === 'sala') pintarSala();
     } else if (est === 'fallo' || est === 'cerrado') {
       chip('Sin conexión', 'mal');
@@ -232,7 +328,7 @@
     if (!m || typeof m.tipo !== 'string') return;
     switch (m.tipo) {
       case 'hola':
-        R.otro.visto = true; R.otro.app = m.app || null;
+        R.otro.visto = true; R.otro.app = m.app || null; R.otro.seFue = false;
         if (R.fase === 'sala') pintarSala();
         break;
       case 'config':
@@ -242,10 +338,16 @@
         if (m.carrilAnf === 'izq' || m.carrilAnf === 'der') R.carrilAnf = m.carrilAnf;
         if (R.fase === 'sala') pintarSala();
         break;
-      case 'estado':
-        R.otro.listo = !!m.listo; R.otro.sensores = !!m.sensores; R.otro.sinc = !!m.sinc;
+      case 'estado': {
+        // un "Listo" de antes de la última salida no cuenta (puede llegar tarde); si el anfitrión ya va en otra ronda
+        // (canceló una salida que aquí no llegó), el invitado se pone en esa
+        const r = isFin(m.ronda) ? m.ronda : R.ronda;
+        if (!esAnfitrion() && r > R.ronda) R.ronda = r;
+        R.otro.listo = !!m.listo && r >= R.ronda; R.otro.sensores = !!m.sensores; R.otro.sinc = !!m.sinc;
+        R.otro.err = isFin(m.err) ? m.err : null;
         if (R.fase === 'sala') { pintarSala(); revisarSalida(); }
         break;
+      }
       case 'salida':
         if (!esAnfitrion()) recibirSalida(m);
         break;
@@ -254,6 +356,7 @@
         break;
       case 'cancelar':
         // solo antes de la verde: ya corriendo, cada carril termina su corrida
+        if (!esAnfitrion() && isFin(m.ronda) && m.ronda > R.ronda && R.fase === 'sala') R.ronda = m.ronda;   // la salida no llegó aquí
         if (m.ronda === R.ronda && (R.fase === 'sala' || (R.fase === 'arbol' && !isFin(R.tVerde)))) cancelarRonda(m.motivo || 'El otro carril canceló la salida.', false);
         break;
       case 'resultado':
@@ -261,7 +364,7 @@
         break;
       case 'adios':
         chip('El otro teléfono salió de la carrera', 'mal');
-        R.otro.listo = false;
+        R.otro.listo = false; R.otro.seFue = true;
         if (R.fase === 'sala') pintarSala();
         break;
     }
@@ -292,7 +395,11 @@
       ].join('');
     }
     if (R.simulado) chip('Rival simulado', 'ok');
-    else if (R.E && R.E.estado === 'conectado') chip(rel && rel.listo ? `Conectados · ±${Math.max(1, Math.round(rel.error_ms))} ms` : 'Conectados · sincronizando…', 'ok');
+    else if (R.E && R.E.estado === 'conectado') {
+      // corto para que quepa junto al título: por la sala, su código; por Wi-Fi, "Conectados"
+      const e = errSinc(), quien = esSala() ? 'Sala ' + R.E.codigo : 'Conectados';
+      chip(isFin(e) && (!esSala() || R.otro.sinc) ? `${quien} · ±${Math.max(1, Math.round(e))} ms` : `${quien} · sincronizando…`, 'ok');
+    }
     // árbol y distancia: los elige quien creó la carrera
     const puede = esAnfitrion();
     for (const [id, val] of [['#segRcArbol', R.cfg.arbol], ['#segRcDist', String(R.cfg.dist)]]) {
@@ -313,11 +420,19 @@
       ? (R.otro.listo ? 'Los dos listos: el árbol va a bajar.' : 'Esperando a que el otro carril toque Listo…')
       : 'Alinea los dos autos. Cuando los dos toquen Listo, el árbol prende pre-stage, luego stage y baja solo.';
     $('#rcCambiar').hidden = !puede || R.yo.listo || R.otro.listo;
-    $('#rcReemparejar').hidden = R.simulado || !R.E || R.E.estado === 'conectado' || R.E.estado === 'conectando';
-    const msg = $('#rcMsg');
+    // por la sala no hay que volver a emparejar: se reconecta sola y el otro puede volver a entrar con el código
+    $('#rcReemparejar').hidden = R.simulado || !R.E || esSala() || R.E.estado === 'conectado' || R.E.estado === 'conectando';
+    $('#rcSalaCod').hidden = !esSala();
+    if (esSala()) $('#rcSalaCod').textContent = `Sala ${R.E.codigo}: si alguien se sale, vuelve a entrar con este código.`;
+    const msg = $('#rcMsg'), est = R.E ? R.E.estado : '', e = errSinc();
     if (R.otro.app && R.otro.app !== A().version) aviso(msg, `El otro teléfono tiene la versión ${R.otro.app} y este la ${A().version}. Abran la app con internet para que los dos se actualicen.`, true);
-    else if (R.E && R.E.estado !== 'conectado' && !R.simulado) aviso(msg, 'Se perdió la conexión con el otro teléfono. Si no vuelve sola, toca "Volver a emparejar".', true);
-    else if (!R.simulado && R.E && R.E.reloj && R.E.reloj.listo && R.E.reloj.error_ms > 30) aviso(msg, 'La conexión está lenta: las dos verdes pueden no salir parejas. Acerquen los teléfonos.', false);
+    else if (esSala() && est === 'esperando') aviso(msg, R.otro.seFue ? `El otro teléfono salió. Puede volver a entrar con el código ${R.E.codigo}.` : 'El otro teléfono no está en la sala (sin señal o fuera de la app). En cuanto vuelva, se conecta solo.', true);
+    else if (esSala() && est === 'desconectado') aviso(msg, 'Este teléfono perdió la señal: reintentando conectar con la sala…', true);
+    else if (esSala() && est === 'fallo') aviso(msg, (R.E.motivo || 'Se cerró la sala.') + ' Toquen "Salir" y creen otra sala.', true);
+    else if (R.E && est !== 'conectado' && !R.simulado) aviso(msg, 'Se perdió la conexión con el otro teléfono. Si no vuelve sola, toca "Volver a emparejar".', true);
+    else if (!R.simulado && isFin(e) && e > (esSala() ? 100 : 30)) aviso(msg, esSala()
+      ? `La señal está lenta: las verdes pueden prender hasta ${Math.round(e)} ms una de otra. La boleta sale justa igual (cada quien contra su verde).`
+      : 'La conexión está lenta: las dos verdes pueden no salir parejas. Acerquen los teléfonos.', false);
     else aviso(msg, '');
   }
   function cambiarCfg(clave, valor) {
@@ -348,13 +463,15 @@
     if (!esAnfitrion() || R.fase !== 'sala') return;
     if (!R.yo.listo || !R.otro.listo || !R.otro.sinc) return;
     if (!R.simulado && (!R.E || R.E.estado !== 'conectado')) return;
+    if (esSala() && !(R.E.reloj && R.E.reloj.listo)) return;   // por la sala, los dos relojes van contra el de ella
     R.ronda++; R.resYo = null; R.resOtro = null; R.runYo = null; R.okSalida = false;
-    const t0 = performance.now() + ANTICIPO_MS;
-    const prog = N.programa({ arbol: R.cfg.arbol, t0, azar: Math.random() });
+    // el programa va en el reloj de referencia (hora de la sala, o la de este teléfono por Wi-Fi) y cada uno lo pasa al suyo
+    const prog = N.programa({ arbol: R.cfg.arbol, t0: aRef(performance.now()) + (esSala() ? ANTICIPO_SALA_MS : ANTICIPO_MS), azar: Math.random() });
     enviar({ tipo: 'salida', ronda: R.ronda, prog, arbol: R.cfg.arbol, dist: R.cfg.dist });
-    programar(prog);
+    const local = N.moverPrograma(prog, deRef(prog.tPre) - prog.tPre);
+    programar(local);
     // si el otro no confirma antes del pre-stage, no baja el árbol en ninguno (nadie corre solo)
-    if (!R.simulado) despues(Math.max(0, t0 - 300 - performance.now()), () => {
+    if (!R.simulado) despues(Math.max(0, local.tPre - 300 - performance.now()), () => {
       if (!R.okSalida && R.fase === 'arbol') { enviar({ tipo: 'cancelar', ronda: R.ronda, motivo: 'El otro teléfono no respondió a tiempo.' }); cancelarRonda('El otro teléfono no respondió a tiempo. Vuelvan a tocar Listo.', false); }
     });
   }
@@ -362,8 +479,9 @@
     if (R.fase !== 'sala' || !R.yo.listo) { enviar({ tipo: 'cancelar', ronda: m.ronda, motivo: 'El otro carril no estaba listo.' }); return; }
     R.ronda = m.ronda; R.resYo = null; R.resOtro = null; R.runYo = null;
     if (m.arbol === 'pro' || m.arbol === 'full') R.cfg.arbol = m.arbol;
-    // del reloj del anfitrión al de este teléfono
-    const prog = N.moverPrograma(m.prog, R.E.aLocal(m.prog.tPre) - m.prog.tPre);
+    // del reloj de referencia (el del anfitrión, o la hora de la sala) al de este teléfono
+    const prog = N.moverPrograma(m.prog, deRef(m.prog.tPre) - m.prog.tPre);
+    if (!isFin(prog.tPre)) { enviar({ tipo: 'cancelar', ronda: m.ronda, motivo: 'El otro teléfono aún no sincroniza su reloj.' }); cancelarRonda('Tu reloj aún no se sincroniza. Vuelvan a tocar Listo en unos segundos.', false); return; }
     if (prog.tPre < performance.now() + 60) { enviar({ tipo: 'cancelar', ronda: m.ronda, motivo: 'La salida llegó tarde al otro teléfono.' }); cancelarRonda('La salida llegó tarde. Vuelvan a tocar Listo.', false); return; }
     enviar({ tipo: 'salida_ok', ronda: m.ronda });
     programar(prog);
@@ -372,6 +490,7 @@
     limpiarTimers();
     R.prog = prog; R.tVerde = NaN; R.tUltAmbar = NaN;
     R.fase = 'arbol';
+    R.yo.listo = false; R.otro.listo = false;   // cada salida usa los dos "Listo": para la siguiente se vuelven a tocar
     R.autoSim = usaSimulado();
     verPaso('rcArbol');
     mostrarOverlay(true);
@@ -447,11 +566,13 @@
     enviar({ tipo: 'resultado', ronda: R.ronda, res: R.resYo });
   }
   function datosRace() {
-    const rel = R.E && R.E.reloj;
+    const rel = R.E && R.E.reloj, sala = esSala();
     const rc = {
       v: 1, id: R.id || null, ronda: R.ronda, rol: R.rol, carril: miCarril(), arbol: R.cfg.arbol, dist: R.cfg.dist,
       simulado: R.simulado, auto_simulado: R.autoSim, prog: R.prog, t_verde: R.tVerde, t_ultimo_ambar: R.tUltAmbar,
-      sincronia: rel && rel.listo ? { offset_ms: rel.offset_ms, error_ms: rel.error_ms, rtt_ms: rel.rtt_ms } : null,
+      conexion: R.simulado ? 'simulada' : (sala ? 'internet' : 'wifi'), sala: sala ? R.E.codigo : null,
+      // por la sala: offset y rtt de este teléfono contra ella; error = la cota de los dos juntos
+      sincronia: rel && rel.listo ? { offset_ms: rel.offset_ms, error_ms: errSinc(), rtt_ms: rel.rtt_ms } : null,
       propio: R.resYo, rival: R.resOtro, app_rival: R.otro.app,
     };
     rc.ganador = rc.propio && rc.rival ? N.ganador(...lados(rc)) : null;
@@ -547,11 +668,12 @@
         if (E.estado !== 'conectado') return false;
         if (m.tipo === 'hola') decir({ tipo: 'hola', app: A().version, rol: 'invitado' });
         else if (m.tipo === 'salida') decir({ tipo: 'salida_ok', ronda: m.ronda }, 20);
-        else if (m.tipo === 'resultado') decir({ tipo: 'estado', listo: true, sensores: true, sinc: true }, 1800);
+        else if (m.tipo === 'resultado') decir({ tipo: 'estado', ronda: m.ronda, listo: true, sensores: true, sinc: true }, 1800);
+        else if (m.tipo === 'cancelar') decir({ tipo: 'estado', ronda: m.ronda, listo: true, sensores: true, sinc: true }, 900);
         return true;
       },
     };
-    decir({ tipo: 'estado', listo: true, sensores: true, sinc: true }, 900);
+    decir({ tipo: 'estado', ronda: 0, listo: true, sensores: true, sinc: true }, 900);
     return E;
   }
   function probarSimulado() {
@@ -591,6 +713,22 @@
   // ---------------------------------------------------------------- controles
   $('#atRace').addEventListener('click', abrir);
   $('#rcSalir').onclick = botonSalir;
+  $('#rcCrearSala').onclick = crearSala;
+  $('#rcUnirSala').onclick = unirSala;
+  $('#rcEntrar').onclick = entrarConCodigo;
+  // el código se escribe en mayúsculas y, con sus 5 letras, entra solo
+  $('#rcCodIn').addEventListener('input', (ev) => {
+    const i = ev.target, v = i.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
+    if (i.value !== v) i.value = v;
+    if (v.length === 5 && DragSala.RE_CODIGO.test(v) && !$('#rcEntrar').disabled) entrarConCodigo();
+  });
+  $('#rcCodIn').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); entrarConCodigo(); } });
+  $('#rcCopiarCodigo').onclick = async () => {
+    const t = R.E && R.E.codigo;
+    if (!t) return;
+    try { await navigator.clipboard.writeText(t); $('#rcCopiarCodigo').textContent = 'Copiado'; } catch (e) { /* sin portapapeles: se dicta */ }
+    setTimeout(() => { $('#rcCopiarCodigo').textContent = 'Copiar código'; }, 1500);
+  };
   $('#rcCrear').onclick = crear;
   $('#rcUnirme').onclick = unirme;
   $('#rcSimulado').onclick = probarSimulado;
@@ -620,5 +758,5 @@
   $('#segRcDist').querySelectorAll('button').forEach((b) => { b.onclick = () => cambiarCfg('dist', parseFloat(b.dataset.v)); });
 
   window.DragCarrera = { abrir, volver, activa: () => !!R.E && R.fase !== 'cerrado', htmlBoleta: (run) => htmlBoleta(run), resumenHist };
-  window.__carrera = { R, usarCodigo, codigo: () => R.codigoMio, terminar };   // para pruebas
+  window.__carrera = { R, usarCodigo, codigo: () => R.codigoMio, terminar, sala: () => (esSala() ? R.E.codigo : '') };   // para pruebas
 })();

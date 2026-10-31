@@ -52,7 +52,7 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
      en 0.6.1 quedó como tarjeta "en desarrollo" y **desde 0.6.2 está fuera de la app** (Daniel: "presentó uno que
      otro fallo"; se sigue trabajando más adelante, la idea y el código se quedan; no enfocarse en eso hasta que lo
      retome; 27 oct, Daniel: "descártalo por ahora": no revisarlo ni correr sus pruebas, o sea probar con
-     `probar_todo.sh algoritmo calc ui practica instalar matlab`, sin el grupo `semaforo`). No se ve en Medir, Ajustes, resultados ni Historial (las corridas grabadas con la 0.6 guardan sus datos
+     `probar_todo.sh algoritmo calc ui practica instalar matlab carrera`, sin el grupo `semaforo`). No se ve en Medir, Ajustes, resultados ni Historial (las corridas grabadas con la 0.6 guardan sus datos
      de cámara, no se muestran), la cámara no se prende y `prueba/camara.html` ya no se publica (líneas comentadas
      en publicar.sh). Con `index.html?camdev` (o localStorage `dragtrim.camDev = true`) vuelve todo;
      cómo funciona y qué falta en el punto 13. Especificación en `archivo/ideas/semaforo_real/plan.md`
@@ -64,7 +64,7 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
      **programado desde el 31 oct (0.7, sin publicar), ver punto 14**): dos autos, cada uno con la app en su teléfono, en pista sin semáforo o lugar
      controlado; la app da la salida a los dos a la vez (excepción a propósito al punto 3, solo en este modo),
      mide reacción y tiempos de ambos y el ticket de los dos sale en un teléfono. Diseño ya estudiado en
-     `archivo/ideas/race_1vs1.md` (no repetir el análisis): hotspot de un teléfono + WebRTC emparejado con
+     `archivo/ideas/race_1vs1.md` (no repetir el análisis): (31 oct: ahora la conexión principal es una sala por internet con código, punto 14) hotspot de un teléfono + WebRTC emparejado con
      QR (sin internet ni servidores ajenos), sincronía tipo NTP con pings, stage = quieto (acelerómetro + GPS
      <1 km/h), árbol de practica.js tras espera al azar, RT = tRo − verde (calibrar el retraso de pantalla y
      sensor de cada teléfono: 20–60 ms por modelo), roja si cruza el rollout antes de la verde, "empate
@@ -268,9 +268,23 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
     alineados" y la app pone pre-stage, stage y baja el árbol; al entrar se elige Full o Pro .400). Especificación de las
     piezas: `archivo/ideas/race_1vs1_programa.md`; diseño de fondo: `race_1vs1.md`. Es la excepción al punto 3: solo aquí
     la app da la salida.
-    - Entrada: el cuadro "Race 1 vs 1" del semáforo de Medir abre la pantalla completa `#rc` (carrera.js): Crear carrera /
-      Unirme / Probar con rival simulado, con el aviso de red (un teléfono prende su punto de acceso y el otro se conecta;
-      no necesita internet).
+    - Entrada: el cuadro "Race 1 vs 1" del semáforo de Medir abre la pantalla completa `#rc` (carrera.js): **Crear sala /
+      Unirme con código** (lo principal), Probar con rival simulado y, plegado, "¿Sin señal en la pista? Conectar con QR"
+      (Crear carrera con QR / Unirme con QR: un teléfono prende su punto de acceso, sin internet).
+    - **Sala por internet** (31 oct, Daniel: "sin necesidad de un hotspot", idea de la plática "Race 1 vs 1 feature ideas",
+      `archivo/ideas/race_1vs1_notas.md`; él eligió la opción B: sala en una cuenta suya): cada teléfono con sus datos; uno
+      crea la sala y ve un código de 5 (sin I, O, 0, 1), el otro lo teclea y entra solo al completar las 5. `DragSala`
+      (sala.js) se porta igual que el enlace WebRTC (estado, mensaje, reloj, enviar, aLocal/aOtro) y carrera.js usa
+      cualquiera; estados extra: 'esperando' (dentro, falta el otro) y 'desconectado' (reintenta solo; un ping por segundo
+      vigila la conexión: 4 s sin respuesta = muerta). Reloj: los dos contra la hora de la sala (Date.now del servidor);
+      el programa del árbol va en hora de la sala (`aRef`/`deRef` en carrera.js) con 2.5 s de anticipación. La boleta no
+      depende de la sincronía (cada carril contra su verde); la sincronía solo dice qué tan juntas se prenden las verdes.
+      Servidor: `fuente/sala/` (Cloudflare Worker + Durable Object con SQLite, plan gratis; `nucleo.js` = la lógica;
+      guarda el último hola/config/estado/resultado de cada teléfono para quien se reconecte; se borra al día sin uso;
+      solo acepta la app publicada y localhost). **Aún no publicado**: `SALA_PUBLICADA = ''` en carrera.js ("Crear sala"
+      avisa y abre lo del QR). Para publicarlo, Daniel crea la cuenta de Cloudflare y pone dos secretos en GitHub
+      (`fuente/sala/LEEME.md`); `.github/workflows/sala.yml` publica con wrangler. Pruebas: `?sala=ws://localhost:PUERTO`
+      con `fuente/pruebas/sala_local.mjs` (misma lógica; `/cortar` y `/callar` simulan perder la señal).
     - Emparejar con dos QR (`DragQR`, qr.js + vendor/jsQR.js y vendor/qrcode.js, licencias en vendor/LICENCIAS.md): el que
       crea muestra su código (oferta WebRTC, "DT1o…"); el otro lo escanea y muestra el suyo ("DT1a…"); el primero lo escanea
       ("Ya lo escaneó: leer su código"). Respaldo: copiar y pegar el código en texto. Antes de armar cada código se pide la
@@ -280,8 +294,9 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
     - Sala: los dos carriles (quien crea = izquierdo, puede cambiar), sensores y "Listo"; el que crea elige árbol Pro/Full y
       distancia 1/8 o 1/4 (el otro lo ve). "Listo: ya estamos alineados" arma la medición de siempre en ese teléfono
       (`DragApp.armarCarrera`, con la distancia de la carrera). Con los dos listos y el reloj sincronizado, el que crea
-      manda el programa con 1.5 s de anticipación (`DragCarreraNucleo.programa`: pre-stage, stage +1 s, árbol +1–2.5 s al
+      manda el programa con 1.5 s de anticipación por Wi-Fi o 2.5 s por la sala (`DragCarreraNucleo.programa`: pre-stage, stage +1 s, árbol +1–2.5 s al
       azar, verde según Pro/Full); el otro lo pasa a su reloj y confirma; si no confirma a tiempo se cancela en los dos.
+      Cada salida gasta los dos "Listo" y el estado lleva la ronda (un "Listo" viejo que llega tarde no cuenta).
     - Árbol en los dos carriles (mismas luces de Práctica); la verde y el último ámbar se toman del cuadro de rAF en que se
       pintaron; 1.2 s después de la verde el árbol se quita y queda la pantalla neutral de la medición. RT = cruce del
       rollout (R.tRo de procesar) − verde; roja si es negativa; boleta = RT + .400/.500. Sin arranque a los 25 s: "No salió".
@@ -290,11 +305,13 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
       las reglas de Práctica (roja pierde; dos rojas pierde quien salió primero; si no, menor RT + ET) y "muy cerrada" si la
       diferencia es menor a 0.10 s. Se guarda en `run.race` (programa, verde, sincronía, los dos resultados); el Historial
       dice "Race 1 vs 1, ganaste/perdiste"; el zip trae `drag_race_meta_*.json`. "Otra carrera" vuelve a la sala con
-      marcador; si se perdió la conexión, "Volver a emparejar" y los resultados se reenvían solos.
+      marcador; si se perdió la conexión, "Volver a emparejar" (por QR) o se reconecta sola (por la sala) y los resultados
+      se reenvían solos.
     - Rival simulado: otro teléfono de mentira que contesta como el real (su resultado sale de una sesión simulada); si no
       hay sensores, el auto propio también es simulado. Pruebas: `?simsens` hace simulado el auto propio con rival real.
-    - Falta probarlo con dos teléfonos reales (hotspot de iPhone o Android, iPhone con Android); calibrar el retraso de
-      pantalla de cada modelo (hoy 0 ms, `ajusteMs`).
+    - Falta: publicar la sala (cuenta de Cloudflare de Daniel); probarlo con dos teléfonos reales (por la sala con datos, y
+      por QR con hotspot de iPhone o Android, iPhone con Android); calibrar el retraso de pantalla de cada modelo (hoy 0 ms,
+      `ajusteMs`).
 
 ```
 index.html, sw.js, manifest.webmanifest, icon-*.png   ← lo publicado (generado, no editar a mano)
@@ -305,6 +322,9 @@ fuente/app/src/rooster.js      fórmulas de la calculadora (hoja exacta + versi�
 fuente/app/src/calculadora.js  pestaña Calcular
 fuente/app/src/semaforo_vision.js, semaforo.js, semaforo_sim.js   semáforo real: visión, análisis, simulador (punto 13)
 fuente/app/src/camara.js, camara.css   cámara en el navegador (DragCam) y pantalla Apuntar
+fuente/app/src/carrera.js      Race 1 vs 1: pantallas, sala, salida, boleta (punto 14); carrera_nucleo.js = sus reglas
+fuente/app/src/sala.js         conexión por la sala en internet (DragSala); enlace.js = por WebRTC (DragEnlace); qr.js + vendor/
+fuente/sala/                   la sala por internet (Cloudflare Worker): sala.js, nucleo.js, wrangler.toml, LEEME.md (publicarla)
 fuente/app/src/prueba_camara.template.html + tools/build_prueba.py   página de prueba prueba/camara.html
 fuente/app/src/index.template.html, style.css
 fuente/app/src/logo.svg, icono/  logo de la barra de arriba y de la carga, e ícono (los genera archivo/logo_pendiente/v5/hacer_logo.py)
@@ -362,6 +382,10 @@ python3 deslizar_test.py # deslizar el dedo entre pestañas (toques reales por C
 python3 carga_test.py    # pantalla de carga: logo + "By" Rooster Racing, 2 s, se desvanece, sin "beta" (con ?carga)
 python3 barra_test.py    # Android: color de la franja de la hora/cámara (theme-color) por fondo, velo, tema, corrida, Práctica, carga; pantallas de Samsung
 python3 atajos_test.py   # Medir: Corrida simulada / Race 1 vs 1 / Antes de la pista como semáforo (3 cuadros a la izquierda); abren su explicación a la derecha, una a la vez
+node carrera_nucleo_test.js; node qr_test.js; node enlace_test.js; node sala_nucleo_test.mjs   # Race 1 vs 1 sin navegador
+python3 carrera_test.py  # Race 1 vs 1: rival simulado, roja, dos teléfonos por WebRTC (códigos en texto) y QR con la cámara
+python3 sala_test.py     # Race 1 vs 1 por la sala en internet (sala_local.mjs): crear, unirse, carrera, errores, sin señal
+python3 enlace_test.py; python3 qr_camara_test.py   # enlace WebRTC entre dos páginas; leer QR con cámara falsa
 python3 mcheck.py ../matlab/*.m   # revisión estructural de MATLAB (aquí no hay MATLAB/Octave)
 node semaforo_sim_test.js   # simulador del árbol y la cámara
 node reaccion.js            # semáforo punta a punta: sesión simulada + árbol + análisis (~75 s)

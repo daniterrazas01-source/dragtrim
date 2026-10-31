@@ -1,0 +1,16 @@
+# Sala de Race 1 vs 1 (Cloudflare Workers, plan gratis). Publicar: ver LEEME.md.
+name = "dragtree-sala"
+main = "sala.js"
+compatibility_date = "2025-06-01"
+
+[[durable_objects.bindings]]
+name = "SALA"
+class_name = "Sala"
+
+# En el plan gratis, los Durable Objects van con almacenamiento SQLite
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Sala"]
+
+[vars]
+ORIGENES = "https://daniterrazas01-source.github.io"

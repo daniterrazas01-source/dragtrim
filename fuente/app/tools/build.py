@@ -39,6 +39,7 @@ html = html.replace('/*CALC*/', (SRC / 'calculadora.js').read_text(encoding='utf
 _qrlib = '\n'.join((SRC / 'vendor' / f).read_text(encoding='utf-8') for f in ('qrcode.js', 'jsQR.js'))
 for marca, texto in (('/*QRLIB*/', _qrlib), ('/*QR*/', (SRC / 'qr.js').read_text(encoding='utf-8')),
                      ('/*ENLACE*/', (SRC / 'enlace.js').read_text(encoding='utf-8')),
+                     ('/*SALA*/', (SRC / 'sala.js').read_text(encoding='utf-8')),
                      ('/*CARRERA_NUCLEO*/', (SRC / 'carrera_nucleo.js').read_text(encoding='utf-8')),
                      ('/*CARRERA*/', (SRC / 'carrera.js').read_text(encoding='utf-8'))):
     assert html.count(marca) == 1, f'falta {marca} en la plantilla'

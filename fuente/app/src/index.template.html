@@ -441,13 +441,37 @@
   <section class="rc-paso" id="rcInicio">
     <p class="rc-intro">Dos autos, cada uno con Drag Tree en su teléfono. La app baja el árbol en los dos al mismo tiempo, mide a cada quien contra su propia verde y al final saca la boleta de los dos carriles.</p>
     <div class="rc-red">
-      <svg viewBox="0 0 64 40" aria-hidden="true"><rect x="2" y="6" width="17" height="30" rx="3.5" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="45" y="6" width="17" height="30" rx="3.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M24 17a11 11 0 0 1 16 0M27.4 21a6.4 6.4 0 0 1 9.2 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="32" cy="25.4" r="2.2" fill="currentColor"/></svg>
-      <p><b>Los dos teléfonos en la misma red Wi-Fi.</b> En uno prende el punto de acceso (hotspot) y conecta el otro a esa red. No necesita internet.</p>
+      <svg viewBox="0 0 64 40" aria-hidden="true"><rect x="2" y="9" width="15" height="27" rx="3.2" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="47" y="9" width="15" height="27" rx="3.2" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M24.5 16.5a6 6 0 0 1 11.4-2.4 4.6 4.6 0 0 1 3.6 8.4H25.6a3.4 3.4 0 0 1-1.1-6z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M19 24l5-2.5M45 24l-5-2.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      <p><b>Cada teléfono con sus datos.</b> Uno crea la sala y le dice el código al otro. No hace falta punto de acceso, y la distancia entre los carros no importa.</p>
     </div>
-    <button class="primary go" id="rcCrear">Crear carrera</button>
-    <button class="ghost" id="rcUnirme">Unirme a una carrera</button>
+    <button class="primary go" id="rcCrearSala">Crear sala</button>
+    <button class="ghost" id="rcUnirSala">Unirme con código</button>
     <button class="ghost" id="rcSimulado">Probar con rival simulado</button>
+    <p class="msg" id="rcInicioMsg"></p>
+    <details class="howto rc-sinred">
+      <summary>¿Sin señal en la pista? Conectar con QR</summary>
+      <p>Sin internet: los dos teléfonos en la misma red Wi-Fi. En uno prende el punto de acceso (hotspot) y conecta el otro a esa red. Luego cada uno escanea el código del otro.</p>
+      <button class="ghost" id="rcCrear">Crear carrera con QR</button>
+      <button class="ghost" id="rcUnirme">Unirme con QR</button>
+    </details>
     <p class="rc-nota">Solo en pista o en un lugar cerrado al tráfico. Cada piloto mira la pista, no el teléfono: el árbol se apaga en cuanto sale la verde.</p>
+  </section>
+
+  <section class="rc-paso" id="rcCodigo" hidden>
+    <span class="rc-pasos">Tu sala</span>
+    <h3 class="rc-h">Dile este código a tu rival</h3>
+    <p class="rc-codigo" id="rcCodigoTxt">· · · · ·</p>
+    <button class="ghost" id="rcCopiarCodigo">Copiar código</button>
+    <p class="rc-txt" id="rcCodigoMsg"></p>
+    <p class="rc-espera" id="rcCodigoEspera" hidden><i class="rc-punto"></i> Esperando a tu rival…</p>
+    <p class="rc-nota">En su teléfono: Race 1 vs 1 → "Unirme con código".</p>
+  </section>
+
+  <section class="rc-paso" id="rcUnir" hidden>
+    <h3 class="rc-h">Escribe el código de la sala</h3>
+    <input id="rcCodIn" class="rc-codin" maxlength="5" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" placeholder="KR7PX" aria-label="Código de la sala">
+    <button class="primary go" id="rcEntrar">Entrar a la sala</button>
+    <p class="rc-txt" id="rcUnirMsg">Son 5 letras y números; te lo dice el que creó la sala.</p>
   </section>
 
   <section class="rc-paso" id="rcQr" hidden>
@@ -506,6 +530,7 @@
     <p class="rc-txt rc-centro" id="rcListoTxt">Alinea los dos autos. Cuando los dos toquen Listo, el árbol prende pre-stage, luego stage y baja solo.</p>
     <button class="ghost" id="rcCambiar">Cambiar de carril</button>
     <button class="ghost" id="rcReemparejar" hidden>Volver a emparejar</button>
+    <p class="rc-nota rc-centro" id="rcSalaCod" hidden></p>
   </section>
 
   <section class="rc-arbol" id="rcArbol" hidden aria-hidden="true">
@@ -570,6 +595,9 @@
 </script>
 <script>
 /*ENLACE*/
+</script>
+<script>
+/*SALA*/
 </script>
 <script>
 /*CARRERA_NUCLEO*/

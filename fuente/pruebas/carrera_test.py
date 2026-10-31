@@ -2,7 +2,7 @@
 #  A. rival simulado: Race 1 vs 1 abre la carrera, sala, "Listo", pre-stage → stage → árbol, la medición sigue sola y sale
 #     la boleta de los dos carriles; la reacción medida se parece a la inyectada; se guarda en el historial con run.race.
 #  B. luz roja (reacción negativa): ese carril pierde.
-#  C. dos "teléfonos" (dos contextos) emparejados con los códigos en texto por WebRTC, con autos simulados (?simsens):
+#  C. dos "teléfonos" (dos contextos) emparejados con los códigos en texto por WebRTC ("¿Sin señal? Conectar con QR"), con autos simulados (?simsens):
 #     el que crea elige Full y 1/8, los dos tocan Listo, las dos verdes salen casi juntas, la boleta es la misma en los dos
 #     y el marcador cuenta; al cerrar uno, el otro ve que se perdió la conexión.
 #  D. el invitado lee el QR del anfitrión con la cámara (video falso con ese QR).
@@ -151,12 +151,12 @@ def main():
             cA = contexto(b); cB = contexto(b)
             A, eA = pagina(cA, URL + '?simsens'); B, eB = pagina(cB, URL + '?simsens')
             for pg in (A, B): pg.on('dialog', lambda d: d.accept())
-            A.click('#atRace'); A.click('#rcCrear')
+            A.click('#atRace'); A.click('.rc-sinred summary'); A.click('#rcCrear')
             chk(esperar(A, "/^DT1o/i.test(window.__carrera.codigo())", 10000), 'C. el anfitrión arma su código (oferta)')
             oferta = A.evaluate('window.__carrera.codigo()')
             print(f'   largo del código de oferta: {len(oferta)}')
             A.screenshot(path=SH + 'carrera_qr_anfitrion.png')
-            B.click('#atRace'); B.click('#rcUnirme'); B.wait_for_timeout(300)
+            B.click('#atRace'); B.click('.rc-sinred summary'); B.click('#rcUnirme'); B.wait_for_timeout(300)
             B.click('#rcEscTexto'); B.fill('#rcCodOtro', oferta); B.click('#rcConectarTexto')
             chk(esperar(B, "/^DT1a/i.test(window.__carrera.codigo())", 10000), 'C. el invitado arma su respuesta')
             resp = B.evaluate('window.__carrera.codigo()')
@@ -209,14 +209,14 @@ def main():
             y4m = os.path.join(tempfile.mkdtemp(), 'qr.y4m')
             b1 = p.chromium.launch(args=ARGS_MEDIOS)
             c1 = contexto(b1); H, eH = pagina(c1)
-            H.click('#atRace'); H.click('#rcCrear')
+            H.click('#atRace'); H.click('.rc-sinred summary'); H.click('#rcCrear')
             esperar(H, "/^DT1o/i.test(window.__carrera.codigo())", 10000)
             img = H.evaluate("""(() => { const c = document.getElementById('rcQrCanvas'); const x = c.getContext('2d').getImageData(0, 0, c.width, c.height);
                 return { w: c.width, h: c.height, d: Array.from(x.data.filter((_, i) => i % 4 === 0)) }; })()""")
             escribir_y4m(y4m, img)
             b2 = p.chromium.launch(args=ARGS_MEDIOS + [f'--use-file-for-fake-video-capture={y4m}'])
             c2 = contexto(b2); G, eG = pagina(c2)
-            G.click('#atRace'); G.click('#rcUnirme')
+            G.click('#atRace'); G.click('.rc-sinred summary'); G.click('#rcUnirme')
             chk(esperar(G, "/^DT1a/i.test(window.__carrera.codigo())", 15000), 'D. el invitado leyó el QR con la cámara y armó su respuesta')
             G.screenshot(path=SH + 'carrera_qr_invitado.png')
             chk(not eH and not eG, 'D. sin errores: ' + '; '.join(eH + eG))
@@ -243,4 +243,5 @@ def escribir_y4m(ruta, img, lado=480, cuadros=60):
         for _ in range(cuadros):
             f.write(b'FRAME\n'); f.write(bytes(y)); f.write(uv); f.write(uv)
 
-main()
+if __name__ == '__main__':
+    main()

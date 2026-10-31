@@ -2,8 +2,8 @@
 # Corre todas las pruebas de Drag Tree y da un resumen corto. No publica nada (solo arma fuente/app/dist).
 #
 #   bash probar_todo.sh            todo
-#   bash probar_todo.sh rapido     sin navegador (algoritmo, calculadora, MATLAB, semáforo sin el Monte Carlo)
-#   bash probar_todo.sh <grupo>... algoritmo | calc | ui | practica | instalar | matlab | semaforo
+#   bash probar_todo.sh rapido     sin navegador (algoritmo, calculadora, MATLAB, semáforo sin el Monte Carlo, carrera)
+#   bash probar_todo.sh <grupo>... algoritmo | calc | ui | practica | instalar | matlab | carrera | semaforo
 #
 # Los registros completos quedan en fuente/pruebas/capturas/registros/ (ignorado por git), junto a las capturas.
 set -uo pipefail
@@ -13,12 +13,12 @@ LOG="$P/capturas/registros"
 mkdir -p "$LOG"
 
 grupos="${*:-todo}"
-quiere() { [[ " $grupos " == *" todo "* ]] || [[ " $grupos " == *" $1 "* ]] || { [[ " $grupos " == *" rapido "* ]] && [[ "$1" =~ ^(algoritmo|calc_node|matlab|semaforo_node)$ ]]; }; }
+quiere() { [[ " $grupos " == *" todo "* ]] || [[ " $grupos " == *" $1 "* ]] || { [[ " $grupos " == *" rapido "* ]] && [[ "$1" =~ ^(algoritmo|calc_node|matlab|semaforo_node|carrera_node)$ ]]; }; }
 
 # Las pruebas de navegador usan Playwright de Python con el Chromium ya instalado (/opt/pw-browsers).
 # Si falta, se instala la MISMA versión que la de Node (así encuentra ese Chromium). Nunca "playwright install".
 necesita_navegador=0
-for g in ui practica calc instalar semaforo; do quiere "$g" && necesita_navegador=1; done
+for g in ui practica calc instalar carrera semaforo; do quiere "$g" && necesita_navegador=1; done
 if [ "$necesita_navegador" = 1 ] && ! python3 -c "import playwright" 2>/dev/null; then
   V=$(node -e "console.log(require('playwright/package.json').version)" 2>/dev/null)
   echo "Instalando Playwright de Python $V (igual que el de Node)..."
@@ -61,6 +61,19 @@ if quiere instalar;  then correr "deslizar_test.py" 'FALLAS: 0'           python
 if quiere instalar;  then correr "carga_test.py"    'FALLAS: 0'           python3 carga_test.py; fi
 if quiere instalar;  then correr "barra_test.py"    'FALLAS: 0'           python3 barra_test.py; fi
 if quiere ui;        then correr "atajos_test.py"   'FALLAS: 0'           python3 atajos_test.py; fi
+# Race 1 vs 1: reglas, QR, enlace WebRTC, sala por internet (con la sala de pruebas sala_local.mjs) y la carrera en la app
+if quiere carrera || quiere carrera_node; then
+  correr "carrera_nucleo_test.js" 'FALLAS: 0' node carrera_nucleo_test.js
+  correr "qr_test.js"             'FALLAS: 0' node qr_test.js
+  correr "enlace_test.js"         'FALLAS: 0' node enlace_test.js
+  correr "sala_nucleo_test.mjs"   'FALLAS: 0' node sala_nucleo_test.mjs
+fi
+if quiere carrera; then
+  correr "enlace_test.py"         'FALLAS: 0' python3 enlace_test.py
+  correr "qr_camara_test.py"      'FALLAS: 0' python3 qr_camara_test.py
+  correr "carrera_test.py"        'FALLAS: 0' python3 carrera_test.py
+  correr "sala_test.py"           'FALLAS: 0' python3 sala_test.py
+fi
 # Semáforo real (cámara). El Monte Carlo se compara contra la salida guardada (varios criterios del plan todavía no se
 # cumplen: PWM, 30 fps, sol); si un cambio lo mejora a propósito, guarda la salida nueva en resultados_mc.txt.
 if quiere semaforo || quiere semaforo_node; then

@@ -727,3 +727,12 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
 .rc-ganador { margin: 14px 0 6px; text-align: center; font: 900 21px/1.2 'Rooster', var(--num); font-style: italic; font-synthesis: none; }
 .rc-ganador.dudosa { font-size: 18px; }
 .rc-ganador.espera { font: 600 15px/1.35 var(--body); color: var(--chalk-dim); }
+/* sala por internet: el código grande para dictarlo, y el campo para teclearlo */
+.rc-codigo { margin: 4px 0; justify-self: center; min-width: min(80vw, 330px); padding: 14px 12px; border-radius: 16px; background: #fff; color: #111;
+  font: 800 52px/1 var(--mono); letter-spacing: .22em; text-align: center; font-variant-numeric: tabular-nums; user-select: all; }
+.rc-codin { width: 100%; padding: 14px 10px; border-radius: 14px; border: 2px solid var(--line); background: #0e0f10; color: var(--chalk);
+  font: 800 40px/1 var(--mono); letter-spacing: .3em; text-align: center; text-transform: uppercase; }
+.rc-codin:focus { outline: none; border-color: var(--amber); }
+.rc-sinred { margin-top: 6px; }
+.rc-sinred > .ghost { margin-top: 8px; }
+.rc-sinred > .ghost:last-child { margin-bottom: 14px; }
