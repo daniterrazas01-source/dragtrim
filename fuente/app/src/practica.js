@@ -32,15 +32,36 @@
   const otroFormato = () => (P.formato === 'boleta' ? 'verde' : 'boleta');
   const nombreFormato = (f) => (f === 'boleta' ? 'boleta' : 'desde la verde');
 
-  const nuevoCarril = () => ({ abajo: false, pid: null, preStage: false, staged: false, salio: false, tSalida: NaN, rt: NaN, rojo: false, timerStage: 0 });
+  const nuevoCarril = () => ({ abajo: false, pid: null, preStage: false, staged: false, salio: false, tSalida: NaN, rt: NaN, rojo: false, timerStage: 0, brillo: false });
   const st = { fase: 'cerrado', c: { l: nuevoCarril(), r: nuevoCarril() }, tArbol: NaN, tVerdePlan: NaN, tVerde: NaN, raf: 0, timers: [] };
   const activos = () => (P.modo === 'solo' ? ['l'] : ['l', 'r']);
 
   function limpiarTimers() { st.timers.forEach(clearTimeout); st.timers = []; cancelAnimationFrame(st.raf); st.raf = 0; }
   function despues(ms, fn) { st.timers.push(setTimeout(fn, ms)); }
 
+  // ---------------------------------------------------------------- fondo que responde a la reacción
+  // Se enciende en cuanto ese carril sale (ya con su tiempo calculado), nunca antes: no da pistas de la verde.
+  // Verde: más brillo entre más cerca de la perfecta (.000 desde la verde = .400 Pro / .500 Full).
+  // Rojo: luz roja, o reacción lenta.
+  function intensidad(c) {
+    if (!c.salio) return [0, 0, false];
+    if (c.rojo || !isFin(c.rt)) return [0, 1, false];
+    const v = Math.pow(Math.max(0, 1 - c.rt / 0.200), 1.3);       // .000 → 1, .050 → .69, .100 → .41, .200 → 0
+    const r = Math.min(1, Math.max(0, (c.rt - 0.250) / 0.250));   // .250 → 0, .375 → .5, .500 → 1
+    return [v, r, c.rt < 0.010];
+  }
+  function brillo(k, v, r, perfecta) {
+    const gv = document.getElementById(`ptBv_${k}`), gr = document.getElementById(`ptBr_${k}`);
+    if (!gv || !gr) return;
+    gv.style.opacity = (0.92 * v).toFixed(3);
+    gr.style.opacity = (0.92 * r).toFixed(3);
+    gv.classList.remove('perfecta');
+    if (perfecta) { void gv.offsetWidth; gv.classList.add('perfecta'); }
+  }
+
   function reiniciar() {
     limpiarTimers();
+    for (const k of ['l', 'r']) brillo(k, 0, 0, false);
     for (const k of ['l', 'r']) { clearTimeout(st.c[k].timerStage); st.c[k] = nuevoCarril(); }
     st.fase = 'idle'; st.tArbol = NaN; st.tVerdePlan = NaN; st.tVerde = NaN;
     $('#ptMsg').textContent = '';
@@ -69,11 +90,11 @@
   }
 
   function textoZona(c) {
-    if (st.fase === 'resultado') return P.salida === 'soltar' ? 'Mantén para otra salida' : 'Toca para otra salida';
+    if (st.fase === 'resultado') return P.salida === 'soltar' ? 'Mantén para otra salida' : 'Toca para pre-stage';
     if (c.salio) return c.rojo ? 'Luz roja' : 'Salida';
     if (c.staged) return P.salida === 'soltar' ? 'STAGED · suelta con la verde' : 'STAGED · toca con la verde';
-    if (c.preStage) return 'Pre-stage…';
-    return P.salida === 'soltar' ? 'Mantén presionado para hacer stage' : 'Toca para hacer stage';
+    if (c.preStage) return P.salida === 'soltar' ? 'Pre-stage…' : 'Pre-stage · toca para stage';
+    return P.salida === 'soltar' ? 'Mantén presionado para hacer stage' : 'Toca para pre-stage';
   }
 
   function bucle(ts) {
@@ -124,6 +145,7 @@
       c.rojo = c.rt < 0;
     }
     pintar(performance.now());
+    brillo(k, ...intensidad(c)); c.brillo = true;   // al instante, con el tiempo ya medido
     if (activos().every((x) => st.c[x].salio)) {
       if (st.fase === 'espera') { limpiarTimers(); finRonda(); }
       else despues(400, finRonda);
@@ -159,6 +181,7 @@
       }
       rt.className = 'pt-rtv' + (c.rojo ? ' rojo' : '');
     }
+    for (const k of activos()) if (!st.c[k].brillo) brillo(k, ...intensidad(st.c[k]));
     if (P.modo === 'solo') {
       const c = st.c.l;
       if (c.salio) {
@@ -205,8 +228,11 @@
       if (st.fase === 'idle') hacerStage(k);
       pintar(performance.now());
     } else {
-      if (!c.preStage && st.fase === 'idle') hacerStage(k);
-      else if (c.staged && !c.salio && (st.fase === 'espera' || st.fase === 'arbol')) salida(k, e.timeStamp || performance.now());
+      // como alinearse en pista (0.6.6, Daniel): 1.er toque pre-stage, 2.º stage (y el árbol baja solo), 3.º la salida
+      if (st.fase === 'idle') {
+        if (!c.preStage) { c.preStage = true; pintar(performance.now()); }
+        else if (!c.staged) { c.staged = true; pintar(performance.now()); revisarTodosStaged(); }
+      } else if (c.staged && !c.salio && (st.fase === 'espera' || st.fase === 'arbol')) salida(k, e.timeStamp || performance.now());
     }
   }
   function arriba(k, e) {
@@ -269,9 +295,19 @@
   }
 
   // ---------------------------------------------------------------- ajustes de práctica
+  // Explicación corta de la opción elegida (va debajo de su selector; así la sección ocupa menos)
+  const EXPLICA = {
+    arbol: { pro: 'Los tres ámbar encienden juntos y la verde sale 0.4 s después.', full: 'Los ámbar bajan uno por uno cada 0.5 s y luego sale la verde.' },
+    salida: { soltar: 'Mantén presionado para hacer stage y suelta con la verde, como un transbrake.', tocar: 'Como al alinearte en pista: un toque para pre-stage, otro para stage y el último para salir con la verde.' },
+    formato: { boleta: 'Desde el último ámbar, como el ticket: perfecta 0.400 en Pro y 0.500 en Full. El otro sale chico abajo.',
+               verde: 'Contra la verde: perfecta 0.000. El de la boleta sale chico abajo.' },
+  };
   function seg(id, key) {
-    const el = document.getElementById(id);
-    const pin = () => el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === P[key])));
+    const el = document.getElementById(id), exp = document.getElementById('exp' + id.slice(3));
+    const pin = () => {
+      el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === P[key])));
+      if (exp && EXPLICA[key]) exp.textContent = EXPLICA[key][P[key]] || '';
+    };
     el.querySelectorAll('button').forEach((b) => b.onclick = () => { P[key] = b.dataset.v; guardarCfg(); pin(); pintarStats(); });
     pin();
   }

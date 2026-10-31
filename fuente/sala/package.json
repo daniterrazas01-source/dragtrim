@@ -1,0 +1,6 @@
+{
+  "name": "dragtree-sala",
+  "private": true,
+  "type": "module",
+  "description": "Sala de Race 1 vs 1 de Drag Tree (Cloudflare Worker + Durable Object). Ver LEEME.md."
+}

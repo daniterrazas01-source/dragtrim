@@ -1,0 +1,77 @@
+# Logo de Drag Tree (pendiente)
+
+Borradores del logo, guardados para retomarlos después (Daniel lo dejó para otro momento, 23 oct 2026).
+v1–v4 no se usan; **v5 (C13) es el logo de la app desde la beta 0.6.3**.
+
+- `referencias/bosquejo_daniel.jpg`: su bosquejo ("Drag" de grande a chico con rayitas, "Tree" vertical, árbol en T).
+- `referencias/foto_calcomania.jpg`: foto de la calcomanía original de "Drag Tree" que quiere usar por nostalgia
+  (sin la franja "Track Service"; con "On your mark" en cursiva; letras blancas con contorno, luces ámbar/verde/roja).
+- `v1` fiel al bosquejo, `v2` refinada, `v3` estilo sticker, `v4` redibujo de la calcomanía.
+  Cada una: `icono.svg` (1024×1024), `encabezado.svg` (44 px de alto) y `icono_512.png`.
+
+Comentario de Daniel sobre v4: "el logo es diferente al que me diste" — no se parece lo suficiente a la
+calcomanía; al retomar, preguntarle qué partes no coinciden.
+
+## v5 (26 oct 2026, Daniel retomó el logo)
+
+- `referencias/drag_racing_marcado_v5.jpg`: la imagen que mandó (logo "Drag [árbol] Racing" con "Racing" tachado y su
+  dibujo encima): usar esa letra, "DRAG" arriba de "TREE" y el árbol de salidas como la T; agregar R, E, E.
+- `v5/hacer_logo.py` arma los SVG: letra **Inter Black Italic** (OFL, la más parecida a la de su imagen; las letras van
+  como trazos, no hace falta la letra), el árbol se dibuja igual que el de su imagen (2 barras con foquitos + 4 filas de
+  focos) con barras y poste inclinados como la letra (9.4°) y focos redondos.
+  - `logo_a.svg`: como su dibujo (DRAG arriba de REE, árbol largo que baja como la T).
+  - `logo_b.svg`: igual con "Drag" / "ree" en minúsculas como en su imagen.
+  - `logo_c.svg`: compacto, DRAG a todo lo ancho (pensado para el encabezado de la app).
+  - `*_blanco.svg` para fondo oscuro; `hoja_claro.png` / `hoja_oscuro.png` las tres juntas.
+- **Daniel eligió la C** (26 oct) con dos cambios → `logo_c2.svg` / `logo_c2_blanco.svg` (`hoja_c2.png`): el árbol
+  inclinado al lado contrario de la letra y con colores: foquitos del pre-stage y del stage amarillos, dos filas ámbar,
+  verde y rojo (cada foco con un aro del color del árbol, como su caja). REE se separa lo justo para no chocar con
+  ningún foco (`derecha()` en hacer_logo.py). Colores en COLORES.
+- **C3** (26 oct, Daniel): pre-stage y stage en **una sola barra** (con sus 4 foquitos amarillos adentro) para que el
+  árbol sea la T; poste más grueso (0.16 C). En fondo oscuro TREE (árbol + REE) va **negro con contorno blanco delgado**
+  (0.02 C; el contorno rodea la figura completa: `capas()`), DRAG blanco. `logo_c3.svg` (claro), `logo_c3_oscuro.svg`,
+  `logo_c3_encabezado.svg` (contorno 0.06 C para que a 60 px de alto se vea de ~1 px), `hoja_c3.png`.
+- **C4** (26 oct, Daniel): la T **más grande** (×1.22 en anchos y focos), **inclinada como la letra** otra vez y con
+  **tres ámbar** + verde + rojo (5 filas; el poste baja lo justo). `logo_c4.svg`, `logo_c4_oscuro.svg`,
+  `logo_c4_encabezado.svg`, `hoja_c4.png`. Si "otro foco amarillo" eran los foquitos de la barra (3 por lado), se cambia
+  en `arbol()` (la lista de dx de la barra).
+- **C5** (26 oct, dibujo de Daniel sobre la C4): la T **sube 0.32 C** y su barra se monta un poco sobre la D y la R
+  (TREE va encima de DRAG; en fondo claro el contorno blanco la separa); **R, E, E más largas hacia abajo** hasta casi el
+  pie del árbol (se estiran a lo alto ×~1.6 sin cambiar la inclinación: `matrix` en `logo_c5()`); **contorno más grueso**
+  (0.035 C; encabezado 0.08 C). `logo_c5.svg`, `logo_c5_oscuro.svg`, `logo_c5_encabezado.svg`, `hoja_c5.png`.
+- **C6** (26 oct, Daniel): DRAG con la forma de la letra **"Full Pack 2025"** (imagex, dafont;
+  `referencias/letra_full_pack_2025.jpg`) pero **inclinada hacia atrás** (ATRAS = 20°) y en blanco (negro en fondo claro).
+  Esa letra es gratis solo para uso personal, así que **no se usa su archivo**: D, R, A, G están dibujadas a mano en
+  `_letras_bloque()` (bloques con huecos angostos y esquinas cortadas). Si Daniel consigue la licencia comercial, se
+  podría usar la letra real. `logo_c6.svg`, `logo_c6_oscuro.svg`, `logo_c6_encabezado.svg`, `hoja_c6.png`.
+- **C7** (26 oct, Daniel): R, E, E con la forma de **"Platinum Sign Over"** (imagex, dafont, solo uso personal:
+  `referencias/letra_platinum_sign.jpg`), dibujadas a mano en `ree_cuadrada()` **directo a lo alto** que ya tenían (no se
+  estiran: esquinas a 45° y gruesos parejos), mismo ancho total que antes y la inclinación de la T (9.4°). R con pata
+  diagonal y esquina cortada arriba a la derecha; E con esquina cortada arriba a la izquierda. TREE sigue negro con
+  contorno blanco. `logo_c7.svg`, `logo_c7_oscuro.svg`, `logo_c7_encabezado.svg`, `hoja_c7.png`.
+- **C8** (26 oct, Daniel): todo el logo **inclinado 8° hacia arriba a la derecha** (como la calcomanía original) y abajo,
+  en el hueco bajo REE, **"On the mark" en cursiva** (Daniel lo escribió así; la calcomanía decía "On your mark"), derecho,
+  del color de DRAG, con la letra **Mr Dafoe** (OFL, `v5/fuentes/`). `logo_c5(..., giro=8, lema='On the mark')`.
+  `logo_c8.svg`, `logo_c8_oscuro.svg`, `logo_c8_encabezado.svg`, `hoja_c8.png`. En el encabezado de la app el lema no se
+  alcanza a leer: ahí convendría la versión sin lema.
+- **C9** (26 oct, Daniel marcó la zona): DRAG **más grande**, de la D (×1.9 del alto de antes) bajando en línea recta
+  hasta la G (×1.15): la orilla de arriba queda inclinada y llena la zona marcada (`crece=(1.9, 1.15)` en `logo_c5`;
+  `svg_drag_bloque(f_izq, f_der)`; la esquina de arriba de la D cabe en el ancho del logo). `logo_c9.svg`,
+  `logo_c9_oscuro.svg`, `logo_c9_encabezado.svg`, `hoja_c9.png`.
+- **C10** (26 oct, Daniel: "gírala sobre su propio eje hacia la derecha", con una raya a lo largo del poste): dos
+  lecturas, para que elija: `logo_c10a*` girada **de frente** 8° hacia la derecha (la barra queda derecha) y `logo_c10b*`
+  girada **sobre su poste** 35° hacia la derecha, con perspectiva (la mitad derecha se va hacia atrás). `arbol2()` arma la
+  T con figuras ya transformadas; REE se recorre solo para no chocar. `hoja_c10.png` (como estaba, 1 y 2).
+- **C11** (26 oct, Daniel eligió la 2 de C10): girada sobre su poste **hacia el otro lado y con más vuelta**
+  (`yaw=-48`: la mitad izquierda se va hacia atrás, la derecha queda al frente y más grande). `logo_c11.svg`,
+  `logo_c11_oscuro.svg`, `logo_c11_encabezado.svg`, `hoja_c11.png`.
+- **C12** (26 oct, Daniel dibujó la raya del poste): el árbol **inclinado hacia atrás** (derecho dentro del logo,
+  `inclina_t=0`: con el giro del logo queda ~8° con la punta de arriba a la izquierda), su pie **más pegado a la R**
+  (`junto=0.03`) y **42°** de giro sobre el poste (`yaw=-42`). `logo_c12.svg`, `logo_c12_oscuro.svg`,
+  `logo_c12_encabezado.svg`, `hoja_c12.png`.
+- **C13** (26 oct, Daniel: "recta, sin inclinación" → "la misma inclinación que la línea de la R"): el poste de la T
+  **paralelo a la R** (la inclinación de la letra, 9.4°; con el giro del logo se ve casi derecho), 42° de giro sobre el
+  poste y pegada a la R (`junto=0.03`). `logo_c13.svg`, `logo_c13_oscuro.svg`, `logo_c13_encabezado.svg`, `hoja_c13.png`.
+- **Aprobado (C13) y en la app desde beta 0.6.3** (26 oct): `hacer_logo.py` también genera `fuente/app/src/logo.svg`
+  (barra de arriba, sin lema, con clases para los colores del tema) y `fuente/app/src/icono/icono*.png` (íconos).
+

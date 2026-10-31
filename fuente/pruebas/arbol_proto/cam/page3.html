@@ -1,0 +1,25 @@
+<!doctype html><html><body><video id=v playsinline muted autoplay style="position:fixed;width:2px;height:2px;opacity:.01"></video>
+<script>
+// cámara falsa controlada por la prueba: canvas.captureStream con un árbol dibujado a horas conocidas
+(() => {
+  const cv = document.createElement('canvas'); cv.width = 320; cv.height = 240; const g = cv.getContext('2d');
+  window.__camFalsa = { verdeEn: NaN, dibujos: [] };
+  const pintar = (ts) => { const verde = performance.now() >= __camFalsa.verdeEn;
+    g.fillStyle = '#111'; g.fillRect(0, 0, 320, 240); g.fillStyle = verde ? '#2f6' : '#030'; g.beginPath(); g.arc(160, 120, 20, 0, 7); g.fill();
+    if (verde && !__camFalsa.tPintada) __camFalsa.tPintada = performance.now();
+    requestAnimationFrame(pintar); };
+  requestAnimationFrame(pintar);
+  const st = cv.captureStream(60);
+  navigator.mediaDevices.getUserMedia = async () => st;
+})();
+window.res = { fr: [] };
+(async () => {
+  const st = await navigator.mediaDevices.getUserMedia({ video: true });
+  const v = document.getElementById('v'); v.srcObject = st; await v.play();
+  const c = document.createElement('canvas'); c.width = 32; c.height = 24; const ctx = c.getContext('2d', { willReadFrequently: true });
+  __camFalsa.verdeEn = performance.now() + 1000;
+  const cb = (now, md) => { ctx.drawImage(v, 0, 0, 32, 24); const d = ctx.getImageData(16, 12, 1, 1).data;
+    res.fr.push({ now, cap: md.captureTime, pres: md.presentationTime, g: d[1] }); if (res.fr.length < 150) v.requestVideoFrameCallback(cb); else res.done = true; };
+  v.requestVideoFrameCallback(cb);
+})().catch(e => { res.err = String(e); res.done = true; });
+</script></body></html>

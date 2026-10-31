@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Drag Trim</title>
+<title>Drag Tree</title>
 <meta name="description" content="Medidor de 1/8 y 1/4 de milla con GPS y acelerómetro del teléfono.">
-<meta name="theme-color" content="#24282c">
+<meta name="theme-color" content="#141618">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Drag Trim">
+<meta name="apple-mobile-web-app-title" content="Drag Tree">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
@@ -18,12 +18,20 @@
 </style>
 </head>
 <body>
+<div class="carga" id="carga" aria-hidden="true">
+  <div class="carga-logo"><!--LOGO--></div>
+  <div class="carga-pie"><span>By</span><img src="ROOSTER_URL" alt="Rooster Racing"></div>
+</div>
+<div class="fondo" id="fondo" aria-hidden="true"></div>
+<!-- #marco: en vertical no cambia nada (display: contents); con la app girada (Ajustes → Orientación) es lo que se desplaza -->
+<div id="marco">
 <header class="top">
-  <div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>Drag Trim<span class="beta">beta</span></div>
+  <div class="brand"><span class="logo" role="img" aria-label="Drag Tree, On the mark"><!--LOGO--></span></div>
   <div class="sensors" aria-label="Estado de sensores">
     <span id="chipGps" class="chip">GPS</span>
     <span id="chipAcc" class="chip">Acel</span>
     <span id="chipWake" class="chip" title="Pantalla siempre encendida">Pantalla</span>
+    <span id="chipCam" class="chip" title="Cámara del semáforo" hidden>Cám</span>
   </div>
 </header>
 
@@ -31,6 +39,14 @@
   <!-- ============ MEDIR ============ -->
   <section id="vMedir" class="view">
     <div id="medirIdle">
+      <div class="field guia" id="guiaMedir" hidden>
+        <span class="lab">Instala Drag Tree en tu teléfono</span>
+        <div class="guia-pasos"></div>
+        <div class="guia-acciones">
+          <button class="primary" data-instalar hidden>Instalar app</button>
+          <button class="ghost" id="guiaOcultar">Ahora no</button>
+        </div>
+      </div>
       <div class="seg big" role="radiogroup" aria-label="Distancia" id="segDist">
         <button role="radio" data-v="201.168">1/8 de milla</button>
         <button role="radio" data-v="402.336">1/4 de milla</button>
@@ -46,22 +62,60 @@
 
       <button id="btnSensores" class="primary">Activar sensores</button>
       <button id="btnArmar" class="primary go" hidden>Armar medición</button>
-      <button id="btnDemo" class="ghost">Probar con una corrida simulada</button>
-      <div class="proximo">
-        <b>Medir con el semáforo real</b> <span class="beta-tag">en desarrollo</span>
-        <p>Grabar el árbol de la pista con la cámara para medir tu tiempo de reacción y registrarlo junto con la corrida.</p>
+      <div class="armar-carril" id="armarCarril" hidden>
+        <button id="btnArmarIzq" class="primary go">Armar · carril izquierdo</button>
+        <button id="btnArmarDer" class="primary go">Armar · carril derecho</button>
       </div>
-
-      <details class="howto">
-        <summary>Antes de salir a la pista</summary>
-        <ul>
-          <li>Pon el teléfono en un soporte firme (parabrisas o tablero) con vista al cielo. La orientación no importa, pero no lo muevas durante la sesión.</li>
-          <li>Activa la ubicación precisa y apaga el ahorro de batería.</li>
-          <li>Deja la app abierta con la pantalla encendida. Si cambias de app o se bloquea la pantalla, el GPS se pausa.</li>
-          <li>La app no da la salida: arranca con el semáforo de la pista. Arma la medición cuando quieras, incluso antes del burnout; el arranque se detecta solo.</li>
-          <li>Las tablets solo-WiFi no tienen GPS y no sirven para medir.</li>
-        </ul>
-      </details>
+      <div class="field cam-campo" id="campoCam" hidden>
+        <label class="toggle">Leer el semáforo con la cámara <span class="beta-tag">beta</span><input type="checkbox" id="inCam"></label>
+        <p class="hint">La cámara de atrás graba el árbol mientras la medición está armada. Al terminar, la app calcula tu reacción como en la boleta. No te avisa nada durante la corrida.</p>
+        <div id="camOpciones" hidden>
+          <span class="lab cam-lab">Árbol</span>
+          <div class="seg" role="radiogroup" aria-label="Árbol de la pista" id="segCamArbol">
+            <button role="radio" data-v="pro">Pro .400</button>
+            <button role="radio" data-v="full">Full .500</button>
+          </div>
+          <p class="msg cam-estado" id="camEstado"></p>
+          <button class="ghost" id="btnApuntar">Apuntar la cámara</button>
+          <p class="hint cam-regla">Solo mide: no se conecta al auto ni da señales. En eventos con reglamento (NHRA, IHRA…) un teléfono que mira el árbol puede tomarse como "lector de árbol", que está prohibido: úsalo en práctica o test &amp; tune y avísale al director técnico.</p>
+        </div>
+      </div>
+      <!-- Atajos (0.6.8, Daniel): tres botones cuadrados uno encima de otro, en una caja oscura como un semáforo, para que
+           se vea más el fondo; "Antes de salir a la pista" se prende y abre su explicación a la derecha; Race 1 vs 1 abre
+           la carrera (0.7, carrera.js) -->
+      <div class="atajos">
+        <div class="atajos-arbol" role="group" aria-label="Más opciones">
+          <button type="button" class="atajo" id="btnDemo">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.2 6.6 13.6 10l-5.4 3.4z" fill="currentColor"/></svg>
+            <span>Corrida simulada</span>
+          </button>
+          <button type="button" class="atajo" id="atRace" aria-haspopup="dialog">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 18V2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4.9 3h11.6v8.4H4.9z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4.9 3h2.9v2.8H4.9zm5.8 0h2.9v2.8h-2.9zM7.8 5.8h2.9v2.8H7.8zm5.8 0h2.9v2.8h-2.9zM4.9 8.6h2.9v2.8H4.9zm5.8 0h2.9v2.8h-2.9z" fill="currentColor"/></svg>
+            <span>Race 1 vs 1</span>
+          </button>
+          <button type="button" class="atajo" id="atAntes" aria-expanded="false" aria-controls="antesPista">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m2.6 5 1.6 1.6L7 3.6M2.6 12l1.6 1.6L7 10.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.6 5.4h7.8M9.6 12.4h7.8M9.6 17h7.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span>Antes de la pista</span>
+          </button>
+        </div>
+        <div class="howto atajo-panel" id="antesPista" hidden>
+          <p class="atajo-tit">Antes de salir a la pista</p>
+          <ul>
+            <li>Pon el teléfono en un soporte firme (parabrisas o tablero) con vista al cielo. La orientación no importa, pero no lo muevas durante la sesión.</li>
+            <li>Activa la ubicación precisa y apaga el ahorro de batería.</li>
+            <li>Deja la app abierta con la pantalla encendida. Si cambias de app o se bloquea la pantalla, el GPS se pausa.</li>
+            <li>La app no da la salida: arranca con el semáforo de la pista. Arma la medición cuando quieras, incluso antes del burnout; el arranque se detecta solo.</li>
+            <li>Las tablets solo-WiFi no tienen GPS y no sirven para medir.</li>
+          </ul>
+          <ul id="howtoCam" hidden>
+            <li>Con la cámara: pon el teléfono <b>horizontal</b>, con la cámara de atrás viendo al frente por el parabrisas, sin que la tapen el soporte, el limpiaparabrisas ni la franja polarizada.</li>
+            <li>El árbol queda a un lado (unos 20°). Con el teléfono horizontal lo ves en los dos carriles sin girarlo.</li>
+            <li>Limpia la lente y el parabrisas; un trapo oscuro en el tablero evita reflejos.</li>
+            <li>Arma la medición en la fila, eligiendo tu carril: la cámara solo graba mientras está armada (máx. 30 min).</li>
+            <li>Apaga el modo de bajo consumo y no dejes el teléfono al sol.</li>
+          </ul>
+        </div>
+      </div>
     </div>
 
     <div id="medirSesion" hidden>
@@ -82,36 +136,31 @@
     <h2>Práctica de salida</h2>
     <p class="muted">Un semáforo de arrancones para entrenar tu reacción, solo o contra alguien en el mismo teléfono.</p>
 
-    <div class="field">
+    <!-- Los cuatro en un solo panel; debajo de cada selector, solo la explicación de lo elegido (practica.js, EXPLICA) -->
+    <div class="field pt-opciones">
       <span class="lab">Modo</span>
-      <div class="seg" role="radiogroup" id="segPModo" style="margin-top:8px">
+      <div class="seg" role="radiogroup" id="segPModo">
         <button role="radio" data-v="solo">Solo</button>
         <button role="radio" data-v="duelo">1 vs 1</button>
       </div>
-    </div>
-    <div class="field">
       <span class="lab">Árbol</span>
-      <p class="hint">Pro: los tres ámbar encienden juntos y la verde 0.4 s después. Full: los ámbar bajan uno por uno cada 0.5 s.</p>
       <div class="seg" role="radiogroup" id="segPArbol">
         <button role="radio" data-v="pro">Pro .4</button>
         <button role="radio" data-v="full">Full .5</button>
       </div>
-    </div>
-    <div class="field">
+      <p class="hint pt-exp" id="expPArbol" aria-live="polite"></p>
       <span class="lab">Cómo sales</span>
-      <p class="hint">Soltar: mantén presionado para hacer stage y suelta con la verde, como un transbrake. Tocar: un toque para stage y otro para salir.</p>
       <div class="seg" role="radiogroup" id="segPSalida">
         <button role="radio" data-v="soltar">Soltar</button>
         <button role="radio" data-v="tocar">Tocar</button>
       </div>
-    </div>
-    <div class="field">
+      <p class="hint pt-exp" id="expPSalida" aria-live="polite"></p>
       <span class="lab">Formato de la reacción</span>
-      <p class="hint">Boleta: como el ticket de pista, desde el último ámbar (perfecta 0.400 con Pro, 0.500 con Full). Desde la verde: la diferencia contra la verde (perfecta 0.000). Siempre verás los dos; aquí eliges cuál sale en grande.</p>
       <div class="seg" role="radiogroup" id="segPFormato">
-        <button role="radio" data-v="boleta">Boleta (.400 / .500)</button>
-        <button role="radio" data-v="verde">Desde la verde (.000)</button>
+        <button role="radio" data-v="boleta">Boleta</button>
+        <button role="radio" data-v="verde">Desde la verde</button>
       </div>
+      <p class="hint pt-exp" id="expPFormato" aria-live="polite"></p>
     </div>
     <div class="field">
       <label class="lab" for="inPRetraso">Retraso de tu auto</label>
@@ -131,6 +180,128 @@
     <p class="empty" id="psVacio">Aún no hay salidas. Empieza una práctica en modo solo.</p>
     <p class="muted" style="font-size:13px;margin-top:14px">La pantalla del teléfono agrega unos milisegundos de retraso; úsalo para comparar tus propias salidas.</p>
     <button id="btnPBorrar" class="danger">Borrar estadísticas</button>
+  </section>
+
+  <!-- ============ CALCULAR ============ -->
+  <section id="vCalc" class="view" hidden>
+    <h2>Calculadora</h2>
+    <p class="muted">Aproximación con las fórmulas de tu hoja Rooster Racing: con tu peso y tus caballos, más o menos qué tiempo harías. No son tiempos medidos.</p>
+
+    <div class="field">
+      <span class="lab">Condiciones del aire</span>
+      <div class="seg" role="radiogroup" aria-label="Condiciones del aire" id="segCAire" style="margin-top:8px">
+        <button role="radio" data-v="tel">En la pista (teléfono)</button>
+        <button role="radio" data-v="manual">Altura que yo elija</button>
+      </div>
+
+      <div id="cTel" class="c-sub">
+        <p class="hint">El teléfono toma tu ubicación y el clima de este momento (temperatura, presión y humedad) y calcula la altitud de densidad (DA) real. Necesita internet; tu ubicación solo se usa para pedir el clima.</p>
+        <button class="ghost" id="cBtnAqui">Tomar condiciones de aquí</button>
+        <p class="c-estado" id="cEstado" aria-live="polite"></p>
+        <dl class="c-lectura" id="cLectura" hidden></dl>
+        <p class="c-viejo" id="cViejo" hidden>Estas condiciones tienen más de 3 horas: tócalo de nuevo.</p>
+        <div id="cTempTelBox" hidden>
+          <label class="lab" for="cTempTel">Temperatura del aire</label>
+          <div class="row"><input type="number" id="cTempTel" inputmode="decimal" step="1"><span>°C</span></div>
+        </div>
+      </div>
+
+      <div id="cMan" class="c-sub">
+        <div id="cAltBox">
+          <label class="lab" for="cPista">Pista</label>
+          <select id="cPista"></select>
+          <label class="lab" for="cAlt">Altura</label>
+          <div class="row"><input type="number" id="cAlt" inputmode="numeric" step="100"><span>ft</span></div>
+          <p class="hint" id="cAltM"></p>
+        </div>
+        <div id="cTempBox">
+          <label class="lab" for="cTemp">Temperatura del aire</label>
+          <div class="row"><input type="number" id="cTemp" inputmode="decimal" step="1"><span>°C</span></div>
+        </div>
+        <label class="toggle c-toggle">Ya sé la DA del día <input type="checkbox" id="cDaSe"></label>
+        <div class="row" id="cDaBox" hidden><input type="number" id="cDa" inputmode="numeric" step="100" aria-label="Altitud de densidad (DA) en pies"><span>ft</span></div>
+      </div>
+      <p class="c-da" id="cDaRes" aria-live="polite"></p>
+    </div>
+
+    <div class="field">
+      <span class="lab">Tu auto</span>
+      <label class="lab" for="cPeso">Peso con piloto</label>
+      <div class="row">
+        <input type="number" id="cPeso" inputmode="decimal" step="10">
+        <div class="seg mini" role="radiogroup" aria-label="Unidad de peso" id="segCPesoU">
+          <button role="radio" data-v="lb">lb</button>
+          <button role="radio" data-v="kg">kg</button>
+        </div>
+      </div>
+      <p class="hint" id="cPesoOtro"></p>
+      <label class="lab" for="cHp">Caballos del motor</label>
+      <div class="row"><input type="number" id="cHp" inputmode="decimal" step="10"><span>hp</span></div>
+      <p class="hint">Al volante, sin contar el nitro ni el turbo. La hoja les quita 14 % por la transmisión.</p>
+      <span class="lab">Motor</span>
+      <div class="seg" role="radiogroup" aria-label="Tipo de motor" id="segCMotor">
+        <button role="radio" data-v="atmos">Atmosférico</button>
+        <button role="radio" data-v="nitro">Nitro</button>
+        <button role="radio" data-v="turbo">Turbo</button>
+      </div>
+      <div id="cNitroBox" class="c-sub">
+        <label class="lab" for="cNitro">Shot de nitro</label>
+        <div class="row"><input type="number" id="cNitro" inputmode="decimal" step="25"><span>hp</span></div>
+      </div>
+      <div id="cBoostBox" class="c-sub">
+        <label class="lab" for="cBoost">Boost (lo que marca el manómetro)</label>
+        <div class="row"><input type="number" id="cBoost" inputmode="decimal" step="1"><span>psi</span></div>
+        <p class="hint" id="cPAmb"></p>
+      </div>
+    </div>
+
+    <h3>Tiempo estimado</h3>
+    <div class="c-res">
+      <table class="c-tabla">
+        <thead><tr><th></th><th>En esta pista<small id="cColPista"></small></th><th>A nivel del mar</th></tr></thead>
+        <tbody id="cTabla"></tbody>
+      </table>
+    </div>
+
+    <div class="field">
+      <span class="lab">Peso para un tiempo meta</span>
+      <p class="hint">Con tus caballos y estas condiciones, cuánto debería pesar el auto para hacer este tiempo.</p>
+      <div class="seg" role="radiogroup" aria-label="Distancia de la meta" id="segCMetaD">
+        <button role="radio" data-v="8">1/8 de milla</button>
+        <button role="radio" data-v="4">1/4 de milla</button>
+      </div>
+      <div class="row" style="margin-top:10px"><input type="number" id="cMetaT" inputmode="decimal" step="0.1" aria-label="Tiempo meta en segundos"><span>s</span></div>
+      <p class="c-big" id="cMetaRes" aria-live="polite"></p>
+    </div>
+
+    <details class="howto c-inv">
+      <summary>Caballos con tu tiempo</summary>
+      <p class="hint">Al revés: con un tiempo o una velocidad, cuántos caballos tendría el motor. Usa el peso y las condiciones de arriba.</p>
+      <div class="seg" role="radiogroup" aria-label="Distancia" id="segCInvD">
+        <button role="radio" data-v="8">1/8</button>
+        <button role="radio" data-v="4">1/4</button>
+      </div>
+      <div class="seg" role="radiogroup" aria-label="Dato" id="segCInvDato" style="margin-top:8px">
+        <button role="radio" data-v="v">Velocidad</button>
+        <button role="radio" data-v="et">Tiempo</button>
+      </div>
+      <label class="lab" for="cInvVal" id="cInvLab" style="margin-top:10px">Velocidad</label>
+      <div class="row"><input type="number" id="cInvVal" inputmode="decimal" step="0.1"><span id="cInvU">km/h</span></div>
+      <p class="c-big" id="cInvRes" aria-live="polite"></p>
+      <p class="hint">Con la velocidad sale más confiable: el tiempo depende mucho de la salida.</p>
+    </details>
+
+    <details class="howto">
+      <summary>Cómo calcula</summary>
+      <ul>
+        <li>Como tu hoja, con las fórmulas de Hale: tiempo de 1/4 = 5.825 × (peso ÷ caballos en la llanta)<sup>⅓</sup> y velocidad = 234 × (caballos en la llanta ÷ peso)<sup>⅓</sup>.</li>
+        <li>Caballos en la llanta = los del motor × 0.86 (14 % de transmisión) × pérdida por altura (3 % por cada 1000 ft de DA). El nitro se suma ya en la llanta. Con turbo: caballos + caballos × boost ÷ presión del aire.</li>
+        <li>1/8 = 1/4 ÷ 1.565 en tiempo y ÷ 1.27 en velocidad. 60 ft típico = 14.5 % del tiempo de 1/4.</li>
+        <li>DA = altitud de densidad: la altura a la que "se siente" el aire por la presión, la temperatura y la humedad. Entre más alta, menos rinde el motor.</li>
+        <li>"Altura que yo elija" usa la fórmula de DA de tu hoja (con su ×1.075). "En la pista" calcula la DA real con la presión, la temperatura y la humedad del clima; suele salir más baja que la de la hoja (a 5100 ft y 20 °C: ≈ 6,830 contra 7,443 ft).</li>
+        <li>Cambios contra tu Excel: el 0–60 siempre se calcula en mph (en la hoja cambiaba casi 1 s al poner km/h); el turbo usa la presión del aire según la DA (la hoja la tenía fija en 11.34 psi, la de 7000 ft); los caballos ya no se sacan del 60 ft; y en "Caballos con tu tiempo" se resta el nitro o el boost, para que dé los caballos del motor como los escribes arriba.</li>
+      </ul>
+    </details>
   </section>
 
   <!-- ============ RESULTADO ============ -->
@@ -153,6 +324,16 @@
       <div class="row">
         <input type="number" id="inRollout" min="0" max="2" step="0.1" inputmode="decimal">
         <span>ft</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="lab">Orientación</span>
+      <p class="hint" id="orientHint">Con el teléfono acostado (por ejemplo, en el soporte del carro): "No girar" deja la app siempre vertical; "Solo Medir" acuesta Medir y Race 1 vs 1; "Toda la app" acuesta todo.</p>
+      <div class="seg" role="radiogroup" aria-label="Orientación" id="segOrient">
+        <button role="radio" data-v="no">No girar</button>
+        <button role="radio" data-v="medir">Solo Medir</button>
+        <button role="radio" data-v="todo">Toda la app</button>
       </div>
     </div>
 
@@ -181,6 +362,18 @@
     </div>
 
     <div class="field">
+      <span class="lab">Fondo de pantalla</span>
+      <p class="hint">El color de los botones cambia con el fondo. Durante una corrida el fondo se oscurece para que los números se lean bien.</p>
+      <div class="fondos" role="radiogroup" id="selFondo" aria-label="Fondo de pantalla"></div>
+      <span class="lab" style="margin-top:14px">Qué tanto se ve</span>
+      <div class="seg" role="radiogroup" id="segVelo" style="margin-top:8px">
+        <button role="radio" data-v="0.88">Poco</button>
+        <button role="radio" data-v="0.78">Medio</button>
+        <button role="radio" data-v="0.64">Mucho</button>
+      </div>
+    </div>
+
+    <div class="field">
       <span class="lab">Tema</span>
       <p class="hint">"Claro" se lee mejor bajo el sol.</p>
       <div class="seg" role="radiogroup" id="segTema">
@@ -195,14 +388,30 @@
       <p class="hint" style="margin-top:6px">Transiciones suaves en la app. Las luces del semáforo de Práctica siempre encienden al instante, sin efectos.</p>
     </div>
 
-    <button id="btnInstalar" class="primary" hidden>Instalar app</button>
-    <p id="iosInstall" class="msg" hidden>Para instalarla en iPhone: abre en Safari, toca Compartir y luego "Agregar a inicio".</p>
+    <div class="field" id="ajCam" hidden>
+      <span class="lab">Semáforo con cámara <span class="beta-tag">beta</span></span>
+      <div id="ajCamCal" class="cam-cal"></div>
+      <label class="toggle" style="margin-top:10px">Guardar los cuadros del árbol <input type="checkbox" id="inCamCuadros"></label>
+      <p class="hint" style="margin-top:6px">Ayuda a mejorar la app y permite cambiar de carril después (~1 MB por corrida; se conservan las últimas 30).</p>
+      <button class="ghost" id="btnOlvidarZona">Olvidar dónde está el árbol</button>
+      <a class="ghost boton" id="lnkPrueba" href="prueba/camara.html">Página de prueba de la cámara</a>
+    </div>
+
+    <div class="field guia" id="guiaAjustes">
+      <span class="lab">Instalar la app</span>
+      <div class="guia-pasos"></div>
+      <button class="primary" data-instalar hidden>Instalar app</button>
+    </div>
     <button id="btnBorrarHist" class="danger">Borrar todo el historial</button>
     <p class="ver" id="verText"></p>
   </section>
 </main>
 
 <div class="pt" id="ptOverlay" hidden>
+  <div class="pt-brillo" aria-hidden="true">
+    <div class="ptg v izq" id="ptBv_l"><i></i></div><div class="ptg r izq" id="ptBr_l"><i></i></div>
+    <div class="ptg v der" id="ptBv_r"><i></i></div><div class="ptg r der" id="ptBr_r"><i></i></div>
+  </div>
   <div class="pt-top">
     <button class="pt-x" id="ptCerrar" aria-label="Cerrar práctica">Cerrar</button>
     <span id="ptTipo"></span>
@@ -233,21 +442,201 @@
   </div>
 </div>
 
+<!-- ============ RACE 1 VS 1 (0.7, carrera.js): inicio, emparejar con QR, sala, árbol ============ -->
+<div class="rc" id="rc" hidden role="dialog" aria-labelledby="rcTitulo">
+  <div class="rc-top">
+    <button class="pt-x" id="rcSalir">Salir</button>
+    <b class="rc-tit" id="rcTitulo">Race 1 vs 1</b>
+    <span class="rc-chip" id="rcChip" hidden></span>
+  </div>
+
+  <section class="rc-paso" id="rcInicio">
+    <div class="rc-lado rc-a">
+    <p class="rc-intro">Dos autos, cada uno con Drag Tree en su teléfono. La app baja el árbol en los dos al mismo tiempo, mide a cada quien contra su propia verde y al final saca la boleta de los dos carriles.</p>
+    <div class="rc-red">
+      <svg viewBox="0 0 64 40" aria-hidden="true"><rect x="2" y="9" width="15" height="27" rx="3.2" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="47" y="9" width="15" height="27" rx="3.2" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M24.5 16.5a6 6 0 0 1 11.4-2.4 4.6 4.6 0 0 1 3.6 8.4H25.6a3.4 3.4 0 0 1-1.1-6z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M19 24l5-2.5M45 24l-5-2.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      <p><b>Cada teléfono con sus datos.</b> Uno crea la sala y le dice el código al otro. No hace falta punto de acceso, y la distancia entre los carros no importa.</p>
+    </div>
+    </div>
+    <div class="rc-lado rc-b">
+    <button class="primary go" id="rcCrearSala">Crear sala</button>
+    <button class="ghost" id="rcUnirSala">Unirme con código</button>
+    <button class="ghost" id="rcSimulado">Probar con rival simulado</button>
+    <p class="msg" id="rcInicioMsg"></p>
+    <details class="howto rc-sinred">
+      <summary>¿Sin señal en la pista? Conectar con QR</summary>
+      <p>Sin internet: los dos teléfonos en la misma red Wi-Fi. En uno prende el punto de acceso (hotspot) y conecta el otro a esa red. Luego cada uno escanea el código del otro.</p>
+      <button class="ghost" id="rcCrear">Crear carrera con QR</button>
+      <button class="ghost" id="rcUnirme">Unirme con QR</button>
+    </details>
+    </div>
+    <p class="rc-nota">Solo en pista o en un lugar cerrado al tráfico. Cada piloto mira la pista, no el teléfono: el árbol se apaga en cuanto sale la verde.</p>
+  </section>
+
+  <section class="rc-paso" id="rcCodigo" hidden>
+    <div class="rc-lado rc-a">
+    <span class="rc-pasos">Tu sala</span>
+    <h3 class="rc-h">Dile este código a tu rival</h3>
+    <p class="rc-codigo" id="rcCodigoTxt">· · · · ·</p>
+    </div>
+    <div class="rc-lado rc-b">
+    <button class="ghost" id="rcCopiarCodigo">Copiar código</button>
+    <p class="rc-txt" id="rcCodigoMsg"></p>
+    <p class="rc-espera" id="rcCodigoEspera" hidden><i class="rc-punto"></i> Esperando a tu rival…</p>
+    <p class="rc-nota">En su teléfono: Race 1 vs 1 → "Unirme con código".</p>
+    </div>
+  </section>
+
+  <section class="rc-paso" id="rcUnir" hidden>
+    <h3 class="rc-h">Escribe el código de la sala</h3>
+    <input id="rcCodIn" class="rc-codin" maxlength="5" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" placeholder="KR7PX" aria-label="Código de la sala">
+    <button class="primary go" id="rcEntrar">Entrar a la sala</button>
+    <p class="rc-txt" id="rcUnirMsg">Son 5 letras y números; te lo dice el que creó la sala.</p>
+  </section>
+
+  <section class="rc-paso" id="rcQr" hidden>
+    <div class="rc-lado rc-b">
+    <span class="rc-pasos" id="rcQrPaso">Paso 1 de 2</span>
+    <h3 class="rc-h" id="rcQrTit">Escanea este código con el otro teléfono</h3>
+    </div>
+    <div class="rc-qr"><canvas id="rcQrCanvas" aria-label="Código para emparejar"></canvas></div>
+    <div class="rc-lado rc-c">
+    <p class="rc-txt" id="rcQrTxt"></p>
+    <button class="primary" id="rcLeerResp" hidden>Ya lo escaneó: leer su código</button>
+    <p class="rc-espera" id="rcQrEspera" hidden><i class="rc-punto"></i> Esperando la conexión…</p>
+    <button class="rc-link" id="rcQrTexto">¿No funciona la cámara? Usar el código en texto</button>
+    </div>
+  </section>
+
+  <section class="rc-paso" id="rcEscaner" hidden>
+    <div class="rc-lado rc-b">
+    <span class="rc-pasos" id="rcEscPaso">Paso 1 de 2</span>
+    <h3 class="rc-h" id="rcEscTit">Apunta la cámara al código del otro teléfono</h3>
+    </div>
+    <div class="rc-visor"><video id="rcVideo" playsinline muted autoplay></video><i class="rc-marco" aria-hidden="true"></i></div>
+    <div class="rc-lado rc-c">
+    <p class="rc-txt" id="rcEscTxt">Acerca el teléfono hasta que el código llene el cuadro.</p>
+    <button class="ghost" id="rcEscCancelar">Cancelar</button>
+    <button class="rc-link" id="rcEscTexto">¿No funciona la cámara? Pegar el código en texto</button>
+    </div>
+  </section>
+
+  <section class="rc-paso" id="rcTexto" hidden>
+    <h3 class="rc-h">Código en texto</h3>
+    <p class="rc-txt" id="rcTxtMio">Manda este código al otro teléfono (por mensaje) y pega aquí el suyo.</p>
+    <label class="rc-lab" for="rcCodMio">Tu código</label>
+    <textarea id="rcCodMio" readonly rows="3"></textarea>
+    <button class="ghost" id="rcCopiar">Copiar mi código</button>
+    <label class="rc-lab" for="rcCodOtro">Código del otro teléfono</label>
+    <textarea id="rcCodOtro" rows="3" placeholder="Pega aquí el código que empieza con DT1"></textarea>
+    <button class="primary" id="rcConectarTexto">Conectar</button>
+    <button class="ghost" id="rcTextoVolver">Volver</button>
+  </section>
+
+  <section class="rc-paso" id="rcSala" hidden>
+    <div class="rc-lado rc-a">
+    <div class="rc-carriles">
+      <div class="rc-carril" id="rcCarril_izq"><span class="rc-cnom">Carril izquierdo</span><b class="rc-quien"></b><ul class="rc-est"></ul></div>
+      <div class="rc-carril" id="rcCarril_der"><span class="rc-cnom">Carril derecho</span><b class="rc-quien"></b><ul class="rc-est"></ul></div>
+    </div>
+    <p class="rc-marcador" id="rcMarcador" hidden></p>
+    <div class="field rc-cfg">
+      <span class="lab">Árbol</span>
+      <div class="seg" role="radiogroup" aria-label="Árbol de la carrera" id="segRcArbol">
+        <button role="radio" data-v="pro">Pro .400</button>
+        <button role="radio" data-v="full">Full .500</button>
+      </div>
+      <span class="lab">Distancia</span>
+      <div class="seg" role="radiogroup" aria-label="Distancia de la carrera" id="segRcDist">
+        <button role="radio" data-v="201.168">1/8 de milla</button>
+        <button role="radio" data-v="402.336">1/4 de milla</button>
+      </div>
+      <p class="hint" id="rcCfgNota"></p>
+    </div>
+    </div>
+    <div class="rc-lado rc-b">
+    <p class="msg" id="rcMsg"></p>
+    <button class="primary" id="rcSensores" hidden>Activar sensores</button>
+    <button class="primary go" id="rcListo">Listo: ya estamos alineados</button>
+    <p class="rc-txt rc-centro" id="rcListoTxt">Alinea los dos autos. Cuando los dos toquen Listo, el árbol prende pre-stage, luego stage y baja solo.</p>
+    <button class="ghost" id="rcCambiar">Cambiar de carril</button>
+    <button class="ghost" id="rcReemparejar" hidden>Volver a emparejar</button>
+    </div>
+    <p class="rc-nota rc-centro" id="rcSalaCod" hidden></p>
+  </section>
+
+  <section class="rc-arbol" id="rcArbol" hidden aria-hidden="true">
+    <p class="rc-fase" id="rcFase"></p>
+    <div class="pt-tree">
+      <div class="rc-col"><div class="pt-lane l">
+        <div class="pt-pair"><i class="pb s w" id="rc_izq_pre1"></i><i class="pb s w" id="rc_izq_pre2"></i></div>
+        <div class="pt-pair"><i class="pb s w" id="rc_izq_stg1"></i><i class="pb s w" id="rc_izq_stg2"></i></div>
+        <i class="pb y" id="rc_izq_a0"></i><i class="pb y" id="rc_izq_a1"></i><i class="pb y" id="rc_izq_a2"></i>
+        <i class="pb g" id="rc_izq_g"></i><i class="pb r" id="rc_izq_r"></i>
+      </div><span class="rc-quien-arbol" id="rcQuien_izq"></span></div>
+      <div class="rc-col"><div class="pt-lane r">
+        <div class="pt-pair"><i class="pb s w" id="rc_der_pre1"></i><i class="pb s w" id="rc_der_pre2"></i></div>
+        <div class="pt-pair"><i class="pb s w" id="rc_der_stg1"></i><i class="pb s w" id="rc_der_stg2"></i></div>
+        <i class="pb y" id="rc_der_a0"></i><i class="pb y" id="rc_der_a1"></i><i class="pb y" id="rc_der_a2"></i>
+        <i class="pb g" id="rc_der_g"></i><i class="pb r" id="rc_der_r"></i>
+      </div><span class="rc-quien-arbol" id="rcQuien_der"></span></div>
+    </div>
+  </section>
+</div>
+
 <nav class="tabs" aria-label="Secciones">
   <button data-view="vMedir" aria-current="page">Medir</button>
   <button data-view="vPractica">Práctica</button>
+  <button data-view="vCalc">Calcular</button>
   <button data-view="vHistorial">Historial</button>
   <button data-view="vAjustes">Ajustes</button>
 </nav>
+</div>
 
 <script>
 /*CORE*/
+</script>
+<script>
+/*SEMVISION*/
+</script>
+<script>
+/*SEMAFORO*/
+</script>
+<script>
+/*SEMSIM*/
+</script>
+<script>
+/*CAMARA*/
 </script>
 <script>
 /*APP*/
 </script>
 <script>
 /*PRACTICA*/
+</script>
+<script>
+/*ROOSTER*/
+</script>
+<script>
+/*CALC*/
+</script>
+<script>
+/*QRLIB*/
+</script>
+<script>
+/*QR*/
+</script>
+<script>
+/*ENLACE*/
+</script>
+<script>
+/*SALA*/
+</script>
+<script>
+/*CARRERA_NUCLEO*/
+</script>
+<script>
+/*CARRERA*/
 </script>
 </body>
 </html>

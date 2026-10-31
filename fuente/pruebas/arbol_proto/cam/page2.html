@@ -1,0 +1,28 @@
+<!doctype html><html><body>
+<video id=hid playsinline muted autoplay style="display:none"></video>
+<video id=tiny playsinline muted autoplay style="position:fixed;left:0;top:0;width:2px;height:2px;opacity:0.01;pointer-events:none"></video>
+<video id=file playsinline muted style="position:fixed;left:0;top:0;width:2px;height:2px;opacity:0.01"></video>
+<script>
+window.res = {};
+const cuenta = (v, k, n) => new Promise((ok) => { let c = 0; const t0 = performance.now();
+  const cb = () => { c++; if (c < n && performance.now() - t0 < 3000) v.requestVideoFrameCallback(cb); };
+  v.requestVideoFrameCallback(cb); setTimeout(() => { res[k] = c; ok(); }, 3000); });
+(async () => {
+  const st = await navigator.mediaDevices.getUserMedia({ video: true });
+  for (const id of ['hid', 'tiny']) { const v = document.getElementById(id); v.srcObject = st.clone(); try { await v.play(); } catch (e) { res[id + '_err'] = String(e); } }
+  // aparte: video fuera del DOM
+  const off = document.createElement('video'); off.muted = true; off.playsInline = true; off.srcObject = st.clone(); try { await off.play(); } catch (e) { res.off_err = String(e); }
+  await Promise.all([cuenta(document.getElementById('hid'), 'hid', 1000), cuenta(document.getElementById('tiny'), 'tiny', 1000), cuenta(off, 'off', 1000)]);
+  // archivo: verde a 2.500 s, ámbar 1.0/1.5/2.0; 60 fps reproducido a 0.5x
+  const f = document.getElementById('file'); f.src = 'full.webm'; f.playbackRate = 0.5;
+  const c = document.createElement('canvas'); c.width = 320; c.height = 240; const ctx = c.getContext('2d', { willReadFrequently: true });
+  const fr = []; 
+  await new Promise((ok) => { const cb = (now, md) => { ctx.drawImage(f, 0, 0); const d = ctx.getImageData(160, 180, 1, 1).data, a = ctx.getImageData(160, 60, 1, 1).data; fr.push([md.mediaTime, md.presentedFrames, d[1] - d[0], a[0]]); if (!f.ended) f.requestVideoFrameCallback(cb); };
+    f.requestVideoFrameCallback(cb); f.onended = () => setTimeout(ok, 100); f.play(); });
+  res.file_n = fr.length;
+  const gaps = []; for (let i = 1; i < fr.length; i++) gaps.push(fr[i][1] - fr[i - 1][1]); res.file_gaps_max = Math.max(...gaps);
+  const g = fr.find((x) => x[2] > 100); const a = fr.find((x) => x[3] > 100);
+  res.file_verde_mediaTime = g && g[0]; res.file_ambar_mediaTime = a && a[0];
+  res.done = true;
+})().catch((e) => { res.err = String(e); res.done = true; });
+</script></body></html>

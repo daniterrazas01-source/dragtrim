@@ -1,0 +1,44 @@
+# Publica la sala de Race 1 vs 1 (fuente/sala/: Cloudflare Worker + Durable Object) en la cuenta de Cloudflare de Daniel
+# cuando cambia en main o en la rama de trabajo de Race 1 vs 1 (mientras no está en main); también "Re-run all jobs" en
+# la pestaña Actions sobre la última corrida.
+# Usa dos secretos del repositorio: CLOUDFLARE_API_TOKEN y CLOUDFLARE_ACCOUNT_ID (cómo sacarlos: fuente/sala/LEEME.md y
+# fuente/sala/PARA_EL_AGENTE.md). Sin ellos no publica nada y termina en verde con un aviso.
+name: Sala Race 1 vs 1
+on:
+  push:
+    branches: [main, claude/youthful-johnson-t02s8o]
+    paths: ['fuente/sala/**', 'fuente/pruebas/sala_real_test.mjs', '.github/workflows/sala.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    env:
+      HAY_CUENTA: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+    steps:
+      - name: Falta la cuenta de Cloudflare
+        if: env.HAY_CUENTA != 'true'
+        run: echo "::notice::Faltan los secretos CLOUDFLARE_API_TOKEN y CLOUDFLARE_ACCOUNT_ID; la sala no se publica (ver fuente/sala/LEEME.md)."
+      - uses: actions/checkout@v4
+        if: env.HAY_CUENTA == 'true'
+      - name: Publicar en Cloudflare
+        id: publicar
+        if: env.HAY_CUENTA == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: fuente/sala
+          wranglerVersion: '4'
+          command: deploy
+      # Dos "teléfonos" de prueba entran a la sala recién publicada (crear, unirse, reloj, mensajes, reconexión)
+      - uses: actions/setup-node@v4
+        if: env.HAY_CUENTA == 'true'
+        with:
+          node-version: 22
+      - name: Probar la sala publicada
+        if: env.HAY_CUENTA == 'true'
+        run: |
+          sleep 5
+          node fuente/pruebas/sala_real_test.mjs "${{ steps.publicar.outputs.deployment-url }}"

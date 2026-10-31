@@ -1,4 +1,4 @@
-DRAG TRIM beta 0.2 - Medidor de 1/8 y 1/4 de milla
+DRAG TREE beta 0.2 - Medidor de 1/8 y 1/4 de milla
 
 Estos archivos son la app. Para usarla en el teléfono hay que publicarlos en
 un sitio con https:// (el GPS del navegador solo funciona así).
