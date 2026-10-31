@@ -6,7 +6,7 @@
 # computadora (el mismo para los dos), cuándo programó cada teléfono su verde y cuándo la pintó, y qué cota mostró la app
 # ("Sala XXXXX · ±N ms"). Escenarios: Wi-Fi bueno, 4G, señal baja, uno bien y otro mal, señal muy mala, señal desigual
 # (el peor caso para sincronizar relojes) y cortes totales de señal justo en el momento de la salida.
-# Uso: python3 sincronia_test.py [rondas_por_escenario] -> capturas/sincronia.json; sale con código 1 si algo falla.
+# Uso: python3 sincronia_test.py [rondas_por_escenario] [cortes] -> capturas/sincronia.json; sale con código 1 si algo falla.
 import json, os, re, statistics, subprocess, sys, time, urllib.request
 from playwright.sync_api import sync_playwright
 from carrera_test import contexto, pagina, esperar, chk, fallas, SH, DIST, ARGS_MEDIOS
@@ -16,7 +16,8 @@ PWEB, PSALA, PCTL, PA, PB = 8781, 8782, 8783, 8784, 8785
 URL = f'http://localhost:{PWEB}/index.html'
 EN_SALA = "!document.getElementById('rcSala').hidden && !document.getElementById('rc').hidden"
 CONECTADOS = "/^Sala [A-Z0-9]{5} · ±/.test(document.getElementById('rcChip').textContent)"
-RONDAS = int(sys.argv[1]) if len(sys.argv) > 1 else 5
+RONDAS = int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1].isdigit() else 5
+SOLO_CORTES = 'cortes' in sys.argv[1:]   # solo los cortes de señal en la salida
 
 P = lambda base, var=0, picos=0, pico=(0, 0): {'base': base, 'var': var, 'picos': picos, 'pico': list(pico)}
 PERFILES = {
@@ -52,7 +53,7 @@ LUCES = """() => { if (window.__luz) return; window.__luz = [];
 CAL = "(() => { let s = 0; for (let i = 0; i < 20; i++) s += performance.timeOrigin + performance.now() - Date.now(); return s / 20; })()"
 ERR = "window.__carrera.R.E && window.__carrera.R.E.aOtro(performance.now()) - Date.now()"   # la sala usa Date.now() de aquí
 DATOS = """(k) => { const R = window.__carrera.R; const L = (window.__luz || []).filter((x) => x.ronda === k);
-  const prog = L.length && R.prog ? { tVerde: R.prog.tVerde, tArbol: R.prog.tArbol } : null;
+  const prog = L.some((x) => x.id === 'pre1') && R.prog ? { tVerde: R.prog.tVerde, tArbol: R.prog.tArbol } : null;
   return { fase: R.fase, ronda: R.ronda, prog, tVerde: R.ronda === k ? R.tVerde : null, luces: L, origin: performance.timeOrigin,
            msg: document.getElementById('rcMsg').textContent }; }"""
 
@@ -87,6 +88,7 @@ def una_carrera(A, B, cal, preparar=None):
     eA, eB = A.evaluate(ERR), B.evaluate(ERR)
     rtt = [pg.evaluate("window.__carrera.R.E.reloj.rtt_ms") for pg in (A, B)]
     r0 = A.evaluate('window.__carrera.R.ronda')
+    for pg in (A, B): pg.evaluate('window.__luz = []')   # solo las luces de esta carrera
     if preparar: preparar()
     A.click('#rcListo'); B.click('#rcListo')
     if not esperar(A, f"window.__carrera.R.ronda > {r0}", 30000):
@@ -104,7 +106,8 @@ def una_carrera(A, B, cal, preparar=None):
         r['resultado'] = 'los_dos'
         reloj = lambda d, t, c: d['origin'] + t - c
         r['dif_programada_ms'] = reloj(dA, dA['prog']['tVerde'], cal[0]) - reloj(dB, dB['prog']['tVerde'], cal[1])
-        r['dif_pintada_ms'] = reloj(dA, dA['tVerde'], cal[0]) - reloj(dB, dB['tVerde'], cal[1])
+        gA = next(x['t'] for x in dA['luces'] if x['id'] == 'g'); gB = next(x['t'] for x in dB['luces'] if x['id'] == 'g')
+        r['dif_pintada_ms'] = reloj(dA, gA, cal[0]) - reloj(dB, gB, cal[1])   # cuando cada uno prendió la verde en pantalla
         r['dif_esperada_ms'] = eB - eA
     elif not (ambA or ambB or verA or verB):
         r['resultado'] = 'cancelada'
@@ -148,7 +151,7 @@ def main():
             cal = [A.evaluate(CAL), B.evaluate(CAL)]
 
             # ---------------- señal de todo tipo: ¿las dos verdes juntas? ¿alguien corre solo?
-            for nombre, pa, pb in ESCENARIOS:
+            for nombre, pa, pb in ([] if SOLO_CORTES else ESCENARIOS):
                 perfil(PA, pa); perfil(PB, pb)
                 cod = emparejar(A, B)
                 if not cod:

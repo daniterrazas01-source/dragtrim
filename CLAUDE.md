@@ -359,6 +359,25 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
     - Falta: probarlo con dos teléfonos reales (por la sala con datos, y
       por QR con hotspot de iPhone o Android, iPhone con Android); calibrar el retraso de pantalla de cada modelo (hoy 0 ms,
       `ajusteMs`).
+    - **¿Las dos verdes salen juntas con señal mala?** (1 nov, Daniel: "que aunque esté baja la señal, ambos celulares suelten
+      el semáforo al mismo tiempo… que algún celular salga antes"). `sincronia_test.py` (dos teléfonos por la sala local, cada
+      uno detrás de `red_mala.mjs`: retraso, variación, picos y cortes por dirección, como red celular; mide con el reloj de la
+      computadora cuándo programó y pintó cada uno su verde). Resultados (4 carreras por escenario): Wi-Fi bueno 0.2–1.0 ms
+      (la app decía ±15), 4G 0.6–1.0 (±61–71), señal baja 0.7–4.3 (±176–191), uno Wi-Fi y otro señal baja 15–21 (±101), muy
+      mala 1–1.3 (±469; 1 de 4 se canceló sola por tardanza), **señal desigual** (a uno le sube lento y al otro le baja lento,
+      140 contra 15 ms: el peor caso, ningún reloj por red lo detecta) ~125 ms (±158). Siempre dentro del ± que muestra la app
+      (es una cota dura: rtt mínimo/2 de cada teléfono). La señal solo afecta el reloj; la salida se acuerda 2.5 s antes y cada
+      teléfono la cuenta con su propio reloj, así que un pico de señal en el momento del árbol no la mueve. Además, en
+      pantalla: un cuadro (8–17 ms) y el retraso de la pantalla de cada modelo (sin calibrar, `ajusteMs`). La boleta es justa
+      igual (cada quien contra su verde).
+      **Fallo encontrado y corregido en 0.7.4 (sin publicar al escribir esto):** con un corte total de señal de ~6 s justo al
+      mandar la salida, el árbol bajaba en un solo teléfono (el invitado; su "sí" o el "cancela" del anfitrión se quedaban
+      atorados). Ahora, durante la cuenta, cada teléfono manda un `latido` cada 250 ms (`LATIDO_MS`) y 1 s antes de los ámbar
+      (`REVISION_MS`) revisa que oyó al otro en los últimos 1.5 s (`SILENCIO_MS`); si no, cancela en los dos (el aviso llega
+      antes de los ámbar). Solo si el otro dijo en su `hola` que late (`late: true`, 0.7.4+). Si aun así el árbol bajó en uno
+      y luego llega el "cancela" del otro, esa carrera queda **anulada** (`R.anulada`, `run.race.anulada`): "esta carrera no
+      cuenta", sin WIN ni marcador. Con 0.7.3 los 3 cortes de 6 s daban árbol en uno solo; con 0.7.4, ninguno.
+      La sala (Cloudflare) no cambió: pasa cualquier tipo de mensaje.
     - Publicado en la **0.7** (31 oct, Daniel: "publícala para probarla, jugar con ella para ver si le sale algún fallo").
       Al publicar, qr_camara_test.py falló solo en el caso extremo "QR lejos y de lado" (lo lee, pero a veces en más de 5 s;
       en la máquina de la mañana pasaba y su código no cambió): depende de la velocidad de la máquina. Si molesta en
@@ -444,6 +463,7 @@ python3 horizontal_test.py  # teléfono acostado (iPhone, S24 Ultra, chico): rie
 node carrera_nucleo_test.js; node qr_test.js; node enlace_test.js; node sala_nucleo_test.mjs   # Race 1 vs 1 sin navegador
 python3 carrera_test.py  # Race 1 vs 1: rival simulado, roja, dos teléfonos por WebRTC (códigos en texto) y QR con la cámara
 python3 sala_test.py     # Race 1 vs 1 por la sala en internet (sala_local.mjs): crear, unirse, carrera, errores, sin señal
+python3 sincronia_test.py [rondas] [cortes]   # Race 1 vs 1 con señal mala (red_mala.mjs): qué tan juntas salen las verdes y que nunca baje en uno solo (~11 min)
 python3 enlace_test.py; python3 qr_camara_test.py   # enlace WebRTC entre dos páginas; leer QR con cámara falsa
 python3 mcheck.py ../matlab/*.m   # revisión estructural de MATLAB (aquí no hay MATLAB/Octave)
 node semaforo_sim_test.js   # simulador del árbol y la cámara
