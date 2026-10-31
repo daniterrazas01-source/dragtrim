@@ -162,7 +162,7 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    unidad `--u` (1vh) se cambian a las del teléfono; `subir()` en vez de `window.scrollTo(0, 0)`; sin deslizar entre
    pestañas). Las ventanas encima (Práctica, Race 1 vs 1, carga) se giran con la app. Al girar, iPhone anima su giro y la app
    se compensa al terminar.
-   **Pulido con impeccable** (31 oct, Daniel: "revisar la interfaz en general… y corregirlos"; en la rama, sin publicar):
+   **Pulido con impeccable** (31 oct, Daniel: "revisar la interfaz en general… y corregirlos"; publicado en la 0.7.3):
    avisos `.msg`/`.avisos` como recuadro con tinte (sin la raya gruesa a la izquierda), `--ease-pop` sin rebote, `.stat` con el
    valor abajo (de lado "Frecuencia GPS" ocupaba dos renglones), boletas sin cortes ("1/4&nbsp;MI", "PRO&nbsp;.400", "RACE 1
    VS 1"; de lado la boleta de la carrera más ancha), `::selection`/caret/deslizadores con el color de la app. Detector:
@@ -402,7 +402,9 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.7.2** (31 oct 2026: la app con el teléfono
+caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.7.3** (31 oct 2026: pulido con impeccable:
+avisos como recuadro con tinte, sin rebote, sensores alineados, boletas sin cortes y la boleta de la carrera más ancha de lado,
+colores de selección/cursor/deslizadores; punto 7); antes **0.7.2** (31 oct 2026: la app con el teléfono
 acostado y Ajustes → Orientación "No girar" / "Solo Medir" / "Toda la app", punto 7 "Teléfono acostado"); antes **0.7.1** (31 oct 2026: Race 1 vs 1, "Salir de la
 carrera" desde la boleta de una corrida cancelada ya corriendo (o "No salió") no hacía nada y la boleta vieja reaparecía:
 `terminar()` y `volver()` en carrera.js ahora siempre regresan a Medir; carrera_test.py E); antes **0.7** (31 oct 2026: Race 1 vs 1, punto 14: sala
