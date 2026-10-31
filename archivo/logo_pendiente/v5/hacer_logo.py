@@ -189,10 +189,12 @@ def _letras_bloque():
                    (G - 0.16, 1), (0, 1), (0, 0.18)]]),
     }
     return letras
-def svg_drag_bloque(izq, der, base, color, f_izq=1.0, f_der=1.0):
+def svg_drag_bloque(izq, der, base, color, f_izq=1.0, f_der=1.0, borde_d=None):
     """DRAG en bloque inclinada hacia atrás, que llena de izq a der (tinta); línea base en base. Devuelve (svg, alto).
     f_izq/f_der (c9): alto en la orilla izquierda y derecha, en veces el alto de antes; en medio va en línea recta, así la
-    D queda más grande y las letras bajan hasta la G (la orilla de arriba queda inclinada, como la marcó Daniel)."""
+    D queda más grande y las letras bajan hasta la G (la orilla de arriba queda inclinada, como la marcó Daniel).
+    borde_d (c14, 31 oct, Daniel rellenó la D): la orilla izquierda de la D baja desde su esquina de arriba con esta
+    inclinación hacia atrás (grados) en vez de la de la letra (ATRAS): la D queda rellena en el triángulo de la izquierda."""
     L, sep, t = _letras_bloque(), 0.1, math.tan(math.radians(ATRAS))
     total = sum(L[c][0] for c in 'DRAG') + 3 * sep
     H = (der - izq) / (total + t * f_izq)      # arriba a la izquierda sobresale t·(alto de la D): cabe de izq a der
@@ -206,6 +208,8 @@ def svg_drag_bloque(izq, der, base, color, f_izq=1.0, f_der=1.0):
             for px, py in pts:
                 u = H * (x + px); y = py * alto(u); hmax = max(hmax, y)
                 q.append((x0 + u - t * y, base - y))
+            if c == 'D' and pts is polis[0] and borde_d is not None:   # esquina de abajo a la izquierda de la D
+                q[0] = (x0 - t * alto(0) + math.tan(math.radians(borde_d)) * alto(0), base)
             d.append('M' + ' L'.join(f'{a:.2f} {b:.2f}' for a, b in q) + ' Z')
         x += w + sep
     return f'<path fill="{color}" fill-rule="evenodd" d="{" ".join(d)}"/>', hmax, x0 - t * alto(0)
@@ -317,10 +321,13 @@ def cursiva(txt, ancho):
     k = ancho / x
     return [(d, dx * k) for d, dx in gl], ancho, arriba * k, -abajo * k, k
 
-def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag='inter', letra_ree='inter', giro=0.0, lema=None, crece=(1.0, 1.0), giro_t=0.0, yaw=0.0, inclina_t=None, junto=0.085, lema_ancho=0.78):
+def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag='inter', letra_ree='inter', giro=0.0, lema=None, crece=(1.0, 1.0), giro_t=0.0, yaw=0.0, inclina_t=None, junto=0.085, lema_ancho=0.78, borde_d=None, inclina_t2=None):
     """C5 (26 oct, dibujo de Daniel): la T sube y se monta un poco sobre la D y la R de DRAG (va encima, con su
     contorno); R, E, E más largas hacia abajo, hasta el pie del árbol (se estiran a lo alto sin cambiar la
-    inclinación); contorno más grueso. color: DRAG; tinta_tree/contorno: TREE y su contorno."""
+    inclinación); contorno más grueso. color: DRAG; tinta_tree/contorno: TREE y su contorno.
+    c14 (31 oct, Daniel): borde_d = orilla izquierda de la D (ver svg_drag_bloque); inclina_t2 = el árbol se dibuja con
+    esta inclinación (grados; negativo = la punta de arriba hacia atrás/izquierda) girando sobre su pie, pero REE, DRAG y
+    el lema se acomodan como con inclina_t (no se mueven)."""
     C, m = 300.0, 60.0
     sube = 0.32 * C                                  # cuánto sube la T: su barra se monta 0.12 C sobre DRAG
     Y_top = -C                                       # arriba de R, E, E (donde estaba)
@@ -337,6 +344,10 @@ def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag
         g_rectos, g_cajas, g_luces, derecha, xmin, xmax, Ht = arbol2(C, tinta_tree, 1.22,
                                                                      ('ambar', 'ambar', 'ambar', 'verde', 'rojo'), piv, yaw, giro_t, inclina=inclina_t)
         tf_rectos = f'translate(0 {Y_t:.2f})'
+    xmin_dibujo = xmin
+    if inclina_t2 is not None:   # c14: el árbol que se dibuja, inclinado sobre su pie; el acomodo sigue con el de antes
+        g_rectos, g_cajas, g_luces, _, xmin_dibujo, _, _ = arbol2(C, tinta_tree, 1.22, ('ambar', 'ambar', 'ambar', 'verde', 'rojo'),
+                                                                  piv, yaw, giro_t, inclina=inclina_t2)
     glifos, ancho_ree, izq_ree, der_ree, s = palabra('REE', C)
     gap = (junto + 2 * grueso) * C                 # junto: aire entre el árbol y la R (sin contar el contorno)
     x_ree = max(d + gap - (izq_ree + TAN * (Y_b - Y)) for Y in [Y_top + (Y_b - Y_top) * k / 300 for k in range(301)]
@@ -357,9 +368,9 @@ def logo_c5(color='#111', tinta_tree='#111', contorno='#fff', grueso=0.035, drag
     # DRAG a todo lo ancho, del árbol a la última E; va abajo de la T (la T se monta encima)
     base_d = Y_top - 0.2 * C
     if drag == 'bloque':   # c6: DRAG en letra de bloque inclinada hacia atrás
-        g_drag, Cd, izq_drag = svg_drag_bloque(izq_total, der_total, base_d, color, *crece)
+        g_drag, Cd, izq_drag = svg_drag_bloque(izq_total, der_total, base_d, color, *crece, borde_d=borde_d)
         der_drag = der_total
-        izq_total = min(izq_total, izq_drag)   # la D más alta sobresale a la izquierda (va inclinada hacia atrás)
+        izq_total = min(izq_total, izq_drag, xmin_dibujo)   # la D más alta sobresale a la izquierda (va inclinada hacia atrás)
     else:
         _, _, izq_d, der_d, _ = palabra('DRAG', C)
         Cd = C * (der_total - izq_total) / (der_d - izq_d)

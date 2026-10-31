@@ -75,3 +75,8 @@ calcomanía; al retomar, preguntarle qué partes no coinciden.
 - **Aprobado (C13) y en la app desde beta 0.6.3** (26 oct): `hacer_logo.py` también genera `fuente/app/src/logo.svg`
   (barra de arriba, sin lema, con clases para los colores del tema) y `fuente/app/src/icono/icono*.png` (íconos).
 
+- **C14 (en pausa, 31 oct)**: Daniel marcó dos cambios sobre el C13: rellenar la D hasta su raya (la orilla izquierda de
+  la D baja más derecha: `borde_d` en `svg_drag_bloque`/`logo_c5`) e inclinar el árbol "hacia enfrente" (`inclina_t2`:
+  el árbol se dibuja con otra inclinación sin mover REE ni DRAG). Se probaron `borde_d=5.1` con `inclina_t2=-5.1` y `-12`
+  y luego Daniel lo dejó de lado para hacer el rediseño. Sin elegir; el logo de la app sigue siendo el C13 (los dos
+  parámetros valen None por defecto y no cambian nada).
