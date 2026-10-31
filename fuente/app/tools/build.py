@@ -34,6 +34,15 @@ html = html.replace('/*APP*/', (SRC / 'app.js').read_text(encoding='utf-8'))
 html = html.replace('/*PRACTICA*/', (SRC / 'practica.js').read_text(encoding='utf-8'))
 html = html.replace('/*ROOSTER*/', (SRC / 'rooster.js').read_text(encoding='utf-8'))
 html = html.replace('/*CALC*/', (SRC / 'calculadora.js').read_text(encoding='utf-8'))
+# Race 1 vs 1 (0.7): generador y lector de QR (vendor/, licencias en vendor/LICENCIAS.md), enlace WebRTC con sincronía de
+# relojes, lógica de la carrera y sus pantallas. Todo adentro para que empareje y corra sin internet.
+_qrlib = '\n'.join((SRC / 'vendor' / f).read_text(encoding='utf-8') for f in ('qrcode.js', 'jsQR.js'))
+for marca, texto in (('/*QRLIB*/', _qrlib), ('/*QR*/', (SRC / 'qr.js').read_text(encoding='utf-8')),
+                     ('/*ENLACE*/', (SRC / 'enlace.js').read_text(encoding='utf-8')),
+                     ('/*CARRERA_NUCLEO*/', (SRC / 'carrera_nucleo.js').read_text(encoding='utf-8')),
+                     ('/*CARRERA*/', (SRC / 'carrera.js').read_text(encoding='utf-8'))):
+    assert html.count(marca) == 1, f'falta {marca} en la plantilla'
+    html = html.replace(marca, texto.replace('</script', '<\\/script'))
 
 manifest = {
     "name": "Drag Tree", "short_name": "Drag Tree",

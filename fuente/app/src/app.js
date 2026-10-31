@@ -29,7 +29,7 @@
 
   function cfgActual() {
     return {
-      distancia_final: S.dist, rollout_ft: S.rollout_ft,
+      distancia_final: ses.distCarrera || S.dist, rollout_ft: S.rollout_ft,   // en Race 1 vs 1 manda la distancia de la carrera
       v_confirma: S.v_confirma_kmh / 3.6, t_confirma: S.t_confirma, usar_acc: S.usar_acc,
     };
   }
@@ -295,7 +295,8 @@
 
   // ------------------------------------------------------------ sesión
   const ses = { fase: 'idle', det: null, demo: false, oculta: false, demoTimer: null, rojoTimer: null, ignorados: [],
-                carril: null, lector: null, camInfo: null, camFalla: null, camT0: NaN, demoSim: null };
+                carril: null, lector: null, camInfo: null, camFalla: null, camT0: NaN, demoSim: null,
+                carrera: null, distCarrera: null };   // Race 1 vs 1: ganchos de carrera.js y la distancia de la carrera
   const CAM_MAX_MIN = 30;
 
 
@@ -429,6 +430,8 @@
     if (sens.velDePos && !ses.demo) R.avisos.push('Tu navegador no entrega la velocidad GPS; se calculó con la posición (menos preciso).');
     if (ses.oculta && !ses.demo) R.avisos.push('La app estuvo en segundo plano durante la sesión; puede faltar información.');
     const run = construirRun(R, cfg);
+    // Race 1 vs 1: la carrera calcula la reacción contra su verde y la guarda en run.race
+    if (ses.carrera && ses.carrera.alTerminar) { try { ses.carrera.alTerminar(run, R); } catch (e) { console.error(e); } }
     let datosCam = null;
     if (S.cam && (ses.lector || ses.camInfo || ses.demo)) {
       $('#sesTexto').textContent = 'Leyendo el semáforo…';
@@ -440,7 +443,8 @@
     if (datosCam && S.cam_cuadros !== false) await DB.putCam(datosCam);
     if (run.cam && !run.demo) aprenderSesgo();
     ses.fase = 'resultado';
-    mostrarResultado(run, true);
+    if (ses.carrera && ses.carrera.mostrar) ses.carrera.mostrar(run);
+    else mostrarResultado(run, true);
   }
 
   function construirRun(R, cfg) {
@@ -581,7 +585,7 @@
   function salirSesion() {
     pararDemo();
     detenerCamara();
-    ses.fase = 'idle'; ses.demo = false;
+    ses.fase = 'idle'; ses.demo = false; ses.carrera = null; ses.distCarrera = null;
     document.body.classList.remove('sesion');
     $('#medirIdle').hidden = false; $('#medirSesion').hidden = true;
     if (sens.fuente === 'demo') { sens.fuente = 'real'; limpiarBuffers(); sens.ultGps = null; sens.gpsDts = []; }
@@ -852,10 +856,14 @@
   function mostrarResultado(run, enSesion) {
     const v = $('#vResultado');
     const cam = htmlCam(run);
+    // Race 1 vs 1: la boleta de los dos carriles va arriba; si la carrera sigue abierta, un botón para volver a ella
+    const race = run.race && window.DragCarrera ? DragCarrera.htmlBoleta(run) : '';
+    const volver = run.race && window.DragCarrera && DragCarrera.activa() ? '<button class="primary go" id="rVolverCarrera">Volver a la carrera</button>' : '';
     if (!run.ok) {
-      v.innerHTML = `<h2>Sin resultado</h2><p class="msg err">${esc(run.mensaje)}</p>
+      v.innerHTML = `${race}<h2>Sin resultado</h2><p class="msg err">${esc(run.mensaje)}</p>
         ${run.avisos.length ? `<ul class="avisos">${run.avisos.map((a) => `<li>${esc(a)}</li>`).join('')}</ul>` : ''}
         <div class="actions">
+          ${volver}
           ${enSesion ? botonesNueva() : ''}
           <button class="ghost" id="rExport">Exportar datos crudos</button>
           <button class="ghost" id="rRecalc">Recalcular con mis ajustes actuales</button>
@@ -871,7 +879,7 @@
       }).join('');
       const c = run.calidad;
       const fila = (k, val) => `<dt>${k}</dt><dd>${val}</dd>`;
-      v.innerHTML = `
+      v.innerHTML = `${race}
         <div class="slip">
           <header><b>DRAG TREE</b><span>${esc(fechaCorta(run.fecha))} &nbsp; ${Df < 300 ? '1/8 MI' : '1/4 MI'}</span></header>
           <table>
@@ -913,6 +921,7 @@
         </div>
         ${cam.seccion}
         <div class="actions">
+          ${volver}
           ${enSesion ? botonesNueva() : ''}
           <button class="ghost" id="rExport">Exportar datos</button>
           <button class="ghost" id="rRecalc">Recalcular con mis ajustes actuales</button>
@@ -929,6 +938,7 @@
     on('rNuevaIzq', () => { if (ses.demo) { carrilDemo = 'izq'; iniciarDemo(); } else armar('izq'); });
     on('rNuevaDer', () => { if (ses.demo) { carrilDemo = 'der'; iniciarDemo(); } else armar('der'); });
     enlazarCam(run, enSesion);
+    on('rVolverCarrera', () => DragCarrera.volver());
     on('rSalir', salirSesion);
     on('rExport', () => exportar(run));
     on('rRecalc', async () => {
@@ -1057,6 +1067,7 @@
       { name: `drag_raw_meta_${st}.json`, text: JSON.stringify(Object.assign({ version: 'app ' + run.app, distancia_final: run.cfg.distancia_final, t_inicio_busqueda: run.cfg.t_inicio_busqueda, rollout_ft: run.cfg.rollout_ft, simulada: run.demo },
         camLeida(run) ? { semaforo: { rt_boleta: run.cam.rt.rt_boleta, rt_verde: run.cam.rt.rt_verde, tipo: run.cam.rt.tipo, roja: run.cam.rt.roja, metodo: run.cam.rt.metodo, nivel: run.cam.rt.nivel } } : {})) },
     ];
+    if (run.race) files.push({ name: `drag_race_meta_${st}.json`, text: JSON.stringify(run.race) });   // Race 1 vs 1: programa, verde, sincronía, los dos resultados
     const gy = run.raw.gyr;
     if (gy && gy.t && gy.t.length) files.push({ name: `drag_raw_gyro_${st}.csv`, text: csv({ t: 't_s', a: 'alpha_dps', b: 'beta_dps', g: 'gamma_dps' }, gy) });
     // semáforo: rasgos por cuadro (CSV), meta, clip de la caja del árbol (luma) y la tira de revisión
@@ -1114,8 +1125,9 @@
       const li = document.createElement('li'), b = document.createElement('button');
       const et = r.ok ? etPrincipal(r) : null;
       const rt = CAM_DEV && camLeida(r) ? (r.cam.rt.roja ? ', roja' : `, RT ${txtRT(r.cam.rt, formatoRT())}`) : '';
-      const sub = r.ok ? `${nombreDist(r.cfg.distancia_final)}, trampa ${fmtV(r.trampa_kmh, 0)} ${velU()}${rt}${r.demo ? ', simulada' : ''}${r.completo ? '' : ', incompleta'}`
-        : 'Sin resultado' + (r.demo ? ', simulada' : '');
+      const carrera = r.race && window.DragCarrera ? DragCarrera.resumenHist(r) + ', ' : '';
+      const sub = carrera + (r.ok ? `${nombreDist(r.cfg.distancia_final)}, trampa ${fmtV(r.trampa_kmh, 0)} ${velU()}${rt}${r.demo ? ', simulada' : ''}${r.completo ? '' : ', incompleta'}`
+        : 'Sin resultado' + (r.demo ? ', simulada' : ''));
       b.innerHTML = `<span class="when">${esc(fechaCorta(r.fecha))}</span><span class="et">${r.ok ? fmtT(et.t) : '—'}</span><span class="sub">${esc(sub)}</span>`;
       b.onclick = () => mostrarResultado(r, false);
       li.appendChild(b); ul.appendChild(li);
@@ -1369,7 +1381,7 @@
       c = encima([...rgba(getComputedStyle(raiz).getPropertyValue('--velo-color')).slice(0, 3), velo], ARRIBA[fid]);
     } else c = rgba(getComputedStyle(document.body).backgroundColor).slice(0, 3);
     // lo que tapa la pantalla completa, de abajo hacia arriba
-    for (const el of [document.body.classList.contains('practica') && $('#ptOverlay'), $('#camApuntar'), $('#carga')])
+    for (const el of [document.body.classList.contains('practica') && $('#ptOverlay'), document.body.classList.contains('carrera') && $('#rc'), $('#camApuntar'), $('#carga')])
       if (el && !el.hidden) c = encima(rgba(getComputedStyle(el).backgroundColor), c);
     const hex = '#' + c.map((x) => Math.round(x).toString(16).padStart(2, '0')).join('');
     if (meta.content !== hex) meta.content = hex;
@@ -1499,7 +1511,7 @@
       document.getElementById(o.getAttribute('aria-controls')).hidden = !(abrir && o === b);
     }
   };
-  $('#btnCancelar').onclick = () => { salirSesion(); };
+  $('#btnCancelar').onclick = () => { const c = ses.carrera; salirSesion(); if (c && c.alCancelar) c.alCancelar(); };   // Race 1 vs 1: avisa al otro teléfono
   $('#btnTerminar').onclick = () => finCorrida('manual');
 
   // ------------------------------------------------------------ instalación (PWA)
@@ -1563,5 +1575,56 @@
 
   if (!window.isSecureContext) mensaje('Abre la app desde su enlace https:// para poder usar el GPS. La corrida simulada sí funciona aquí.', true);
   tickEstado();
+
+  // ------------------------------------------------------------ Race 1 vs 1 (carrera.js)
+  // Arma la medición de siempre para una carrera: con la distancia de la carrera y los ganchos al terminar (reacción
+  // contra su verde, boleta de los dos carriles). Con `simulado`, el auto de este teléfono es simulado (rival simulado
+  // sin sensores, y pruebas).
+  function armarCarrera(o) {
+    if (o.simulado) {
+      pararDemo();
+      sens.fuente = 'demo'; ses.demoSim = null;
+      limpiarBuffers(); sens.ultGps = null; sens.gpsDts = [];
+    }
+    ses.demo = !!o.simulado;
+    ses.distCarrera = o.dist || null;
+    armar(null);
+    ses.carrera = { alTerminar: o.alTerminar, mostrar: o.mostrar, alCancelar: o.alCancelar };
+    $('#sesTitulo').textContent = 'Race 1 vs 1';
+    $('#sesTexto').textContent = 'Medición armada: al pasar la meta sale la boleta de los dos carriles.';
+    $('#gpsLine').textContent = o.simulado ? 'Tu auto es simulado' : '';
+  }
+  // Auto simulado alineado con el árbol: la sesión simulada se reproduce en tiempo real con sus marcas corridas
+  // `off` segundos (lo de antes de ahora entra de golpe: burnout y alineación ya pasaron).
+  function simularCarrera(sim, off) {
+    pararDemo(); ses.demoSim = sim;
+    let ig = 0, ia = 0;
+    const paso = () => {
+      const ahora = nowS();
+      while (ia < sim.acc.t.length && sim.acc.t[ia] + off <= ahora) { pushAcc(sim.acc.t[ia] + off, sim.acc.ax[ia], sim.acc.ay[ia], sim.acc.az[ia]); ia++; }
+      while (ig < sim.gps.t.length && sim.gps.t[ig] + off <= ahora) {
+        pushGps({ t: sim.gps.t[ig] + off, v: sim.gps.v[ig], hacc: sim.gps.hacc[ig], lat: sim.gps.lat[ig], lon: sim.gps.lon[ig] }); ig++;
+      }
+      if (ig >= sim.gps.t.length) { pararDemo(); if (ses.fase === 'corrida') finCorrida('tiempo'); }
+    };
+    paso();
+    ses.demoTimer = setInterval(paso, 50);
+  }
+  // La boleta de la carrera ocupa la pantalla de resultado (sin pestañas, como al terminar una medición)
+  function pantallaResultado(html) {
+    const v = $('#vResultado');
+    v.innerHTML = html;
+    $('#medirSesion').hidden = true;
+    document.body.classList.add('sesion');
+    mostrarVista('vResultado');
+    window.scrollTo(0, 0);
+    return v;
+  }
+  window.DragApp = {
+    version: APP_VERSION, ajustes: S,
+    sensoresActivos: () => sens.activo, activarSensores, pedirPantalla,
+    armarCarrera, simularCarrera, salir: salirSesion, fase: () => ses.fase,
+    guardar: (run) => DB.put(run), mostrarResultado, pantallaResultado, formatoRT, velU, velConv,
+  };
   window.__dragtrim = { S, buf, ses, sens, DB, pintarCam };   // para pruebas
 })();

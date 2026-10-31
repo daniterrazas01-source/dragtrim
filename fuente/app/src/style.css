@@ -649,3 +649,81 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   * , *::before, *::after { transition: none !important; animation: none !important; }
 }
 :root[data-sin-anim] *, :root[data-sin-anim] *::before, :root[data-sin-anim] *::after { transition: none !important; animation: none !important; }
+
+/* ============================================================ Race 1 vs 1 (0.7, carrera.js)
+   Pantalla completa oscura como Práctica (con fondo se ve detrás, con velo); los paneles, selectores y botones de la app
+   toman colores oscuros aquí aunque el tema sea claro. Después de la verde se quita: la medición queda neutral. */
+body.carrera { overflow: hidden; }
+body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
+.rc {
+  --asphalt: #24282c; --surface: #2f3439; --surface-2: #383e44; --line: #4a5158; --chalk: #eceee9; --chalk-dim: #a5abb0;
+  --amber: #ffb020; --green: #36d46b; --red: #f0453a; color-scheme: dark;
+  position: fixed; inset: 0; z-index: 20; background: #141618; color: var(--chalk);
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: env(safe-area-inset-top) 0 calc(18px + env(safe-area-inset-bottom));
+}
+:root[data-fondo] .rc {
+  background: rgba(10, 10, 11, .86); --surface: rgba(16, 16, 18, .93); --surface-2: rgba(38, 38, 42, .94);
+  --line: rgba(255, 255, 255, .24); --sticker: #ffffff; --tinta: #0e0e0f; --amber: var(--acento);
+}
+.rc-top { display: flex; align-items: center; gap: 10px; max-width: 560px; margin: 0 auto; padding: 10px 16px; }
+.rc-tit { flex: 1; font: 900 21px/1 'Rooster', var(--num); font-style: italic; font-synthesis: none; }
+.rc-chip { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 99px; border: 1px solid var(--line); color: var(--chalk-dim); white-space: nowrap; }
+.rc-chip.ok { border-color: var(--green); color: #8be3a9; }
+.rc-chip.mal { border-color: var(--red); color: #ff8d84; }
+.rc.en-arbol .rc-chip { display: none; }
+.rc-paso { max-width: 560px; margin: 0 auto; padding: 4px 16px 16px; display: grid; gap: 10px; align-content: start; }
+.rc-paso > .primary, .rc-paso > .ghost { margin-top: 0; }
+.rc-intro { margin: 0 0 4px; color: var(--chalk-dim); }
+.rc-red { display: flex; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+.rc-red svg { width: 60px; height: 38px; flex: none; color: #8be3a9; }
+.rc-red p { margin: 0; font-size: 14px; color: var(--chalk-dim); }
+.rc-red b { color: var(--chalk); }
+.rc-nota { margin: 4px 0 0; font-size: 13px; color: var(--chalk-dim); }
+.rc-pasos { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--amber); }
+.rc-h { margin: 0; font: 700 20px/1.25 var(--body); }
+.rc-qr { justify-self: center; width: min(80vw, 330px); aspect-ratio: 1; background: #fff; border-radius: 16px; padding: 10px; display: grid; place-items: center; }
+.rc-qr canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.rc-qr canvas[width="0"] { visibility: hidden; }
+.rc-txt { margin: 0; font-size: 15px; color: var(--chalk-dim); }
+.rc-txt.err { color: #ff8d84; }
+.rc-centro { text-align: center; font-size: 14px; }
+.rc-espera { margin: 0; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--chalk-dim); }
+.rc-punto { width: 10px; height: 10px; border-radius: 50%; background: var(--green); animation: rc-latido 1.2s ease-in-out infinite; }
+@keyframes rc-latido { 50% { opacity: .2; } }
+.rc-link { justify-self: center; background: none; border: 0; padding: 8px; color: #7cc4ff; font-size: 14px; text-decoration: underline; cursor: pointer; }
+.rc-visor { position: relative; justify-self: center; width: min(80vw, 330px); aspect-ratio: 1; border-radius: 16px; overflow: hidden; background: #000; }
+.rc-visor video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rc-marco { position: absolute; inset: 13%; border: 3px solid rgba(255, 255, 255, .9); border-radius: 12px; box-shadow: 0 0 0 999px rgba(0, 0, 0, .28); }
+.rc-lab { font-size: 13px; color: var(--chalk-dim); margin-top: 4px; }
+#rcTexto textarea { width: 100%; background: #0e0f10; color: var(--chalk); border: 1px solid var(--line); border-radius: 10px; padding: 10px; font: 13px/1.3 var(--mono); word-break: break-all; resize: vertical; }
+.rc-carriles { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.rc-carril { display: grid; gap: 2px; align-content: start; background: var(--surface); border: 2px solid var(--line); border-radius: 14px; padding: 10px 12px; }
+.rc-carril.mio { border-color: var(--amber); }
+.rc-cnom { font-size: 12px; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: .06em; }
+.rc-quien { font: 900 19px/1.15 'Rooster', var(--num); font-style: italic; font-synthesis: none; overflow-wrap: anywhere; }
+.rc-est { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 3px; font-size: 13px; }
+.rc-est:empty { display: none; }
+.rc-est li::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: var(--line); vertical-align: 1px; }
+.rc-est li.si { color: var(--chalk); }
+.rc-est li.si::before { background: var(--green); }
+.rc-est li.no { color: var(--chalk-dim); }
+.rc-marcador { margin: 0; text-align: center; font: 700 16px/1.2 var(--num); }
+.rc-cfg { margin-top: 0; }
+.rc-cfg .seg button:disabled { opacity: .55; }
+/* árbol: los dos carriles, como Práctica; "Tú" debajo de tu carril */
+.rc-arbol { display: grid; justify-items: center; align-content: center; gap: 14px; min-height: calc(100dvh - 90px - env(safe-area-inset-top)); padding-bottom: 20px; }
+.rc-arbol .pt-tree { gap: 22px; }
+.rc-col { display: grid; justify-items: center; gap: 10px; }
+.rc-quien-arbol { font: 900 18px/1 'Rooster', var(--num); font-style: italic; font-synthesis: none; color: var(--chalk-dim); }
+.rc-fase { margin: 0; min-height: 1.1em; font: 900 28px/1 'Rooster', var(--num); font-style: italic; font-synthesis: none; }
+/* boleta de la carrera: tres columnas (dato, izquierdo, derecho) */
+.rc-slip td:nth-child(2), .rc-slip td:nth-child(3) { text-align: right; color: var(--ink); font-size: 16px; }
+.rc-slip tr.hd td { font-size: 11px; letter-spacing: .04em; }
+.rc-slip tr.hd td:nth-child(2), .rc-slip tr.hd td:nth-child(3) { color: var(--ink-dim); font-size: 11px; }
+.rc-slip tr.et td:nth-child(2), .rc-slip tr.et td:nth-child(3) { font-size: 20px; }
+.rc-slip tr.rc-wins td { padding-top: 8px; }
+.rc-win { display: inline-block; background: #111; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 13px; letter-spacing: .12em; }
+.rc-ganador { margin: 14px 0 6px; text-align: center; font: 900 21px/1.2 'Rooster', var(--num); font-style: italic; font-synthesis: none; }
+.rc-ganador.dudosa { font-size: 18px; }
+.rc-ganador.espera { font: 600 15px/1.35 var(--body); color: var(--chalk-dim); }

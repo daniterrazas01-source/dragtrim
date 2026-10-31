@@ -79,14 +79,15 @@
         </div>
       </div>
       <!-- Atajos (0.6.8, Daniel): tres botones cuadrados uno encima de otro, en una caja oscura como un semáforo, para que
-           se vea más el fondo; Race 1 vs 1 y "Antes de salir a la pista" se prenden y abren su explicación a la derecha -->
+           se vea más el fondo; "Antes de salir a la pista" se prende y abre su explicación a la derecha; Race 1 vs 1 abre
+           la carrera (0.7, carrera.js) -->
       <div class="atajos">
         <div class="atajos-arbol" role="group" aria-label="Más opciones">
           <button type="button" class="atajo" id="btnDemo">
             <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.2 6.6 13.6 10l-5.4 3.4z" fill="currentColor"/></svg>
             <span>Corrida simulada</span>
           </button>
-          <button type="button" class="atajo" id="atRace" aria-expanded="false" aria-controls="race1v1">
+          <button type="button" class="atajo" id="atRace" aria-haspopup="dialog">
             <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 18V2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4.9 3h11.6v8.4H4.9z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4.9 3h2.9v2.8H4.9zm5.8 0h2.9v2.8h-2.9zM7.8 5.8h2.9v2.8H7.8zm5.8 0h2.9v2.8h-2.9zM4.9 8.6h2.9v2.8H4.9zm5.8 0h2.9v2.8h-2.9z" fill="currentColor"/></svg>
             <span>Race 1 vs 1</span>
           </button>
@@ -94,10 +95,6 @@
             <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m2.6 5 1.6 1.6L7 3.6M2.6 12l1.6 1.6L7 10.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.6 5.4h7.8M9.6 12.4h7.8M9.6 17h7.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
             <span>Antes de la pista</span>
           </button>
-        </div>
-        <div class="howto atajo-panel" id="race1v1" hidden>
-          <p class="atajo-tit">Race 1 vs 1 <span class="beta-tag">en desarrollo</span></p>
-          <p>Para pistas sin semáforo o un lugar controlado: dos autos, cada uno con la app en su teléfono. La app da la salida a los dos al mismo tiempo, mide los tiempos de ambos y al final imprime el ticket de la carrera en un solo teléfono.</p>
         </div>
         <div class="howto atajo-panel" id="antesPista" hidden>
           <p class="atajo-tit">Antes de salir a la pista</p>
@@ -433,6 +430,103 @@
   </div>
 </div>
 
+<!-- ============ RACE 1 VS 1 (0.7, carrera.js): inicio, emparejar con QR, sala, árbol ============ -->
+<div class="rc" id="rc" hidden role="dialog" aria-labelledby="rcTitulo">
+  <div class="rc-top">
+    <button class="pt-x" id="rcSalir">Salir</button>
+    <b class="rc-tit" id="rcTitulo">Race 1 vs 1</b>
+    <span class="rc-chip" id="rcChip" hidden></span>
+  </div>
+
+  <section class="rc-paso" id="rcInicio">
+    <p class="rc-intro">Dos autos, cada uno con Drag Tree en su teléfono. La app baja el árbol en los dos al mismo tiempo, mide a cada quien contra su propia verde y al final saca la boleta de los dos carriles.</p>
+    <div class="rc-red">
+      <svg viewBox="0 0 64 40" aria-hidden="true"><rect x="2" y="6" width="17" height="30" rx="3.5" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="45" y="6" width="17" height="30" rx="3.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M24 17a11 11 0 0 1 16 0M27.4 21a6.4 6.4 0 0 1 9.2 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="32" cy="25.4" r="2.2" fill="currentColor"/></svg>
+      <p><b>Los dos teléfonos en la misma red Wi-Fi.</b> En uno prende el punto de acceso (hotspot) y conecta el otro a esa red. No necesita internet.</p>
+    </div>
+    <button class="primary go" id="rcCrear">Crear carrera</button>
+    <button class="ghost" id="rcUnirme">Unirme a una carrera</button>
+    <button class="ghost" id="rcSimulado">Probar con rival simulado</button>
+    <p class="rc-nota">Solo en pista o en un lugar cerrado al tráfico. Cada piloto mira la pista, no el teléfono: el árbol se apaga en cuanto sale la verde.</p>
+  </section>
+
+  <section class="rc-paso" id="rcQr" hidden>
+    <span class="rc-pasos" id="rcQrPaso">Paso 1 de 2</span>
+    <h3 class="rc-h" id="rcQrTit">Escanea este código con el otro teléfono</h3>
+    <div class="rc-qr"><canvas id="rcQrCanvas" aria-label="Código para emparejar"></canvas></div>
+    <p class="rc-txt" id="rcQrTxt"></p>
+    <button class="primary" id="rcLeerResp" hidden>Ya lo escaneó: leer su código</button>
+    <p class="rc-espera" id="rcQrEspera" hidden><i class="rc-punto"></i> Esperando la conexión…</p>
+    <button class="rc-link" id="rcQrTexto">¿No funciona la cámara? Usar el código en texto</button>
+  </section>
+
+  <section class="rc-paso" id="rcEscaner" hidden>
+    <span class="rc-pasos" id="rcEscPaso">Paso 1 de 2</span>
+    <h3 class="rc-h" id="rcEscTit">Apunta la cámara al código del otro teléfono</h3>
+    <div class="rc-visor"><video id="rcVideo" playsinline muted autoplay></video><i class="rc-marco" aria-hidden="true"></i></div>
+    <p class="rc-txt" id="rcEscTxt">Acerca el teléfono hasta que el código llene el cuadro.</p>
+    <button class="ghost" id="rcEscCancelar">Cancelar</button>
+    <button class="rc-link" id="rcEscTexto">¿No funciona la cámara? Pegar el código en texto</button>
+  </section>
+
+  <section class="rc-paso" id="rcTexto" hidden>
+    <h3 class="rc-h">Código en texto</h3>
+    <p class="rc-txt" id="rcTxtMio">Manda este código al otro teléfono (por mensaje) y pega aquí el suyo.</p>
+    <label class="rc-lab" for="rcCodMio">Tu código</label>
+    <textarea id="rcCodMio" readonly rows="3"></textarea>
+    <button class="ghost" id="rcCopiar">Copiar mi código</button>
+    <label class="rc-lab" for="rcCodOtro">Código del otro teléfono</label>
+    <textarea id="rcCodOtro" rows="3" placeholder="Pega aquí el código que empieza con DT1"></textarea>
+    <button class="primary" id="rcConectarTexto">Conectar</button>
+    <button class="ghost" id="rcTextoVolver">Volver</button>
+  </section>
+
+  <section class="rc-paso" id="rcSala" hidden>
+    <div class="rc-carriles">
+      <div class="rc-carril" id="rcCarril_izq"><span class="rc-cnom">Carril izquierdo</span><b class="rc-quien"></b><ul class="rc-est"></ul></div>
+      <div class="rc-carril" id="rcCarril_der"><span class="rc-cnom">Carril derecho</span><b class="rc-quien"></b><ul class="rc-est"></ul></div>
+    </div>
+    <p class="rc-marcador" id="rcMarcador" hidden></p>
+    <div class="field rc-cfg">
+      <span class="lab">Árbol</span>
+      <div class="seg" role="radiogroup" aria-label="Árbol de la carrera" id="segRcArbol">
+        <button role="radio" data-v="pro">Pro .400</button>
+        <button role="radio" data-v="full">Full .500</button>
+      </div>
+      <span class="lab">Distancia</span>
+      <div class="seg" role="radiogroup" aria-label="Distancia de la carrera" id="segRcDist">
+        <button role="radio" data-v="201.168">1/8 de milla</button>
+        <button role="radio" data-v="402.336">1/4 de milla</button>
+      </div>
+      <p class="hint" id="rcCfgNota"></p>
+    </div>
+    <p class="msg" id="rcMsg"></p>
+    <button class="primary" id="rcSensores" hidden>Activar sensores</button>
+    <button class="primary go" id="rcListo">Listo: ya estamos alineados</button>
+    <p class="rc-txt rc-centro" id="rcListoTxt">Alinea los dos autos. Cuando los dos toquen Listo, el árbol prende pre-stage, luego stage y baja solo.</p>
+    <button class="ghost" id="rcCambiar">Cambiar de carril</button>
+    <button class="ghost" id="rcReemparejar" hidden>Volver a emparejar</button>
+  </section>
+
+  <section class="rc-arbol" id="rcArbol" hidden aria-hidden="true">
+    <p class="rc-fase" id="rcFase"></p>
+    <div class="pt-tree">
+      <div class="rc-col"><div class="pt-lane l">
+        <div class="pt-pair"><i class="pb s w" id="rc_izq_pre1"></i><i class="pb s w" id="rc_izq_pre2"></i></div>
+        <div class="pt-pair"><i class="pb s w" id="rc_izq_stg1"></i><i class="pb s w" id="rc_izq_stg2"></i></div>
+        <i class="pb y" id="rc_izq_a0"></i><i class="pb y" id="rc_izq_a1"></i><i class="pb y" id="rc_izq_a2"></i>
+        <i class="pb g" id="rc_izq_g"></i><i class="pb r" id="rc_izq_r"></i>
+      </div><span class="rc-quien-arbol" id="rcQuien_izq"></span></div>
+      <div class="rc-col"><div class="pt-lane r">
+        <div class="pt-pair"><i class="pb s w" id="rc_der_pre1"></i><i class="pb s w" id="rc_der_pre2"></i></div>
+        <div class="pt-pair"><i class="pb s w" id="rc_der_stg1"></i><i class="pb s w" id="rc_der_stg2"></i></div>
+        <i class="pb y" id="rc_der_a0"></i><i class="pb y" id="rc_der_a1"></i><i class="pb y" id="rc_der_a2"></i>
+        <i class="pb g" id="rc_der_g"></i><i class="pb r" id="rc_der_r"></i>
+      </div><span class="rc-quien-arbol" id="rcQuien_der"></span></div>
+    </div>
+  </section>
+</div>
+
 <nav class="tabs" aria-label="Secciones">
   <button data-view="vMedir" aria-current="page">Medir</button>
   <button data-view="vPractica">Práctica</button>
@@ -467,6 +561,21 @@
 </script>
 <script>
 /*CALC*/
+</script>
+<script>
+/*QRLIB*/
+</script>
+<script>
+/*QR*/
+</script>
+<script>
+/*ENLACE*/
+</script>
+<script>
+/*CARRERA_NUCLEO*/
+</script>
+<script>
+/*CARRERA*/
 </script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 # Prueba de los atajos de Medir (0.6.8, Daniel): "Corrida simulada", "Race 1 vs 1" y "Antes de salir a la pista" como tres
 # botones cuadrados uno encima de otro en una caja oscura, como un semáforo (antes eran tres renglones grandes), para que
-# se vea más el fondo. Race 1 vs 1 y Antes de salir a la pista se prenden y abren su explicación a la derecha, una a la vez. Uso: python3 atajos_test.py -> capturas/atajos_*.png; código 1 si algo falla.
+# se vea más el fondo. Antes de salir a la pista se prende y abre su explicación a la derecha; Race 1 vs 1 abre la carrera
+# (0.7). Uso: python3 atajos_test.py -> capturas/atajos_*.png; código 1 si algo falla.
 import json, os, subprocess, sys, time
 from playwright.sync_api import sync_playwright
 
@@ -30,7 +31,7 @@ FILA = """(() => { const t = [...document.querySelectorAll('.atajo')].map(x => x
              izquierda: Math.abs(caja.left - sens.left) < 1, cajaAncho: Math.round(caja.width), libre: Math.round(sens.right - caja.right),
              dentro: t.every(r => r.left >= 0 && r.right <= innerWidth), ancho: document.documentElement.scrollWidth <= innerWidth,
              cortado: [...document.querySelectorAll('.atajo span')].some(s => s.scrollWidth > s.clientWidth + 1 || s.getBoundingClientRect().height > 28) }; })()"""
-estado = lambda pg: pg.evaluate("[['atRace', 'race1v1'], ['atAntes', 'antesPista']].map(([b, p]) => [document.getElementById(b).getAttribute('aria-expanded'), !document.getElementById(p).hidden])")
+estado = lambda pg: pg.evaluate("[['atAntes', 'antesPista']].map(([b, p]) => [document.getElementById(b).getAttribute('aria-expanded'), !document.getElementById(p).hidden])")
 
 def main():
     srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(PUERTO), '-d', DIST], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -49,25 +50,25 @@ def main():
                     if ancho == 393: pg.screenshot(path=SH + f'atajos_{fondo}_{tema}.png')
                     chk(not errs, f'A. {ancho} {fondo} sin errores: ' + '; '.join(errs))
                     ctx.close()
-            # B. abren su explicación abajo, una a la vez, y se cierran con otro toque
+            # B. "Antes de la pista" abre su explicación a la derecha y se cierra con otro toque; "Race 1 vs 1" abre la carrera (0.7)
             ctx, pg, errs = abrir(b, {'fondo': 'gallos'}, 393, 852)
-            chk(estado(pg) == [['false', False], ['false', False]], f'B. al abrir la app las dos explicaciones están cerradas ({estado(pg)})')
-            pg.click('#atRace'); pg.wait_for_timeout(350)
-            chk(estado(pg) == [['true', True], ['false', False]], f'B. Race 1 vs 1 abre la suya ({estado(pg)})')
-            chk('en desarrollo' in pg.inner_text('#race1v1') and 'dos autos' in pg.inner_text('#race1v1'), 'B. dice "en desarrollo" y la explicación')
-            arr = pg.evaluate("[document.querySelector('.atajos-arbol').getBoundingClientRect(), document.getElementById('race1v1').getBoundingClientRect()].map(r => [Math.round(r.left), Math.round(r.top), Math.round(r.right)])")
-            chk(arr[1][0] >= arr[0][2] and abs(arr[1][1] - arr[0][1]) <= 2, f'B. la explicación sale a la derecha del semáforo, arriba a la par ({arr})')
-            chk(pg.evaluate("getComputedStyle(document.getElementById('atRace')).backgroundColor") != pg.evaluate("getComputedStyle(document.getElementById('atAntes')).backgroundColor"), 'B. el botón abierto se prende')
+            chk(estado(pg) == [['false', False]], f'B. al abrir la app la explicación está cerrada ({estado(pg)})')
             pg.click('#atAntes'); pg.wait_for_timeout(350)
-            chk(estado(pg) == [['false', False], ['true', True]], f'B. Antes de la pista abre la suya y cierra la otra ({estado(pg)})')
+            chk(estado(pg) == [['true', True]], f'B. Antes de la pista abre la suya ({estado(pg)})')
             arr = pg.evaluate("[document.querySelector('.atajos-arbol').getBoundingClientRect(), document.getElementById('antesPista').getBoundingClientRect()].map(r => [Math.round(r.left), Math.round(r.top), Math.round(r.right)])")
-            chk(arr[1][0] >= arr[0][2] and abs(arr[1][1] - arr[0][1]) <= 2, f'B. la de Antes de salir a la pista también sale a la derecha ({arr})')
+            chk(arr[1][0] >= arr[0][2] and abs(arr[1][1] - arr[0][1]) <= 2, f'B. la explicación sale a la derecha del semáforo, arriba a la par ({arr})')
+            chk(pg.evaluate("getComputedStyle(document.getElementById('atAntes')).backgroundColor") != pg.evaluate("getComputedStyle(document.getElementById('atRace')).backgroundColor"), 'B. el botón abierto se prende')
             chk('soporte firme' in pg.inner_text('#antesPista') and pg.evaluate("document.getElementById('howtoCam').hidden"), 'B. trae los consejos (sin los de la cámara)')
             pg.screenshot(path=SH + 'atajos_abierto.png', full_page=True)
             pg.click('#atAntes'); pg.wait_for_timeout(250)
-            chk(estado(pg) == [['false', False], ['false', False]], f'B. otro toque la cierra ({estado(pg)})')
-            pg.focus('#atRace'); pg.keyboard.press('Enter'); pg.wait_for_timeout(250)
+            chk(estado(pg) == [['false', False]], f'B. otro toque la cierra ({estado(pg)})')
+            pg.focus('#atAntes'); pg.keyboard.press('Enter'); pg.wait_for_timeout(250)
             chk(estado(pg)[0] == ['true', True], 'B. también abre con el teclado')
+            pg.keyboard.press('Enter'); pg.wait_for_timeout(250)
+            pg.click('#atRace'); pg.wait_for_timeout(350)
+            chk(pg.evaluate("!document.getElementById('rc').hidden && !document.getElementById('rcInicio').hidden"), 'B. Race 1 vs 1 abre la carrera')
+            pg.click('#rcSalir'); pg.wait_for_timeout(300)
+            chk(pg.evaluate("document.getElementById('rc').hidden && !document.getElementById('medirIdle').hidden"), 'B. "Salir" la cierra y regresa a Medir')
             chk(not errs, 'B. sin errores: ' + '; '.join(errs))
             # C. "Corrida simulada" arranca la corrida de prueba
             pg.click('#btnDemo'); pg.wait_for_timeout(700)
