@@ -313,6 +313,8 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
       se reenvían solos.
     - Rival simulado: otro teléfono de mentira que contesta como el real (su resultado sale de una sesión simulada); si no
       hay sensores, el auto propio también es simulado. Pruebas: `?simsens` hace simulado el auto propio con rival real.
+    - **Confirmado por Daniel (31 oct):** los dos teléfonos tocan "Listo"; espera al azar de 1 a 2.5 s entre stage y el
+      árbol (`tArbol = tStage + 1000 + 1500·azar`); "muy cerrada" si la diferencia es menor a 0.100 s (`margenDudoso`).
     - Falta: probarlo con dos teléfonos reales (por la sala con datos, y
       por QR con hotspot de iPhone o Android, iPhone con Android); calibrar el retraso de pantalla de cada modelo (hoy 0 ms,
       `ajusteMs`).
