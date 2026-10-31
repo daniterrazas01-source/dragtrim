@@ -22,7 +22,7 @@
   const otroCarril = (c) => (c === 'izq' ? 'der' : 'izq');
 
   const R = {
-    fase: 'cerrado',   // cerrado | inicio | emparejar | sala | arbol | corriendo | boleta
+    fase: 'cerrado',   // cerrado | inicio | emparejar | sala | arbol | corriendo | boleta | detalle (viendo su corrida)
     rol: null, simulado: false, E: null, id: '', carrilAnf: 'izq',
     cfg: Object.assign({ arbol: 'pro', dist: 402.336 }, LS.get('dragtrim.carrera.cfg', {})),
     yo: { listo: false }, otro: { listo: false, sensores: false, sinc: false, app: null, visto: false },
@@ -142,6 +142,10 @@
       filtro: (t) => t.startsWith('DT1' + tipo) || t.startsWith('DT1' + tipo.toUpperCase()),
       alLeer: (t) => { R.escaner = null; usarCodigo(t); },
       alError: (m) => aviso($('#rcEscTxt'), m + ' Puedes usar el código en texto.', true),
+      // un código que no toca en este paso: se dice por qué y la cámara sigue buscando
+      alRechazar: (t) => aviso($('#rcEscTxt'), /^DT1/i.test(t)
+        ? (tipo === 'o' ? 'Ese es el código de respuesta. Escanea el del teléfono que creó la carrera.' : 'Ese es tu propio código o el de otra carrera. Escanea el que muestra el otro teléfono.')
+        : 'Ese código no es de Drag Tree.', true),
     });
     R.escaner.iniciar().catch((e) => aviso($('#rcEscTxt'), String(e && e.message || e), true));
   }
@@ -201,7 +205,13 @@
     enviar({ tipo: 'estado', listo: R.yo.listo, sensores: usaSimulado() || A().sensoresActivos(), sinc: !!(rel && rel.listo), err: rel && isFin(rel.error_ms) ? +rel.error_ms.toFixed(1) : null });
   }
   function enviarConfig() { if (esAnfitrion()) enviar({ tipo: 'config', arbol: R.cfg.arbol, dist: R.cfg.dist, carrilAnf: R.carrilAnf }); }
-  function alEstado(est) {
+  function alEstado(est, info) {
+    if ((est === 'fallo' || est === 'cerrado') && R.fase === 'emparejar') {
+      apagarCamara();
+      verPaso('rcQr'); $('#rcLeerResp').hidden = true; $('#rcQrEspera').hidden = true;
+      aviso($('#rcQrTxt'), ((info && info.motivo) || 'No se pudo conectar.') + ' Revisa que los dos teléfonos estén en la misma red Wi-Fi (el punto de acceso de uno) y vuelvan a empezar.', true);
+      return;
+    }
     if (est === 'conectado') {
       chip('');
       enviar({ tipo: 'hola', app: A().version, rol: R.rol, id: R.id });
@@ -456,6 +466,7 @@
     }
     contar();
     if (R.fase === 'boleta') pantallaBoleta(R.runYo);
+    else if (R.fase === 'sala') pintarSala();
   }
   function contar() {
     if (!R.resYo || !R.resOtro || R.contadas.has(R.ronda)) return;
@@ -466,6 +477,7 @@
   }
   // La app terminó de medir: en vez del resultado de siempre, la boleta de la carrera
   function mostrar(run) {
+    limpiarTimers(); mostrarOverlay(false);
     R.fase = 'boleta';
     contar();
     pantallaBoleta(run);
@@ -480,7 +492,7 @@
       </div></div>`);
     const on = (id, fn) => { const b = v.querySelector('#' + id); if (b) b.onclick = fn; };
     on('rcOtra', volver);
-    on('rcVerMia', () => { if (run) A().mostrarResultado(run, false); });
+    on('rcVerMia', () => { if (run) { R.fase = 'detalle'; A().mostrarResultado(run, false); } });
     on('rcSalirRes', terminar);
   }
 

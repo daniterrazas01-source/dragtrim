@@ -11,7 +11,7 @@ import json, os, subprocess, sys, tempfile, time
 from playwright.sync_api import sync_playwright
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
-DIST = os.path.join(AQUI, '..', 'app', 'dist')
+DIST = os.environ.get('DIST_DRAG') or os.path.join(AQUI, '..', 'app', 'dist')   # DIST_DRAG: probar otro armado
 SH = os.path.join(AQUI, 'capturas', '')
 os.makedirs(SH, exist_ok=True)
 PUERTO = 8798
@@ -65,6 +65,22 @@ def rt_de(b, col):
         if f and f[0].upper().startswith('R/T'): return f[col]
     return None
 
+def ganador_esperado(bo, perfecta, et):
+    """Ganador según las reglas de pista con los números de la boleta: roja pierde; si no, menor reacción (desde la
+    verde) + ET a la meta."""
+    fila = lambda e: next((f for f in bo['filas'] if f and f[0] == e), None)
+    rt, t = fila('R/T'), fila(et)
+    lados = {}
+    for k, col in (('izq', 1), ('der', 2)):
+        txt = rt[col].upper()
+        try: r = float(txt.split()[-1]) - perfecta
+        except Exception: r = float('nan')
+        try: e = float(t[col])
+        except Exception: e = float('nan')
+        lados[k] = ('ROJA' in txt, r + e)
+    if lados['izq'][0] != lados['der'][0]: return 'der' if lados['izq'][0] else 'izq'
+    return 'izq' if lados['izq'][1] < lados['der'][1] else 'der'
+
 def correr_simulado(b, rt_mio, rt_rival, nombre):
     ctx = contexto(b)
     pg, errs = pagina(ctx)
@@ -89,7 +105,7 @@ def correr_simulado(b, rt_mio, rt_rival, nombre):
     chk(abs((L['g'] - L['a0']) - 400) < 40, f'{nombre}. árbol Pro: la verde 0.4 s después de los ámbar ({round(L["g"] - L["a0"])} ms)')
     chk(esperar(pg, "!!document.querySelector('.rc-slip')", 45000), f'{nombre}. al pasar la meta sale la boleta de la carrera')
     chk(esperar(pg, "!document.querySelector('.rc-ganador').classList.contains('espera')", 30000), f'{nombre}. llega el resultado del rival y se decide')
-    pg.wait_for_timeout(300)
+    pg.wait_for_timeout(1500)   # la boleta se "imprime" con una animación
     bo = boleta(pg)
     pg.screenshot(path=SH + f'carrera_boleta_{nombre}.png', full_page=True)
     return ctx, pg, errs, bo
@@ -108,7 +124,9 @@ def main():
             try: rtv = float(rt.split()[-1].replace('+', ''))
             except Exception: rtv = float('nan')
             chk(abs(rtv - 0.550) < 0.035, f'A. tu reacción ~0.150 desde la verde = 0.550 en boleta Pro ({rtv})')
-            chk('izquierdo' in bo['ganador'].lower() and bo['wins'] == 1, f'A. gana el carril izquierdo (reacción más rápida, mismo tipo de auto): "{bo["ganador"]}"')
+            g = ganador_esperado(bo, 0.4, '1/4')
+            chk(('izquierdo' if g == 'izq' else 'derecho') in bo['ganador'].lower().split('gana')[-1] and bo['wins'] == 1,
+                f'A. gana quien llega primero a la meta (reacción + ET): {g} → "{bo["ganador"]}"')
             corridas = pg.evaluate("window.__dragtrim.DB.todos().then(rs => rs.map(r => r.race ? { rival: !!r.race.rival, carril: r.race.carril, ganador: r.race.ganador && r.race.ganador.ganador } : null))")
             chk(corridas and corridas[0] and corridas[0]['rival'] and corridas[0]['carril'] == 'izq', f'A. la corrida se guardó con los datos de la carrera ({corridas[:1]})')
             pg.click('#rcVerMia'); pg.wait_for_timeout(400)
@@ -134,13 +152,13 @@ def main():
             A, eA = pagina(cA, URL + '?simsens'); B, eB = pagina(cB, URL + '?simsens')
             for pg in (A, B): pg.on('dialog', lambda d: d.accept())
             A.click('#atRace'); A.click('#rcCrear')
-            chk(esperar(A, "window.__carrera.codigo().startsWith('DT1o')", 10000), 'C. el anfitrión arma su código (oferta)')
+            chk(esperar(A, "/^DT1o/i.test(window.__carrera.codigo())", 10000), 'C. el anfitrión arma su código (oferta)')
             oferta = A.evaluate('window.__carrera.codigo()')
             print(f'   largo del código de oferta: {len(oferta)}')
             A.screenshot(path=SH + 'carrera_qr_anfitrion.png')
             B.click('#atRace'); B.click('#rcUnirme'); B.wait_for_timeout(300)
             B.click('#rcEscTexto'); B.fill('#rcCodOtro', oferta); B.click('#rcConectarTexto')
-            chk(esperar(B, "window.__carrera.codigo().startsWith('DT1a')", 10000), 'C. el invitado arma su respuesta')
+            chk(esperar(B, "/^DT1a/i.test(window.__carrera.codigo())", 10000), 'C. el invitado arma su respuesta')
             resp = B.evaluate('window.__carrera.codigo()')
             print(f'   largo del código de respuesta: {len(resp)}')
             A.click('#rcQrTexto'); A.fill('#rcCodOtro', resp); A.click('#rcConectarTexto')
@@ -172,10 +190,13 @@ def main():
             bA, bB = boleta(A), boleta(B)
             print('   boleta anfitrión:', bA); print('   boleta invitado:', bB)
             chk(bA and bB and bA['ganador'] == bB['ganador'] and bA['filas'][1:] == bB['filas'][1:], 'C. la boleta y el ganador son los mismos en los dos teléfonos')
-            chk(bA and 'izquierdo' in bA['ganador'].lower(), f'C. gana el izquierdo (reacción .120 contra .260): "{bA and bA["ganador"]}"')
+            g = ganador_esperado(bA, 0.5, '1/8') if bA else None
+            chk(bA and ('izquierdo' if g == 'izq' else 'derecho') in bA['ganador'].lower().split('gana')[-1],
+                f'C. gana quien llega primero a la meta en 1/8 (reacción + ET): {g} → "{bA and bA["ganador"]}"')
             try: rI = float(rt_de(bA, 1).split()[-1]); rD = float(rt_de(bA, 2).split()[-1])
             except Exception: rI = rD = float('nan')
             chk(abs(rI - 0.620) < 0.04 and abs(rD - 0.760) < 0.04, f'C. reacciones en boleta Full: izq ~0.620 ({rI}), der ~0.760 ({rD})')
+            A.wait_for_timeout(1500)
             A.screenshot(path=SH + 'carrera_boleta_anfitrion.png', full_page=True); B.screenshot(path=SH + 'carrera_boleta_invitado.png', full_page=True)
             A.click('#rcOtra'); B.click('#rcOtra'); A.wait_for_timeout(500)
             chk(visible(A, '#rcSala') and visible(B, '#rcSala') and '1' in A.inner_text('#rcMarcador'), f'C. "Otra carrera" regresa a la sala y el marcador cuenta ({A.inner_text("#rcMarcador")})')
@@ -189,14 +210,14 @@ def main():
             b1 = p.chromium.launch(args=ARGS_MEDIOS)
             c1 = contexto(b1); H, eH = pagina(c1)
             H.click('#atRace'); H.click('#rcCrear')
-            esperar(H, "window.__carrera.codigo().startsWith('DT1o')", 10000)
+            esperar(H, "/^DT1o/i.test(window.__carrera.codigo())", 10000)
             img = H.evaluate("""(() => { const c = document.getElementById('rcQrCanvas'); const x = c.getContext('2d').getImageData(0, 0, c.width, c.height);
                 return { w: c.width, h: c.height, d: Array.from(x.data.filter((_, i) => i % 4 === 0)) }; })()""")
             escribir_y4m(y4m, img)
             b2 = p.chromium.launch(args=ARGS_MEDIOS + [f'--use-file-for-fake-video-capture={y4m}'])
             c2 = contexto(b2); G, eG = pagina(c2)
             G.click('#atRace'); G.click('#rcUnirme')
-            chk(esperar(G, "window.__carrera.codigo().startsWith('DT1a')", 15000), 'D. el invitado leyó el QR con la cámara y armó su respuesta')
+            chk(esperar(G, "/^DT1a/i.test(window.__carrera.codigo())", 15000), 'D. el invitado leyó el QR con la cámara y armó su respuesta')
             G.screenshot(path=SH + 'carrera_qr_invitado.png')
             chk(not eH and not eG, 'D. sin errores: ' + '; '.join(eH + eG))
             b1.close(); b2.close()

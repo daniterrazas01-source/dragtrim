@@ -60,8 +60,8 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
      (detección y cálculos con ultracode; página de prueba, cámara e integración sin agentes; revisión final
      antes de publicar) ya se cumplió hasta la revisión final (25 oct, esfuerzo max sin agentes, como pidió
      Daniel) y se publicó en la 0.6.
-   - **Race 1 vs 1** (idea de Daniel, 24 oct; "en desarrollo" en Medir desde 0.5.4, desplegable desde 0.6.5, botón chico desde 0.6.8; no programar
-     hasta que lo pida): dos autos, cada uno con la app en su teléfono, en pista sin semáforo o lugar
+   - **Race 1 vs 1** (idea de Daniel, 24 oct; "en desarrollo" en Medir desde 0.5.4, desplegable desde 0.6.5, botón chico desde 0.6.8;
+     **programado desde el 31 oct (0.7, sin publicar), ver punto 14**): dos autos, cada uno con la app en su teléfono, en pista sin semáforo o lugar
      controlado; la app da la salida a los dos a la vez (excepción a propósito al punto 3, solo en este modo),
      mide reacción y tiempos de ambos y el ticket de los dos sale en un teléfono. Diseño ya estudiado en
      `archivo/ideas/race_1vs1.md` (no repetir el análisis): hotspot de un teléfono + WebRTC emparejado con
@@ -69,7 +69,7 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
      <1 km/h), árbol de practica.js tras espera al azar, RT = tRo − verde (calibrar el retraso de pantalla y
      sensor de cada teléfono: 20–60 ms por modelo), roja si cruza el rollout antes de la verde, "empate
      técnico" si la diferencia es menor al error. Primer paso: página de prueba aparte en sus teléfonos.
-   - **Lo que sigue** (Daniel, 26 oct, al cerrar la 0.6.5: "ya terminamos" el diseño): **Race 1 vs 1** y **correr solo pero
+   - **Lo que sigue** (Daniel, 26 oct, al cerrar la 0.6.5: "ya terminamos" el diseño): **Race 1 vs 1** (en marcha, punto 14) y **correr solo pero
      con semáforo** (la app da la salida a un solo auto con el árbol, como el 1 vs 1 pero de uno; misma excepción al
      punto 3, solo en ese modo). No empezar hasta que Daniel lo pida; el diseño del 1 vs 1 está en `archivo/ideas/race_1vs1.md`.
    - Más adelante: app nativa (Capacitor) para Play Store/App Store; GNSS externo.
@@ -261,6 +261,40 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
     - Selectores (`.seg`) de toda la app: la marca que se desliza va a la posición y al ancho del botón elegido
       (`marcaSeg` en app.js pone `--seg-x`/`--seg-w`). Antes suponía botones iguales y con textos largos
       ("Atmosférico", "Automático" a 320 px) quedaba corrida; camara_test.py (H) lo revisa en todas las pestañas.
+
+
+14. **Race 1 vs 1** (0.7, 31 oct, Daniel: "programa esta sección, incluyendo la sala, la forma de vincular ambos teléfonos, de
+    la forma más sencilla que se pueda y visual"; él alinea los autos en la realidad, luego le dicen a la app "ya estamos
+    alineados" y la app pone pre-stage, stage y baja el árbol; al entrar se elige Full o Pro .400). Especificación de las
+    piezas: `archivo/ideas/race_1vs1_programa.md`; diseño de fondo: `race_1vs1.md`. Es la excepción al punto 3: solo aquí
+    la app da la salida.
+    - Entrada: el cuadro "Race 1 vs 1" del semáforo de Medir abre la pantalla completa `#rc` (carrera.js): Crear carrera /
+      Unirme / Probar con rival simulado, con el aviso de red (un teléfono prende su punto de acceso y el otro se conecta;
+      no necesita internet).
+    - Emparejar con dos QR (`DragQR`, qr.js + vendor/jsQR.js y vendor/qrcode.js, licencias en vendor/LICENCIAS.md): el que
+      crea muestra su código (oferta WebRTC, "DT1o…"); el otro lo escanea y muestra el suyo ("DT1a…"); el primero lo escanea
+      ("Ya lo escaneó: leer su código"). Respaldo: copiar y pegar el código en texto. Antes de armar cada código se pide la
+      cámara: con ese permiso Chrome y Safari ponen la IP real (sin él, Chrome usa .local y Safari puede no dar candidatos).
+    - Enlace (`DragEnlace`, enlace.js): WebRTC sin servidores (iceServers vacío), canal 'ctl' (mensajes) y 'reloj' (pings
+      tipo NTP en los dos sentidos; offset = reloj del otro − propio, con recta para la deriva).
+    - Sala: los dos carriles (quien crea = izquierdo, puede cambiar), sensores y "Listo"; el que crea elige árbol Pro/Full y
+      distancia 1/8 o 1/4 (el otro lo ve). "Listo: ya estamos alineados" arma la medición de siempre en ese teléfono
+      (`DragApp.armarCarrera`, con la distancia de la carrera). Con los dos listos y el reloj sincronizado, el que crea
+      manda el programa con 1.5 s de anticipación (`DragCarreraNucleo.programa`: pre-stage, stage +1 s, árbol +1–2.5 s al
+      azar, verde según Pro/Full); el otro lo pasa a su reloj y confirma; si no confirma a tiempo se cancela en los dos.
+    - Árbol en los dos carriles (mismas luces de Práctica); la verde y el último ámbar se toman del cuadro de rAF en que se
+      pintaron; 1.2 s después de la verde el árbol se quita y queda la pantalla neutral de la medición. RT = cruce del
+      rollout (R.tRo de procesar) − verde; roja si es negativa; boleta = RT + .400/.500. Sin arranque a los 25 s: "No salió".
+      "Cancelar" antes de la verde cancela la salida de los dos; ya corriendo, solo ese carril queda sin terminar.
+    - Boleta de los dos carriles (`htmlBoleta`): R/T, 60', 330', 1/8, 1000', 1/4 y velocidades, WIN, texto del ganador con
+      las reglas de Práctica (roja pierde; dos rojas pierde quien salió primero; si no, menor RT + ET) y "muy cerrada" si la
+      diferencia es menor a 0.10 s. Se guarda en `run.race` (programa, verde, sincronía, los dos resultados); el Historial
+      dice "Race 1 vs 1, ganaste/perdiste"; el zip trae `drag_race_meta_*.json`. "Otra carrera" vuelve a la sala con
+      marcador; si se perdió la conexión, "Volver a emparejar" y los resultados se reenvían solos.
+    - Rival simulado: otro teléfono de mentira que contesta como el real (su resultado sale de una sesión simulada); si no
+      hay sensores, el auto propio también es simulado. Pruebas: `?simsens` hace simulado el auto propio con rival real.
+    - Falta probarlo con dos teléfonos reales (hotspot de iPhone o Android, iPhone con Android); calibrar el retraso de
+      pantalla de cada modelo (hoy 0 ms, `ajusteMs`).
 
 ```
 index.html, sw.js, manifest.webmanifest, icon-*.png   ← lo publicado (generado, no editar a mano)
