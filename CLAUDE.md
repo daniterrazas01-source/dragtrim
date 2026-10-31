@@ -162,6 +162,15 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    unidad `--u` (1vh) se cambian a las del teléfono; `subir()` en vez de `window.scrollTo(0, 0)`; sin deslizar entre
    pestañas). Las ventanas encima (Práctica, Race 1 vs 1, carga) se giran con la app. Al girar, iPhone anima su giro y la app
    se compensa al terminar.
+   **Pulido con impeccable** (31 oct, Daniel: "revisar la interfaz en general… y corregirlos"; en la rama, sin publicar):
+   avisos `.msg`/`.avisos` como recuadro con tinte (sin la raya gruesa a la izquierda), `--ease-pop` sin rebote, `.stat` con el
+   valor abajo (de lado "Frecuencia GPS" ocupaba dos renglones), boletas sin cortes ("1/4&nbsp;MI", "PRO&nbsp;.400", "RACE 1
+   VS 1"; de lado la boleta de la carrera más ancha), `::selection`/caret/deslizadores con el color de la app. Detector:
+   `IMPECCABLE_BROWSER` = un envoltorio de /opt/pw-browsers/chromium-1194/chrome-linux/chrome con `--no-sandbox` (como root
+   no abre sin eso); las sombras duras que marca son del estilo sticker (a propósito). **Propuesta de rediseño "Drag Tree
+   2026"** (UI/UX Pro Max: OLED + bloques + pestañas de cristal flotantes; Barlow Condensed para números, Saira para títulos;
+   colores del árbol: ámbar acción, verde listo, rojo falla): solo maqueta, artefacto claude.ai/artifact/KvvibEKpijqMBP73b4xhFF;
+   la app no cambió. Pendiente que Daniel diga si la quiere.
    **Deslizar entre pestañas** (0.6.2, 25 oct, Daniel lo pidió "como nativa de iPhone"): con el dedo a la izquierda/derecha
    se pasa a la pestaña de al lado. Al tomar el dedo de lado, las pestañas de los lados ya se pintan (`prepararVista`,
    `data-entra` = sin la cascada de entrada) a ±ancho y se mueven pegadas a la actual; cada una se pone a la altura donde
