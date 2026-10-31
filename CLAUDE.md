@@ -120,8 +120,12 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    fondo; sin fondo, el color de la app; corrida = velo 0.92; Práctica, cámara y carga encima) y cambia sola
    (MutationObserver + cambio de modo oscuro del teléfono). Manifiesto: background_color y theme_color #141618 (la carga).
    Cuando Chrome lo arregle, el CSS de iPhone (`env(safe-area-inset-*)`) ya lo deja como en iPhone (barra_test.py H lo
-   simula). En iPhone no cambia nada. Vistas previas (28 oct, Daniel se queda con dos): "Drag Tree en iPhone" y
-   "Drag Tree en S24 Ultra" (384×832, tres modos: hoy, pantalla completa, como iPhone). Daniel pidió lo mismo que en iPhone (fondo detrás y pantalla activa):
+   simula). En iPhone no cambia nada. Vistas previas (31 oct, Daniel: "solamente pon 3"; con la 0.7.2): "Drag Tree en iPhone"
+   (claude.ai/artifact/EPUsRwc3cSm8D5yLnrHyJ6, app.html con zonas 59/34), "Drag Tree en S24 Ultra" (6k6KfEsENGHLae9LgfQwLo,
+   384×832, tres modos: hoy 0/24, pantalla completa 30/0, como iPhone 30/24) y "Drag Tree en horizontal"
+   (8vrsZy1nkJkpPkSGACnCLT: teléfono acostado, iPhone 852×393 con zonas 0/59/21/59 o Samsung 832×360 bajo la barra de
+   arriba, y los botones de Ajustes → Orientación que se tocan dentro de la app; sus app_h_*.html empiezan en 'todo').
+   Cada una lleva index.html con `env(safe-area-inset-*)` cambiado por esos px; para actualizarlas, rearmar esas copias. Daniel pidió lo mismo que en iPhone (fondo detrás y pantalla activa):
    hoy solo se acerca **pantalla completa** (`display: fullscreen` o la API de pantalla completa + viewport-fit=cover: el
    fondo llega a la cámara y se toca, pero Android esconde la hora y la batería; sin probar en teléfono) o la **app nativa**
    (APK con Capacitor: ahí sí como iPhone). Pendiente que Daniel elija; no hacerlo sin que lo pida.
