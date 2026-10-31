@@ -318,6 +318,10 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
     - Falta: probarlo con dos teléfonos reales (por la sala con datos, y
       por QR con hotspot de iPhone o Android, iPhone con Android); calibrar el retraso de pantalla de cada modelo (hoy 0 ms,
       `ajusteMs`).
+    - Publicado en la **0.7** (31 oct, Daniel: "publícala para probarla, jugar con ella para ver si le sale algún fallo").
+      Al publicar, qr_camara_test.py falló solo en el caso extremo "QR lejos y de lado" (lo lee, pero a veces en más de 5 s;
+      en la máquina de la mañana pasaba y su código no cambió): depende de la velocidad de la máquina. Si molesta en
+      teléfonos reales, hacer más seguido en el ciclo de qr.js los intentos ampliados.
 
 ```
 index.html, sw.js, manifest.webmanifest, icon-*.png   ← lo publicado (generado, no editar a mano)
