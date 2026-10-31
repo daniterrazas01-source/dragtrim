@@ -120,7 +120,7 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    fondo; sin fondo, el color de la app; corrida = velo 0.92; Práctica, cámara y carga encima) y cambia sola
    (MutationObserver + cambio de modo oscuro del teléfono). Manifiesto: background_color y theme_color #141618 (la carga).
    Cuando Chrome lo arregle, el CSS de iPhone (`env(safe-area-inset-*)`) ya lo deja como en iPhone (barra_test.py H lo
-   simula). En iPhone no cambia nada. Vistas previas (31 oct, Daniel: "solamente pon 3"; con la 0.7.2): "Drag Tree en iPhone"
+   simula). En iPhone no cambia nada. Vistas previas (31 oct, Daniel: "solamente pon 3"; con la 0.7.3): "Drag Tree en iPhone"
    (claude.ai/artifact/EPUsRwc3cSm8D5yLnrHyJ6, app.html con zonas 59/34), "Drag Tree en S24 Ultra" (6k6KfEsENGHLae9LgfQwLo,
    384×832, tres modos: hoy 0/24, pantalla completa 30/0, como iPhone 30/24) y "Drag Tree en horizontal"
    (8vrsZy1nkJkpPkSGACnCLT: teléfono acostado, iPhone 852×393 con zonas 0/59/21/59 o Samsung 832×360 bajo la barra de
