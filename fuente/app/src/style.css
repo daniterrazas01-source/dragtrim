@@ -231,6 +231,13 @@ p { margin: 0 0 12px; }
 /* última corrida: se toca para abrir su boleta */
 :where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .stat.ultima { font: inherit; color: inherit; cursor: pointer; }
 :where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ultima .stat-fila { align-items: baseline; }
+/* la tacha que quita la última corrida hasta la siguiente (1 nov, Daniel): se toca en 44 px y se ve un círculo de 28 */
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ult-caja { grid-column: 1 / -1; position: relative; display: grid; transition: opacity .16s cubic-bezier(.23, 1, .32, 1), transform .16s cubic-bezier(.23, 1, .32, 1); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ult-caja.saliendo { opacity: 0; transform: scale(.98); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ult-x { position: absolute; top: 2px; right: 2px; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--chalk-3); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ult-x::before { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: color-mix(in srgb, var(--chalk) 9%, transparent); transition: background-color .12s; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ult-x:active::before { background: color-mix(in srgb, var(--chalk) 22%, transparent); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ult-x svg { position: relative; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
 :where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tramos { display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 1fr)); gap: 4px; margin-top: 8px; }
 :where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tramos span { display: grid; gap: 4px; font: 600 10.5px/1 var(--body); color: var(--chalk-3); }
 :where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tramos span::before { content: ""; height: 5px; border-radius: 3px; background: linear-gradient(90deg, var(--amber), color-mix(in srgb, var(--amber) 55%, #fff)); }
@@ -1096,7 +1103,7 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
   :root.acostada .status { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 12px 0 2px; }
   :root.acostada .stat { padding: 9px 12px; }
   :root.acostada .stat .val { font-size: 24px; }
-:root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .stat .s, :root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .ultima { display: none; }
+:root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .stat .s, :root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .ult-caja { display: none; }
 /* lo principal cabe sin desplazarse */
 :root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .barras { height: 20px; margin-bottom: 10px; }
 
@@ -1407,7 +1414,7 @@ input[type="range"] { accent-color: var(--amber); }
 :where(:root[data-caratula="tablero"]) .tb-velo { grid-area: velo; justify-content: flex-start; }
 :where(:root[data-caratula="tablero"]) #sStatus > .gps { grid-area: gps; }
 :where(:root[data-caratula="tablero"]) .tb-acel { grid-area: acel; }
-:where(:root[data-caratula="tablero"]) #ultCorrida { grid-area: ult; }
+:where(:root[data-caratula="tablero"]) #ultCaja { grid-area: ult; }
 :where(:root[data-caratula="tablero"]) .tb-velo .val { text-align: center; }
 :where(:root[data-caratula="tablero"]) .tb-dial {
   position: relative; isolation: isolate; display: block; width: 100%; max-width: 156px; aspect-ratio: 1; margin: 8px auto 4px; border-radius: 50%;

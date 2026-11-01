@@ -1192,11 +1192,13 @@
   // Última corrida en Medir (rediseño 2026): su tiempo, velocidad y tramos; tocarla abre su boleta
   const CORTO = { '60 ft': "60'", '330 ft': "330'", '1/8 mi': '1/8', '1000 ft': "1000'", '1/4 mi': '1/4' };
   async function pintarUltima() {
-    const b = $('#ultCorrida');
-    if (!b) return;
+    const b = $('#ultCorrida'), caja = $('#ultCaja');
+    if (!b || !caja) return;
     const r = (await DB.todos()).find((x) => x.ok);
-    b.hidden = !r;
-    if (!r) return;
+    // la tacha la quita hasta la siguiente corrida (1 nov, Daniel): se guarda cuál se quitó
+    caja.hidden = !r || LS.get('dragtrim.ultOculta', null) === r.id;
+    caja.classList.remove('saliendo');
+    if (caja.hidden) return;
     const Df = r.cfg.distancia_final, et = etPrincipal(r);
     const tramos = (r.hitos || []).filter((h) => h.dist_m <= Df + 0.01 && isFin(h.t))
       .map((h) => `<span>${CORTO[h.nombre] || esc(h.nombre)}<b>${h.t.toFixed(2)}</b></span>`).join('');
@@ -1205,6 +1207,15 @@
       <span class="tramos" style="--n:${(r.hitos || []).filter((h) => h.dist_m <= Df + 0.01).length || 1}">${tramos}</span>`;
     b.setAttribute('aria-label', `Última corrida: ${fmtT(et.t)} segundos en ${nombreDist(Df)}. Abrir su boleta`);
     b.onclick = () => mostrarResultado(r, false);
+    $('#ultQuitar').onclick = () => {
+      LS.set('dragtrim.ultOculta', r.id);
+      const conFoco = document.activeElement === $('#ultQuitar');
+      const fin = () => {
+        caja.hidden = true; caja.classList.remove('saliendo');
+        if (conFoco) { const p = [...document.querySelectorAll('#medirIdle .primary')].find((e) => e.offsetParent); if (p) p.focus({ preventScroll: true }); }
+      };
+      if (conAnim()) { caja.classList.add('saliendo'); setTimeout(fin, 160); } else fin();
+    };
   }
   function mostrarVista(id, tabActivo) {
     if (id === 'vMedir') pintarUltima();

@@ -185,7 +185,9 @@ mejor?").
    pastilla que se desliza (los botones van encima: `position: relative; z-index: 1`, si no la pastilla se queda con el
    toque). Medir: GPS a lo ancho con precisión, frecuencia y **rayitas de señal** (`#sBarras`, `#sGpsTxt` en
    tickEstado) y la **última corrida** con sus tramos (`#ultCorrida`, `pintarUltima()` al mostrar Medir; se toca y abre
-   su boleta). Con fondo: el color del fondo en botones, selector y pestaña elegida; las losas son oscuras sobre el fondo
+   su boleta; desde la 0.8.1 trae una **tacha** arriba a la derecha, `#ultQuitar` dentro de `#ultCaja`, que la quita hasta la
+   siguiente corrida: guarda su id en `dragtrim.ultOculta`; 1 nov, Daniel: "un botón de tacha para poder quitar esa parte
+   cuando no la quieras ver"). Con fondo: el color del fondo en botones, selector y pestaña elegida; las losas son oscuras sobre el fondo
    (sin el borde blanco de sticker); se quedan los títulos como etiqueta chueca y la boleta pegada. Árbol (Práctica y
    Race): caja con orilla y focos con brillo (mismos colores; prenden al instante). De lado: el riel es una tarjeta de
    cristal. Se quedaron a propósito: la letra, el logo, la boleta, la medición neutral y el **semáforo vertical de

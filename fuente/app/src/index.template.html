@@ -631,7 +631,10 @@
         </div>
         <div class="stat"><span class="k">Acelerómetro</span><span class="val" id="sAcel">—</span></div>
         <div class="stat"><span class="k">Velocidad</span><span class="val" id="sVel">—</span></div>
-        <button type="button" class="stat ancha ultima" id="ultCorrida" hidden></button>
+        <div class="ult-caja" id="ultCaja" hidden>
+          <button type="button" class="stat ancha ultima" id="ultCorrida"></button>
+          <button type="button" class="ult-x" id="ultQuitar" aria-label="Quitar la última corrida de aquí"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+        </div>
 </template>
 <!-- Tablero (tablero de los 80 y 90 con algo de los 2000): velocímetro con aguja (--vel, app.js) y su pantalla, GPS con su
      barra de LED y frecuencia, acelerómetro y la última corrida -->
@@ -647,7 +650,10 @@
           <span class="tb-fila"><span class="barras" id="sBarras" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="tb-hz" id="sHz">—</span></span>
         </div>
         <div class="stat tb-acel"><span class="k">Acelerómetro</span><span class="val" id="sAcel">—</span></div>
-        <button type="button" class="stat ancha ultima" id="ultCorrida" hidden></button>
+        <div class="ult-caja" id="ultCaja" hidden>
+          <button type="button" class="stat ancha ultima" id="ultCorrida"></button>
+          <button type="button" class="ult-x" id="ultQuitar" aria-label="Quitar la última corrida de aquí"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+        </div>
 </template>
 
 <script>
