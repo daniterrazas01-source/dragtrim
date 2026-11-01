@@ -120,6 +120,39 @@ def main():
                 chk(not errs, f'C. {car} sin errores: ' + '; '.join(errs))
                 ctx.close()
 
+            # ---------------- E. Tablero: consola fija abajo, velocímetro con aguja, números de 7 segmentos, aguja al medir
+            ctx, pg, errs = abrir(b, {'fondo': 'ninguno', 'tema': 'dark'}, mock=True)
+            pg.click('.tabs button[data-view="vAjustes"]'); pg.click('#ajTabApariencia'); pg.wait_for_timeout(200)
+            pg.click('#segCaratula button[data-v="tablero"]'); pg.wait_for_timeout(300)
+            chk(pg.evaluate("document.documentElement.dataset.caratula") == 'tablero', 'E. al elegir Tablero cambia al momento')
+            chk(fondo_body(pg) == 'rgb(11, 12, 14)', f'E. Tablero: negro de tablero con fibra de carbono ({fondo_body(pg)})')
+            t = pg.evaluate(TABS)
+            chk(t['abajo'] == 0 and t['izq'] == 0 and t['ancho'] == 393 and visible(pg, '.tabs button svg'), f'E. Tablero: consola fija abajo con íconos ({t})')
+            chk('Tablero' in pg.text_content('#segCaratula') and 'tablero' in pg.text_content('#caratulaExp'), 'E. la tercera opción y su explicación')
+            pg.click('.tabs button[data-view="vMedir"]'); pg.wait_for_timeout(300)
+            chk(visible(pg, '.tb-dial') and visible(pg, '.tb-aguja') and visible(pg, '#sBarras'), 'E. Medir: velocímetro con aguja y barra de LED del GPS')
+            fam = pg.evaluate("getComputedStyle(document.getElementById('sAcel')).fontFamily")
+            chk('DSEG7' in fam, f'E. números de 7 segmentos ({fam})')
+            ley = pg.evaluate("getComputedStyle(document.querySelector('#sStatus .k')).fontFamily")
+            chk('Michroma' in ley, f'E. leyendas de tablero ({ley})')
+            sai = pg.evaluate("getComputedStyle(document.querySelector('#segDist button')).fontFamily")
+            chk('Rooster' in sai, f'E. la letra Saira se queda en los selectores ({sai})')
+            pg.click('#btnSensores'); pg.wait_for_timeout(3200)
+            chk(pg.text_content('#sPrec').startswith('±') and pg.evaluate("getComputedStyle(document.getElementById('sStatus')).getPropertyValue('--vel').trim()") != '', 'E. sensores y aguja conectados')
+            # DSEG7 solo se carga cuando hay dígitos en pantalla (unicode-range): ya con los sensores prendidos
+            car = pg.evaluate("[...document.fonts].filter(f => ['DSEG7', 'Michroma'].includes(f.family.replace(/[\"']/g, ''))).map(f => f.family + ':' + f.status)")
+            chk(len(car) == 2 and all(c.endswith(':loaded') for c in car), f'E. las dos letras cargaron (van dentro de la app) {car}')
+            pg.click('#btnDemo'); vmax = 0
+            for _ in range(60):
+                pg.wait_for_timeout(250)
+                v = pg.evaluate("parseFloat(getComputedStyle(document.getElementById('medirSesion')).getPropertyValue('--vel')) || 0")
+                vmax = max(vmax, v)
+                if pg.query_selector('.slip'): break
+            chk(0.3 < vmax <= 1, f'E. al medir la aguja sigue la velocidad (máx {vmax:.2f} de 240 km/h)')
+            pg.screenshot(path=SH + 'caratulas_tablero_medir.png')
+            chk(not errs, 'E. sin errores: ' + '; '.join(errs))
+            ctx.close()
+
             # ---------------- D. con fondo: el botón principal toma el color del fondo
             for car in ('original', '2026'):
                 ctx, pg, errs = abrir(b, {'fondo': 'combinado', 'tema': 'dark', 'caratula': car})

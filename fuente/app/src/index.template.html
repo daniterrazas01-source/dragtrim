@@ -377,6 +377,7 @@
         <div class="seg" role="radiogroup" aria-label="Carátula" id="segCaratula" style="margin-top:8px">
           <button role="radio" data-v="original">Original</button>
           <button role="radio" data-v="2026">2026</button>
+          <button role="radio" data-v="tablero">Tablero</button>
         </div>
         <p class="hint aj-exp" id="caratulaExp" aria-live="polite"></p>
       </div>
@@ -631,6 +632,22 @@
         </div>
         <div class="stat"><span class="k">Acelerómetro</span><span class="val" id="sAcel">—</span></div>
         <div class="stat"><span class="k">Velocidad</span><span class="val" id="sVel">—</span></div>
+        <button type="button" class="stat ancha ultima" id="ultCorrida" hidden></button>
+</template>
+<!-- Tablero (tablero de los 80 y 90 con algo de los 2000): velocímetro con aguja (--vel, app.js) y su pantalla, GPS con su
+     barra de LED y frecuencia, acelerómetro y la última corrida -->
+<template id="tplStatusTablero">
+        <div class="stat tb-velo">
+          <span class="k">Velocidad</span>
+          <span class="tb-dial" aria-hidden="true"><i class="tb-aguja"></i></span>
+          <span class="val" id="sVel">—</span>
+        </div>
+        <div class="stat gps">
+          <span class="k">GPS</span>
+          <span class="val" id="sPrec">—</span>
+          <span class="tb-fila"><span class="barras" id="sBarras" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="tb-hz" id="sHz">—</span></span>
+        </div>
+        <div class="stat tb-acel"><span class="k">Acelerómetro</span><span class="val" id="sAcel">—</span></div>
         <button type="button" class="stat ancha ultima" id="ultCorrida" hidden></button>
 </template>
 

@@ -20,10 +20,13 @@ def _rooster():   # logo de Rooster Racing para la pantalla de carga: recortado,
 assert html.count('ROOSTER_URL') == 1
 html = html.replace('ROOSTER_URL', _rooster())
 html = html.replace('/*CSS*/', (SRC / 'style.css').read_text(encoding='utf-8') + '\n' + (SRC / 'camara.css').read_text(encoding='utf-8'))
-# letra de Rooster Racing (fondo Gallos), dentro del index.html para que funcione sin internet
-_fuente = 'url("fuentes/saira-black-italic.woff2")'
-assert html.count(_fuente) == 1
-html = html.replace(_fuente, 'url("data:font/woff2;base64,' + base64.b64encode((SRC / 'fuentes' / 'saira-black-italic.woff2').read_bytes()).decode() + '")')
+# letras dentro del index.html para que funcionen sin internet: Saira Black Italic (la de Rooster Racing) y, desde la
+# carátula Tablero (1 nov), DSEG7 (números de 7 segmentos) y Michroma (leyendas de tablero). Licencias en src/fuentes/OFL-*.txt
+import re as _re
+_fuentes = sorted(set(_re.findall(r'url\("fuentes/([\w.-]+\.woff2)"\)', html)))
+assert 'saira-black-italic.woff2' in _fuentes, _fuentes
+for _f in _fuentes:
+    html = html.replace(f'url("fuentes/{_f}")', 'url("data:font/woff2;base64,' + base64.b64encode((SRC / 'fuentes' / _f).read_bytes()).decode() + '")')
 html = html.replace('/*CORE*/', (SRC / 'dragcore.js').read_text(encoding='utf-8'))
 # Semáforo real: visión, núcleo, simulador (corrida simulada con cámara) y cámara
 for marca, archivo in (('/*SEMVISION*/', 'semaforo_vision.js'), ('/*SEMAFORO*/', 'semaforo.js'),

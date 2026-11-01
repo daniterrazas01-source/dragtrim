@@ -320,6 +320,7 @@
       const hz = sens.gpsDts.length ? 1 / median(sens.gpsDts) : NaN;
       $('#sHz').textContent = isFin(hz) ? `${hz < 1.5 ? hz.toFixed(1) : Math.round(hz)} Hz` : '—';
       $('#sVel').textContent = s ? `${fmtV(s.v * 3.6, 0)} ${velU()}` : '—';
+      $('#sStatus').style.setProperty('--vel', s && vivo ? Math.min(1, s.v * 3.6 / 240).toFixed(3) : '0');   // aguja del Tablero
       const ae = $('#sAcel');
       const accVivo = sens.ultAccRec > 0 && nowS() - sens.ultAccRec < 2;
       ae.textContent = accVivo && isFin(sens.accHz) ? `${Math.round(sens.accHz)} Hz` : (sens.activo ? 'sin datos' : '—');
@@ -384,6 +385,7 @@
     $('#sesTitulo').textContent = 'Esperando tu arranque';
     $('#sesTexto').textContent = 'La app no da la salida: arranca con el semáforo de la pista. El burnout, la alineación y el stage se ignoran.';
     $('#liveMain').innerHTML = `0<small>${velU()}</small>`;
+    $('#medirSesion').style.setProperty('--vel', '0');   // aguja del Tablero
     $('#liveSub').hidden = true; $('#track').hidden = true; $('#trackFill').style.width = '0';
     $('#btnTerminar').hidden = true; $('#btnCancelar').hidden = false;
     $('#eventLog').innerHTML = ''; $('#gpsLine').textContent = ses.demo ? 'Corrida simulada' : '';
@@ -449,6 +451,7 @@
         finCorrida(e.motivo);
       }
     }
+    if (ses.fase === 'corrida' || ses.fase === 'espera') $('#medirSesion').style.setProperty('--vel', Math.min(1, s.v * 3.6 / 240).toFixed(3));   // aguja del Tablero
     if (ses.fase === 'corrida') {
       const tope = ses.det.cfg.distancia_final + ses.det.cfg.margen_final_m;
       $('#liveMain').innerHTML = `${Math.round(ses.det.dVivo)}<small>m</small>`;
@@ -1447,6 +1450,7 @@
   const CARATULAS = {
     original: { tpl: 'tplStatusOriginal', exp: 'La de siempre: paneles con orilla y las pestañas fijas abajo.' },
     2026: { tpl: 'tplStatus2026', exp: 'Bloques sobre negro profundo y pestañas de cristal que flotan. Se lee mejor al sol.' },
+    tablero: { tpl: 'tplStatusTablero', exp: 'Como el tablero de un auto de los 80 y 90: números que brillan, aguja, cromo y fibra de carbono. De día, medidores de cara blanca.' },
   };
   function aplicarCaratula() {
     if (!CARATULAS[S.caratula]) S.caratula = DEF.caratula;

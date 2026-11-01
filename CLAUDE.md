@@ -205,6 +205,28 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    acelerómetro, cámara, instalar, borrar historial) y **Apariencia** (carátula con su explicación `#caratulaExp`, fondo y
    qué tanto se ve, tema, orientación, animaciones). Los `.seg` aceptan `aria-selected` además de `aria-checked`.
    caratulas_test.py lo revisa; barra, calc y horizontal tocan antes `#ajTabApariencia`.
+   **Carátula Tablero** (1 nov, Daniel: "inspírate en los tableros de los autos de los 80s y 90s… entre digitales y
+   analógicos… y esencia de los 2000s… utiliza la skill de UI/UX"; UI/UX Pro Max: Skeuomorphism + Retro-Futurism sin
+   "glitch" + Y2K, su `--design-system` salió fuera de tema y se buscó por estilo/letra): `S.caratula = 'tablero'`. Se arma
+   **sobre la 2026**: todas las reglas de la 2026 llevan `:where(:root:is([data-caratula="2026"], [data-caratula="tablero"]))`
+   (y sus guardas `:not(... , ...)`) y al final de style.css va el bloque "CARÁTULA TABLERO" con
+   `:where(:root[data-caratula="tablero"])`, que le gana por ir después (al tocar una regla de la 2026, revisar el Tablero).
+   De noche: fibra de carbono (`--carbono`), cápsulas con bisel de cromo, ventanas de pantalla VFD que brillan
+   (`--vfd` #3ff0d2; `--brillo` usa currentColor), números de 7 segmentos **DSEG7 Classic Bold Italic** (OFL, de npm
+   `dseg` 0.46.0; `unicode-range` solo dígitos . : - para que las letras y unidades salgan en otra letra; se carga al haber
+   dígitos) y leyendas **Michroma** (OFL, Google Fonts); botones como teclas iluminadas, consola fija abajo con un foquito
+   en la tecla elegida (`.tabs::before`), selectores como interruptores con foquito (`.seg button…::after`). De día (tema
+   claro): medidores de cara blanca de los 2000 y ventanas LCD (`--ventana` #c4d0b3, números oscuros sin brillo), aluminio
+   cepillado. Con fondo: brilla el color del fondo (`--vfd`, `--boton`, `--led` = `--acento`; en Gallos/rojos parece LED
+   rojo). Lo analógico: velocímetro con aguja en Medir (`tplStatusTablero`: `.tb-dial` + `.tb-aguja`, `--vel` en `#sStatus`
+   desde tickEstado) y al medir (`#liveMain` es un velocímetro: arco, rayitas y zona roja con `::before`, aguja con
+   `::after`; `--vel` en `#medirSesion` = velocidad/240 km/h en espera y corriendo; en el centro, la velocidad o ya
+   corriendo la distancia, como el odómetro dentro del velocímetro). La Saira no cambia (títulos con cromo, selectores,
+   botones, pestañas). Práctica y Race 1 vs 1 siempre de noche (`.rc` redefine los colores). build.py mete en index.html
+   todas las `url("fuentes/*.woff2")` (licencias en `src/fuentes/OFL-*.txt`). Comprobado: con el Tablero agregado, la
+   Original y la 2026 siguen igual píxel a píxel (0 diferencias); caratulas_test.py (E) revisa el Tablero.
+   Vista previa: el mismo artefacto "Drag Tree 2026" (abajo, botones Original / 2026 / Tablero que tocan los de Ajustes
+   → Apariencia dentro de la app; se guarda como si se tocara ahí).
    **Deslizar entre pestañas** (0.6.2, 25 oct, Daniel lo pidió "como nativa de iPhone"): con el dedo a la izquierda/derecha
    se pasa a la pestaña de al lado. Al tomar el dedo de lado, las pestañas de los lados ya se pintan (`prepararVista`,
    `data-entra` = sin la cascada de entrada) a ±ancho y se mueven pegadas a la actual; cada una se pone a la altura donde
@@ -508,7 +530,7 @@ python3 instalar_test.py # guía de instalación por teléfono/navegador, iPad v
 python3 deslizar_test.py # deslizar el dedo entre pestañas (toques reales por CDP): pasa, regresa, orillas, corrida, semáforo
 python3 carga_test.py    # pantalla de carga: logo + "By" Rooster Racing, 2 s, se desvanece, sin "beta" (con ?carga)
 python3 barra_test.py    # Android: color de la franja de la hora/cámara (theme-color) por fondo, velo, tema, corrida, Práctica, carga; pantallas de Samsung
-python3 caratulas_test.py   # Ajustes General/Apariencia y las carátulas Original y 2026 (cambio, se guarda, Medir, fondo)
+python3 caratulas_test.py   # Ajustes General/Apariencia y las carátulas Original, 2026 y Tablero (cambio, se guarda, Medir, aguja, fondo)
 python3 atajos_test.py   # Medir: Corrida simulada / Race 1 vs 1 / Antes de la pista como semáforo (3 cuadros a la izquierda); abren su explicación a la derecha, una a la vez
 python3 horizontal_test.py  # teléfono acostado (iPhone, S24 Ultra, chico): riel, Medir, midiendo, resultado, Race 1 vs 1, Práctica, carga; vertical igual
 node carrera_nucleo_test.js; node qr_test.js; node enlace_test.js; node sala_nucleo_test.mjs   # Race 1 vs 1 sin navegador
