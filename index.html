@@ -14,6 +14,18 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <style>
+/* ======================================================================================================================
+   CARÁTULAS (1 nov 2026, Daniel: "vamos a hacer tres interfaces"; se elige en Ajustes → Apariencia, S.caratula → <html
+   data-caratula>). Esta hoja es la Original (la de la 0.7.4) y junto a cada regla que el rediseño cambia va su versión,
+   limitada con :where(), que no cambia la especificidad: así cada carátula se ve exactamente como su hoja completa y la
+   Original no cambia.
+   - :where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) X → en la 2026 (rediseño "Drag Tree 2026", UI/UX
+     Pro Max) y en el Tablero, que se arma encima de ella.
+   - :where(:root:not([data-caratula="2026"], [data-caratula="tablero"])) X → regla de la Original que el rediseño quita.
+   - Al final, la carátula TABLERO: solo con :where(:root[data-caratula="tablero"]), gana a la 2026 por ir después.
+   Al cambiar algo, revísalo en las tres (Ajustes → Apariencia). La parte de la 2026 se armó con
+   fuente/app/tools/fusionar_caratula.py (ver CLAUDE.md, punto 7).
+   ====================================================================================================================== */
 :root {
   --asphalt: #24282c;
   --surface: #2f3439;
@@ -35,17 +47,62 @@
   --mono: "Courier New", ui-monospace, Menlo, monospace;
   color-scheme: dark;
 }
+:root:where([data-caratula="2026"], [data-caratula="tablero"]) {
+  --asphalt: #050607;                      /* fondo de la app: negro OLED */
+  --surface: #101317;                      /* losas */
+  --surface-2: #171b20;
+  --surface-3: #20252b;
+  --line: rgba(255, 255, 255, .16);        /* orilla de botones y campos */
+  --raya: rgba(255, 255, 255, .08);        /* orilla de las losas */
+  --chalk: #f3f4f0;
+  --chalk-dim: #a3aab0;
+  --chalk-3: #858d94;
+  --amber: #ffb020;
+  --green: #2fe07a;
+  --red: #ff453a;
+  --on-color: #16130a;                     /* letra sobre un botón de color */
+  --tab-on: var(--amber);                  /* pestaña elegida */
+  --bulb-off: #23282e;
+  --bulb-white: #fff3c9;
+  --paper: #f5f4ee;
+  --ink: #1b1d1f;
+  --ink-dim: #6c7176;
+  --focus: #7cc4ff;
+  --glass: rgba(28, 32, 38, .62);
+  --glass-borde: rgba(255, 255, 255, .16);
+  --glass-sombra: inset 0 1px 0 rgba(255, 255, 255, .12), 0 8px 24px rgba(0, 0, 0, .35);
+  --r-losa: 20px; --r-boton: 18px;
+  --tabs-h: 62px; --tabs-b: max(12px, calc(var(--sa-b) - 4px));   /* pestañas flotantes: arriba de la rayita de inicio */
+  --num: "Avenir Next Condensed", "sans-serif-condensed", "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "Courier New", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
     --asphalt: #eef0ec; --surface: #ffffff; --surface-2: #e2e5e1; --line: #c4c9cc;
     --chalk: #16191c; --chalk-dim: #565c62; --bulb-off: #cfd3d5; --amber: #e09000;
     --green: #12a548; --red: #d9271c; --focus: #0b63c4; color-scheme: light;
   }
+:root:where([data-caratula="2026"], [data-caratula="tablero"]):not([data-theme="dark"]) {
+    --asphalt: #eef0ec; --surface: #ffffff; --surface-2: #f2f3f0; --surface-3: #dfe3df; --line: rgba(0, 0, 0, .16);
+    --raya: rgba(0, 0, 0, .07); --chalk: #16191c; --chalk-dim: #565c62; --chalk-3: #686e74; --bulb-off: #cfd3d5;
+    --amber: #e09000; --green: #12a548; --red: #d9271c; --focus: #0b63c4; --tab-on: var(--chalk);
+    --glass: rgba(255, 255, 255, .74); --glass-borde: rgba(0, 0, 0, .08);
+    --glass-sombra: inset 0 1px 0 rgba(255, 255, 255, .9), 0 8px 24px rgba(0, 0, 0, .12); color-scheme: light;
+  }
 }
 :root[data-theme="light"] {
   --asphalt: #eef0ec; --surface: #ffffff; --surface-2: #e2e5e1; --line: #c4c9cc;
   --chalk: #16191c; --chalk-dim: #565c62; --bulb-off: #cfd3d5; --amber: #e09000;
   --green: #12a548; --red: #d9271c; --focus: #0b63c4; color-scheme: light;
+}
+:root:where([data-caratula="2026"], [data-caratula="tablero"])[data-theme="light"] {
+  --asphalt: #eef0ec; --surface: #ffffff; --surface-2: #f2f3f0; --surface-3: #dfe3df; --line: rgba(0, 0, 0, .16);
+  --raya: rgba(0, 0, 0, .07); --chalk: #16191c; --chalk-dim: #565c62; --chalk-3: #686e74; --bulb-off: #cfd3d5;
+  --amber: #e09000; --green: #12a548; --red: #d9271c; --focus: #0b63c4; --tab-on: var(--chalk);
+  --glass: rgba(255, 255, 255, .74); --glass-borde: rgba(0, 0, 0, .08);
+  --glass-sombra: inset 0 1px 0 rgba(255, 255, 255, .9), 0 8px 24px rgba(0, 0, 0, .12); color-scheme: light;
 }
 
 * { box-sizing: border-box; }
@@ -57,7 +114,18 @@ body {
   padding: var(--sa-t) 0 calc(64px + var(--sa-b));
   -webkit-tap-highlight-color: transparent;
 }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) body {
+  background: var(--asphalt); color: var(--chalk);
+  font: 16px/1.45 var(--body);
+  min-height: var(--alto);
+  padding: var(--sa-t) 0 calc(var(--tabs-h) + var(--tabs-b) + 18px);
+  -webkit-tap-highlight-color: transparent;
+}
 button, input, select { font: inherit; color: inherit; }
+/* cristal (solo la navegación y los controles que flotan): se ve borroso lo de atrás */
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) :is(.tabs, .sensors, .seg, .ghost, .pt-x, .rc-chip) {
+  -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%);
+}
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 [hidden] { display: none !important; }
 
@@ -77,53 +145,124 @@ button, input, select { font: inherit; color: inherit; }
 .lg-tree { fill: var(--logo-tree); }
 .lg-borde { fill: var(--logo-borde); stroke: var(--logo-borde); }
 .sensors { display: flex; gap: 10px; }
-.chip {
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .sensors {
+  display: flex; gap: 10px; padding: 7px 12px; border-radius: 999px;
+  background: var(--glass); border: 1px solid var(--glass-borde); box-shadow: var(--glass-sombra);
+}
+:where(:root:not([data-caratula="2026"], [data-caratula="tablero"])) .chip {
   font-size: 12px; color: var(--chalk-dim);
   display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
 }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .chip {
+  font: 600 11px/1 var(--body); letter-spacing: .06em; text-transform: uppercase; color: var(--chalk-dim);
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+}
 .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--bulb-off); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--chalk-3); flex: none; }
 .chip.on { color: var(--chalk); }
 .chip.on::before { background: var(--green); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .chip.on::before { background: var(--green); box-shadow: 0 0 8px color-mix(in srgb, var(--green) 70%, transparent); }
 .chip.warn::before { background: var(--amber); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .chip.warn::before { background: #ffb020; box-shadow: 0 0 8px rgba(255, 176, 32, .7); }
 .chip.bad::before { background: var(--red); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .chip.bad::before { background: var(--red); box-shadow: 0 0 8px color-mix(in srgb, var(--red) 70%, transparent); }
 
 main { max-width: 560px; margin: 0 auto; padding: 0 16px; }
 .view { padding-top: 8px; }
 h2 { font: 700 28px/1.1 var(--num); margin: 10px 0 14px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) h2 { font: 700 30px/1.05 var(--num); margin: 12px 0 14px; letter-spacing: -.01em; text-wrap: balance; }
 h3 { font: 600 17px/1.2 var(--body); margin: 26px 0 10px; }
 p { margin: 0 0 12px; }
 .muted { color: var(--chalk-dim); }
 
 /* Controles */
 .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--surface); border-radius: 12px; padding: 4px; gap: 4px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .seg {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: 4px; gap: 4px; border-radius: var(--r-boton);
+  background: var(--glass); border: 1px solid var(--glass-borde); box-shadow: var(--glass-sombra);
+}
 .seg button { border: 0; background: transparent; padding: 12px 6px; border-radius: 9px; font-weight: 600; color: var(--chalk-dim); cursor: pointer; }
-.seg button[aria-checked="true"] { background: var(--chalk); color: var(--asphalt); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .seg button { border: 0; background: transparent; padding: 12px 6px; border-radius: 14px; font-weight: 600; color: var(--chalk-dim); cursor: pointer; }
+.seg button:is([aria-checked="true"], [aria-selected="true"]) { background: var(--chalk); color: var(--asphalt); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .seg button:is([aria-checked="true"], [aria-selected="true"]) { background: var(--amber); color: var(--on-color); }
 .seg.big button { font: 700 22px/1 var(--num); padding: 16px 6px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .seg.big button { font: 700 22px/1 var(--num); padding: 18px 6px; }
 
 .primary, .ghost, .danger {
   display: block; width: 100%; border-radius: 14px; padding: 18px 16px; margin-top: 12px; cursor: pointer;
   font-weight: 700; font-size: 18px;
 }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .primary, :where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ghost, :where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .danger {
+  display: block; width: 100%; border-radius: var(--r-boton); padding: 17px 16px; margin-top: 12px; cursor: pointer;
+  font-weight: 700; font-size: 19px; min-height: 56px;
+}
 .primary { background: var(--amber); color: #1d1a12; border: 0; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .primary {
+  background: var(--amber); color: var(--on-color); border: 0;
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--amber) 30%, transparent), inset 0 1px 0 rgba(255, 255, 255, .45);
+}
 .primary.go { background: var(--green); color: #0d2414; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .primary.go { background: var(--green); color: #04170b; box-shadow: 0 10px 26px color-mix(in srgb, var(--green) 28%, transparent), inset 0 1px 0 rgba(255, 255, 255, .45); }
 .primary:disabled { opacity: .45; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .primary:disabled { opacity: .45; box-shadow: none; }
 .ghost { background: transparent; border: 1px solid var(--line); color: var(--chalk); font-weight: 600; font-size: 16px; padding: 14px 16px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ghost {
+  background: var(--glass); border: 1px solid var(--glass-borde); box-shadow: var(--glass-sombra); color: var(--chalk);
+  font-weight: 600; font-size: 16px; padding: 14px 16px; min-height: 50px;
+}
 .danger { background: transparent; border: 1px solid var(--red); color: var(--red); font-weight: 600; font-size: 16px; padding: 14px 16px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .danger {
+  background: color-mix(in srgb, var(--red) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--red) 55%, transparent);
+  color: var(--red); font-weight: 600; font-size: 16px; padding: 14px 16px; min-height: 50px;
+}
 
-.status { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border-radius: 14px; overflow: hidden; margin: 16px 0 4px; }
-.stat { background: var(--surface); padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between; }   /* el valor abajo aunque el nombre ocupe dos renglones */
-.stat .k { display: block; font-size: 13px; color: var(--chalk-dim); }
+:where(:root:not([data-caratula="2026"], [data-caratula="tablero"])) .status { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border-radius: 14px; overflow: hidden; margin: 16px 0 4px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .status { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin: 14px 0 4px; }
+.stat { background: var(--surface); padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .stat {
+  background: var(--surface); border: 1px solid var(--raya); border-radius: var(--r-losa); padding: 11px 13px 12px;
+  display: flex; flex-direction: column; justify-content: space-between; gap: 2px; min-width: 0; text-align: left;
+}
+/* el valor abajo aunque el nombre ocupe dos renglones */
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .stat.ancha { grid-column: span 2; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .stat .k, :where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .kpis span, :where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .chart p, :where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .losa-k { display: block; font: 600 10.5px/1.25 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--chalk-3); }   /* el valor abajo aunque el nombre ocupe dos renglones */
+:where(:root:not([data-caratula="2026"], [data-caratula="tablero"])) .stat .k { display: block; font-size: 13px; color: var(--chalk-dim); }
 .stat .val { display: block; font: 700 26px/1.15 var(--num); font-variant-numeric: tabular-nums; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .stat .val { display: block; font: 700 32px/1.05 var(--num); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .stat .val small { font: 600 13px/1 var(--body); color: var(--chalk-dim); margin-left: 3px; letter-spacing: 0; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .stat .s { display: block; font-size: 12.5px; color: var(--chalk-dim); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .stat .sk { display: block; font-size: 11px; color: var(--chalk-3); margin-top: 1px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .stat-fila { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .stat-der { display: flex; align-items: flex-end; gap: 12px; text-align: right; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .barras { display: flex; gap: 3px; align-items: flex-end; height: 26px; margin-bottom: 14px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .barras i { width: 6px; border-radius: 2px; background: var(--surface-3); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .barras i:nth-child(1) { height: 30%; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .barras i:nth-child(2) { height: 48%; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .barras i:nth-child(3) { height: 66%; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .barras i:nth-child(4) { height: 84%; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .barras i:nth-child(5) { height: 100%; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .barras.good i.on { background: var(--green); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .barras.meh i.on { background: #ffb020; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .barras.bad i.on { background: var(--red); }
+/* última corrida: se toca para abrir su boleta */
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .stat.ultima { font: inherit; color: inherit; cursor: pointer; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ultima .stat-fila { align-items: baseline; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tramos { display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 1fr)); gap: 4px; margin-top: 8px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tramos span { display: grid; gap: 4px; font: 600 10.5px/1 var(--body); color: var(--chalk-3); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tramos span::before { content: ""; height: 5px; border-radius: 3px; background: linear-gradient(90deg, var(--amber), color-mix(in srgb, var(--amber) 55%, #fff)); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tramos b { font: 700 14px/1 var(--num); color: var(--chalk); font-variant-numeric: tabular-nums; }
 .stat .val.good { color: var(--green); }
 .stat .val.meh { color: var(--amber); }
 .stat .val.bad { color: var(--red); }
 
 /* aviso: recuadro con un tinte del color (antes una raya gruesa a la izquierda; impeccable, 31 oct) */
 .msg { margin: 12px 0 0; padding: 12px 14px; border-radius: 12px; background: color-mix(in srgb, var(--amber) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--amber) 50%, transparent); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .msg { margin: 12px 0 0; padding: 12px 14px; border-radius: 14px; background: color-mix(in srgb, var(--amber) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--amber) 50%, transparent); }
 .msg:empty { display: none; }
 .msg.err { background: color-mix(in srgb, var(--red) 10%, var(--surface)); border-color: color-mix(in srgb, var(--red) 55%, transparent); }
 
 .howto { margin-top: 20px; background: var(--surface); border-radius: 14px; padding: 4px 16px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .howto { margin-top: 20px; background: var(--surface); border: 1px solid var(--raya); border-radius: var(--r-losa); padding: 4px 16px; }
 .howto summary { padding: 12px 0; font-weight: 600; cursor: pointer; }
 .howto ul { margin: 0 0 14px; padding-left: 20px; }
 .howto li { margin-bottom: 8px; }
@@ -137,10 +276,20 @@ p { margin: 0 0 12px; }
   display: flex; flex-direction: column; gap: 8px; padding: 8px;
   background: #0b0c0d; border-radius: 16px; box-shadow: inset 0 0 0 2px #050606;
 }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .atajos-arbol {
+  display: flex; flex-direction: column; gap: 8px; padding: 8px;
+  background: linear-gradient(#0c0e10, #08090a); border-radius: 22px; box-shadow: inset 0 0 0 1.5px #1c2025, 0 12px 30px rgba(0, 0, 0, .5);
+}
 .atajo {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
   width: 72px; height: 72px; padding: 6px 4px; border-radius: 12px; cursor: pointer;
   background: #1d2023; border: 1px solid #3a3f44; color: #eceee9;
+  font: 600 11.5px/1.1 var(--body); text-align: center;
+}
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .atajo {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  width: 72px; height: 72px; padding: 6px 4px; border-radius: 16px; cursor: pointer;
+  background: #171b20; border: 1px solid rgba(255, 255, 255, .1); color: #f3f4f0;
   font: 600 11.5px/1.1 var(--body); text-align: center;
 }
 .atajo svg { width: 22px; height: 22px; flex: none; }
@@ -152,22 +301,29 @@ p { margin: 0 0 12px; }
 
 /* Sesión */
 .ses-title { font: 700 40px/1.05 var(--num); margin: 10px 0 10px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ses-title { font: 700 36px/1.02 var(--num); margin: 12px 0 10px; letter-spacing: -.01em; text-wrap: balance; }
 .ses-text { color: var(--chalk-dim); margin-bottom: 16px; }
 .big { font: 700 84px/0.95 var(--num); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .big { font: 700 clamp(84px, 34vw, 140px)/.86 var(--num); font-variant-numeric: tabular-nums; letter-spacing: -.03em; margin-top: 8px; }
 .big small { font: 600 20px/1 var(--body); color: var(--chalk-dim); margin-left: 6px; letter-spacing: 0; }
 .mid { font: 700 46px/1 var(--num); font-variant-numeric: tabular-nums; margin-top: 8px; }
 .mid small { font: 600 18px/1 var(--body); color: var(--chalk-dim); margin-left: 6px; }
 .gpsline { font-size: 14px; color: var(--chalk-dim); margin-top: 10px; }
 
 .track { position: relative; height: 14px; border-radius: 7px; background: var(--surface); margin: 22px 0 30px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .track { position: relative; height: 6px; border-radius: 3px; background: var(--surface-3); margin: 26px 0 34px; }
 .track .fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 7px; background: var(--green); transition: width .25s linear; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .track .fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 3px; background: var(--green); transition: width .25s linear; }
 .track .tick { position: absolute; top: -4px; width: 2px; height: 22px; background: var(--line); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .track .tick { position: absolute; top: -6px; width: 2px; height: 18px; border-radius: 1px; background: var(--chalk-3); }
 .track .tick span { position: absolute; top: 24px; left: 50%; transform: translateX(-50%); font-size: 11px; color: var(--chalk-dim); white-space: nowrap; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .track .tick span { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 600; color: var(--chalk-dim); white-space: nowrap; }
 .track .tick.passed { background: var(--green); }
 .track .tick.passed span { color: var(--chalk); font-weight: 600; }
 
 .log { list-style: none; margin: 18px 0 0; padding: 0; font-size: 14px; color: var(--chalk-dim); }
 .log li { padding: 8px 0; border-top: 1px solid var(--line); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .log li { padding: 9px 0; border-top: 1px solid var(--raya); }
 .log li.red { color: var(--red); }
 .log li.green { color: var(--green); font-weight: 600; }
 
@@ -176,6 +332,13 @@ p { margin: 0 0 12px; }
   background: var(--paper); color: var(--ink); font-family: var(--mono); border-radius: 4px;
   padding: 18px 18px 14px; margin: 6px auto 0; max-width: 360px;
   box-shadow: 0 1px 0 rgba(0,0,0,.25), 0 10px 24px rgba(0,0,0,.25);
+  -webkit-mask: radial-gradient(circle at 8px 0, transparent 5px, #000 5.5px) -8px 0 / 16px 100% repeat-x;
+          mask: radial-gradient(circle at 8px 0, transparent 5px, #000 5.5px) -8px 0 / 16px 100% repeat-x;
+}
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .slip {
+  background: var(--paper); color: var(--ink); font-family: var(--mono); border-radius: 6px;
+  padding: 18px 18px 14px; margin: 6px auto 0; max-width: 360px;
+  box-shadow: 0 1px 0 rgba(0,0,0,.25), 0 14px 34px rgba(0,0,0,.45);
   -webkit-mask: radial-gradient(circle at 8px 0, transparent 5px, #000 5.5px) -8px 0 / 16px 100% repeat-x;
           mask: radial-gradient(circle at 8px 0, transparent 5px, #000 5.5px) -8px 0 / 16px 100% repeat-x;
 }
@@ -193,54 +356,89 @@ p { margin: 0 0 12px; }
 .slip footer { margin-top: 10px; border-top: 1px dashed var(--ink-dim); padding-top: 8px; font-size: 13px; color: var(--ink-dim); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .stamp { display: inline-block; border: 2px solid var(--red); color: var(--red); font: 700 12px/1 var(--body); padding: 3px 6px; border-radius: 4px; transform: rotate(-4deg); margin-top: 6px; }
 
-.kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border-radius: 14px; overflow: hidden; margin-top: 18px; }
-.kpis div { background: var(--surface); padding: 12px 14px; }
-.kpis span { display: block; font-size: 13px; color: var(--chalk-dim); }
+:where(:root:not([data-caratula="2026"], [data-caratula="tablero"])) .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border-radius: 14px; overflow: hidden; margin-top: 18px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .kpis { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-top: 16px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .kpis > div { background: var(--surface); border: 1px solid var(--raya); border-radius: var(--r-losa); padding: 11px 13px 12px; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; }   /* el valor abajo aunque el nombre ocupe dos renglones */
+:where(:root:not([data-caratula="2026"], [data-caratula="tablero"])) .kpis div { background: var(--surface); padding: 12px 14px; }
+:where(:root:not([data-caratula="2026"], [data-caratula="tablero"])) .kpis span { display: block; font-size: 13px; color: var(--chalk-dim); }
 .kpis b { font: 700 26px/1.15 var(--num); font-variant-numeric: tabular-nums; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .kpis b { display: block; margin-top: 3px; font: 700 30px/1.05 var(--num); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 .kpis b small { font: 500 14px var(--body); color: var(--chalk-dim); margin-left: 4px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .kpis b small { font: 600 13px var(--body); color: var(--chalk-dim); margin-left: 3px; letter-spacing: 0; }
 
 .chart { background: var(--surface); border-radius: 14px; padding: 12px 10px 6px; margin-top: 12px; }
-.chart p { margin: 0 4px 6px; font-weight: 600; font-size: 14px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .chart { background: var(--surface); border: 1px solid var(--raya); border-radius: var(--r-losa); padding: 12px 10px 6px; margin-top: 10px; }
+:where(:root:not([data-caratula="2026"], [data-caratula="tablero"])) .chart p { margin: 0 4px 6px; font-weight: 600; font-size: 14px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .chart p { margin: 0 4px 6px; }
 .chart canvas { width: 100%; height: 190px; display: block; }
 
 .quality { background: var(--surface); border-radius: 14px; padding: 6px 14px; margin-top: 12px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .quality { background: var(--surface); border: 1px solid var(--raya); border-radius: var(--r-losa); padding: 6px 16px; margin-top: 10px; }
 .quality dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 14px; margin: 8px 0; font-size: 14px; }
 .quality dt { color: var(--chalk-dim); }
 .quality dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .avisos { list-style: none; padding: 0; margin: 4px 0 10px; font-size: 14px; }
 .avisos li { padding: 8px 10px; border: 1px solid color-mix(in srgb, var(--amber) 45%, transparent); background: color-mix(in srgb, var(--amber) 8%, var(--surface-2)); border-radius: 8px; margin-top: 6px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .avisos li { padding: 9px 11px; border: 1px solid color-mix(in srgb, var(--amber) 45%, transparent); background: color-mix(in srgb, var(--amber) 8%, var(--surface-2)); border-radius: 12px; margin-top: 6px; }
 
 .actions { display: grid; gap: 0; margin: 10px 0 20px; }
 
 /* Historial */
 .hist { list-style: none; margin: 0; padding: 0; }
-.hist li { border-top: 1px solid var(--line); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .hist li + li { margin-top: 8px; }
+:where(:root:not([data-caratula="2026"], [data-caratula="tablero"])) .hist li { border-top: 1px solid var(--line); }
 .hist button { width: 100%; background: none; border: 0; padding: 14px 2px; display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; text-align: left; cursor: pointer; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .hist button {
+  width: 100%; background: var(--surface); border: 1px solid var(--raya); border-radius: var(--r-losa); padding: 13px 16px;
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; text-align: left; cursor: pointer;
+}
 .hist .et { font: 700 30px/1 var(--num); font-variant-numeric: tabular-nums; grid-row: span 2; align-self: center; text-align: right; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .hist .et { font: 700 32px/1 var(--num); font-variant-numeric: tabular-nums; grid-row: span 2; align-self: center; text-align: right; letter-spacing: -.01em; }
 .hist .when { font-weight: 600; }
 .hist .sub { font-size: 13px; color: var(--chalk-dim); }
 .empty { padding: 30px 0; color: var(--chalk-dim); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .empty { padding: 30px 4px; color: var(--chalk-dim); }
 
 /* Ajustes */
 .field { background: var(--surface); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .field { background: var(--surface); border: 1px solid var(--raya); border-radius: var(--r-losa); padding: 15px 16px; margin-bottom: 10px; }
 .field > label, .field > .lab { display: block; font-weight: 600; margin-bottom: 4px; }
 .field .hint { font-size: 13px; color: var(--chalk-dim); margin: 0 0 10px; }
 .field .row { display: flex; gap: 10px; align-items: center; }
 .field input[type=number] { width: 100%; background: var(--asphalt); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 18px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .field input[type=number] { width: 100%; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 18px; }
 .field .row span { color: var(--chalk-dim); white-space: nowrap; }
 .field > label.toggle, .toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; }
 .toggle input { width: 26px; height: 26px; accent-color: var(--green); }
 .ver { font-size: 13px; color: var(--chalk-dim); margin: 18px 0; }
+/* Ajustes en dos pestañas (1 nov): General y Apariencia; la explicación de la carátula elegida va bajo su selector */
+.aj-pestanas { margin: 0 0 12px; }
+.field .hint.aj-exp { margin: 8px 2px 0; }
 
 /* Navegación */
-.tabs {
+:where(:root:not([data-caratula="2026"], [data-caratula="tablero"])) .tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
   display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
   background: var(--surface); border-top: 1px solid var(--line);
   padding-bottom: var(--sa-b);
 }
-.tabs button { background: none; border: 0; padding: 14px 2px 16px; font-size: 15px; font-weight: 600; color: var(--chalk-dim); cursor: pointer; }
-.tabs button[aria-current="page"] { color: var(--chalk); box-shadow: inset 0 3px 0 var(--amber); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tabs {
+  position: fixed; left: calc(12px + var(--sa-l)); right: calc(12px + var(--sa-r)); bottom: var(--tabs-b); z-index: 5;
+  height: var(--tabs-h); padding: 0 6px; border-radius: 32px;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center;
+  background: var(--glass); border: 1px solid var(--glass-borde); box-shadow: var(--glass-sombra);
+}
+:where(:root:not([data-caratula="2026"], [data-caratula="tablero"])) .tabs button { background: none; border: 0; padding: 14px 2px 16px; font-size: 15px; font-weight: 600; color: var(--chalk-dim); cursor: pointer; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tabs button {
+  display: grid; justify-items: center; align-content: center; gap: 3px; height: calc(var(--tabs-h) - 12px); padding: 0 1px;
+  background: none; border: 0; border-radius: 25px; font-size: 11.5px; line-height: 1; color: var(--chalk-dim); cursor: pointer;
+  position: relative; z-index: 1;   /* encima de la pastilla que se desliza (si no, ella se queda con el toque) */
+}
+.tabs button svg { display: none; }   /* íconos de las pestañas: solo los muestra la carátula 2026 */
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tabs button svg { display: block; width: 22px; height: 22px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tabs button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; }
+:where(:root:not([data-caratula="2026"], [data-caratula="tablero"])) .tabs button[aria-current="page"] { color: var(--chalk); box-shadow: inset 0 3px 0 var(--amber); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tabs button[aria-current="page"] { color: var(--tab-on); background: color-mix(in srgb, var(--amber) 15%, transparent); }
 body.sesion .tabs { display: none; }
 body.sesion { padding-bottom: var(--sa-b); }
 
@@ -270,6 +468,7 @@ a.ghost.boton { display: block; text-align: center; text-decoration: none; }
 .cam-boleta .rejilla { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
 .cam-boleta label { display: grid; gap: 4px; font-size: 13px; color: var(--chalk-dim); }
 .cam-boleta input { width: 100%; background: var(--asphalt); border: 1px solid var(--line); border-radius: 10px; padding: 10px; font-size: 17px; color: var(--chalk); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .cam-boleta input { width: 100%; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px; font-size: 17px; color: var(--chalk); }
 .slip tr.rt td { font-size: 18px; font-weight: 700; padding-bottom: 6px; }
 .slip tr.rt.baja td:nth-child(2) { color: #8d9093; }
 
@@ -286,19 +485,36 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   padding: var(--sa-t) 0 var(--sa-b);
   user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none;
 }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .pt {
+  position: fixed; inset: 0; z-index: 20; background: #050607; color: #f3f4f0;
+  display: grid; grid-template-rows: auto 1fr auto auto minmax(108px, calc(19 * var(--u)));   /* botón de abajo más bajo: se ve más el fondo (0.6.2) */
+  padding: var(--sa-t) 0 var(--sa-b);
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none;
+}
 .pt-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; font-size: 14px; color: #a5abb0; }
 .pt-x { background: none; border: 1px solid #4a5158; color: #eceee9; border-radius: 10px; padding: 8px 14px; font-weight: 600; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .pt-x { background: rgba(28, 32, 38, .62); border: 1px solid rgba(255, 255, 255, .16); color: #f3f4f0; border-radius: 14px; padding: 9px 14px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12); }
 .pt-score { font: 700 24px/1 var(--num); color: #eceee9; min-width: 60px; text-align: right; }
 .pt-tree { display: flex; justify-content: center; align-items: center; gap: 18px; min-height: 0; }
 .pt-lane { display: grid; justify-items: center; gap: min(calc(1.2 * var(--u)), 9px); background: #0b0c0d; padding: 12px 12px; border-radius: 16px; box-shadow: inset 0 0 0 2px #050606; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .pt-lane {
+  display: grid; justify-items: center; gap: min(calc(1.2 * var(--u)), 10px); padding: 13px 12px; border-radius: 22px;
+  background: linear-gradient(#0c0e10, #08090a); box-shadow: inset 0 0 0 1.5px #1c2025, 0 12px 30px rgba(0, 0, 0, .6);
+}
 .pt-pair { display: flex; gap: 8px; }
 .pb { display: block; width: min(calc(7.4 * var(--u)), 60px); height: min(calc(7.4 * var(--u)), 60px);   /* el árbol cabe sin tocar la reacción */ border-radius: 50%; background: #26292c; box-shadow: inset 0 -4px 0 rgba(0,0,0,.45); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .pb { display: block; width: min(calc(7.4 * var(--u)), 60px); height: min(calc(7.4 * var(--u)), 60px);   /* el árbol cabe sin tocar la reacción */ border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #2b3037, #1e2227 62%); box-shadow: inset 0 -4px 6px rgba(0, 0, 0, .55); }
 .pb.s { width: min(calc(3 * var(--u)), 22px); height: min(calc(3 * var(--u)), 22px); }
 @media (max-height: 700px) { .pb { width: 6.6vh; height: 6.6vh; } }   /* teléfonos chicos (SE): en 1 vs 1 el árbol tocaba la reacción */
 .pb.w.on { background: #fff3c9; box-shadow: 0 0 12px 2px rgba(255,243,201,.6); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .pb.w.on { background: radial-gradient(circle at 35% 30%, #fffef4, #fff3c9 45%, #f2d27a); box-shadow: 0 0 12px 3px rgba(255,243,201,.65), inset 0 -2px 3px rgba(150,110,20,.35); }
 .pb.y.on { background: #ffb020; box-shadow: 0 0 20px 5px rgba(255,176,32,.6); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .pb.y.on { background: radial-gradient(circle at 35% 30%, #ffe9b0, #ffb020 45%, #c47a00); box-shadow: 0 0 24px 6px rgba(255,176,32,.6), inset 0 -4px 6px rgba(120,60,0,.45); }
 .pb.g.on { background: #36d46b; box-shadow: 0 0 24px 7px rgba(54,212,107,.6); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .pb.g.on { background: radial-gradient(circle at 35% 30%, #c9ffd9, #36d46b 45%, #168a3d); box-shadow: 0 0 26px 7px rgba(54,212,107,.6), inset 0 -4px 6px rgba(0,70,20,.45); }
 .pb.r.on { background: #f0453a; box-shadow: 0 0 24px 7px rgba(240,69,58,.65); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .pb.r.on { background: radial-gradient(circle at 35% 30%, #ffd0cc, #f0453a 45%, #a31a12); box-shadow: 0 0 26px 7px rgba(240,69,58,.65), inset 0 -4px 6px rgba(90,0,0,.45); }
 .pt-res { display: grid; grid-template-columns: 1fr 1fr; text-align: center; padding: 12px 10px 0; min-height: 58px; }
 .pt-res span { display: block; font-size: 13px; color: #a5abb0; }
 .pt-rtv { display: block; font: 700 34px/1.05 var(--num); font-variant-numeric: tabular-nums; }
@@ -306,7 +522,13 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 .pt-msg { text-align: center; font-weight: 600; margin: 4px 12px; min-height: 1.4em; }
 .pt-zones { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; }
 .pt-zone { border-radius: 18px; background: #24282c; border: 2px solid #3a3f44; display: flex; align-items: center; justify-content: center; text-align: center; padding: 10px; font: 700 20px/1.2 var(--num); cursor: pointer; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .pt-zone {
+  border-radius: 24px; background: rgba(28, 32, 38, .62); border: 1px solid rgba(255, 255, 255, .16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 8px 24px rgba(0, 0, 0, .35);
+  display: flex; align-items: center; justify-content: center; text-align: center; padding: 10px; font: 700 20px/1.2 var(--num); cursor: pointer;
+}
 .pt-zone.held { background: #3a2f12; border-color: #ffb020; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .pt-zone.held { background: color-mix(in srgb, #ffb020 20%, #101317); border-color: #ffb020; }
 .pt.solo .pt-lane.r, .pt.solo .pt-res .r, .pt.solo .pt-zone.r { display: none; }
 .pt.solo .pt-zones, .pt.solo .pt-res { grid-template-columns: 1fr; }
 .pt.solo .pt-zone { width: min(100%, 300px); justify-self: center; }   /* más angosto: se ve el fondo a los lados */
@@ -350,7 +572,8 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 #guiaMedir { margin-bottom: 14px; }
 
 /* ============================================================ Calculadora (Rooster Racing) */
-@media (max-width: 350px) { .tabs button { font-size: 13px; } }
+@media (max-width: 350px) { .tabs button { font-size: 13px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tabs button { font-size: 10px; } }
 /* Encabezado en pantallas angostas: primero se compacta; si aun así no cabe (≤ ~365 px), los indicadores
    bajan de línea en vez de ensanchar la página. */
 .top { flex-wrap: wrap; row-gap: 6px; }
@@ -374,6 +597,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 .pt-exp { margin: 6px 2px 0; font-size: 13px; line-height: 1.35; }
 .pt-opciones .seg button { padding-top: 9px; padding-bottom: 9px; }
 .field select { width: 100%; background: var(--asphalt); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 17px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .field select { width: 100%; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 17px; }
 .c-sub { margin-top: 12px; }
 .c-sub > .ghost { margin-top: 0; }
 .seg.mini { flex: none; width: 120px; }
@@ -409,6 +633,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 .c-inv .row { display: flex; gap: 10px; align-items: center; }
 .c-inv .row span { color: var(--chalk-dim); white-space: nowrap; }
 .c-inv input[type=number] { width: 100%; background: var(--asphalt); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 18px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .c-inv input[type=number] { width: 100%; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 18px; }
 
 /* ============================================================ Fondos de pantalla: estilo sticker
    Se activa con data-fondo en <html>. El fondo va fijo detrás de todo con un velo oscuro
@@ -421,10 +646,26 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   --amber: var(--acento); --velo-color: 10, 10, 11;
   color-scheme: dark;
 }
+:root:where([data-caratula="2026"], [data-caratula="tablero"])[data-fondo] {
+  --sticker: #ffffff; --tinta: #0e0e0f;
+  --asphalt: #0e0e0f; --surface: rgba(12, 14, 17, .86); --surface-2: rgba(32, 35, 40, .92); --surface-3: rgba(255, 255, 255, .16);
+  --line: rgba(255, 255, 255, .24); --raya: rgba(255, 255, 255, .13); --chalk: #ffffff; --chalk-dim: #c8c8c8; --chalk-3: #a8a8a8;
+  --amber: var(--acento); --tab-on: var(--acento); --on-color: #0e0e0f; --velo-color: 10, 10, 11;
+  --glass: rgba(16, 18, 22, .6); --glass-borde: rgba(255, 255, 255, .2);
+  color-scheme: dark;
+}
 :root[data-fondo][data-theme="light"] {
   --sticker: #0e0e0f; --tinta: #ffffff;
   --asphalt: #f2f2ef; --surface: rgba(255, 255, 255, .94); --surface-2: rgba(234, 234, 230, .95);
   --line: rgba(0, 0, 0, .22); --chalk: #0e0e0f; --chalk-dim: #4a4a4a; --velo-color: 244, 244, 240;
+  color-scheme: light;
+}
+:root:where([data-caratula="2026"], [data-caratula="tablero"])[data-fondo][data-theme="light"] {
+  --sticker: #0e0e0f; --tinta: #ffffff;
+  --asphalt: #f2f2ef; --surface: rgba(255, 255, 255, .9); --surface-2: rgba(240, 240, 236, .95); --surface-3: rgba(0, 0, 0, .12);
+  --line: rgba(0, 0, 0, .2); --raya: rgba(0, 0, 0, .09); --chalk: #0e0e0f; --chalk-dim: #4a4a4a; --chalk-3: #5a5a5a;
+  --velo-color: 244, 244, 240; --tab-on: #0e0e0f; --glass: rgba(255, 255, 255, .72); --glass-borde: rgba(0, 0, 0, .1);
+  --glass-sombra: inset 0 1px 0 rgba(255, 255, 255, .9), 0 8px 24px rgba(0, 0, 0, .14);
   color-scheme: light;
 }
 @media (prefers-color-scheme: light) {
@@ -432,6 +673,14 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
     --sticker: #0e0e0f; --tinta: #ffffff;
     --asphalt: #f2f2ef; --surface: rgba(255, 255, 255, .94); --surface-2: rgba(234, 234, 230, .95);
     --line: rgba(0, 0, 0, .22); --chalk: #0e0e0f; --chalk-dim: #4a4a4a; --velo-color: 244, 244, 240;
+    color-scheme: light;
+  }
+:root:where([data-caratula="2026"], [data-caratula="tablero"])[data-fondo]:not([data-theme]) {
+    --sticker: #0e0e0f; --tinta: #ffffff;
+    --asphalt: #f2f2ef; --surface: rgba(255, 255, 255, .9); --surface-2: rgba(240, 240, 236, .95); --surface-3: rgba(0, 0, 0, .12);
+    --line: rgba(0, 0, 0, .2); --raya: rgba(0, 0, 0, .09); --chalk: #0e0e0f; --chalk-dim: #4a4a4a; --chalk-3: #5a5a5a;
+    --velo-color: 244, 244, 240; --tab-on: #0e0e0f; --glass: rgba(255, 255, 255, .72); --glass-borde: rgba(0, 0, 0, .1);
+    --glass-sombra: inset 0 1px 0 rgba(255, 255, 255, .9), 0 8px 24px rgba(0, 0, 0, .14);
     color-scheme: light;
   }
 }
@@ -448,19 +697,21 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 :root[data-fondo] body.sesion .fondo::after { background: rgba(var(--velo-color), .92); }
 
 /* Paneles = stickers: borde recortado y sombra */
-:root[data-fondo] :is(.status, .field, .howto, .kpis, .chart, .quality, .msg, .proximo, .seg, .c-res) {
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] :is(.status, .field, .howto, .kpis, .chart, .quality, .msg, .proximo, .seg, .c-res) {
   border: 2px solid var(--sticker); box-shadow: 0 4px 0 rgba(0, 0, 0, .55);
 }
-:root[data-fondo] :is(.status, .kpis) { background: var(--sticker); gap: 2px; }
-:root[data-fondo] .field .seg { box-shadow: none; border-width: 1.5px; }
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] :is(.status, .kpis) { background: var(--sticker); gap: 2px; }
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .field .seg { box-shadow: none; border-width: 1.5px; }
 :root[data-fondo] .proximo { background: var(--surface); border-style: dashed; }
-:root[data-fondo] .msg { border-width: 1.5px; }
-:root[data-fondo] .hist button { background: var(--surface); border-radius: 12px; margin: 8px 0; padding: 12px 14px; border: 2px solid var(--sticker); }
-:root[data-fondo] .hist li { border-top: 0; }
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .msg { border-width: 1.5px; }
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .hist button { background: var(--surface); border-radius: 12px; margin: 8px 0; padding: 12px 14px; border: 2px solid var(--sticker); }
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .hist li { border-top: 0; }
 :root[data-fondo] .empty { background: var(--surface); border-radius: 12px; padding: 16px; }
+:root:where([data-caratula="2026"], [data-caratula="tablero"])[data-fondo] .empty { background: var(--surface); border-radius: var(--r-losa); padding: 16px; }
 
 /* Textos sueltos sobre el fondo: siempre con panel detrás */
 :root[data-fondo] .view > p.muted { background: var(--surface); padding: 10px 14px; border-radius: 12px; }
+:root:where([data-caratula="2026"], [data-caratula="tablero"])[data-fondo] .view > p.muted { background: var(--surface); padding: 11px 15px; border-radius: 16px; }
 :root[data-fondo] .beta-tag { background: var(--acento); color: #0e0e0f; border-color: #0e0e0f; }
 
 /* Títulos y logo = etiqueta pegada, ligeramente chueca */
@@ -470,41 +721,48 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   transform: rotate(-1.5deg); box-shadow: 0 4px 0 rgba(0, 0, 0, .55); margin: 14px 0 16px;
 }
 :root[data-fondo] h3 { display: inline-block; background: var(--surface); padding: 4px 10px; border-radius: 6px; }
-:root[data-fondo] .sensors { background: var(--surface); padding: 5px 9px; border-radius: 99px; border: 1.5px solid var(--line); }
+:root:where([data-caratula="2026"], [data-caratula="tablero"])[data-fondo] h3 { display: inline-block; background: var(--surface); padding: 5px 12px; border-radius: 10px; }
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .sensors { background: var(--surface); padding: 5px 9px; border-radius: 99px; border: 1.5px solid var(--line); }
 :root[data-fondo] .ses-title { font-style: italic; font-weight: 900; }
 
 /* Botones = sticker de color */
-:root[data-fondo] .primary, :root[data-fondo] .primary.go {
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .primary, :root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .primary.go {
   background: var(--acento); color: #0e0e0f; border: 3px solid #0e0e0f;
   box-shadow: 0 0 0 3px var(--sticker), 0 6px 0 3px rgba(0, 0, 0, .55);
   font-style: italic; font-weight: 900; font-size: 20px; margin-top: 16px;
 }
-:root[data-fondo] .ghost { background: var(--surface); border: 2px solid var(--sticker); font-weight: 700; box-shadow: 0 4px 0 rgba(0, 0, 0, .5); }
-:root[data-fondo] .atajos-arbol { box-shadow: 0 0 0 3px #ffffff, 0 6px 0 3px rgba(0, 0, 0, .6); }
+:root:where([data-caratula="2026"], [data-caratula="tablero"])[data-fondo] .primary, :root:where([data-caratula="2026"], [data-caratula="tablero"])[data-fondo] .primary.go {
+  background: var(--acento); color: #0e0e0f;
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--acento) 30%, transparent), inset 0 1px 0 rgba(255, 255, 255, .45);
+}
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .ghost { background: var(--surface); border: 2px solid var(--sticker); font-weight: 700; box-shadow: 0 4px 0 rgba(0, 0, 0, .5); }
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .atajos-arbol { box-shadow: 0 0 0 3px #ffffff, 0 6px 0 3px rgba(0, 0, 0, .6); }
 :root[data-fondo] .atajo { font-weight: 700; }
 :root[data-fondo] .atajo[aria-expanded="true"] { background: var(--acento); border-color: var(--acento); box-shadow: 0 0 14px color-mix(in srgb, var(--acento) 70%, transparent); }
-:root[data-fondo] .danger { background: var(--surface); border-width: 2px; }
-:root[data-fondo] .seg button[aria-checked="true"], :root[data-fondo] .seg::before { background: var(--acento); color: #0e0e0f; }
-:root[data-fondo] .seg button[aria-checked="true"] { color: #0e0e0f; }
-:root[data-fondo] .tabs { background: rgba(10, 10, 11, .94); border-top: 2px solid var(--sticker); }
-:root[data-fondo][data-theme="light"] .tabs { background: rgba(255, 255, 255, .96); }
-@media (prefers-color-scheme: light) { :root[data-fondo]:not([data-theme]) .tabs { background: rgba(255, 255, 255, .96); } }
-:root[data-fondo] .tabs button[aria-current="page"] { font-style: italic; font-weight: 900; }
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .danger { background: var(--surface); border-width: 2px; }
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .seg button:is([aria-checked="true"], [aria-selected="true"]), :root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .seg::before { background: var(--acento); color: #0e0e0f; }
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .seg button:is([aria-checked="true"], [aria-selected="true"]) { color: #0e0e0f; }
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .tabs { background: rgba(10, 10, 11, .94); border-top: 2px solid var(--sticker); }
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo][data-theme="light"] .tabs { background: rgba(255, 255, 255, .96); }
+@media (prefers-color-scheme: light) { :root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo]:not([data-theme]) .tabs { background: rgba(255, 255, 255, .96); } }
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .tabs button[aria-current="page"] { font-style: italic; font-weight: 900; }
 /* La letra del texto "Rooster Racing" del logo (Saira Black Italic, licencia OFL: fuentes/OFL-Saira.txt; build.py la mete
    en index.html) en lo que Daniel marcó: títulos de cada pantalla, etiquetas (Modo, Árbol, Peso…), todos los selectores,
    los botones principales y las pestañas, con cualquier fondo. Las letras chiquitas (ayudas, descripciones, datos) no.
    font-synthesis: none para que el navegador no la incline otra vez donde el estilo pide cursiva. */
 @font-face { font-family: 'Rooster'; src: url("data:font/woff2;base64,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") format("woff2"); font-weight: 900; font-style: normal; font-display: swap; }
 :root :is(h2, .lab, .seg button, .primary, .tabs button) { font-family: 'Rooster', var(--num); font-style: normal; font-weight: 900; font-synthesis: none; }
-:root[data-fondo] .track { background: var(--surface); border: 2px solid var(--sticker); }
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .track { background: var(--surface); border: 2px solid var(--sticker); }
+:root:where([data-caratula="2026"], [data-caratula="tablero"])[data-fondo] .track { background: rgba(255, 255, 255, .18); }
 :root[data-fondo] .slip { box-shadow: 0 0 0 3px var(--sticker), 0 8px 0 3px rgba(0, 0, 0, .55); transform: rotate(-.6deg); }
 
 /* Práctica: el fondo se asoma detrás del árbol */
 :root[data-fondo] .pt { background: rgba(10, 10, 11, .84); }
-:root[data-fondo] .pt-lane { box-shadow: 0 0 0 3px #ffffff, 0 6px 0 3px rgba(0, 0, 0, .6); }
-:root[data-fondo] .pt-zone { background: rgba(20, 20, 22, .9); border: 2px solid #ffffff; }
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .pt-lane { box-shadow: 0 0 0 3px #ffffff, 0 6px 0 3px rgba(0, 0, 0, .6); }
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .pt-zone { background: rgba(20, 20, 22, .9); border: 2px solid #ffffff; }
 :root[data-fondo] .pt-zone.held { background: color-mix(in srgb, var(--acento) 24%, #0e0e0f); border-color: var(--acento); }
-:root[data-fondo] .pt-x { background: rgba(20, 20, 22, .9); border: 2px solid #ffffff; }
+:root:where([data-caratula="2026"], [data-caratula="tablero"])[data-fondo] .pt-zone.held { background: color-mix(in srgb, var(--acento) 22%, rgba(16, 18, 22, .8)); border-color: var(--acento); }
+:root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] .pt-x { background: rgba(20, 20, 22, .9); border: 2px solid #ffffff; }
 
 /* Selector de fondos */
 .fondos { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; margin-top: 4px; }
@@ -536,19 +794,19 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 @keyframes sacude { 0%, 100% { transform: none; } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
 
 /* Cambio de pestaña: el contenido entra en cascada */
-:where(.view:not(#vMedir), #medirIdle, #medirSesion) > * { animation: entra .34s var(--ease-out) both; }
-:where(.view, #medirIdle, #medirSesion) > :nth-child(2) { animation-delay: 35ms; }
-:where(.view, #medirIdle, #medirSesion) > :nth-child(3) { animation-delay: 70ms; }
-:where(.view, #medirIdle, #medirSesion) > :nth-child(4) { animation-delay: 105ms; }
-:where(.view, #medirIdle, #medirSesion) > :nth-child(5) { animation-delay: 140ms; }
-:where(.view, #medirIdle, #medirSesion) > :nth-child(6) { animation-delay: 175ms; }
-:where(.view, #medirIdle, #medirSesion) > :nth-child(7) { animation-delay: 210ms; }
-:where(.view, #medirIdle, #medirSesion) > :nth-child(n+8) { animation-delay: 240ms; }
+:where(.view:not(#vMedir), #medirIdle, #medirSesion, .aj-panel) > * { animation: entra .34s var(--ease-out) both; }
+:where(.view, #medirIdle, #medirSesion, .aj-panel) > :nth-child(2) { animation-delay: 35ms; }
+:where(.view, #medirIdle, #medirSesion, .aj-panel) > :nth-child(3) { animation-delay: 70ms; }
+:where(.view, #medirIdle, #medirSesion, .aj-panel) > :nth-child(4) { animation-delay: 105ms; }
+:where(.view, #medirIdle, #medirSesion, .aj-panel) > :nth-child(5) { animation-delay: 140ms; }
+:where(.view, #medirIdle, #medirSesion, .aj-panel) > :nth-child(6) { animation-delay: 175ms; }
+:where(.view, #medirIdle, #medirSesion, .aj-panel) > :nth-child(7) { animation-delay: 210ms; }
+:where(.view, #medirIdle, #medirSesion, .aj-panel) > :nth-child(n+8) { animation-delay: 240ms; }
 /* Deslizar entre pestañas (app.js): la actual y las de los lados se mueven juntas con el dedo. Las que se asoman ya
    vienen pintadas (data-entra): sin la cascada de entrada, que se queda apagada hasta que se ocultan. */
 :root.desliza-tab main { position: relative; overflow-x: clip; }
 :root.desliza-tab main > .view:not([hidden]) { will-change: transform; }
-:where(.view[data-entra]) > *, :where(.view[data-entra] #medirIdle) > *, :where(.view[data-entra] .atajo-panel) > * { animation: none; }
+:where(.view[data-entra]) > *, :where(.view[data-entra] #medirIdle) > *, :where(.view[data-entra] .atajo-panel) > *, :where(.view[data-entra] .aj-panel) > * { animation: none; }
 
 /* Logo: las luces se encienden una vez al abrir la app */
 /* Pantalla de carga (0.6.4): al abrir la app, 2 s con el logo y "By Rooster Racing" (app.js la quita); siempre oscura.
@@ -596,8 +854,8 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 @supports selector(:has(a)) {
   .seg { position: relative; --i: 0; --n: 2; }
   .seg:has(> button:nth-child(3)) { --n: 3; }
-  .seg:has(> button:nth-child(2)[aria-checked="true"]) { --i: 1; }
-  .seg:has(> button:nth-child(3)[aria-checked="true"]) { --i: 2; }
+  .seg:has(> button:nth-child(2):is([aria-checked="true"], [aria-selected="true"])) { --i: 1; }
+  .seg:has(> button:nth-child(3):is([aria-checked="true"], [aria-selected="true"])) { --i: 2; }
   /* app.js pone --seg-x/--seg-w con la posición y el ancho del botón elegido (un texto largo como "Atmosférico"
      hace un botón más ancho); sin ellas, botones iguales. Se desliza solo después de la primera medida. */
   .seg::before {
@@ -605,22 +863,35 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
     width: var(--seg-w, calc((100% - 8px - (var(--n) - 1) * 4px) / var(--n)));
     transform: translateX(var(--seg-x, calc(4px + var(--i) * (100% + 4px))));
   }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .seg::before {
+    content: ""; position: absolute; top: 4px; bottom: 4px; left: 0; border-radius: 14px; background: var(--amber);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--amber) 32%, transparent);
+    width: var(--seg-w, calc((100% - 8px - (var(--n) - 1) * 4px) / var(--n)));
+    transform: translateX(var(--seg-x, calc(4px + var(--i) * (100% + 4px))));
+  }
   .seg.seg-listo::before { transition: transform .32s var(--ease-out), width .32s var(--ease-out), opacity .2s; }
-  .seg:not(:has(> button[aria-checked="true"]))::before { opacity: 0; }
+  .seg:not(:has(> button:is([aria-checked="true"], [aria-selected="true"])))::before { opacity: 0; }
   .seg button { position: relative; z-index: 1; }
-  .seg button[aria-checked="true"] { background: transparent; }
+  .seg button:is([aria-checked="true"], [aria-selected="true"]) { background: transparent; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .seg button:is([aria-checked="true"], [aria-selected="true"]) { background: transparent; color: var(--on-color); }
 
   .tabs { --i: 0; }
   .tabs:has(> button:nth-child(2)[aria-current]) { --i: 1; }
   .tabs:has(> button:nth-child(3)[aria-current]) { --i: 2; }
   .tabs:has(> button:nth-child(4)[aria-current]) { --i: 3; }
   .tabs:has(> button:nth-child(5)[aria-current]) { --i: 4; }
-  .tabs::before {
+  :where(:root:not([data-caratula="2026"], [data-caratula="tablero"])) .tabs::before {
     content: ""; position: absolute; top: -1px; left: 0; width: 20%; height: 3px; background: var(--amber);
     border-radius: 0 0 3px 3px; transform: translateX(calc(var(--i) * 100%)); transition: transform .34s var(--ease-out), opacity .2s;
   }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tabs::before {
+    content: ""; position: absolute; top: 6px; bottom: 6px; left: 6px; width: calc((100% - 12px) / 5); border-radius: 25px;
+    background: color-mix(in srgb, var(--amber) 15%, transparent);
+    transform: translateX(calc(var(--i) * 100%)); transition: transform .34s var(--ease-out), opacity .2s;
+  }
   .tabs:not(:has(> button[aria-current]))::before { opacity: 0; }
-  .tabs button[aria-current="page"] { box-shadow: none; }
+  :where(:root:not([data-caratula="2026"], [data-caratula="tablero"])) .tabs button[aria-current="page"] { box-shadow: none; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tabs button[aria-current="page"] { background: none; }
 }
 
 /* Corrida en curso: hitos y bitácora */
@@ -679,14 +950,29 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
   overflow-y: auto; overscroll-behavior: contain;
   padding: var(--sa-t) 0 calc(18px + var(--sa-b));
 }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .rc {
+  --asphalt: #050607; --surface: #101317; --surface-2: #171b20; --surface-3: #20252b; --line: rgba(255, 255, 255, .16);
+  --raya: rgba(255, 255, 255, .08); --chalk: #f3f4f0; --chalk-dim: #a3aab0; --chalk-3: #858d94; --amber: #ffb020; --green: #2fe07a;
+  --red: #ff453a; --on-color: #16130a; --glass: rgba(28, 32, 38, .62); --glass-borde: rgba(255, 255, 255, .16);
+  --glass-sombra: inset 0 1px 0 rgba(255, 255, 255, .12), 0 8px 24px rgba(0, 0, 0, .35); color-scheme: dark;
+  position: fixed; inset: 0; z-index: 20; background: #050607; color: var(--chalk);
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: var(--sa-t) 0 calc(18px + var(--sa-b));
+}
 :root[data-fondo] .rc {
   background: rgba(10, 10, 11, .86); --surface: rgba(16, 16, 18, .93); --surface-2: rgba(38, 38, 42, .94);
   --line: rgba(255, 255, 255, .24); --sticker: #ffffff; --tinta: #0e0e0f; --amber: var(--acento);
+}
+:root:where([data-caratula="2026"], [data-caratula="tablero"])[data-fondo] .rc {
+  background: rgba(10, 10, 11, .86); --surface: rgba(12, 14, 17, .86); --surface-2: rgba(32, 35, 40, .92);
+  --line: rgba(255, 255, 255, .24); --raya: rgba(255, 255, 255, .13); --sticker: #ffffff; --tinta: #0e0e0f; --amber: var(--acento);
+  --on-color: #0e0e0f; --glass: rgba(16, 18, 22, .6); --glass-borde: rgba(255, 255, 255, .2);
 }
 .rc-top { display: flex; align-items: center; gap: 10px; max-width: 560px; margin: 0 auto; padding: 10px 16px; }
 .rc-tit { flex: 0 0 auto; white-space: nowrap; font: 900 21px/1 'Rooster', var(--num); font-style: italic; font-synthesis: none; }
 /* el aviso va a la derecha y, si no cabe, se recorta con "…" (el título nunca se parte) */
 .rc-chip { margin-left: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 99px; border: 1px solid var(--line); color: var(--chalk-dim); white-space: nowrap; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .rc-chip { margin-left: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: 99px; background: var(--glass); border: 1px solid var(--glass-borde); color: var(--chalk-dim); white-space: nowrap; }
 .rc-chip.ok { border-color: var(--green); color: #8be3a9; }
 .rc-chip.mal { border-color: var(--red); color: #ff8d84; }
 .rc.en-arbol .rc-chip { display: none; }
@@ -696,6 +982,7 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
 .rc-lado { display: contents; }
 .rc-intro { margin: 0 0 4px; color: var(--chalk-dim); }
 .rc-red { display: flex; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .rc-red { display: flex; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--raya); border-radius: var(--r-losa); padding: 13px 15px; }
 .rc-red svg { width: 60px; height: 38px; flex: none; color: #8be3a9; }
 .rc-red p { margin: 0; font-size: 14px; color: var(--chalk-dim); }
 .rc-red b { color: var(--chalk); }
@@ -719,9 +1006,13 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
 #rcTexto textarea { width: 100%; background: #0e0f10; color: var(--chalk); border: 1px solid var(--line); border-radius: 10px; padding: 10px; font: 13px/1.3 var(--mono); word-break: break-all; resize: vertical; }
 .rc-carriles { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
 .rc-carril { display: grid; gap: 2px; align-content: start; background: var(--surface); border: 2px solid var(--line); border-radius: 14px; padding: 10px 12px; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .rc-carril { display: grid; gap: 3px; align-content: start; background: var(--surface); border: 1.5px solid var(--raya); border-radius: var(--r-losa); padding: 11px 13px; }
 .rc-carril.mio { border-color: var(--amber); }
-.rc-cnom { font-size: 12px; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: .06em; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .rc-carril.mio { border-color: var(--amber); box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 14%, transparent); }
+:where(:root:not([data-caratula="2026"], [data-caratula="tablero"])) .rc-cnom { font-size: 12px; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: .06em; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .rc-cnom { font: 600 10.5px/1.2 var(--body); color: var(--chalk-3); text-transform: uppercase; letter-spacing: .1em; }
 .rc-quien { font: 900 19px/1.15 'Rooster', var(--num); font-style: italic; font-synthesis: none; overflow-wrap: anywhere; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .rc-quien { font: 900 21px/1.15 'Rooster', var(--num); font-style: italic; font-synthesis: none; overflow-wrap: anywhere; }
 .rc-est { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 3px; font-size: 13px; }
 .rc-est:empty { display: none; }
 .rc-est li::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: var(--line); vertical-align: 1px; }
@@ -729,6 +1020,7 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
 .rc-est li.si::before { background: var(--green); }
 .rc-est li.no { color: var(--chalk-dim); }
 .rc-marcador { margin: 0; text-align: center; font: 700 16px/1.2 var(--num); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .rc-marcador { margin: 2px 0; text-align: center; font: 700 22px/1.2 var(--num); font-variant-numeric: tabular-nums; }
 .rc-cfg { margin-top: 0; }
 .rc-cfg .seg button:disabled { opacity: .55; }
 /* árbol: los dos carriles, como Práctica; "Tú" debajo de tu carril */
@@ -737,6 +1029,7 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
 .rc-col { display: grid; justify-items: center; gap: 10px; }
 .rc-quien-arbol { font: 900 18px/1 'Rooster', var(--num); font-style: italic; font-synthesis: none; color: var(--chalk-dim); }
 .rc-fase { margin: 0; min-height: 1.1em; font: 900 28px/1 'Rooster', var(--num); font-style: italic; font-synthesis: none; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .rc-fase { margin: 0; min-height: 1.1em; font: 900 32px/1 'Rooster', var(--num); font-style: italic; font-synthesis: none; }
 /* boleta de la carrera: tres columnas (dato, izquierdo, derecho) */
 .rc-slip td:nth-child(2), .rc-slip td:nth-child(3) { text-align: right; color: var(--ink); font-size: 16px; }
 .rc-slip tr.hd td { font-size: 11px; letter-spacing: .04em; }
@@ -777,20 +1070,33 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
   }
   :root.acostada .brand .logo { height: 50px; }
   :root.acostada .top .sensors { margin-left: 0; flex-direction: column; align-items: flex-start; gap: 1px; }
-  :root.acostada[data-fondo] .sensors { padding: 4px 8px; border-radius: 10px; }
+:root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .top .sensors { margin-left: 0; flex-direction: column; align-items: flex-start; gap: 3px; padding: 2px 4px; background: none; border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  :root:where(:not([data-caratula="2026"], [data-caratula="tablero"])).acostada[data-fondo] .sensors { padding: 4px 8px; border-radius: 10px; }
   :root.acostada .sensors .chip { font-size: 11px; }
-  :root.acostada .tabs {
+  :root:where(:not([data-caratula="2026"], [data-caratula="tablero"])).acostada .tabs {
     top: 0; bottom: 0; right: auto; width: calc(var(--riel) + var(--sa-l));
     grid-template-columns: 1fr; grid-template-rows: repeat(5, minmax(0, 1fr));
     padding: calc(var(--riel-arriba) + var(--sa-t)) 0 var(--sa-b) var(--sa-l);
     border-top: 0; border-right: 1px solid var(--line);
   }
-  :root.acostada[data-fondo] .tabs { border-top: 0; border-right: 2px solid var(--sticker); }
-  :root.acostada .tabs button { padding: 2px 6px 2px 14px; text-align: left; }
-  :root.acostada .tabs button[aria-current="page"] { box-shadow: inset 3px 0 0 var(--amber); }
+:root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .tabs {
+    top: calc(8px + var(--sa-t)); bottom: calc(8px + var(--sa-b)); left: calc(8px + var(--sa-l)); right: auto;
+    width: calc(var(--riel) - 16px); height: auto; border-radius: 26px;
+    grid-template-columns: 1fr; grid-template-rows: repeat(5, minmax(0, 1fr));
+    padding: calc(var(--riel-arriba) - 8px) 6px 6px;
+  }
+  :root:where(:not([data-caratula="2026"], [data-caratula="tablero"])).acostada[data-fondo] .tabs { border-top: 0; border-right: 2px solid var(--sticker); }
+  :root:where(:not([data-caratula="2026"], [data-caratula="tablero"])).acostada .tabs button { padding: 2px 6px 2px 14px; text-align: left; }
+:root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .tabs button { height: auto; align-self: stretch; padding: 3px 0; border-radius: 16px; font-size: 10px; gap: 2px; }
+:root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .tabs button svg { width: 19px; height: 19px; }
+  :root:where(:not([data-caratula="2026"], [data-caratula="tablero"])).acostada .tabs button[aria-current="page"] { box-shadow: inset 3px 0 0 var(--amber); }
   :root.acostada .tabs::before {
     top: calc(var(--riel-arriba) + var(--sa-t)); left: var(--sa-l); width: 3px; border-radius: 0 3px 3px 0;
     height: calc((100% - var(--riel-arriba) - var(--sa-t) - var(--sa-b)) / 5); transform: translateY(calc(var(--i) * 100%));
+  }
+:root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .tabs::before {
+    top: calc(var(--riel-arriba) - 8px); left: 6px; width: calc(100% - 12px); border-radius: 16px;
+    height: calc((100% - var(--riel-arriba) + 2px) / 5); transform: translateY(calc(var(--i) * 100%));
   }
 
   :root.acostada main { max-width: 900px; padding: 0 18px; }
@@ -807,6 +1113,9 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
   :root.acostada .status { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 12px 0 2px; }
   :root.acostada .stat { padding: 9px 12px; }
   :root.acostada .stat .val { font-size: 24px; }
+:root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .stat .s, :root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .ultima { display: none; }
+/* lo principal cabe sin desplazarse */
+:root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .barras { height: 20px; margin-bottom: 10px; }
 
   /* ---- Midiendo: el texto a la izquierda; la velocidad y los botones a la derecha */
   :root.acostada #medirSesion {
@@ -921,6 +1230,7 @@ html.girada #marco {
 html.girada #marco > main { flex: 1 0 auto; width: 100%; }
 html.girada #marco > .top { width: 100%; }
 html.girada .tabs { position: sticky; bottom: 0; flex: none; }
+html:where([data-caratula="2026"], [data-caratula="tablero"]).girada .tabs { position: sticky; bottom: var(--tabs-b); flex: none; margin: 0 12px var(--tabs-b); }
 html.girada body.sesion #marco { padding-bottom: var(--sa-b); }
 html.girada .pb { width: min(calc(7.4 * var(--u)), 60px); height: min(calc(7.4 * var(--u)), 60px); }
 html.girada .pb.s { width: min(calc(3 * var(--u)), 22px); height: min(calc(3 * var(--u)), 22px); }
@@ -930,6 +1240,347 @@ html.girada .pb.s { width: min(calc(3 * var(--u)), 22px); height: min(calc(3 * v
 input, textarea { caret-color: var(--amber); }
 input[type="range"] { accent-color: var(--amber); }
 :root[data-fondo] input[type="range"] { accent-color: var(--acento); }
+
+/* ======================================================================================================================
+   CARÁTULA TABLERO (1 nov 2026, Daniel: "inspírate en los tableros de los autos de los 80s y 90s… entre digitales y
+   analógicos… y esencia de los 2000s"). UI/UX Pro Max: Skeuomorphism (bisel de cromo, cápsulas hundidas, teclas que se
+   hunden) + Retro-Futurism (pantallas VFD que brillan; sin parpadeos ni "glitch": la medición sigue neutral) + Y2K (cromo).
+   Se arma sobre la 2026 (sus reglas también aplican aquí) y esto va al final para ganarle.
+   - De noche (tema oscuro): tablero negro con fibra de carbono y ventanas de pantalla VFD; números de 7 segmentos
+     (DSEG7, OFL) y leyendas como las de los tableros (Michroma, OFL). La letra Saira se queda donde estaba.
+   - De día (tema claro): medidores de cara blanca de los 2000 y ventanas LCD (números oscuros, sin brillo).
+   - Lo que brilla es el color del fondo de pantalla (--acento); sin fondo, el verde-azul de las pantallas VFD.
+   - Lo analógico: la aguja del velocímetro en Medir y al medir (--vel de 0 a 1 = 0 a 240 km/h; app.js).
+   ====================================================================================================================== */
+@font-face { font-family: 'DSEG7'; src: url("data:font/woff2;base64,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") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; unicode-range: U+0030-0039, U+002E, U+003A, U+002D; }
+@font-face { font-family: 'Michroma'; src: url("data:font/woff2;base64,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") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+:root:where([data-caratula="tablero"]) {
+  --asphalt: #0b0c0e; --surface: #0f1114; --surface-2: #16191d; --surface-3: #1f2328;
+  --line: rgba(255, 255, 255, .16); --raya: #000; --chalk: #e9edf0; --chalk-dim: #a0a8b0; --chalk-3: #8b949c;
+  --amber: #ffb020; --green: #34e27e; --red: #ff3b30; --on-color: #0c0b06;
+  --vfd: #3ff0d2;                         /* lo que brilla: pantallas VFD (con fondo, el color del fondo) */
+  --vfd-noche: #3ff0d2;                   /* Práctica y Race siempre son de noche */
+  --led: var(--vfd); --tab-on: var(--vfd); --arco: var(--vfd);
+  --bien: #39e88a; --aviso: #ffb020; --mal: #ff4a3d;
+  --boton: #ffb020; --boton-go: #2fe07a;
+  --brillo: 0 0 4px color-mix(in srgb, currentColor 70%, transparent), 0 0 14px color-mix(in srgb, currentColor 35%, transparent);
+  --ventana: #030607; --sombra-ventana: inset 0 2px 6px rgba(0, 0, 0, .9);
+  --cara: linear-gradient(180deg, #181b1f, #0c0e11);
+  --cara-dial: #07090b; --arco-apagado: #1b1f24; --marcas: #9aa3ab; --led-apagado: #1d2126;
+  --tecla: linear-gradient(180deg, #282d33, #171a1e); --tecla-hundida: linear-gradient(180deg, #0e1013, #16191c);
+  --panel: #07090b; --bisel: #3e444a; --orilla: #000; --luz-arriba: rgba(255, 255, 255, .08); --apagado: #858e97;
+  --consola: linear-gradient(180deg, #1a1d21, #0b0c0e);
+  --cromo-texto: linear-gradient(180deg, #ffffff 0%, #e2e6ea 40%, #868d94 52%, #d5dade 64%, #f7f8f9 100%);
+  --carbono: radial-gradient(#040506 15%, transparent 16%) 0 0 / 6px 6px, radial-gradient(#040506 15%, transparent 16%) 3px 3px / 6px 6px,
+    radial-gradient(rgba(255, 255, 255, .05) 15%, transparent 20%) 0 1px / 6px 6px, radial-gradient(rgba(255, 255, 255, .05) 15%, transparent 20%) 3px 4px / 6px 6px, #0b0c0e;
+  --textura: var(--carbono);
+  --seg7: 'DSEG7', var(--num); --leyenda: 'Michroma', var(--body);
+  --r-losa: 14px; --r-boton: 12px;
+  --glass: #101317; --glass-borde: #2c3137; --glass-sombra: none;
+  color-scheme: dark;
+}
+/* de día: medidores de cara blanca y pantallas LCD */
+@media (prefers-color-scheme: light) {
+  :root:where([data-caratula="tablero"]):not([data-theme="dark"]) {
+    --asphalt: #d0d4d7; --surface: #f8f8f5; --surface-2: #eceee9; --surface-3: #d5dacd;
+    --line: rgba(0, 0, 0, .2); --raya: #8f959b; --chalk: #121417; --chalk-dim: #454c53; --chalk-3: #565e65;
+    --amber: #e08a00; --green: #128a3e; --red: #c8231a; --on-color: #120d02;
+    --vfd: #16211a; --led: #e08a00; --tab-on: var(--chalk); --arco: #e08a00;
+    --bien: #0d6a2f; --aviso: #8a5200; --mal: #a8160d; --boton: #f2a516; --boton-go: #2fd36a;
+    --brillo: none; --ventana: #c4d0b3; --sombra-ventana: inset 0 2px 4px rgba(0, 0, 0, .35);
+    --cara: linear-gradient(180deg, #ffffff, #eceee9); --cara-dial: #ffffff; --arco-apagado: #dde1e4; --marcas: #262b30; --led-apagado: #b6bfa8;
+    --tecla: linear-gradient(180deg, #ffffff, #e1e4e7); --tecla-hundida: linear-gradient(180deg, #d3d7da, #e8eaec);
+    --panel: #c3c8cb; --bisel: #9aa0a6; --orilla: #6f757b; --luz-arriba: rgba(255, 255, 255, .95); --apagado: #5f676e;
+    --consola: linear-gradient(180deg, #eff1f3, #cdd1d5);
+    --cromo-texto: linear-gradient(180deg, #3a4047 0%, #69717a 42%, #15181c 54%, #4c535b 100%);
+    --textura: repeating-linear-gradient(90deg, rgba(255, 255, 255, .22) 0 1px, rgba(0, 0, 0, .025) 1px 2px, transparent 2px 4px), linear-gradient(180deg, #dadde0, #c7cbcf) #d0d4d7;
+    --glass: #eceee9; --glass-borde: #9aa0a6; color-scheme: light;
+  }
+}
+:root:where([data-caratula="tablero"])[data-theme="light"] {
+  --asphalt: #d0d4d7; --surface: #f8f8f5; --surface-2: #eceee9; --surface-3: #d5dacd;
+  --line: rgba(0, 0, 0, .2); --raya: #8f959b; --chalk: #121417; --chalk-dim: #454c53; --chalk-3: #565e65;
+  --amber: #e08a00; --green: #128a3e; --red: #c8231a; --on-color: #120d02;
+  --vfd: #16211a; --led: #e08a00; --tab-on: var(--chalk); --arco: #e08a00;
+  --bien: #0d6a2f; --aviso: #8a5200; --mal: #a8160d; --boton: #f2a516; --boton-go: #2fd36a;
+  --brillo: none; --ventana: #c4d0b3; --sombra-ventana: inset 0 2px 4px rgba(0, 0, 0, .35);
+  --cara: linear-gradient(180deg, #ffffff, #eceee9); --cara-dial: #ffffff; --arco-apagado: #dde1e4; --marcas: #262b30; --led-apagado: #b6bfa8;
+  --tecla: linear-gradient(180deg, #ffffff, #e1e4e7); --tecla-hundida: linear-gradient(180deg, #d3d7da, #e8eaec);
+  --panel: #c3c8cb; --bisel: #9aa0a6; --orilla: #6f757b; --luz-arriba: rgba(255, 255, 255, .95); --apagado: #5f676e;
+  --consola: linear-gradient(180deg, #eff1f3, #cdd1d5);
+  --cromo-texto: linear-gradient(180deg, #3a4047 0%, #69717a 42%, #15181c 54%, #4c535b 100%);
+  --textura: repeating-linear-gradient(90deg, rgba(255, 255, 255, .22) 0 1px, rgba(0, 0, 0, .025) 1px 2px, transparent 2px 4px), linear-gradient(180deg, #dadde0, #c7cbcf) #d0d4d7;
+  --glass: #eceee9; --glass-borde: #9aa0a6; color-scheme: light;
+}
+/* con fondo de pantalla: brilla el color del fondo; las cápsulas tapan lo justo para leer */
+:root:where([data-caratula="tablero"])[data-fondo] {
+  --vfd: var(--acento); --vfd-noche: var(--acento); --led: var(--acento); --tab-on: var(--acento); --arco: var(--acento);
+  --boton: var(--acento); --boton-go: var(--acento); --raya: #000;
+  --cara: linear-gradient(180deg, rgba(24, 27, 31, .95), rgba(12, 14, 17, .95)); --panel: rgba(7, 9, 11, .92);
+  --consola: linear-gradient(180deg, rgba(26, 29, 33, .97), rgba(11, 12, 14, .97));
+}
+:root:where([data-caratula="tablero"])[data-fondo][data-theme="light"] {
+  --vfd: #16211a; --led: var(--acento); --tab-on: #0e0e0f; --arco: var(--acento); --raya: #8f959b;
+  --cara: linear-gradient(180deg, rgba(255, 255, 255, .95), rgba(236, 238, 233, .95)); --panel: rgba(195, 200, 203, .92);
+  --consola: linear-gradient(180deg, rgba(239, 241, 243, .97), rgba(205, 209, 213, .97));
+}
+@media (prefers-color-scheme: light) {
+  :root:where([data-caratula="tablero"])[data-fondo]:not([data-theme]) {
+    --vfd: #16211a; --led: var(--acento); --tab-on: #0e0e0f; --arco: var(--acento); --raya: #8f959b;
+    --cara: linear-gradient(180deg, rgba(255, 255, 255, .95), rgba(236, 238, 233, .95)); --panel: rgba(195, 200, 203, .92);
+    --consola: linear-gradient(180deg, rgba(239, 241, 243, .97), rgba(205, 209, 213, .97));
+  }
+}
+
+/* el tablero: fibra de carbono de noche, aluminio cepillado de día; abajo la consola */
+:where(:root[data-caratula="tablero"]) body { background: var(--textura); padding-bottom: calc(68px + var(--sa-b) + 14px); }
+
+/* testigos (GPS, acelerómetro, pantalla) como las luces del tablero */
+:where(:root[data-caratula="tablero"]) .sensors {
+  background: var(--panel); border: 1px solid var(--orilla); border-radius: 8px; padding: 6px 10px; gap: 9px;
+  box-shadow: 0 0 0 1.5px var(--bisel), inset 0 2px 5px rgba(0, 0, 0, .7); -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+:where(:root[data-caratula="tablero"]) .chip { font: 400 9.5px/1 var(--leyenda); letter-spacing: .1em; color: var(--apagado); }
+:where(:root[data-caratula="tablero"]) .chip::before { background: var(--led-apagado); }
+:where(:root[data-caratula="tablero"]) .chip.on { color: var(--bien); text-shadow: var(--brillo); }
+:where(:root[data-caratula="tablero"]) .chip.warn { color: var(--aviso); }
+:where(:root[data-caratula="tablero"]) .chip.bad { color: var(--mal); }
+
+/* títulos: emblema de cromo (con fondo, en una placa para que se lean) */
+:where(:root[data-caratula="tablero"]) h2 {
+  background: var(--cromo-texto); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, .85));
+}
+:root:where([data-caratula="tablero"])[data-theme="light"] h2 { filter: drop-shadow(0 1px 0 rgba(255, 255, 255, .9)); }
+@media (prefers-color-scheme: light) { :root:where([data-caratula="tablero"]):not([data-theme]) h2 { filter: drop-shadow(0 1px 0 rgba(255, 255, 255, .9)); } }
+:root:where([data-caratula="tablero"])[data-fondo] h2 {
+  display: inline-block; transform: none; color: var(--chalk); background: var(--panel); -webkit-background-clip: border-box; background-clip: border-box;
+  border: 1px solid var(--orilla); box-shadow: 0 0 0 1.5px var(--bisel); padding: 6px 14px 7px; border-radius: 8px; filter: none;
+}
+
+/* selectores: panel de interruptores; la tecla elegida sale y su foquito se prende */
+:where(:root[data-caratula="tablero"]) .seg {
+  background: var(--panel); border: 1px solid var(--orilla); border-radius: 12px;
+  box-shadow: 0 0 0 1.5px var(--bisel), inset 0 2px 6px rgba(0, 0, 0, .75); -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+:where(:root[data-caratula="tablero"]) .seg button { position: relative; border-radius: 9px; color: var(--apagado); }
+:where(:root[data-caratula="tablero"]) .seg button:is([aria-checked="true"], [aria-selected="true"]) { background: var(--tecla); color: var(--vfd); text-shadow: var(--brillo); }
+:where(:root[data-caratula="tablero"]) .seg button:is([aria-checked="true"], [aria-selected="true"])::after {
+  content: ""; position: absolute; left: 50%; bottom: 4px; width: 18px; height: 3px; margin-left: -9px; border-radius: 2px;
+  background: var(--led); box-shadow: 0 0 6px var(--led);
+}
+@supports selector(:has(a)) {
+  :where(:root[data-caratula="tablero"]) .seg::before {
+    background: var(--tecla); border-radius: 9px; box-shadow: inset 0 1px 0 var(--luz-arriba), 0 1px 0 var(--orilla), 0 2px 4px rgba(0, 0, 0, .45);
+  }
+  :where(:root[data-caratula="tablero"]) .seg button:is([aria-checked="true"], [aria-selected="true"]) { background: transparent; }
+}
+
+/* botones: tecla grande iluminada con aro de cromo; los demás, teclas de tablero */
+:where(:root[data-caratula="tablero"]) .primary {
+  border: 0; border-radius: 12px; color: var(--on-color);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--boton) 70%, #fff) 0%, var(--boton) 42%, color-mix(in srgb, var(--boton) 80%, #000) 100%);
+  box-shadow: 0 0 0 2px var(--orilla), 0 0 0 3.5px var(--bisel), 0 8px 20px color-mix(in srgb, var(--boton) 26%, transparent), inset 0 1px 0 rgba(255, 255, 255, .55);
+}
+:where(:root[data-caratula="tablero"]) .primary.go {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--boton-go) 70%, #fff) 0%, var(--boton-go) 42%, color-mix(in srgb, var(--boton-go) 80%, #000) 100%);
+  color: var(--on-color);
+  box-shadow: 0 0 0 2px var(--orilla), 0 0 0 3.5px var(--bisel), 0 8px 20px color-mix(in srgb, var(--boton-go) 26%, transparent), inset 0 1px 0 rgba(255, 255, 255, .55);
+}
+:root:where([data-caratula="tablero"])[data-fondo] .primary, :root:where([data-caratula="tablero"])[data-fondo] .primary.go {
+  color: #0e0e0f;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--acento) 70%, #fff) 0%, var(--acento) 42%, color-mix(in srgb, var(--acento) 80%, #000) 100%);
+  box-shadow: 0 0 0 2px #000, 0 0 0 3.5px var(--bisel), 0 8px 20px color-mix(in srgb, var(--acento) 26%, transparent), inset 0 1px 0 rgba(255, 255, 255, .55);
+}
+:where(:root[data-caratula="tablero"]) :is(.ghost, .danger) {
+  background: var(--tecla); border: 1px solid var(--orilla); border-radius: 12px;
+  box-shadow: inset 0 1px 0 var(--luz-arriba), 0 0 0 1px var(--bisel), 0 3px 0 var(--orilla); -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+:where(:root[data-caratula="tablero"]) .ghost { color: var(--chalk); }
+:where(:root[data-caratula="tablero"]) .danger { color: var(--mal); }
+:where(:root[data-caratula="tablero"]) :is(.ghost, .danger):active { transform: translateY(2px); box-shadow: inset 0 2px 4px rgba(0, 0, 0, .5), 0 0 0 1px var(--bisel), 0 1px 0 var(--orilla); }
+
+/* cápsulas: cara oscura (o blanca de día) con aro de cromo */
+:where(:root[data-caratula="tablero"]) :is(.stat, .kpis > div, .field, .howto, .chart, .quality, .c-res, .hist button, .rc-carril, .rc-red) {
+  background: var(--cara); border: 1px solid var(--orilla); border-radius: var(--r-losa);
+  box-shadow: 0 0 0 1.5px var(--bisel), inset 0 1px 0 var(--luz-arriba), 0 6px 14px rgba(0, 0, 0, .3);
+}
+:where(:root[data-caratula="tablero"]) :is(.stat .k, .kpis span, .chart p, .rc-cnom) {
+  font: 400 9.5px/1.3 var(--leyenda); letter-spacing: .12em; text-transform: uppercase; color: var(--chalk-3);
+}
+/* ventanas de pantalla: números de 7 segmentos que brillan (LCD oscuro de día) */
+:where(:root[data-caratula="tablero"]) :is(.stat .val, .kpis b) {
+  display: block; margin-top: 6px; padding: 7px 9px 6px; border-radius: 6px; background: var(--ventana);
+  box-shadow: var(--sombra-ventana), 0 0 0 1px var(--orilla);
+  font: 400 25px/1.05 var(--seg7); letter-spacing: .02em; color: var(--vfd); text-shadow: var(--brillo); font-synthesis: none;
+}
+:where(:root[data-caratula="tablero"]) :is(.stat .val, .kpis b) small { font: 400 10px/1 var(--leyenda); letter-spacing: .06em; color: var(--chalk-dim); text-shadow: none; margin-left: 5px; }
+:where(:root[data-caratula="tablero"]) .stat .val.good { color: var(--bien); }
+:where(:root[data-caratula="tablero"]) .stat .val.meh { color: var(--aviso); }
+:where(:root[data-caratula="tablero"]) .stat .val.bad { color: var(--mal); }
+
+/* Medir: velocímetro con aguja a la izquierda; GPS con su barra de LED y el acelerómetro a la derecha; la última corrida abajo */
+:where(:root[data-caratula="tablero"]) #sStatus { gap: 10px; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); grid-template-areas: "velo gps" "velo acel" "ult ult"; }
+:where(:root[data-caratula="tablero"]) .tb-velo { grid-area: velo; justify-content: flex-start; }
+:where(:root[data-caratula="tablero"]) #sStatus > .gps { grid-area: gps; }
+:where(:root[data-caratula="tablero"]) .tb-acel { grid-area: acel; }
+:where(:root[data-caratula="tablero"]) #ultCorrida { grid-area: ult; }
+:where(:root[data-caratula="tablero"]) .tb-velo .val { text-align: center; }
+:where(:root[data-caratula="tablero"]) .tb-dial {
+  position: relative; isolation: isolate; display: block; width: 100%; max-width: 156px; aspect-ratio: 1; margin: 8px auto 4px; border-radius: 50%;
+  background: radial-gradient(circle, var(--cara-dial) 0 60%, transparent 61%),
+    conic-gradient(from -120deg, var(--arco) 0 calc(var(--vel, 0) * 240deg), var(--arco-apagado) 0 240deg, transparent 0), var(--cara-dial);
+  box-shadow: 0 0 0 2px var(--orilla), 0 0 0 4px var(--bisel), inset 0 0 14px rgba(0, 0, 0, .85);
+}
+:where(:root[data-caratula="tablero"]) :is(.tb-dial, #liveMain)::before {   /* rayitas cada 10 km/h y la zona roja */
+  content: ""; position: absolute; inset: 8%; z-index: -1; border-radius: 50%;
+  background: repeating-conic-gradient(from -120deg, var(--marcas) 0 1.4deg, transparent 1.4deg 10deg),
+    conic-gradient(from 80deg, var(--mal) 0 40deg, transparent 40deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 66%, #000 67% 100%), conic-gradient(from -120deg, #000 0 241deg, transparent 241deg);
+  -webkit-mask-composite: source-in;
+  mask: radial-gradient(circle, transparent 0 66%, #000 67% 100%), conic-gradient(from -120deg, #000 0 241deg, transparent 241deg);
+  mask-composite: intersect;
+}
+:where(:root[data-caratula="tablero"]) .tb-aguja {
+  position: absolute; left: calc(50% - 2px); bottom: 50%; width: 4px; height: 40%; border-radius: 2px 2px 1px 1px;
+  background: linear-gradient(#ffa25a, #ff3b1f); box-shadow: 0 0 8px rgba(255, 70, 30, .55);
+  transform-origin: 50% 100%; transform: rotate(calc(-120deg + var(--vel, 0) * 240deg)); transition: transform .35s cubic-bezier(.3, .7, .4, 1);
+}
+:where(:root[data-caratula="tablero"]) .tb-dial::after {   /* el tapón de la aguja */
+  content: ""; position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; z-index: 1;
+  background: radial-gradient(circle at 35% 30%, #eef0f2, #6d737a 60%, #2a2e33); box-shadow: 0 1px 3px rgba(0, 0, 0, .8);
+}
+:where(:root[data-caratula="tablero"]) .tb-fila { display: flex; align-items: center; gap: 10px; margin-top: 9px; }
+:where(:root[data-caratula="tablero"]) .tb-hz { font: 400 14px/1 var(--seg7); color: var(--chalk-dim); white-space: nowrap; }
+:where(:root[data-caratula="tablero"]) .barras { flex: 1; height: 11px; margin: 0; gap: 3px; align-items: stretch; }
+:where(:root[data-caratula="tablero"]) .barras i:nth-child(n) { flex: 1; width: auto; height: auto; border-radius: 2px; background: var(--led-apagado); }
+:where(:root[data-caratula="tablero"]) .barras.good i.on { background: var(--bien); box-shadow: 0 0 6px color-mix(in srgb, var(--bien) 70%, transparent); }
+:where(:root[data-caratula="tablero"]) .barras.meh i.on { background: var(--aviso); box-shadow: 0 0 6px color-mix(in srgb, var(--aviso) 70%, transparent); }
+:where(:root[data-caratula="tablero"]) .barras.bad i.on { background: var(--mal); box-shadow: 0 0 6px color-mix(in srgb, var(--mal) 70%, transparent); }
+:where(:root[data-caratula="tablero"]) .ultima .stat-fila .s { font: 400 15px/1 var(--seg7); color: var(--chalk-dim); }
+:where(:root[data-caratula="tablero"]) .tramos span { gap: 6px; font: 400 9.5px/1.1 var(--leyenda); letter-spacing: .04em; }
+:where(:root[data-caratula="tablero"]) .tramos span::before { height: 4px; border-radius: 1px; background: var(--vfd); box-shadow: 0 0 5px color-mix(in srgb, var(--vfd) 60%, transparent); }
+:where(:root[data-caratula="tablero"]) .tramos b { font: 400 12.5px/1 var(--seg7); color: var(--chalk); }
+
+/* semáforo de atajos con aro de cromo; el que está abierto se prende como tecla iluminada */
+:where(:root[data-caratula="tablero"]) .atajos-arbol { box-shadow: inset 0 0 0 1.5px #1c2025, 0 0 0 3px #4a5056, 0 0 0 4.5px #000, 0 12px 30px rgba(0, 0, 0, .5); }
+:where(:root[data-caratula="tablero"]) .atajo { background: linear-gradient(180deg, #262a30, #16191d); border: 1px solid #000; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 2px 0 #000; }
+:where(:root[data-caratula="tablero"]) .atajo[aria-expanded="true"] { background: linear-gradient(180deg, #0e1013, #16191c); border-color: #000; color: var(--vfd-noche); text-shadow: var(--brillo); box-shadow: inset 0 2px 5px rgba(0, 0, 0, .7), 0 0 10px color-mix(in srgb, var(--vfd-noche) 35%, transparent); }
+:root:where([data-caratula="tablero"])[data-fondo] .atajo[aria-expanded="true"] { background: linear-gradient(180deg, #0e1013, #16191c); border-color: #000; color: var(--acento); box-shadow: inset 0 2px 5px rgba(0, 0, 0, .7), 0 0 10px color-mix(in srgb, var(--acento) 35%, transparent); }
+
+/* midiendo: velocímetro grande con aguja (la velocidad) y en medio la pantalla (la velocidad, o la distancia ya corriendo) */
+:where(:root[data-caratula="tablero"]) .ses-title { font: 400 19px/1.3 var(--leyenda); letter-spacing: .06em; text-transform: uppercase; font-synthesis: none; margin: 14px 0 8px; }
+:where(:root[data-caratula="tablero"]) #liveMain {
+  position: relative; isolation: isolate; width: min(76vw, 300px); aspect-ratio: 1; margin: 12px auto 4px; border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 19%;
+  font: 400 clamp(44px, 14vw, 62px)/1 var(--seg7); letter-spacing: .02em; color: var(--vfd); text-shadow: var(--brillo);
+  background: radial-gradient(circle, var(--cara-dial) 0 61%, transparent 62%),
+    conic-gradient(from -120deg, var(--arco) 0 calc(var(--vel, 0) * 240deg), var(--arco-apagado) 0 240deg, transparent 0), var(--cara-dial);
+  box-shadow: 0 0 0 3px var(--orilla), 0 0 0 6px var(--bisel), 0 0 0 7px var(--orilla), inset 0 0 22px rgba(0, 0, 0, .85), 0 14px 34px rgba(0, 0, 0, .45);
+}
+:where(:root[data-caratula="tablero"]) #liveMain::after {   /* la aguja */
+  content: ""; position: absolute; left: calc(50% - 3px); bottom: 50%; z-index: -1; width: 6px; height: 37%; border-radius: 3px 3px 1px 1px;
+  background: linear-gradient(#ffa25a, #ff3b1f); box-shadow: 0 0 10px rgba(255, 70, 30, .55);
+  transform-origin: 50% 100%; transform: rotate(calc(-120deg + var(--vel, 0) * 240deg)); transition: transform .3s linear;
+}
+:where(:root[data-caratula="tablero"]) #liveMain small { font: 400 11px/1 var(--leyenda); letter-spacing: .08em; color: var(--chalk-dim); text-shadow: none; margin: 8px 0 0; }
+:where(:root[data-caratula="tablero"]) #liveSub { text-align: center; font: 400 40px/1 var(--seg7); color: var(--vfd); text-shadow: var(--brillo); margin-top: 14px; }
+:where(:root[data-caratula="tablero"]) #liveSub small { font: 400 11px/1 var(--leyenda); letter-spacing: .08em; color: var(--chalk-dim); text-shadow: none; }
+:where(:root[data-caratula="tablero"]) .gpsline { text-align: center; font: 400 10px/1.4 var(--leyenda); letter-spacing: .08em; text-transform: uppercase; }
+:where(:root[data-caratula="tablero"]) .track { height: 12px; border-radius: 3px; background: var(--panel); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .8), 0 0 0 1px var(--bisel); }
+:root:where([data-caratula="tablero"])[data-fondo] .track { background: var(--panel); }
+:where(:root[data-caratula="tablero"]) .track .fill {   /* barra de LED, como un tacómetro de barras */
+  border-radius: 2px; background: var(--vfd); filter: drop-shadow(0 0 4px color-mix(in srgb, var(--vfd) 70%, transparent));
+  -webkit-mask: repeating-linear-gradient(90deg, #000 0 7px, transparent 7px 9px); mask: repeating-linear-gradient(90deg, #000 0 7px, transparent 7px 9px);
+}
+:where(:root[data-caratula="tablero"]) .track .tick.passed { background: var(--vfd); }
+:where(:root[data-caratula="tablero"]) .track .tick span { font: 400 8.5px/1 var(--leyenda); letter-spacing: .04em; }
+
+/* resultado, historial y calculadora: los números en sus pantallas */
+:where(:root[data-caratula="tablero"]) div.chart { background: var(--ventana); }   /* la gráfica en su pantalla (div.: le gana a la cápsula) */
+:where(:root[data-caratula="tablero"]) .hist .et { font: 400 23px/1 var(--seg7); color: var(--vfd); text-shadow: var(--brillo); }
+:where(:root[data-caratula="tablero"]) .c-tabla td { font: 400 15px/1.1 var(--seg7); color: var(--vfd); text-shadow: var(--brillo); }
+:where(:root[data-caratula="tablero"]) .c-tabla tr.et td { font-size: 18px; color: var(--vfd); }
+:where(:root[data-caratula="tablero"]) .c-big b { font: 400 20px/1.2 var(--seg7); color: var(--vfd); text-shadow: var(--brillo); }
+:where(:root[data-caratula="tablero"]) :is(.field input[type=number], .c-inv input[type=number], .cam-boleta input, .field select) {
+  background: var(--ventana); color: var(--vfd); border: 1px solid var(--orilla); border-radius: 6px; box-shadow: var(--sombra-ventana);
+}
+:where(:root[data-caratula="tablero"]) :is(.field input[type=number], .c-inv input[type=number]) { font-family: var(--seg7); letter-spacing: .04em; }
+
+/* abajo, la consola: teclas con su foquito; la elegida se hunde y se prende */
+:where(:root[data-caratula="tablero"]) .tabs {
+  left: 0; right: 0; bottom: 0; height: auto; border-radius: 0; gap: 6px;
+  padding: 7px calc(8px + var(--sa-r)) calc(7px + var(--sa-b)) calc(8px + var(--sa-l));
+  background: var(--consola); border: 0; border-top: 1px solid var(--bisel);
+  box-shadow: 0 -1px 0 var(--orilla), 0 -10px 24px rgba(0, 0, 0, .4); -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+:where(:root[data-caratula="tablero"]) .tabs button {
+  height: 54px; border-radius: 10px; gap: 4px; font-size: 10.5px; color: var(--apagado);
+  background: var(--tecla); box-shadow: inset 0 1px 0 var(--luz-arriba), 0 0 0 1px var(--orilla), 0 2px 0 var(--orilla);
+}
+:where(:root[data-caratula="tablero"]) .tabs button svg { width: 20px; height: 20px; }
+:where(:root[data-caratula="tablero"]) .tabs button[aria-current="page"] {
+  color: var(--tab-on); background: var(--tecla-hundida); box-shadow: inset 0 2px 5px rgba(0, 0, 0, .6), 0 0 0 1px var(--orilla);
+}
+:where(:root[data-caratula="tablero"]) .tabs button[aria-current="page"] :is(svg, span) { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--tab-on) 55%, transparent)); }
+@supports selector(:has(a)) {
+  :where(:root[data-caratula="tablero"]) .tabs::before {   /* el foquito de la tecla elegida, que se desliza */
+    top: 11px; bottom: auto; left: calc(8px + var(--sa-l)); height: 3px; border-radius: 2px; z-index: 2; pointer-events: none;
+    width: calc((100% - 16px - var(--sa-l) - var(--sa-r) - 24px) / 5);
+    background: linear-gradient(90deg, transparent 36%, var(--led) 36% 64%, transparent 64%); filter: drop-shadow(0 0 4px var(--led));
+    transform: translateX(calc(var(--i) * (100% + 6px)));
+  }
+  :where(:root[data-caratula="tablero"]) .tabs button[aria-current="page"] { background: var(--tecla-hundida); }
+}
+html:where([data-caratula="tablero"]).girada .tabs { bottom: 0; margin: 0; }
+
+/* Práctica y Race 1 vs 1: siempre de noche (fibra de carbono), con el tiempo de reacción en su pantalla */
+:where(:root[data-caratula="tablero"]) :is(.pt, .rc) { background: var(--carbono); }
+:where(:root[data-caratula="tablero"]) .rc {
+  --cara: linear-gradient(180deg, #181b1f, #0c0e11); --panel: #07090b; --bisel: #3e444a; --orilla: #000; --luz-arriba: rgba(255, 255, 255, .08);
+  --tecla: linear-gradient(180deg, #282d33, #171a1e); --tecla-hundida: linear-gradient(180deg, #0e1013, #16191c); --ventana: #030607;
+  --vfd: var(--vfd-noche); --led: var(--vfd-noche); --apagado: #858e97; --chalk-3: #8b949c; --mal: #ff4a3d;
+  --brillo: 0 0 4px color-mix(in srgb, currentColor 70%, transparent), 0 0 14px color-mix(in srgb, currentColor 35%, transparent);
+  --sombra-ventana: inset 0 2px 6px rgba(0, 0, 0, .9); --boton: #ffb020; --boton-go: #2fe07a;
+}
+:root:where([data-caratula="tablero"])[data-fondo] .rc { --boton: var(--acento); --boton-go: var(--acento); }
+:where(:root[data-caratula="tablero"]) .pt-lane { box-shadow: inset 0 0 0 1.5px #1c2025, 0 0 0 3px #4a5056, 0 0 0 4.5px #000, 0 12px 30px rgba(0, 0, 0, .6); }
+:where(:root[data-caratula="tablero"]) .pt-zone {
+  background: radial-gradient(120% 100% at 50% 0%, #23272c, #121417); border: 1px solid #000;
+  box-shadow: 0 0 0 1.5px #3e444a, inset 0 1px 0 rgba(255, 255, 255, .06), 0 6px 16px rgba(0, 0, 0, .45);
+}
+:where(:root[data-caratula="tablero"]) :is(.pt-x, .rc-chip) {
+  background: linear-gradient(180deg, #282d33, #171a1e); border: 1px solid #000; box-shadow: 0 0 0 1px #3e444a, inset 0 1px 0 rgba(255, 255, 255, .07);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+:where(:root[data-caratula="tablero"]) .pt-x { border-radius: 10px; }
+:where(:root[data-caratula="tablero"]) .pt-rtv { font: 400 30px/1.15 var(--seg7); color: var(--vfd-noche); text-shadow: 0 0 4px color-mix(in srgb, currentColor 70%, transparent), 0 0 14px color-mix(in srgb, currentColor 35%, transparent); }
+:where(:root[data-caratula="tablero"]) .pt-score { font: 400 19px/1 var(--seg7); color: var(--vfd-noche); }
+:where(:root[data-caratula="tablero"]) .rc-carril.mio { border-color: var(--vfd); box-shadow: 0 0 0 1.5px var(--vfd), 0 0 14px color-mix(in srgb, var(--vfd) 30%, transparent); }
+:where(:root[data-caratula="tablero"]) .rc-marcador { font-family: var(--seg7); color: var(--vfd); }
+
+/* de lado: el riel es la consola, de arriba abajo a la izquierda */
+@media (orientation: landscape) and (max-height: 500px) {
+  :root:where([data-caratula="tablero"]).acostada body { padding-bottom: calc(8px + var(--sa-b)); }
+  :root:where([data-caratula="tablero"]).acostada .tabs {
+    top: 0; bottom: 0; left: 0; right: auto; width: calc(var(--riel) + var(--sa-l)); height: auto; border-radius: 0;
+    grid-template-columns: 1fr; grid-template-rows: repeat(5, minmax(0, 1fr)); gap: 6px;
+    padding: calc(var(--riel-arriba) + var(--sa-t)) 10px calc(8px + var(--sa-b)) calc(10px + var(--sa-l));
+    border-top: 0; border-right: 1px solid var(--bisel); box-shadow: 1px 0 0 var(--orilla), 10px 0 24px rgba(0, 0, 0, .4);
+  }
+  :root:where([data-caratula="tablero"]).acostada .tabs button { height: auto; align-self: stretch; padding: 2px 0; font-size: 9.5px; gap: 2px; }
+  :root:where([data-caratula="tablero"]).acostada .tabs::before {
+    top: calc(var(--riel-arriba) + var(--sa-t)); left: calc(10px + var(--sa-l)); width: calc(var(--riel) - 20px);
+    height: calc((100% - var(--riel-arriba) - var(--sa-t) - 8px - var(--sa-b) - 24px) / 5);
+    background: linear-gradient(90deg, transparent 36%, var(--led) 36% 64%, transparent 64%) center 4px / 100% 3px no-repeat;
+    transform: translateY(calc(var(--i) * (100% + 6px)));
+  }
+  :root:where([data-caratula="tablero"]).acostada #sStatus { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "velo gps acel"; }
+  :root:where([data-caratula="tablero"]).acostada .tb-dial { max-width: 92px; margin: 4px auto 2px; }
+  :root:where([data-caratula="tablero"]).acostada .stat .val { font-size: 20px; }
+  :root:where([data-caratula="tablero"]).acostada #liveMain { width: min(54vh, 220px); font-size: 40px; }
+  :root:where([data-caratula="tablero"]).acostada #sesTitulo { font-size: 17px; }
+}
 
 /* camara.css — "Medir con el semáforo real": video escondido mientras graba y la pantalla Apuntar.
    build.py la junta con style.css (usa sus variables). */
@@ -1017,12 +1668,8 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
         <button role="radio" data-v="402.336">1/4 de milla</button>
       </div>
 
-      <div class="status">
-        <div class="stat"><span class="k">Precisión GPS</span><span class="val" id="sPrec">—</span></div>
-        <div class="stat"><span class="k">Frecuencia GPS</span><span class="val" id="sHz">—</span></div>
-        <div class="stat"><span class="k">Velocidad</span><span class="val" id="sVel">—</span></div>
-        <div class="stat"><span class="k">Acelerómetro</span><span class="val" id="sAcel">—</span></div>
-      </div>
+      <!-- sensores: app.js (aplicarCaratula) pone aquí la plantilla de la carátula elegida (ver abajo, antes de los scripts) -->
+      <div class="status" id="sStatus"></div>
       <p id="idleMsg" class="msg"></p>
 
       <button id="btnSensores" class="primary">Activar sensores</button>
@@ -1282,92 +1929,112 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   <!-- ============ AJUSTES ============ -->
   <section id="vAjustes" class="view" hidden>
     <h2>Ajustes</h2>
+    <!-- Dos pestañas (1 nov, Daniel: "orientación, tema y fondo de pantalla en una sola pestaña… y el tipo de carátula"):
+         General (la medición y la app) y Apariencia (carátula, fondo, tema, orientación y animaciones) -->
+    <div class="seg aj-pestanas" role="tablist" aria-label="Secciones de Ajustes" id="segAjustes">
+      <button role="tab" id="ajTabGeneral" data-v="general" aria-selected="true" aria-controls="ajGeneral">General</button>
+      <button role="tab" id="ajTabApariencia" data-v="apariencia" aria-selected="false" aria-controls="ajApariencia" tabindex="-1">Apariencia</button>
+    </div>
 
-    <div class="field">
-      <label class="lab" for="inRollout">Rollout (punto inicial del cronómetro)</label>
-      <p class="hint">En pista el cronómetro arranca cuando la llanta deja el haz de stage, ~1 ft después del primer movimiento. Usa 1 ft para comparar con la boleta; 0 mide desde el primer movimiento. Si tu 60 ft sale siempre distinto al oficial, ajústalo y usa "Recalcular" en el historial.</p>
-      <div class="row">
-        <input type="number" id="inRollout" min="0" max="2" step="0.1" inputmode="decimal">
-        <span>ft</span>
+    <div class="aj-panel" id="ajGeneral" role="tabpanel" aria-labelledby="ajTabGeneral">
+      <div class="field">
+        <label class="lab" for="inRollout">Rollout (punto inicial del cronómetro)</label>
+        <p class="hint">En pista el cronómetro arranca cuando la llanta deja el haz de stage, ~1 ft después del primer movimiento. Usa 1 ft para comparar con la boleta; 0 mide desde el primer movimiento. Si tu 60 ft sale siempre distinto al oficial, ajústalo y usa "Recalcular" en el historial.</p>
+        <div class="row">
+          <input type="number" id="inRollout" min="0" max="2" step="0.1" inputmode="decimal">
+          <span>ft</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="lab">Unidades de velocidad</span>
+        <div class="seg" role="radiogroup" id="segUnidad" style="margin-top:8px">
+          <button role="radio" data-v="kmh">km/h</button>
+          <button role="radio" data-v="mph">mph</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="lab">Arranque válido</span>
+        <p class="hint">Solo cuenta como arranque si, saliendo de detenido, llegas a esta velocidad en este tiempo. Así se ignoran el burnout y la alineación.</p>
+        <div class="row">
+          <input type="number" id="inVconf" min="20" max="120" step="5" inputmode="numeric" aria-label="Velocidad de confirmación en km/h">
+          <span>km/h en</span>
+          <input type="number" id="inTconf" min="3" max="20" step="1" inputmode="numeric" aria-label="Tiempo máximo en segundos">
+          <span>s</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="toggle">Usar acelerómetro <input type="checkbox" id="inAcc"></label>
+        <p class="hint" style="margin-top:6px">Combina GPS y acelerómetro para mayor precisión. Apágalo solo para comparar.</p>
+      </div>
+
+      <div class="field" id="ajCam" hidden>
+        <span class="lab">Semáforo con cámara <span class="beta-tag">beta</span></span>
+        <div id="ajCamCal" class="cam-cal"></div>
+        <label class="toggle" style="margin-top:10px">Guardar los cuadros del árbol <input type="checkbox" id="inCamCuadros"></label>
+        <p class="hint" style="margin-top:6px">Ayuda a mejorar la app y permite cambiar de carril después (~1 MB por corrida; se conservan las últimas 30).</p>
+        <button class="ghost" id="btnOlvidarZona">Olvidar dónde está el árbol</button>
+        <a class="ghost boton" id="lnkPrueba" href="prueba/camara.html">Página de prueba de la cámara</a>
+      </div>
+
+      <div class="field guia" id="guiaAjustes">
+        <span class="lab">Instalar la app</span>
+        <div class="guia-pasos"></div>
+        <button class="primary" data-instalar hidden>Instalar app</button>
+      </div>
+      <button id="btnBorrarHist" class="danger">Borrar todo el historial</button>
+    </div>
+
+    <div class="aj-panel" id="ajApariencia" role="tabpanel" aria-labelledby="ajTabApariencia" hidden>
+      <div class="field">
+        <span class="lab">Carátula</span>
+        <div class="seg" role="radiogroup" aria-label="Carátula" id="segCaratula" style="margin-top:8px">
+          <button role="radio" data-v="original">Original</button>
+          <button role="radio" data-v="2026">2026</button>
+          <button role="radio" data-v="tablero">Tablero</button>
+        </div>
+        <p class="hint aj-exp" id="caratulaExp" aria-live="polite"></p>
+      </div>
+
+      <div class="field">
+        <span class="lab">Fondo de pantalla</span>
+        <p class="hint">El color de los botones cambia con el fondo. Durante una corrida el fondo se oscurece para que los números se lean bien.</p>
+        <div class="fondos" role="radiogroup" id="selFondo" aria-label="Fondo de pantalla"></div>
+        <span class="lab" style="margin-top:14px">Qué tanto se ve</span>
+        <div class="seg" role="radiogroup" id="segVelo" style="margin-top:8px">
+          <button role="radio" data-v="0.88">Poco</button>
+          <button role="radio" data-v="0.78">Medio</button>
+          <button role="radio" data-v="0.64">Mucho</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="lab">Tema</span>
+        <p class="hint">"Claro" se lee mejor bajo el sol.</p>
+        <div class="seg" role="radiogroup" id="segTema">
+          <button role="radio" data-v="auto">Automático</button>
+          <button role="radio" data-v="light">Claro</button>
+          <button role="radio" data-v="dark">Oscuro</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="lab">Orientación</span>
+        <p class="hint" id="orientHint">Con el teléfono acostado (por ejemplo, en el soporte del carro): "No girar" deja la app siempre vertical; "Solo Medir" acuesta Medir y Race 1 vs 1; "Toda la app" acuesta todo.</p>
+        <div class="seg" role="radiogroup" aria-label="Orientación" id="segOrient">
+          <button role="radio" data-v="no">No girar</button>
+          <button role="radio" data-v="medir">Solo Medir</button>
+          <button role="radio" data-v="todo">Toda la app</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="toggle">Animaciones <input type="checkbox" id="inAnim"></label>
+        <p class="hint" style="margin-top:6px">Transiciones suaves en la app. Las luces del semáforo de Práctica siempre encienden al instante, sin efectos.</p>
       </div>
     </div>
-
-    <div class="field">
-      <span class="lab">Orientación</span>
-      <p class="hint" id="orientHint">Con el teléfono acostado (por ejemplo, en el soporte del carro): "No girar" deja la app siempre vertical; "Solo Medir" acuesta Medir y Race 1 vs 1; "Toda la app" acuesta todo.</p>
-      <div class="seg" role="radiogroup" aria-label="Orientación" id="segOrient">
-        <button role="radio" data-v="no">No girar</button>
-        <button role="radio" data-v="medir">Solo Medir</button>
-        <button role="radio" data-v="todo">Toda la app</button>
-      </div>
-    </div>
-
-    <div class="field">
-      <span class="lab">Unidades de velocidad</span>
-      <div class="seg" role="radiogroup" id="segUnidad" style="margin-top:8px">
-        <button role="radio" data-v="kmh">km/h</button>
-        <button role="radio" data-v="mph">mph</button>
-      </div>
-    </div>
-
-    <div class="field">
-      <span class="lab">Arranque válido</span>
-      <p class="hint">Solo cuenta como arranque si, saliendo de detenido, llegas a esta velocidad en este tiempo. Así se ignoran el burnout y la alineación.</p>
-      <div class="row">
-        <input type="number" id="inVconf" min="20" max="120" step="5" inputmode="numeric" aria-label="Velocidad de confirmación en km/h">
-        <span>km/h en</span>
-        <input type="number" id="inTconf" min="3" max="20" step="1" inputmode="numeric" aria-label="Tiempo máximo en segundos">
-        <span>s</span>
-      </div>
-    </div>
-
-    <div class="field">
-      <label class="toggle">Usar acelerómetro <input type="checkbox" id="inAcc"></label>
-      <p class="hint" style="margin-top:6px">Combina GPS y acelerómetro para mayor precisión. Apágalo solo para comparar.</p>
-    </div>
-
-    <div class="field">
-      <span class="lab">Fondo de pantalla</span>
-      <p class="hint">El color de los botones cambia con el fondo. Durante una corrida el fondo se oscurece para que los números se lean bien.</p>
-      <div class="fondos" role="radiogroup" id="selFondo" aria-label="Fondo de pantalla"></div>
-      <span class="lab" style="margin-top:14px">Qué tanto se ve</span>
-      <div class="seg" role="radiogroup" id="segVelo" style="margin-top:8px">
-        <button role="radio" data-v="0.88">Poco</button>
-        <button role="radio" data-v="0.78">Medio</button>
-        <button role="radio" data-v="0.64">Mucho</button>
-      </div>
-    </div>
-
-    <div class="field">
-      <span class="lab">Tema</span>
-      <p class="hint">"Claro" se lee mejor bajo el sol.</p>
-      <div class="seg" role="radiogroup" id="segTema">
-        <button role="radio" data-v="auto">Automático</button>
-        <button role="radio" data-v="light">Claro</button>
-        <button role="radio" data-v="dark">Oscuro</button>
-      </div>
-    </div>
-
-    <div class="field">
-      <label class="toggle">Animaciones <input type="checkbox" id="inAnim"></label>
-      <p class="hint" style="margin-top:6px">Transiciones suaves en la app. Las luces del semáforo de Práctica siempre encienden al instante, sin efectos.</p>
-    </div>
-
-    <div class="field" id="ajCam" hidden>
-      <span class="lab">Semáforo con cámara <span class="beta-tag">beta</span></span>
-      <div id="ajCamCal" class="cam-cal"></div>
-      <label class="toggle" style="margin-top:10px">Guardar los cuadros del árbol <input type="checkbox" id="inCamCuadros"></label>
-      <p class="hint" style="margin-top:6px">Ayuda a mejorar la app y permite cambiar de carril después (~1 MB por corrida; se conservan las últimas 30).</p>
-      <button class="ghost" id="btnOlvidarZona">Olvidar dónde está el árbol</button>
-      <a class="ghost boton" id="lnkPrueba" href="prueba/camara.html">Página de prueba de la cámara</a>
-    </div>
-
-    <div class="field guia" id="guiaAjustes">
-      <span class="lab">Instalar la app</span>
-      <div class="guia-pasos"></div>
-      <button class="primary" data-instalar hidden>Instalar app</button>
-    </div>
-    <button id="btnBorrarHist" class="danger">Borrar todo el historial</button>
     <p class="ver" id="verText"></p>
   </section>
 </main>
@@ -1550,13 +2217,55 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
 </div>
 
 <nav class="tabs" aria-label="Secciones">
-  <button data-view="vMedir" aria-current="page">Medir</button>
-  <button data-view="vPractica">Práctica</button>
-  <button data-view="vCalc">Calcular</button>
-  <button data-view="vHistorial">Historial</button>
-  <button data-view="vAjustes">Ajustes</button>
+  <button data-view="vMedir" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 16.5a8 8 0 1 1 15 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 13.2 16 8.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="13.5" r="1.6" fill="currentColor"/></svg><span>Medir</span></button>
+  <button data-view="vPractica"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="2.8" width="8" height="18.4" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="7.3" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="16.7" r="1.7" fill="currentColor"/></svg><span>Práctica</span></button>
+  <button data-view="vCalc"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 7.5h7M8.5 12h1.5M14 12h1.5M8.5 16h1.5M14 16h1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Calcular</span></button>
+  <button data-view="vHistorial"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4 4.5v3.2h3.2M12 8v4.3l2.8 1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Historial</span></button>
+  <button data-view="vAjustes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h9M18 7h1M5 17h1M10 17h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="8" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span>Ajustes</span></button>
 </nav>
 </div>
+
+<!-- ============ Plantillas por carátula (Ajustes → Apariencia): el bloque de sensores de Medir ============ -->
+<template id="tplStatusOriginal">
+        <div class="stat"><span class="k">Precisión GPS</span><span class="val" id="sPrec">—</span></div>
+        <div class="stat"><span class="k">Frecuencia GPS</span><span class="val" id="sHz">—</span></div>
+        <div class="stat"><span class="k">Velocidad</span><span class="val" id="sVel">—</span></div>
+        <div class="stat"><span class="k">Acelerómetro</span><span class="val" id="sAcel">—</span></div>
+</template>
+<!-- 2026 (rediseño, UI/UX Pro Max): todo en bloques. GPS a lo ancho con su precisión, frecuencia y rayitas de señal;
+     acelerómetro, velocidad y la última corrida con sus tramos (app.js: tickEstado y pintarUltima) -->
+<template id="tplStatus2026">
+        <div class="stat ancha gps">
+          <span class="k">GPS</span>
+          <div class="stat-fila">
+            <div><span class="val" id="sPrec">—</span><span class="sk">precisión</span></div>
+            <div class="stat-der">
+              <span class="barras" id="sBarras" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+              <div><span class="val" id="sHz">—</span><span class="sk">frecuencia</span></div>
+            </div>
+          </div>
+          <span class="s" id="sGpsTxt">Toca "Activar sensores"</span>
+        </div>
+        <div class="stat"><span class="k">Acelerómetro</span><span class="val" id="sAcel">—</span></div>
+        <div class="stat"><span class="k">Velocidad</span><span class="val" id="sVel">—</span></div>
+        <button type="button" class="stat ancha ultima" id="ultCorrida" hidden></button>
+</template>
+<!-- Tablero (tablero de los 80 y 90 con algo de los 2000): velocímetro con aguja (--vel, app.js) y su pantalla, GPS con su
+     barra de LED y frecuencia, acelerómetro y la última corrida -->
+<template id="tplStatusTablero">
+        <div class="stat tb-velo">
+          <span class="k">Velocidad</span>
+          <span class="tb-dial" aria-hidden="true"><i class="tb-aguja"></i></span>
+          <span class="val" id="sVel">—</span>
+        </div>
+        <div class="stat gps">
+          <span class="k">GPS</span>
+          <span class="val" id="sPrec">—</span>
+          <span class="tb-fila"><span class="barras" id="sBarras" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="tb-hz" id="sHz">—</span></span>
+        </div>
+        <div class="stat tb-acel"><span class="k">Acelerómetro</span><span class="val" id="sAcel">—</span></div>
+        <button type="button" class="stat ancha ultima" id="ultCorrida" hidden></button>
+</template>
 
 <script>
 /* dragcore.js — Algoritmo del medidor Drag Tree (port de drag_procesar.m v2.2)
@@ -7337,7 +8046,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = '0.7.4';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
+  const APP_VERSION = '0.8';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -7346,7 +8055,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
   };
-  const DEF = { dist: 402.336, rollout_ft: 1, unidad: 'kmh', orientacion: 'no', v_confirma_kmh: 50, t_confirma: 8, usar_acc: true, tema: 'auto', anim: true, fondo: 'combinado', velo: '0.78',
+  const DEF = { dist: 402.336, rollout_ft: 1, unidad: 'kmh', orientacion: 'no', v_confirma_kmh: 50, t_confirma: 8, usar_acc: true, tema: 'auto', anim: true, fondo: 'combinado', velo: '0.78', caratula: '2026',
     // Semáforo con cámara (beta 0.6): zona del árbol por carril (normalizada al cuadro orig), cámara física elegida,
     // retraso cámara↔giroscopio medido por carril (últimos valores), sesgo del acelerómetro y correcciones con boleta (ms)
     cam: false, cam_arbol: 'pro', cam_zona: { izq: null, der: null }, cam_orig: null, cam_camara: null, cam_info: null,
@@ -7635,15 +8344,27 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     if (ses.fase === 'idle') {
       const s = sens.ultGps, vivo = s && nowS() - sens.ultGpsRec < 4;
       const pe = $('#sPrec');
+      // rayitas de señal (rediseño 2026): 5 con ±5 m o mejor, ninguna sin lecturas; el color dice si sirve para medir
+      let rayas = 0, tono = '', txt = 'Toca "Activar sensores"';
       if (!sens.activo) { pe.textContent = '—'; pe.className = 'val'; }
-      else if (!s) { pe.textContent = 'buscando…'; pe.className = 'val meh'; }
+      else if (!s) { pe.textContent = 'buscando…'; pe.className = 'val meh'; txt = 'Buscando señal: sal a cielo abierto'; }
       else {
         pe.textContent = `±${Math.round(s.hacc)} m`;
-        pe.className = 'val ' + (!vivo ? 'bad' : s.hacc <= 8 ? 'good' : s.hacc <= 15 ? 'meh' : 'bad');
+        tono = !vivo ? 'bad' : s.hacc <= 8 ? 'good' : s.hacc <= 15 ? 'meh' : 'bad';
+        pe.className = 'val ' + tono;
+        rayas = !vivo ? 0 : s.hacc <= 5 ? 5 : s.hacc <= 8 ? 4 : s.hacc <= 15 ? 3 : s.hacc <= 25 ? 2 : 1;
+        txt = !vivo ? 'Sin lecturas nuevas del GPS' : tono === 'good' ? 'Señal buena para medir' : tono === 'meh' ? 'Señal regular: busca cielo abierto' : 'Señal débil: espera o muévete a cielo abierto';
       }
+      const br = $('#sBarras'), gt = $('#sGpsTxt');   // solo en la carátula 2026
+      if (br) {
+        br.className = 'barras ' + tono;
+        [...br.children].forEach((x, i) => x.classList.toggle('on', i < rayas));
+      }
+      if (gt) gt.textContent = txt;
       const hz = sens.gpsDts.length ? 1 / median(sens.gpsDts) : NaN;
       $('#sHz').textContent = isFin(hz) ? `${hz < 1.5 ? hz.toFixed(1) : Math.round(hz)} Hz` : '—';
       $('#sVel').textContent = s ? `${fmtV(s.v * 3.6, 0)} ${velU()}` : '—';
+      $('#sStatus').style.setProperty('--vel', s && vivo ? Math.min(1, s.v * 3.6 / 240).toFixed(3) : '0');   // aguja del Tablero
       const ae = $('#sAcel');
       const accVivo = sens.ultAccRec > 0 && nowS() - sens.ultAccRec < 2;
       ae.textContent = accVivo && isFin(sens.accHz) ? `${Math.round(sens.accHz)} Hz` : (sens.activo ? 'sin datos' : '—');
@@ -7708,6 +8429,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     $('#sesTitulo').textContent = 'Esperando tu arranque';
     $('#sesTexto').textContent = 'La app no da la salida: arranca con el semáforo de la pista. El burnout, la alineación y el stage se ignoran.';
     $('#liveMain').innerHTML = `0<small>${velU()}</small>`;
+    $('#medirSesion').style.setProperty('--vel', '0');   // aguja del Tablero
     $('#liveSub').hidden = true; $('#track').hidden = true; $('#trackFill').style.width = '0';
     $('#btnTerminar').hidden = true; $('#btnCancelar').hidden = false;
     $('#eventLog').innerHTML = ''; $('#gpsLine').textContent = ses.demo ? 'Corrida simulada' : '';
@@ -7773,6 +8495,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
         finCorrida(e.motivo);
       }
     }
+    if (ses.fase === 'corrida' || ses.fase === 'espera') $('#medirSesion').style.setProperty('--vel', Math.min(1, s.v * 3.6 / 240).toFixed(3));   // aguja del Tablero
     if (ses.fase === 'corrida') {
       const tope = ses.det.cfg.distancia_final + ses.det.cfg.margen_final_m;
       $('#liveMain').innerHTML = `${Math.round(ses.det.dVivo)}<small>m</small>`;
@@ -8510,7 +9233,25 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   }
 
   // ------------------------------------------------------------ navegación
+  // Última corrida en Medir (rediseño 2026): su tiempo, velocidad y tramos; tocarla abre su boleta
+  const CORTO = { '60 ft': "60'", '330 ft': "330'", '1/8 mi': '1/8', '1000 ft': "1000'", '1/4 mi': '1/4' };
+  async function pintarUltima() {
+    const b = $('#ultCorrida');
+    if (!b) return;
+    const r = (await DB.todos()).find((x) => x.ok);
+    b.hidden = !r;
+    if (!r) return;
+    const Df = r.cfg.distancia_final, et = etPrincipal(r);
+    const tramos = (r.hitos || []).filter((h) => h.dist_m <= Df + 0.01 && isFin(h.t))
+      .map((h) => `<span>${CORTO[h.nombre] || esc(h.nombre)}<b>${h.t.toFixed(2)}</b></span>`).join('');
+    b.innerHTML = `<span class="k">Última corrida · ${Df < 300 ? '1/8' : '1/4'}${r.demo ? ' · simulada' : ''}</span>
+      <span class="stat-fila"><span class="val">${fmtT(et.t)}<small>s</small></span><span class="s">${fmtV(r.trampa_kmh)} ${velU()}</span></span>
+      <span class="tramos" style="--n:${(r.hitos || []).filter((h) => h.dist_m <= Df + 0.01).length || 1}">${tramos}</span>`;
+    b.setAttribute('aria-label', `Última corrida: ${fmtT(et.t)} segundos en ${nombreDist(Df)}. Abrir su boleta`);
+    b.onclick = () => mostrarResultado(r, false);
+  }
   function mostrarVista(id, tabActivo) {
+    if (id === 'vMedir') pintarUltima();
     for (const v of document.querySelectorAll('.view')) { v.hidden = v.id !== id; if (v.hidden) delete v.dataset.entra; }   // data-entra: ver deslizar
     const tab = tabActivo || id;
     for (const b of document.querySelectorAll('.tabs button')) {
@@ -8676,7 +9417,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   // elegido: con un texto largo ("Atmosférico", "Automático" a 320 px) los botones no miden lo mismo y la marca, que
   // los suponía iguales, quedaba corrida.
   function marcaSeg(s) {
-    const b = s && s.querySelector(':scope > button[aria-checked="true"]');
+    const b = s && s.querySelector(':scope > button:is([aria-checked="true"], [aria-selected="true"])');
     if (!b || !b.offsetWidth) return;
     const rb = b.getBoundingClientRect(), rs = s.getBoundingClientRect();   // con fracciones de píxel (offsetLeft redondea)
     s.style.setProperty('--seg-x', (rb.left - rs.left - s.clientLeft).toFixed(2) + 'px');   // desde el borde interior
@@ -8688,7 +9429,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     const mo = new MutationObserver((ms) => ms.forEach((m) => marcaSeg(m.target.closest && m.target.closest('.seg'))));
     document.querySelectorAll('.seg').forEach((s) => {
       ro.observe(s); s.querySelectorAll(':scope > button').forEach((b) => ro.observe(b));
-      mo.observe(s, { subtree: true, attributes: true, attributeFilter: ['aria-checked'] });
+      mo.observe(s, { subtree: true, attributes: true, attributeFilter: ['aria-checked', 'aria-selected'] });
       marcaSeg(s);
     });
   }
@@ -8747,6 +9488,51 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   }
   aplicarTema();
 
+  // ------------------------------------------------------------ carátulas (1 nov, Daniel: "tres interfaces")
+  // Ajustes → Apariencia. <html data-caratula> elige los estilos (style.css: cada carátula junto a la Original) y el
+  // bloque de sensores de Medir sale de su plantilla (index.template.html, tplStatus*). La tercera está por definirse.
+  const CARATULAS = {
+    original: { tpl: 'tplStatusOriginal', exp: 'La de siempre: paneles con orilla y las pestañas fijas abajo.' },
+    2026: { tpl: 'tplStatus2026', exp: 'Bloques sobre negro profundo y pestañas de cristal que flotan. Se lee mejor al sol.' },
+    tablero: { tpl: 'tplStatusTablero', exp: 'Como el tablero de un auto de los 80 y 90: números que brillan, aguja, cromo y fibra de carbono. De día, medidores de cara blanca.' },
+  };
+  function aplicarCaratula() {
+    if (!CARATULAS[S.caratula]) S.caratula = DEF.caratula;
+    const c = CARATULAS[S.caratula], st = $('#sStatus');
+    document.documentElement.setAttribute('data-caratula', S.caratula);
+    if (st.dataset.caratula !== S.caratula) {
+      st.replaceChildren(document.getElementById(c.tpl).content.cloneNode(true));
+      st.dataset.caratula = S.caratula;
+      tickEstado(); pintarUltima();
+    }
+    $('#caratulaExp').textContent = c.exp;
+  }
+  seg('segCaratula', 'caratula', String);
+  $('#segCaratula').addEventListener('click', aplicarCaratula);
+  aplicarCaratula();
+
+  // Ajustes en dos pestañas: General y Apariencia (carátula, fondo, tema, orientación, animaciones). Con las flechas
+  // del teclado se pasa de una a otra, como en cualquier lista de pestañas.
+  (() => {
+    const tabs = [...document.querySelectorAll('#segAjustes [role="tab"]')];
+    const elegir = (t, foco) => {
+      for (const b of tabs) {
+        const si = b === t;
+        b.setAttribute('aria-selected', String(si)); b.tabIndex = si ? 0 : -1;
+        $('#' + b.getAttribute('aria-controls')).hidden = !si;
+      }
+      if (foco) t.focus();
+    };
+    tabs.forEach((b, i) => {
+      b.onclick = () => elegir(b);
+      b.onkeydown = (e) => {
+        const k = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+        if (k === undefined) return;
+        e.preventDefault(); elegir(tabs[(k + tabs.length) % tabs.length], true);
+      };
+    });
+  })();
+
   // ------------------------------------------------------------ franja de la hora y la cámara en Android (0.6.7)
   // En Android (Samsung y los demás) la app instalada no se dibuja detrás de la hora y la batería: el sistema pinta esa
   // franja, la del hoyito de la cámara, del color de theme-color. Se le da el color que queda arriba de la pantalla
@@ -8773,7 +9559,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   // cambia sola con el tema, el fondo, el velo, la corrida, Práctica, la cámara y al quitarse la carga
   // (la clase de <html> no se vigila: cambia al deslizar entre pestañas y ahí no debe hacer trabajo de más)
   const vigiaBarra = new MutationObserver(pintarBarra);
-  vigiaBarra.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-fondo', 'style'] });
+  vigiaBarra.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-fondo', 'data-caratula', 'style'] });
   vigiaBarra.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true });
   matchMedia('(prefers-color-scheme: light)').addEventListener('change', pintarBarra);
   pintarBarra();
@@ -9004,6 +9790,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     subir();
     return v;
   }
+  pintarUltima();   // la última corrida en Medir al abrir la app
   window.DragApp = {
     version: APP_VERSION, ajustes: S,
     sensoresActivos: () => sens.activo, activarSensores, pedirPantalla,

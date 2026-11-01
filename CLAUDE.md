@@ -191,7 +191,7 @@ mejor?").
    cristal. Se quedaron a propósito: la letra, el logo, la boleta, la medición neutral y el **semáforo vertical de
    atajos** de la 0.6.8 (la maqueta los ponía en fila; Daniel los pidió verticales). barra_test y horizontal_test se
    ajustaron al negro nuevo y a la barra flotante. Vista previa: artefacto "Drag Tree 2026" (claude.ai/artifact/5RKtcktzFLSDrs6MRpKeJR; app.html = dist/index.html con las zonas
-   seguras en 59/34 px, como "Drag Tree en iPhone"). Falta que Daniel lo vea y diga si se publica (sería la 0.8).
+   seguras en 59/34 px, como "Drag Tree en iPhone"). **Publicado en la 0.8** (1 nov, con las tres carátulas).
    **Carátulas** (1 nov, Daniel: "Me gustó… vamos a hacer tres interfaces o tres carátulas: la original, la que me acabas
    de dar y vamos a trabajar otra"; la tercera la describe él después): se eligen en **Ajustes → Apariencia** (`S.caratula`
    'original' | '2026', de inicio '2026'; `aplicarCaratula()` en app.js pone `<html data-caratula>`). `style.css` es la
@@ -230,6 +230,14 @@ mejor?").
    Original y la 2026 siguen igual píxel a píxel (0 diferencias); caratulas_test.py (E) revisa el Tablero.
    Vista previa: el mismo artefacto "Drag Tree 2026" (abajo, botones Original / 2026 / Tablero que tocan los de Ajustes
    → Apariencia dentro de la app; se guarda como si se tocara ahí).
+   Daniel pidió (1 nov) que en el Tablero la precisión y la frecuencia del GPS fueran barras curvas como un tablero
+   digital de los 80 (foto de un Corvette) y luego lo descartó: "deja la carátula de tablero como anteriormente estaba"
+   (se hizo y se deshizo, commits d2abd1f y 51c9271). No retomarlo salvo que lo pida.
+   **Revisión final con impeccable y publicación (0.8, 1 nov**, Daniel: "revísala con impecable y luego publícala"; la
+   Original no se revisó: "esa ya está correcta"): el detector solo marcó cosas de la Original y de la plantilla común
+   (no se tocan); a ojo, en la 2026 y el Tablero de noche, de día y con fondo, se arregló que los recuadros de la boleta
+   (`.kpis > div`) dejen el valor abajo aunque el nombre ocupe dos renglones (en el Tablero "Tiempo 1/4 de milla"
+   desalineaba su pantalla) y las leyendas de los tramos de la última corrida en el Tablero (más grandes y separadas).
    **Deslizar entre pestañas** (0.6.2, 25 oct, Daniel lo pidió "como nativa de iPhone"): con el dedo a la izquierda/derecha
    se pasa a la pestaña de al lado. Al tomar el dedo de lado, las pestañas de los lados ya se pintan (`prepararVista`,
    `data-entra` = sin la cascada de entrada) a ±ancho y se mueven pegadas a la actual; cada una se pone a la altura donde
@@ -497,7 +505,9 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.7.4** (31 oct 2026: Race 1 vs 1, nunca baja el
+caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.8** (1 nov 2026: tres carátulas en Ajustes →
+Apariencia: la Original, la 2026 (de inicio) y el Tablero; Ajustes en dos pestañas, General y Apariencia; revisión final
+con impeccable, punto 7); antes **0.7.4** (31 oct 2026: Race 1 vs 1, nunca baja el
 árbol en un solo teléfono: latidos entre los dos durante la cuenta y revisión 1 s antes de los ámbar; si aun así bajó en uno,
 la carrera queda anulada; sincronia_test.py + red_mala.mjs, punto 14); antes **0.7.3** (31 oct 2026: pulido con impeccable:
 avisos como recuadro con tinte, sin rebote, sensores alineados, boletas sin cortes y la boleta de la carrera más ancha de lado,

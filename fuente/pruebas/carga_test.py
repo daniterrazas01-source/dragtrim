@@ -2,6 +2,8 @@
 # En las pruebas automáticas no sale (navigator.webdriver) salvo con ?carga, que es lo que se prueba aquí.
 # Uso: python3 carga_test.py -> capturas/carga_*.png; sale con código 1 si algo falla.
 import json, os, subprocess, sys, time
+import re as _re, os as _os
+VER = _re.search(r"APP_VERSION = '([^']+)'", open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '../app/src/app.js'), encoding='utf-8').read()).group(1)   # la versión de la app
 from playwright.sync_api import sync_playwright
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
@@ -64,7 +66,7 @@ def main():
             chk(1.9 <= t['quitada'] / 1000 <= 2.7, f"A. dura unos 2 s ({t['quitada'] / 1000:.2f} s desde que se abrió)")
             pg.click('.tabs button[data-view="vAjustes"]', timeout=2000); pg.wait_for_timeout(300)
             chk(pg.evaluate("document.querySelector('main .view:not([hidden])').id") == 'vAjustes', 'A. después la app responde')
-            chk('0.7.4' in pg.evaluate("document.getElementById('verText').textContent") and 'beta' not in pg.evaluate("document.getElementById('verText').textContent"),
+            chk(VER in pg.evaluate("document.getElementById('verText').textContent") and 'beta' not in pg.evaluate("document.getElementById('verText').textContent"),
                 'A. la versión ya no dice "beta"')
             chk(not pg.evaluate("document.querySelector('.brand .beta')"), 'A. ya no está la etiqueta "beta" arriba')
             chk(not errs, 'A. sin errores en consola: ' + '; '.join(errs))
