@@ -1,0 +1,42 @@
+# Graphify (mapa del proyecto para Claude; ver CLAUDE.md, punto 15).
+# Lo que no aporta al mapa o costaría mucho leer con el modelo.
+
+# Generado por el build (es la misma fuente, junta en un archivo)
+index.html
+sw.js
+prueba/
+fondos/
+icon-*.png
+
+# Copias de versiones viejas y bocetos del logo
+archivo/versiones/
+archivo/logo_pendiente/v1/
+archivo/logo_pendiente/v2/
+archivo/logo_pendiente/v3/
+archivo/logo_pendiente/v4/
+archivo/logo_pendiente/referencias/
+
+# Skills y agentes de otros autores (no son parte de Drag Tree)
+.claude/skills/impeccable/
+.claude/skills/ui-ux-pro-max/
+.claude/skills/apple-design/
+.claude/skills/mobile-native/
+.claude/skills/review-animations/
+.claude/skills/no-ui-slop/
+.claude/skills/graphify/
+.claude/agents/
+
+# Librerías de terceros
+fuente/app/src/vendor/
+
+# Imágenes, letras y datos: cada imagen sería una lectura aparte del modelo
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.svg
+*.ttf
+*.woff2
+*.xlsx
+*.bin
+*.y4m
