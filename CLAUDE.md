@@ -4,6 +4,9 @@ Medidor de tiempos de arrancones (1/8 y 1/4 de milla) con el GPS y el aceleróme
 teléfono, más un simulador de semáforo para practicar la salida. El dueño (Daniel) corre en
 autódromo con semáforo profesional. **Habla con él en español**, de forma clara y sin jerga
 técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro estás.
+También en español lo que ve en la app mientras trabajas: la descripción de cada paso (comandos, búsquedas,
+archivos) y las tareas (1 nov, Daniel: "estás poniendo las instrucciones en inglés… ¿puedes ponerlas en español
+mejor?").
 
 - App publicada (GitHub Pages): https://daniterrazas01-source.github.io/dragtrim/
 - Repo: `daniterrazas01-source/dragtrim`. Pages sirve la raíz de **`gh-pages`** (confirmado con el
