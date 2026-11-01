@@ -247,6 +247,13 @@ p { margin: 0 0 12px; }
 /* última corrida: se toca para abrir su boleta */
 :where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .stat.ultima { font: inherit; color: inherit; cursor: pointer; }
 :where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ultima .stat-fila { align-items: baseline; }
+/* la tacha que quita la última corrida hasta la siguiente (1 nov, Daniel): se toca en 44 px y se ve un círculo de 28 */
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ult-caja { grid-column: 1 / -1; position: relative; display: grid; transition: opacity .16s cubic-bezier(.23, 1, .32, 1), transform .16s cubic-bezier(.23, 1, .32, 1); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ult-caja.saliendo { opacity: 0; transform: scale(.98); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ult-x { position: absolute; top: 2px; right: 2px; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--chalk-3); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ult-x::before { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: color-mix(in srgb, var(--chalk) 9%, transparent); transition: background-color .12s; }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ult-x:active::before { background: color-mix(in srgb, var(--chalk) 22%, transparent); }
+:where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .ult-x svg { position: relative; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
 :where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tramos { display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 1fr)); gap: 4px; margin-top: 8px; }
 :where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tramos span { display: grid; gap: 4px; font: 600 10.5px/1 var(--body); color: var(--chalk-3); }
 :where(:root:is([data-caratula="2026"], [data-caratula="tablero"])) .tramos span::before { content: ""; height: 5px; border-radius: 3px; background: linear-gradient(90deg, var(--amber), color-mix(in srgb, var(--amber) 55%, #fff)); }
@@ -413,7 +420,6 @@ p { margin: 0 0 12px; }
 .ver { font-size: 13px; color: var(--chalk-dim); margin: 18px 0; }
 /* Ajustes en dos pestañas (1 nov): General y Apariencia; la explicación de la carátula elegida va bajo su selector */
 .aj-pestanas { margin: 0 0 12px; }
-.field .hint.aj-exp { margin: 8px 2px 0; }
 
 /* Navegación */
 :where(:root:not([data-caratula="2026"], [data-caratula="tablero"])) .tabs {
@@ -1113,7 +1119,7 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
   :root.acostada .status { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 12px 0 2px; }
   :root.acostada .stat { padding: 9px 12px; }
   :root.acostada .stat .val { font-size: 24px; }
-:root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .stat .s, :root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .ultima { display: none; }
+:root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .stat .s, :root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .ult-caja { display: none; }
 /* lo principal cabe sin desplazarse */
 :root:where([data-caratula="2026"], [data-caratula="tablero"]).acostada .barras { height: 20px; margin-bottom: 10px; }
 
@@ -1424,7 +1430,7 @@ input[type="range"] { accent-color: var(--amber); }
 :where(:root[data-caratula="tablero"]) .tb-velo { grid-area: velo; justify-content: flex-start; }
 :where(:root[data-caratula="tablero"]) #sStatus > .gps { grid-area: gps; }
 :where(:root[data-caratula="tablero"]) .tb-acel { grid-area: acel; }
-:where(:root[data-caratula="tablero"]) #ultCorrida { grid-area: ult; }
+:where(:root[data-caratula="tablero"]) #ultCaja { grid-area: ult; }
 :where(:root[data-caratula="tablero"]) .tb-velo .val { text-align: center; }
 :where(:root[data-caratula="tablero"]) .tb-dial {
   position: relative; isolation: isolate; display: block; width: 100%; max-width: 156px; aspect-ratio: 1; margin: 8px auto 4px; border-radius: 50%;
@@ -1991,11 +1997,10 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
       <div class="field">
         <span class="lab">Carátula</span>
         <div class="seg" role="radiogroup" aria-label="Carátula" id="segCaratula" style="margin-top:8px">
-          <button role="radio" data-v="original">Original</button>
-          <button role="radio" data-v="2026">2026</button>
-          <button role="radio" data-v="tablero">Tablero</button>
+          <button role="radio" data-v="original" aria-label="Carátula 1">1</button>
+          <button role="radio" data-v="2026" aria-label="Carátula 2">2</button>
+          <button role="radio" data-v="tablero" aria-label="Carátula 3">3</button>
         </div>
-        <p class="hint aj-exp" id="caratulaExp" aria-live="polite"></p>
       </div>
 
       <div class="field">
@@ -2248,7 +2253,10 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
         </div>
         <div class="stat"><span class="k">Acelerómetro</span><span class="val" id="sAcel">—</span></div>
         <div class="stat"><span class="k">Velocidad</span><span class="val" id="sVel">—</span></div>
-        <button type="button" class="stat ancha ultima" id="ultCorrida" hidden></button>
+        <div class="ult-caja" id="ultCaja" hidden>
+          <button type="button" class="stat ancha ultima" id="ultCorrida"></button>
+          <button type="button" class="ult-x" id="ultQuitar" aria-label="Quitar la última corrida de aquí"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+        </div>
 </template>
 <!-- Tablero (tablero de los 80 y 90 con algo de los 2000): velocímetro con aguja (--vel, app.js) y su pantalla, GPS con su
      barra de LED y frecuencia, acelerómetro y la última corrida -->
@@ -2264,7 +2272,10 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
           <span class="tb-fila"><span class="barras" id="sBarras" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="tb-hz" id="sHz">—</span></span>
         </div>
         <div class="stat tb-acel"><span class="k">Acelerómetro</span><span class="val" id="sAcel">—</span></div>
-        <button type="button" class="stat ancha ultima" id="ultCorrida" hidden></button>
+        <div class="ult-caja" id="ultCaja" hidden>
+          <button type="button" class="stat ancha ultima" id="ultCorrida"></button>
+          <button type="button" class="ult-x" id="ultQuitar" aria-label="Quitar la última corrida de aquí"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+        </div>
 </template>
 
 <script>
@@ -8046,7 +8057,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = '0.8';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
+  const APP_VERSION = '0.8.1';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -9236,11 +9247,13 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   // Última corrida en Medir (rediseño 2026): su tiempo, velocidad y tramos; tocarla abre su boleta
   const CORTO = { '60 ft': "60'", '330 ft': "330'", '1/8 mi': '1/8', '1000 ft': "1000'", '1/4 mi': '1/4' };
   async function pintarUltima() {
-    const b = $('#ultCorrida');
-    if (!b) return;
+    const b = $('#ultCorrida'), caja = $('#ultCaja');
+    if (!b || !caja) return;
     const r = (await DB.todos()).find((x) => x.ok);
-    b.hidden = !r;
-    if (!r) return;
+    // la tacha la quita hasta la siguiente corrida (1 nov, Daniel): se guarda cuál se quitó
+    caja.hidden = !r || LS.get('dragtrim.ultOculta', null) === r.id;
+    caja.classList.remove('saliendo');
+    if (caja.hidden) return;
     const Df = r.cfg.distancia_final, et = etPrincipal(r);
     const tramos = (r.hitos || []).filter((h) => h.dist_m <= Df + 0.01 && isFin(h.t))
       .map((h) => `<span>${CORTO[h.nombre] || esc(h.nombre)}<b>${h.t.toFixed(2)}</b></span>`).join('');
@@ -9249,6 +9262,15 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
       <span class="tramos" style="--n:${(r.hitos || []).filter((h) => h.dist_m <= Df + 0.01).length || 1}">${tramos}</span>`;
     b.setAttribute('aria-label', `Última corrida: ${fmtT(et.t)} segundos en ${nombreDist(Df)}. Abrir su boleta`);
     b.onclick = () => mostrarResultado(r, false);
+    $('#ultQuitar').onclick = () => {
+      LS.set('dragtrim.ultOculta', r.id);
+      const conFoco = document.activeElement === $('#ultQuitar');
+      const fin = () => {
+        caja.hidden = true; caja.classList.remove('saliendo');
+        if (conFoco) { const p = [...document.querySelectorAll('#medirIdle .primary')].find((e) => e.offsetParent); if (p) p.focus({ preventScroll: true }); }
+      };
+      if (conAnim()) { caja.classList.add('saliendo'); setTimeout(fin, 160); } else fin();
+    };
   }
   function mostrarVista(id, tabActivo) {
     if (id === 'vMedir') pintarUltima();
@@ -9492,9 +9514,10 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   // Ajustes → Apariencia. <html data-caratula> elige los estilos (style.css: cada carátula junto a la Original) y el
   // bloque de sensores de Medir sale de su plantilla (index.template.html, tplStatus*). La tercera está por definirse.
   const CARATULAS = {
-    original: { tpl: 'tplStatusOriginal', exp: 'La de siempre: paneles con orilla y las pestañas fijas abajo.' },
-    2026: { tpl: 'tplStatus2026', exp: 'Bloques sobre negro profundo y pestañas de cristal que flotan. Se lee mejor al sol.' },
-    tablero: { tpl: 'tplStatusTablero', exp: 'Como el tablero de un auto de los 80 y 90: números que brillan, aguja, cromo y fibra de carbono. De día, medidores de cara blanca.' },
+    // en Ajustes se llaman 1, 2 y 3, sin explicación (1 nov, Daniel); por dentro siguen con su nombre (se guarda así)
+    original: { tpl: 'tplStatusOriginal' },
+    2026: { tpl: 'tplStatus2026' },
+    tablero: { tpl: 'tplStatusTablero' },
   };
   function aplicarCaratula() {
     if (!CARATULAS[S.caratula]) S.caratula = DEF.caratula;
@@ -9505,7 +9528,6 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
       st.dataset.caratula = S.caratula;
       tickEstado(); pintarUltima();
     }
-    $('#caratulaExp').textContent = c.exp;
   }
   seg('segCaratula', 'caratula', String);
   $('#segCaratula').addEventListener('click', aplicarCaratula);

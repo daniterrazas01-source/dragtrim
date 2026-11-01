@@ -509,7 +509,9 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.8** (1 nov 2026: tres carátulas en Ajustes →
+caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.8.1** (1 nov 2026: las carátulas se llaman 1, 2
+y 3, sin explicación; tacha en la última corrida de Medir para quitarla hasta la siguiente corrida, punto 7); antes **0.8**
+(1 nov 2026: tres carátulas en Ajustes →
 Apariencia: la Original, la 2026 (de inicio) y el Tablero; Ajustes en dos pestañas, General y Apariencia; revisión final
 con impeccable, punto 7); antes **0.7.4** (31 oct 2026: Race 1 vs 1, nunca baja el
 árbol en un solo teléfono: latidos entre los dos durante la cuenta y revisión 1 s antes de los ámbar; si aun así bajó en uno,
