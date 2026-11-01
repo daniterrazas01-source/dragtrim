@@ -189,6 +189,22 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    atajos** de la 0.6.8 (la maqueta los ponía en fila; Daniel los pidió verticales). barra_test y horizontal_test se
    ajustaron al negro nuevo y a la barra flotante. Vista previa: artefacto "Drag Tree 2026" (claude.ai/artifact/5RKtcktzFLSDrs6MRpKeJR; app.html = dist/index.html con las zonas
    seguras en 59/34 px, como "Drag Tree en iPhone"). Falta que Daniel lo vea y diga si se publica (sería la 0.8).
+   **Carátulas** (1 nov, Daniel: "Me gustó… vamos a hacer tres interfaces o tres carátulas: la original, la que me acabas
+   de dar y vamos a trabajar otra"; la tercera la describe él después): se eligen en **Ajustes → Apariencia** (`S.caratula`
+   'original' | '2026', de inicio '2026'; `aplicarCaratula()` en app.js pone `<html data-caratula>`). `style.css` es la
+   Original (la de la 0.7.4) y junto a cada regla que la 2026 cambia va su versión con `:where(:root[data-caratula="2026"])`
+   (no cambia la especificidad ni el orden); las reglas que la 2026 quita llevan `:where(:not([data-caratula="2026"]))`.
+   Se armó con `fuente/app/tools/fusionar_caratula.py` (compara las dos hojas completas regla por regla). Comprobado píxel a
+   píxel (4 fondos × claro/oscuro × 9 pantallas, sin Ajustes): la Original = la 0.7.4 (0 diferencias) y la 2026 = el
+   rediseño (1 píxel de orilla del logo en claro sin fondo, mismo tamaño y estilos: ruido). Lo que cambia de marcado: el
+   bloque de sensores de Medir sale de una plantilla por carátula (`tplStatusOriginal` / `tplStatus2026` en
+   index.template.html; tickEstado y pintarUltima aguantan que falten `#sBarras`, `#sGpsTxt` y `#ultCorrida`) y las
+   pestañas traen ícono (`.tabs button svg`, oculto en la Original). Al cambiar algo de la interfaz, revisarlo en las dos.
+   **Ajustes en dos pestañas** (1 nov, Daniel: "orientación, tema y fondo de pantalla… en una sola pestaña… y tipo de
+   carátula"): `#segAjustes` (role tablist, flechas/Inicio/Fin) con **General** (rollout, unidades, arranque válido,
+   acelerómetro, cámara, instalar, borrar historial) y **Apariencia** (carátula con su explicación `#caratulaExp`, fondo y
+   qué tanto se ve, tema, orientación, animaciones). Los `.seg` aceptan `aria-selected` además de `aria-checked`.
+   caratulas_test.py lo revisa; barra, calc y horizontal tocan antes `#ajTabApariencia`.
    **Deslizar entre pestañas** (0.6.2, 25 oct, Daniel lo pidió "como nativa de iPhone"): con el dedo a la izquierda/derecha
    se pasa a la pestaña de al lado. Al tomar el dedo de lado, las pestañas de los lados ya se pintan (`prepararVista`,
    `data-entra` = sin la cascada de entrada) a ±ancho y se mueven pegadas a la actual; cada una se pone a la altura donde
@@ -430,6 +446,7 @@ fuente/app/src/index.template.html, style.css
 fuente/app/src/logo.svg, icono/  logo de la barra de arriba y de la carga, e ícono (los genera archivo/logo_pendiente/v5/hacer_logo.py)
 fuente/app/src/carga/          logo de Rooster Racing para la pantalla de carga
 fuente/app/tools/build.py      junta todo en un index.html autocontenido + sw.js + íconos (sube VERSION al cambiar)
+fuente/app/tools/fusionar_caratula.py   arma style.css con varias carátulas a partir de hojas completas (punto 7)
 fuente/publicar.sh             build + copia a la raíz
 fuente/matlab/                 script MATLAB Mobile v2.3 (mismo algoritmo); Drag_tree_v2_unico.m = todo en un archivo
 fuente/pruebas/                pruebas (ver abajo)
@@ -491,6 +508,7 @@ python3 instalar_test.py # guía de instalación por teléfono/navegador, iPad v
 python3 deslizar_test.py # deslizar el dedo entre pestañas (toques reales por CDP): pasa, regresa, orillas, corrida, semáforo
 python3 carga_test.py    # pantalla de carga: logo + "By" Rooster Racing, 2 s, se desvanece, sin "beta" (con ?carga)
 python3 barra_test.py    # Android: color de la franja de la hora/cámara (theme-color) por fondo, velo, tema, corrida, Práctica, carga; pantallas de Samsung
+python3 caratulas_test.py   # Ajustes General/Apariencia y las carátulas Original y 2026 (cambio, se guarda, Medir, fondo)
 python3 atajos_test.py   # Medir: Corrida simulada / Race 1 vs 1 / Antes de la pista como semáforo (3 cuadros a la izquierda); abren su explicación a la derecha, una a la vez
 python3 horizontal_test.py  # teléfono acostado (iPhone, S24 Ultra, chico): riel, Medir, midiendo, resultado, Race 1 vs 1, Práctica, carga; vertical igual
 node carrera_nucleo_test.js; node qr_test.js; node enlace_test.js; node sala_nucleo_test.mjs   # Race 1 vs 1 sin navegador

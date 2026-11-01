@@ -212,7 +212,8 @@ async def main():
                 await pg.evaluate("document.querySelector('.tabs button[data-view=vCalc]').click()"); await pg.wait_for_timeout(450)
                 await pg.screenshot(path=SH + f'calc_06_tabs_{ancho}.png')
             await pg.set_viewport_size({'width': 390, 'height': 844})
-            await pg.click('.tabs button[data-view="vAjustes"]'); await pg.click('#segTema button[data-v="light"]')
+            await pg.click('.tabs button[data-view="vAjustes"]'); await pg.click('#ajTabApariencia')   # tema y fondo: Apariencia
+            await pg.click('#segTema button[data-v="light"]')
             await pg.click('#selFondo button >> nth=0') if await pg.query_selector('#selFondo button') else None
             await pg.click('.tabs button[data-view="vCalc"]'); await pg.wait_for_timeout(700)
             await pg.screenshot(path=SH + 'calc_07_claro.png', full_page=True)

@@ -108,6 +108,7 @@ def main():
             # C. cambiar fondo, velo y tema en Ajustes: cambia al momento
             ctx, pg, errs = abrir(b, {'fondo': 'combinado', 'tema': 'dark', 'velo': '0.78'})
             pg.click('.tabs button[data-view="vAjustes"]'); pg.wait_for_timeout(300)
+            pg.click('#ajTabApariencia'); pg.wait_for_timeout(150)   # fondo y velo están en Ajustes → Apariencia
             pg.click('#segVelo button[data-v="0.64"]'); pg.wait_for_timeout(150)
             chk(dist(deh(barra(pg)), encima(VELO_OSC, 0.64, ARRIBA['combinado'])) <= 1.5, f'C. velo "Mucho": {barra(pg)}')
             pg.click('#selFondo button:has-text("Rojo") >> nth=-1'); pg.wait_for_timeout(150)

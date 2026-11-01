@@ -186,6 +186,7 @@ def main():
             alto = pg.evaluate("(() => { const m = document.getElementById('marco'); m.scrollTop = 500; return [m.scrollTop, m.scrollHeight > m.clientHeight]; })()")
             chk(alto[0] > 0 and alto[1], f'G. con la app girada Ajustes se desplaza ({alto})')
             chk(pg.evaluate("document.querySelector('#segOrient button[data-v=\"no\"]').getAttribute('aria-checked') === 'true'"), 'G. Ajustes muestra "No girar" elegido')
+            pg.click('#ajTabApariencia'); pg.wait_for_timeout(200)   # la orientación está en Ajustes → Apariencia
             pg.evaluate("document.querySelector('#segOrient').scrollIntoView({block: 'center'})"); pg.wait_for_timeout(200)
             pg.screenshot(path=SH + 'horizontal_girada_ajustes.png')
             # al otro lado: pestañas a la izquierda
@@ -220,6 +221,7 @@ def main():
             pg.click('#rcSalir'); pg.wait_for_timeout(300)
             # "Toda la app"
             pg.click('.tabs button[data-view="vAjustes"]'); pg.wait_for_timeout(300)
+            pg.click('#ajTabApariencia'); pg.wait_for_timeout(200)
             pg.click('#segOrient button[data-v="todo"]'); pg.wait_for_timeout(300)
             c = clases()
             chk('acostada' in c and 'girada' not in c, f'G. "Toda la app": Ajustes también se acuesta ({c})')
