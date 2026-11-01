@@ -52,24 +52,8 @@
         <button role="radio" data-v="402.336">1/4 de milla</button>
       </div>
 
-      <!-- Rediseño 2026 (UI/UX Pro Max): todo en bloques. GPS a lo ancho con su precisión, frecuencia y rayitas de señal;
-           acelerómetro, velocidad y la última corrida con sus tramos (app.js: tickEstado y pintarUltima) -->
-      <div class="status">
-        <div class="stat ancha gps">
-          <span class="k">GPS</span>
-          <div class="stat-fila">
-            <div><span class="val" id="sPrec">—</span><span class="sk">precisión</span></div>
-            <div class="stat-der">
-              <span class="barras" id="sBarras" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
-              <div><span class="val" id="sHz">—</span><span class="sk">frecuencia</span></div>
-            </div>
-          </div>
-          <span class="s" id="sGpsTxt">Toca "Activar sensores"</span>
-        </div>
-        <div class="stat"><span class="k">Acelerómetro</span><span class="val" id="sAcel">—</span></div>
-        <div class="stat"><span class="k">Velocidad</span><span class="val" id="sVel">—</span></div>
-        <button type="button" class="stat ancha ultima" id="ultCorrida" hidden></button>
-      </div>
+      <!-- sensores: app.js (aplicarCaratula) pone aquí la plantilla de la carátula elegida (ver abajo, antes de los scripts) -->
+      <div class="status" id="sStatus"></div>
       <p id="idleMsg" class="msg"></p>
 
       <button id="btnSensores" class="primary">Activar sensores</button>
@@ -329,92 +313,111 @@
   <!-- ============ AJUSTES ============ -->
   <section id="vAjustes" class="view" hidden>
     <h2>Ajustes</h2>
+    <!-- Dos pestañas (1 nov, Daniel: "orientación, tema y fondo de pantalla en una sola pestaña… y el tipo de carátula"):
+         General (la medición y la app) y Apariencia (carátula, fondo, tema, orientación y animaciones) -->
+    <div class="seg aj-pestanas" role="tablist" aria-label="Secciones de Ajustes" id="segAjustes">
+      <button role="tab" id="ajTabGeneral" data-v="general" aria-selected="true" aria-controls="ajGeneral">General</button>
+      <button role="tab" id="ajTabApariencia" data-v="apariencia" aria-selected="false" aria-controls="ajApariencia" tabindex="-1">Apariencia</button>
+    </div>
 
-    <div class="field">
-      <label class="lab" for="inRollout">Rollout (punto inicial del cronómetro)</label>
-      <p class="hint">En pista el cronómetro arranca cuando la llanta deja el haz de stage, ~1 ft después del primer movimiento. Usa 1 ft para comparar con la boleta; 0 mide desde el primer movimiento. Si tu 60 ft sale siempre distinto al oficial, ajústalo y usa "Recalcular" en el historial.</p>
-      <div class="row">
-        <input type="number" id="inRollout" min="0" max="2" step="0.1" inputmode="decimal">
-        <span>ft</span>
+    <div class="aj-panel" id="ajGeneral" role="tabpanel" aria-labelledby="ajTabGeneral">
+      <div class="field">
+        <label class="lab" for="inRollout">Rollout (punto inicial del cronómetro)</label>
+        <p class="hint">En pista el cronómetro arranca cuando la llanta deja el haz de stage, ~1 ft después del primer movimiento. Usa 1 ft para comparar con la boleta; 0 mide desde el primer movimiento. Si tu 60 ft sale siempre distinto al oficial, ajústalo y usa "Recalcular" en el historial.</p>
+        <div class="row">
+          <input type="number" id="inRollout" min="0" max="2" step="0.1" inputmode="decimal">
+          <span>ft</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="lab">Unidades de velocidad</span>
+        <div class="seg" role="radiogroup" id="segUnidad" style="margin-top:8px">
+          <button role="radio" data-v="kmh">km/h</button>
+          <button role="radio" data-v="mph">mph</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="lab">Arranque válido</span>
+        <p class="hint">Solo cuenta como arranque si, saliendo de detenido, llegas a esta velocidad en este tiempo. Así se ignoran el burnout y la alineación.</p>
+        <div class="row">
+          <input type="number" id="inVconf" min="20" max="120" step="5" inputmode="numeric" aria-label="Velocidad de confirmación en km/h">
+          <span>km/h en</span>
+          <input type="number" id="inTconf" min="3" max="20" step="1" inputmode="numeric" aria-label="Tiempo máximo en segundos">
+          <span>s</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="toggle">Usar acelerómetro <input type="checkbox" id="inAcc"></label>
+        <p class="hint" style="margin-top:6px">Combina GPS y acelerómetro para mayor precisión. Apágalo solo para comparar.</p>
+      </div>
+
+      <div class="field" id="ajCam" hidden>
+        <span class="lab">Semáforo con cámara <span class="beta-tag">beta</span></span>
+        <div id="ajCamCal" class="cam-cal"></div>
+        <label class="toggle" style="margin-top:10px">Guardar los cuadros del árbol <input type="checkbox" id="inCamCuadros"></label>
+        <p class="hint" style="margin-top:6px">Ayuda a mejorar la app y permite cambiar de carril después (~1 MB por corrida; se conservan las últimas 30).</p>
+        <button class="ghost" id="btnOlvidarZona">Olvidar dónde está el árbol</button>
+        <a class="ghost boton" id="lnkPrueba" href="prueba/camara.html">Página de prueba de la cámara</a>
+      </div>
+
+      <div class="field guia" id="guiaAjustes">
+        <span class="lab">Instalar la app</span>
+        <div class="guia-pasos"></div>
+        <button class="primary" data-instalar hidden>Instalar app</button>
+      </div>
+      <button id="btnBorrarHist" class="danger">Borrar todo el historial</button>
+    </div>
+
+    <div class="aj-panel" id="ajApariencia" role="tabpanel" aria-labelledby="ajTabApariencia" hidden>
+      <div class="field">
+        <span class="lab">Carátula</span>
+        <div class="seg" role="radiogroup" aria-label="Carátula" id="segCaratula" style="margin-top:8px">
+          <button role="radio" data-v="original">Original</button>
+          <button role="radio" data-v="2026">2026</button>
+        </div>
+        <p class="hint aj-exp" id="caratulaExp" aria-live="polite"></p>
+      </div>
+
+      <div class="field">
+        <span class="lab">Fondo de pantalla</span>
+        <p class="hint">El color de los botones cambia con el fondo. Durante una corrida el fondo se oscurece para que los números se lean bien.</p>
+        <div class="fondos" role="radiogroup" id="selFondo" aria-label="Fondo de pantalla"></div>
+        <span class="lab" style="margin-top:14px">Qué tanto se ve</span>
+        <div class="seg" role="radiogroup" id="segVelo" style="margin-top:8px">
+          <button role="radio" data-v="0.88">Poco</button>
+          <button role="radio" data-v="0.78">Medio</button>
+          <button role="radio" data-v="0.64">Mucho</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="lab">Tema</span>
+        <p class="hint">"Claro" se lee mejor bajo el sol.</p>
+        <div class="seg" role="radiogroup" id="segTema">
+          <button role="radio" data-v="auto">Automático</button>
+          <button role="radio" data-v="light">Claro</button>
+          <button role="radio" data-v="dark">Oscuro</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="lab">Orientación</span>
+        <p class="hint" id="orientHint">Con el teléfono acostado (por ejemplo, en el soporte del carro): "No girar" deja la app siempre vertical; "Solo Medir" acuesta Medir y Race 1 vs 1; "Toda la app" acuesta todo.</p>
+        <div class="seg" role="radiogroup" aria-label="Orientación" id="segOrient">
+          <button role="radio" data-v="no">No girar</button>
+          <button role="radio" data-v="medir">Solo Medir</button>
+          <button role="radio" data-v="todo">Toda la app</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="toggle">Animaciones <input type="checkbox" id="inAnim"></label>
+        <p class="hint" style="margin-top:6px">Transiciones suaves en la app. Las luces del semáforo de Práctica siempre encienden al instante, sin efectos.</p>
       </div>
     </div>
-
-    <div class="field">
-      <span class="lab">Orientación</span>
-      <p class="hint" id="orientHint">Con el teléfono acostado (por ejemplo, en el soporte del carro): "No girar" deja la app siempre vertical; "Solo Medir" acuesta Medir y Race 1 vs 1; "Toda la app" acuesta todo.</p>
-      <div class="seg" role="radiogroup" aria-label="Orientación" id="segOrient">
-        <button role="radio" data-v="no">No girar</button>
-        <button role="radio" data-v="medir">Solo Medir</button>
-        <button role="radio" data-v="todo">Toda la app</button>
-      </div>
-    </div>
-
-    <div class="field">
-      <span class="lab">Unidades de velocidad</span>
-      <div class="seg" role="radiogroup" id="segUnidad" style="margin-top:8px">
-        <button role="radio" data-v="kmh">km/h</button>
-        <button role="radio" data-v="mph">mph</button>
-      </div>
-    </div>
-
-    <div class="field">
-      <span class="lab">Arranque válido</span>
-      <p class="hint">Solo cuenta como arranque si, saliendo de detenido, llegas a esta velocidad en este tiempo. Así se ignoran el burnout y la alineación.</p>
-      <div class="row">
-        <input type="number" id="inVconf" min="20" max="120" step="5" inputmode="numeric" aria-label="Velocidad de confirmación en km/h">
-        <span>km/h en</span>
-        <input type="number" id="inTconf" min="3" max="20" step="1" inputmode="numeric" aria-label="Tiempo máximo en segundos">
-        <span>s</span>
-      </div>
-    </div>
-
-    <div class="field">
-      <label class="toggle">Usar acelerómetro <input type="checkbox" id="inAcc"></label>
-      <p class="hint" style="margin-top:6px">Combina GPS y acelerómetro para mayor precisión. Apágalo solo para comparar.</p>
-    </div>
-
-    <div class="field">
-      <span class="lab">Fondo de pantalla</span>
-      <p class="hint">El color de los botones cambia con el fondo. Durante una corrida el fondo se oscurece para que los números se lean bien.</p>
-      <div class="fondos" role="radiogroup" id="selFondo" aria-label="Fondo de pantalla"></div>
-      <span class="lab" style="margin-top:14px">Qué tanto se ve</span>
-      <div class="seg" role="radiogroup" id="segVelo" style="margin-top:8px">
-        <button role="radio" data-v="0.88">Poco</button>
-        <button role="radio" data-v="0.78">Medio</button>
-        <button role="radio" data-v="0.64">Mucho</button>
-      </div>
-    </div>
-
-    <div class="field">
-      <span class="lab">Tema</span>
-      <p class="hint">"Claro" se lee mejor bajo el sol.</p>
-      <div class="seg" role="radiogroup" id="segTema">
-        <button role="radio" data-v="auto">Automático</button>
-        <button role="radio" data-v="light">Claro</button>
-        <button role="radio" data-v="dark">Oscuro</button>
-      </div>
-    </div>
-
-    <div class="field">
-      <label class="toggle">Animaciones <input type="checkbox" id="inAnim"></label>
-      <p class="hint" style="margin-top:6px">Transiciones suaves en la app. Las luces del semáforo de Práctica siempre encienden al instante, sin efectos.</p>
-    </div>
-
-    <div class="field" id="ajCam" hidden>
-      <span class="lab">Semáforo con cámara <span class="beta-tag">beta</span></span>
-      <div id="ajCamCal" class="cam-cal"></div>
-      <label class="toggle" style="margin-top:10px">Guardar los cuadros del árbol <input type="checkbox" id="inCamCuadros"></label>
-      <p class="hint" style="margin-top:6px">Ayuda a mejorar la app y permite cambiar de carril después (~1 MB por corrida; se conservan las últimas 30).</p>
-      <button class="ghost" id="btnOlvidarZona">Olvidar dónde está el árbol</button>
-      <a class="ghost boton" id="lnkPrueba" href="prueba/camara.html">Página de prueba de la cámara</a>
-    </div>
-
-    <div class="field guia" id="guiaAjustes">
-      <span class="lab">Instalar la app</span>
-      <div class="guia-pasos"></div>
-      <button class="primary" data-instalar hidden>Instalar app</button>
-    </div>
-    <button id="btnBorrarHist" class="danger">Borrar todo el historial</button>
     <p class="ver" id="verText"></p>
   </section>
 </main>
@@ -604,6 +607,32 @@
   <button data-view="vAjustes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h9M18 7h1M5 17h1M10 17h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="8" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span>Ajustes</span></button>
 </nav>
 </div>
+
+<!-- ============ Plantillas por carátula (Ajustes → Apariencia): el bloque de sensores de Medir ============ -->
+<template id="tplStatusOriginal">
+        <div class="stat"><span class="k">Precisión GPS</span><span class="val" id="sPrec">—</span></div>
+        <div class="stat"><span class="k">Frecuencia GPS</span><span class="val" id="sHz">—</span></div>
+        <div class="stat"><span class="k">Velocidad</span><span class="val" id="sVel">—</span></div>
+        <div class="stat"><span class="k">Acelerómetro</span><span class="val" id="sAcel">—</span></div>
+</template>
+<!-- 2026 (rediseño, UI/UX Pro Max): todo en bloques. GPS a lo ancho con su precisión, frecuencia y rayitas de señal;
+     acelerómetro, velocidad y la última corrida con sus tramos (app.js: tickEstado y pintarUltima) -->
+<template id="tplStatus2026">
+        <div class="stat ancha gps">
+          <span class="k">GPS</span>
+          <div class="stat-fila">
+            <div><span class="val" id="sPrec">—</span><span class="sk">precisión</span></div>
+            <div class="stat-der">
+              <span class="barras" id="sBarras" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+              <div><span class="val" id="sHz">—</span><span class="sk">frecuencia</span></div>
+            </div>
+          </div>
+          <span class="s" id="sGpsTxt">Toca "Activar sensores"</span>
+        </div>
+        <div class="stat"><span class="k">Acelerómetro</span><span class="val" id="sAcel">—</span></div>
+        <div class="stat"><span class="k">Velocidad</span><span class="val" id="sVel">—</span></div>
+        <button type="button" class="stat ancha ultima" id="ultCorrida" hidden></button>
+</template>
 
 <script>
 /*CORE*/

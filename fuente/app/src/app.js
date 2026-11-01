@@ -11,7 +11,7 @@
     get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
   };
-  const DEF = { dist: 402.336, rollout_ft: 1, unidad: 'kmh', orientacion: 'no', v_confirma_kmh: 50, t_confirma: 8, usar_acc: true, tema: 'auto', anim: true, fondo: 'combinado', velo: '0.78',
+  const DEF = { dist: 402.336, rollout_ft: 1, unidad: 'kmh', orientacion: 'no', v_confirma_kmh: 50, t_confirma: 8, usar_acc: true, tema: 'auto', anim: true, fondo: 'combinado', velo: '0.78', caratula: '2026',
     // Semáforo con cámara (beta 0.6): zona del árbol por carril (normalizada al cuadro orig), cámara física elegida,
     // retraso cámara↔giroscopio medido por carril (últimos valores), sesgo del acelerómetro y correcciones con boleta (ms)
     cam: false, cam_arbol: 'pro', cam_zona: { izq: null, der: null }, cam_orig: null, cam_camara: null, cam_info: null,
@@ -311,11 +311,12 @@
         rayas = !vivo ? 0 : s.hacc <= 5 ? 5 : s.hacc <= 8 ? 4 : s.hacc <= 15 ? 3 : s.hacc <= 25 ? 2 : 1;
         txt = !vivo ? 'Sin lecturas nuevas del GPS' : tono === 'good' ? 'Señal buena para medir' : tono === 'meh' ? 'Señal regular: busca cielo abierto' : 'Señal débil: espera o muévete a cielo abierto';
       }
-      const br = $('#sBarras');
-      br.className = 'barras ' + tono;
-      br.style.setProperty('--rayas', rayas);
-      [...br.children].forEach((x, i) => x.classList.toggle('on', i < rayas));
-      $('#sGpsTxt').textContent = txt;
+      const br = $('#sBarras'), gt = $('#sGpsTxt');   // solo en la carátula 2026
+      if (br) {
+        br.className = 'barras ' + tono;
+        [...br.children].forEach((x, i) => x.classList.toggle('on', i < rayas));
+      }
+      if (gt) gt.textContent = txt;
       const hz = sens.gpsDts.length ? 1 / median(sens.gpsDts) : NaN;
       $('#sHz').textContent = isFin(hz) ? `${hz < 1.5 ? hz.toFixed(1) : Math.round(hz)} Hz` : '—';
       $('#sVel').textContent = s ? `${fmtV(s.v * 3.6, 0)} ${velU()}` : '—';
@@ -1369,7 +1370,7 @@
   // elegido: con un texto largo ("Atmosférico", "Automático" a 320 px) los botones no miden lo mismo y la marca, que
   // los suponía iguales, quedaba corrida.
   function marcaSeg(s) {
-    const b = s && s.querySelector(':scope > button[aria-checked="true"]');
+    const b = s && s.querySelector(':scope > button:is([aria-checked="true"], [aria-selected="true"])');
     if (!b || !b.offsetWidth) return;
     const rb = b.getBoundingClientRect(), rs = s.getBoundingClientRect();   // con fracciones de píxel (offsetLeft redondea)
     s.style.setProperty('--seg-x', (rb.left - rs.left - s.clientLeft).toFixed(2) + 'px');   // desde el borde interior
@@ -1381,7 +1382,7 @@
     const mo = new MutationObserver((ms) => ms.forEach((m) => marcaSeg(m.target.closest && m.target.closest('.seg'))));
     document.querySelectorAll('.seg').forEach((s) => {
       ro.observe(s); s.querySelectorAll(':scope > button').forEach((b) => ro.observe(b));
-      mo.observe(s, { subtree: true, attributes: true, attributeFilter: ['aria-checked'] });
+      mo.observe(s, { subtree: true, attributes: true, attributeFilter: ['aria-checked', 'aria-selected'] });
       marcaSeg(s);
     });
   }
@@ -1440,6 +1441,50 @@
   }
   aplicarTema();
 
+  // ------------------------------------------------------------ carátulas (1 nov, Daniel: "tres interfaces")
+  // Ajustes → Apariencia. <html data-caratula> elige los estilos (style.css: cada carátula junto a la Original) y el
+  // bloque de sensores de Medir sale de su plantilla (index.template.html, tplStatus*). La tercera está por definirse.
+  const CARATULAS = {
+    original: { tpl: 'tplStatusOriginal', exp: 'La de siempre: paneles con orilla y las pestañas fijas abajo.' },
+    2026: { tpl: 'tplStatus2026', exp: 'Bloques sobre negro profundo y pestañas de cristal que flotan. Se lee mejor al sol.' },
+  };
+  function aplicarCaratula() {
+    if (!CARATULAS[S.caratula]) S.caratula = DEF.caratula;
+    const c = CARATULAS[S.caratula], st = $('#sStatus');
+    document.documentElement.setAttribute('data-caratula', S.caratula);
+    if (st.dataset.caratula !== S.caratula) {
+      st.replaceChildren(document.getElementById(c.tpl).content.cloneNode(true));
+      st.dataset.caratula = S.caratula;
+      tickEstado(); pintarUltima();
+    }
+    $('#caratulaExp').textContent = c.exp;
+  }
+  seg('segCaratula', 'caratula', String);
+  $('#segCaratula').addEventListener('click', aplicarCaratula);
+  aplicarCaratula();
+
+  // Ajustes en dos pestañas: General y Apariencia (carátula, fondo, tema, orientación, animaciones). Con las flechas
+  // del teclado se pasa de una a otra, como en cualquier lista de pestañas.
+  (() => {
+    const tabs = [...document.querySelectorAll('#segAjustes [role="tab"]')];
+    const elegir = (t, foco) => {
+      for (const b of tabs) {
+        const si = b === t;
+        b.setAttribute('aria-selected', String(si)); b.tabIndex = si ? 0 : -1;
+        $('#' + b.getAttribute('aria-controls')).hidden = !si;
+      }
+      if (foco) t.focus();
+    };
+    tabs.forEach((b, i) => {
+      b.onclick = () => elegir(b);
+      b.onkeydown = (e) => {
+        const k = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+        if (k === undefined) return;
+        e.preventDefault(); elegir(tabs[(k + tabs.length) % tabs.length], true);
+      };
+    });
+  })();
+
   // ------------------------------------------------------------ franja de la hora y la cámara en Android (0.6.7)
   // En Android (Samsung y los demás) la app instalada no se dibuja detrás de la hora y la batería: el sistema pinta esa
   // franja, la del hoyito de la cámara, del color de theme-color. Se le da el color que queda arriba de la pantalla
@@ -1466,7 +1511,7 @@
   // cambia sola con el tema, el fondo, el velo, la corrida, Práctica, la cámara y al quitarse la carga
   // (la clase de <html> no se vigila: cambia al deslizar entre pestañas y ahí no debe hacer trabajo de más)
   const vigiaBarra = new MutationObserver(pintarBarra);
-  vigiaBarra.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-fondo', 'style'] });
+  vigiaBarra.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-fondo', 'data-caratula', 'style'] });
   vigiaBarra.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true });
   matchMedia('(prefers-color-scheme: light)').addEventListener('change', pintarBarra);
   pintarBarra();
