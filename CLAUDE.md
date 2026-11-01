@@ -393,7 +393,10 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
     autores, vendor e imágenes). Graphify no lee el chat, solo archivos: lo que se decide sigue yendo a este CLAUDE.md
     y a `archivo/ideas/`. En Drag Tree ayuda poco (es chico y los módulos se llaman por `window.Drag*`, que el mapa no
     siempre une); sirve más en proyectos grandes. "directory" (aún sin repo en la cuenta): ahí se instala igual (punto 9
-    de la skill).
+    de la skill). **Ya pedido (1 nov, Daniel: "vincula esta sesión y la del diseño de DragTree UI… y crea el mapa de
+    Graphify, para que… no gastes tokens de más")** en las sesiones "Drag tree" (rama claude/youthful-johnson-t02s8o) y
+    "Diseño de drag tree (ui)" (rama claude/determined-bardeen-6zalo0): ahí se usa siempre; si el contenedor es nuevo,
+    reinstalar y rearmar el mapa (pasos 2 y 3 de la skill, ~1 min) antes de releer archivos.
 
 ```
 index.html, sw.js, manifest.webmanifest, icon-*.png   ← lo publicado (generado, no editar a mano)
