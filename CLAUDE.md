@@ -205,8 +205,10 @@ mejor?").
    pestañas traen ícono (`.tabs button svg`, oculto en la Original). Al cambiar algo de la interfaz, revisarlo en las dos.
    **Ajustes en dos pestañas** (1 nov, Daniel: "orientación, tema y fondo de pantalla… en una sola pestaña… y tipo de
    carátula"): `#segAjustes` (role tablist, flechas/Inicio/Fin) con **General** (rollout, unidades, arranque válido,
-   acelerómetro, cámara, instalar, borrar historial) y **Apariencia** (carátula con su explicación `#caratulaExp`, fondo y
-   qué tanto se ve, tema, orientación, animaciones). Los `.seg` aceptan `aria-selected` además de `aria-checked`.
+   acelerómetro, cámara, instalar, borrar historial) y **Apariencia** (carátula, fondo y qué tanto se ve, tema,
+   orientación, animaciones). Los botones de carátula dicen **1, 2 y 3** (= Original, 2026, Tablero; por dentro se guardan
+   con su nombre) y **sin explicación** (1 nov, Daniel: "en vez de que se llamen original, 2026 y tablero solo ponles 1, 2
+   y 3, además quita la explicación"; 0.8.1). Los `.seg` aceptan `aria-selected` además de `aria-checked`.
    caratulas_test.py lo revisa; barra, calc y horizontal tocan antes `#ajTabApariencia`.
    **Carátula Tablero** (1 nov, Daniel: "inspírate en los tableros de los autos de los 80s y 90s… entre digitales y
    analógicos… y esencia de los 2000s… utiliza la skill de UI/UX"; UI/UX Pro Max: Skeuomorphism + Retro-Futurism sin

@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = '0.8';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
+  const APP_VERSION = '0.8.1';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -1448,9 +1448,10 @@
   // Ajustes → Apariencia. <html data-caratula> elige los estilos (style.css: cada carátula junto a la Original) y el
   // bloque de sensores de Medir sale de su plantilla (index.template.html, tplStatus*). La tercera está por definirse.
   const CARATULAS = {
-    original: { tpl: 'tplStatusOriginal', exp: 'La de siempre: paneles con orilla y las pestañas fijas abajo.' },
-    2026: { tpl: 'tplStatus2026', exp: 'Bloques sobre negro profundo y pestañas de cristal que flotan. Se lee mejor al sol.' },
-    tablero: { tpl: 'tplStatusTablero', exp: 'Como el tablero de un auto de los 80 y 90: números que brillan, aguja, cromo y fibra de carbono. De día, medidores de cara blanca.' },
+    // en Ajustes se llaman 1, 2 y 3, sin explicación (1 nov, Daniel); por dentro siguen con su nombre (se guarda así)
+    original: { tpl: 'tplStatusOriginal' },
+    2026: { tpl: 'tplStatus2026' },
+    tablero: { tpl: 'tplStatusTablero' },
   };
   function aplicarCaratula() {
     if (!CARATULAS[S.caratula]) S.caratula = DEF.caratula;
@@ -1461,7 +1462,6 @@
       st.dataset.caratula = S.caratula;
       tickEstado(); pintarUltima();
     }
-    $('#caratulaExp').textContent = c.exp;
   }
   seg('segCaratula', 'caratula', String);
   $('#segCaratula').addEventListener('click', aplicarCaratula);

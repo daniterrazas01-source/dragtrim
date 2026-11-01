@@ -397,7 +397,6 @@ p { margin: 0 0 12px; }
 .ver { font-size: 13px; color: var(--chalk-dim); margin: 18px 0; }
 /* Ajustes en dos pestañas (1 nov): General y Apariencia; la explicación de la carátula elegida va bajo su selector */
 .aj-pestanas { margin: 0 0 12px; }
-.field .hint.aj-exp { margin: 8px 2px 0; }
 
 /* Navegación */
 :where(:root:not([data-caratula="2026"], [data-caratula="tablero"])) .tabs {
