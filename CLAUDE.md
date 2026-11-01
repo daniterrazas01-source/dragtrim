@@ -187,7 +187,8 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    Race): caja con orilla y focos con brillo (mismos colores; prenden al instante). De lado: el riel es una tarjeta de
    cristal. Se quedaron a propósito: la letra, el logo, la boleta, la medición neutral y el **semáforo vertical de
    atajos** de la 0.6.8 (la maqueta los ponía en fila; Daniel los pidió verticales). barra_test y horizontal_test se
-   ajustaron al negro nuevo y a la barra flotante. Vista previa: artefacto "Drag Tree 2026".
+   ajustaron al negro nuevo y a la barra flotante. Vista previa: artefacto "Drag Tree 2026" (claude.ai/artifact/5RKtcktzFLSDrs6MRpKeJR; app.html = dist/index.html con las zonas
+   seguras en 59/34 px, como "Drag Tree en iPhone"). Falta que Daniel lo vea y diga si se publica (sería la 0.8).
    **Deslizar entre pestañas** (0.6.2, 25 oct, Daniel lo pidió "como nativa de iPhone"): con el dedo a la izquierda/derecha
    se pasa a la pestaña de al lado. Al tomar el dedo de lado, las pestañas de los lados ya se pintan (`prepararVista`,
    `data-entra` = sin la cascada de entrada) a ±ancho y se mueven pegadas a la actual; cada una se pone a la altura donde
