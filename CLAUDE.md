@@ -398,6 +398,21 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
       en la máquina de la mañana pasaba y su código no cambió): depende de la velocidad de la máquina. Si molesta en
       teléfonos reales, hacer más seguido en el ciclo de qr.js los intentos ampliados.
 
+15. **Graphify** (1 nov 2026, Daniel: "un segundo cerebro… que lo implementes en las sesiones que yo te lo pida, como en la
+    de directory"): arma un mapa (grafo) del proyecto y se le pregunta (`graphify explain/path/query`) en vez de releer
+    archivos enteros. **Solo cuando Daniel lo pida en la sesión**; si no, se trabaja como siempre. Skill
+    `.claude/skills/graphify/` (la oficial 0.9.99 con sus reglas en español arriba: instalar `graphifyy==0.9.99`, mapa del
+    código gratis y local con `GRAPHIFY_BACKEND=none graphify update .` en ~10 s, documentos con el modelo solo si Daniel
+    lo pide porque gasta uso, nada siempre activo, cómo llevarla a otro repo). `graphify-out/` no se sube (`.gitignore`;
+    se rearma en cada sesión); qué entra al mapa: `.graphifyignore` (fuera lo generado, versiones viejas, skills de otros
+    autores, vendor e imágenes). Graphify no lee el chat, solo archivos: lo que se decide sigue yendo a este CLAUDE.md
+    y a `archivo/ideas/`. En Drag Tree ayuda poco (es chico y los módulos se llaman por `window.Drag*`, que el mapa no
+    siempre une); sirve más en proyectos grandes. "directory" (aún sin repo en la cuenta): ahí se instala igual (punto 9
+    de la skill). **Ya pedido (1 nov, Daniel: "vincula esta sesión y la del diseño de DragTree UI… y crea el mapa de
+    Graphify, para que… no gastes tokens de más")** en las sesiones "Drag tree" (rama claude/youthful-johnson-t02s8o) y
+    "Diseño de drag tree (ui)" (rama claude/determined-bardeen-6zalo0): ahí se usa siempre; si el contenedor es nuevo,
+    reinstalar y rearmar el mapa (pasos 2 y 3 de la skill, ~1 min) antes de releer archivos.
+
 ```
 index.html, sw.js, manifest.webmanifest, icon-*.png   ← lo publicado (generado, no editar a mano)
 fuente/app/src/dragcore.js     algoritmo (procesar, DetectorVivo, simulador)
@@ -432,6 +447,7 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
                                impeccable (pulir/revisar; sus agentes en .claude/agents/), ui-ux-pro-max
                                (catálogo de estilos retro y modernos), apple-design, mobile-native,
                                review-animations (Emil Kowalski), no-ui-slop (UXKIN, sin su servidor de paga).
+                               + graphify (1 nov: mapa del proyecto, solo si Daniel lo pide; punto 15).
                                Origen, licencias y cambios: .claude/skills/EXTERNAS.md.
                                Las decisiones de este archivo mandan sobre lo que digan esas skills (p. ej.
                                pantalla de medición neutral, no cambiar apple-mobile-web-app-status-bar-style,
