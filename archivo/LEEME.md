@@ -50,6 +50,7 @@ podría mezclar ajustes.
 | `drag_0.7.3.html` | 0.7.3 | e022cbe | Pulido de la interfaz (impeccable): avisos como recuadro con tinte, animaciones sin rebote, sensores alineados, boletas sin cortes (la de la carrera más ancha de lado), colores de selección, cursor y deslizadores |
 | `drag_0.7.4.html` | 0.7.4 | c75eca1 | Race 1 vs 1: nunca baja el árbol en un solo teléfono (latidos entre los dos durante la cuenta; si se pierde la señal antes de los ámbar, se cancela en los dos; si aun así bajó en uno, la carrera no cuenta) |
 | `drag_0.8.html` | 0.8 | a79acb1 | Tres carátulas en Ajustes → Apariencia: Original, 2026 (de inicio) y Tablero (tablero de auto de los 80 y 90); Ajustes en dos pestañas; revisión final con impeccable |
+| `drag_0.8.1.html` | 0.8.1 | d170769 | Las carátulas se llaman 1, 2 y 3, sin explicación; tacha en la última corrida de Medir para quitarla hasta la siguiente corrida |
 
 El código fuente editable de cada versión está en `fuente/` de ese commit:
 `git checkout <commit>` o, en GitHub, "Browse files" en el commit.
