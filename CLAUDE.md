@@ -174,6 +174,20 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    cada fondo, `--acento`, en vez del ámbar de la maqueta; sin fondo, el de la app) y **sin cambiar la letra** ("esa sí no la
    quiero que se mueva": Saira Black Italic donde está hoy, p. ej. "1/8 de milla", "1/4 de milla", "Armar medición"; nada de
    Barlow). Luego lo dejó **para otro día**: no empezar hasta que lo pida (esa semana prueba la 0.7.3 y avisa si ve fallos).
+   **Rediseño hecho, sin publicar** (1 nov, Daniel: "vamos con el rediseño"; rama `claude/determined-bardeen-6zalo0`):
+   sin fondo, negro OLED (#050607); losas grafito (`--surface` #101317, orilla `--raya`, radio `--r-losa` 20 px) en vez de
+   paneles con borde; cristal (`--glass`, blur 22 px) solo en la barra de pestañas, la píldora de sensores, los selectores
+   y los botones secundarios; botones principales de 56 px con brillo; pestañas **flotantes** de cristal con íconos
+   (`--tabs-h` 62 px, a `--tabs-b` = máx(12 px, zona segura − 4) del borde: arriba de la rayita del iPhone) y una
+   pastilla que se desliza (los botones van encima: `position: relative; z-index: 1`, si no la pastilla se queda con el
+   toque). Medir: GPS a lo ancho con precisión, frecuencia y **rayitas de señal** (`#sBarras`, `#sGpsTxt` en
+   tickEstado) y la **última corrida** con sus tramos (`#ultCorrida`, `pintarUltima()` al mostrar Medir; se toca y abre
+   su boleta). Con fondo: el color del fondo en botones, selector y pestaña elegida; las losas son oscuras sobre el fondo
+   (sin el borde blanco de sticker); se quedan los títulos como etiqueta chueca y la boleta pegada. Árbol (Práctica y
+   Race): caja con orilla y focos con brillo (mismos colores; prenden al instante). De lado: el riel es una tarjeta de
+   cristal. Se quedaron a propósito: la letra, el logo, la boleta, la medición neutral y el **semáforo vertical de
+   atajos** de la 0.6.8 (la maqueta los ponía en fila; Daniel los pidió verticales). barra_test y horizontal_test se
+   ajustaron al negro nuevo y a la barra flotante. Vista previa: artefacto "Drag Tree 2026".
    **Deslizar entre pestañas** (0.6.2, 25 oct, Daniel lo pidió "como nativa de iPhone"): con el dedo a la izquierda/derecha
    se pasa a la pestaña de al lado. Al tomar el dedo de lado, las pestañas de los lados ya se pintan (`prepararVista`,
    `data-entra` = sin la cascada de entrada) a ±ancho y se mueven pegadas a la actual; cada una se pone a la altura donde

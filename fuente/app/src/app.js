@@ -300,12 +300,22 @@
     if (ses.fase === 'idle') {
       const s = sens.ultGps, vivo = s && nowS() - sens.ultGpsRec < 4;
       const pe = $('#sPrec');
+      // rayitas de señal (rediseño 2026): 5 con ±5 m o mejor, ninguna sin lecturas; el color dice si sirve para medir
+      let rayas = 0, tono = '', txt = 'Toca "Activar sensores"';
       if (!sens.activo) { pe.textContent = '—'; pe.className = 'val'; }
-      else if (!s) { pe.textContent = 'buscando…'; pe.className = 'val meh'; }
+      else if (!s) { pe.textContent = 'buscando…'; pe.className = 'val meh'; txt = 'Buscando señal: sal a cielo abierto'; }
       else {
         pe.textContent = `±${Math.round(s.hacc)} m`;
-        pe.className = 'val ' + (!vivo ? 'bad' : s.hacc <= 8 ? 'good' : s.hacc <= 15 ? 'meh' : 'bad');
+        tono = !vivo ? 'bad' : s.hacc <= 8 ? 'good' : s.hacc <= 15 ? 'meh' : 'bad';
+        pe.className = 'val ' + tono;
+        rayas = !vivo ? 0 : s.hacc <= 5 ? 5 : s.hacc <= 8 ? 4 : s.hacc <= 15 ? 3 : s.hacc <= 25 ? 2 : 1;
+        txt = !vivo ? 'Sin lecturas nuevas del GPS' : tono === 'good' ? 'Señal buena para medir' : tono === 'meh' ? 'Señal regular: busca cielo abierto' : 'Señal débil: espera o muévete a cielo abierto';
       }
+      const br = $('#sBarras');
+      br.className = 'barras ' + tono;
+      br.style.setProperty('--rayas', rayas);
+      [...br.children].forEach((x, i) => x.classList.toggle('on', i < rayas));
+      $('#sGpsTxt').textContent = txt;
       const hz = sens.gpsDts.length ? 1 / median(sens.gpsDts) : NaN;
       $('#sHz').textContent = isFin(hz) ? `${hz < 1.5 ? hz.toFixed(1) : Math.round(hz)} Hz` : '—';
       $('#sVel').textContent = s ? `${fmtV(s.v * 3.6, 0)} ${velU()}` : '—';
@@ -1175,7 +1185,25 @@
   }
 
   // ------------------------------------------------------------ navegación
+  // Última corrida en Medir (rediseño 2026): su tiempo, velocidad y tramos; tocarla abre su boleta
+  const CORTO = { '60 ft': "60'", '330 ft': "330'", '1/8 mi': '1/8', '1000 ft': "1000'", '1/4 mi': '1/4' };
+  async function pintarUltima() {
+    const b = $('#ultCorrida');
+    if (!b) return;
+    const r = (await DB.todos()).find((x) => x.ok);
+    b.hidden = !r;
+    if (!r) return;
+    const Df = r.cfg.distancia_final, et = etPrincipal(r);
+    const tramos = (r.hitos || []).filter((h) => h.dist_m <= Df + 0.01 && isFin(h.t))
+      .map((h) => `<span>${CORTO[h.nombre] || esc(h.nombre)}<b>${h.t.toFixed(2)}</b></span>`).join('');
+    b.innerHTML = `<span class="k">Última corrida · ${Df < 300 ? '1/8' : '1/4'}${r.demo ? ' · simulada' : ''}</span>
+      <span class="stat-fila"><span class="val">${fmtT(et.t)}<small>s</small></span><span class="s">${fmtV(r.trampa_kmh)} ${velU()}</span></span>
+      <span class="tramos" style="--n:${(r.hitos || []).filter((h) => h.dist_m <= Df + 0.01).length || 1}">${tramos}</span>`;
+    b.setAttribute('aria-label', `Última corrida: ${fmtT(et.t)} segundos en ${nombreDist(Df)}. Abrir su boleta`);
+    b.onclick = () => mostrarResultado(r, false);
+  }
   function mostrarVista(id, tabActivo) {
+    if (id === 'vMedir') pintarUltima();
     for (const v of document.querySelectorAll('.view')) { v.hidden = v.id !== id; if (v.hidden) delete v.dataset.entra; }   // data-entra: ver deslizar
     const tab = tabActivo || id;
     for (const b of document.querySelectorAll('.tabs button')) {
@@ -1669,6 +1697,7 @@
     subir();
     return v;
   }
+  pintarUltima();   // la última corrida en Medir al abrir la app
   window.DragApp = {
     version: APP_VERSION, ajustes: S,
     sensoresActivos: () => sens.activo, activarSensores, pedirPantalla,

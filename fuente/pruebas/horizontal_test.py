@@ -171,10 +171,12 @@ def main():
             def girada_bien(lado_tabs):
                 r = pg.evaluate("""(() => { const t = document.querySelector('.tabs').getBoundingClientRect(), l = document.querySelector('.brand').getBoundingClientRect();
                     return { tl: t.left, tr: t.right, tt: t.top, tb: t.bottom, ll: l.left, lr: l.right }; })()""")
-                # las pestañas van de lado a lado salvo la rayita de inicio del iPhone (zona segura de abajo, 21 px)
+                # rediseño 2026: la barra de cristal flota casi de lado a lado (12 px de orilla), lejos de la isla y de la rayita
+                # de inicio del iPhone (zona segura de abajo, 21 px)
+                arriba_abajo = r['tt'] <= 14 and H - INS[2] - 14 <= r['tb'] <= H - INS[2] + 1
                 if lado_tabs == 'der':   # lo de arriba del teléfono a la izquierda: logo a la izquierda, pestañas a la derecha
-                    return abs(r['tr'] - W) < 2 and r['tt'] < 2 and abs(r['tb'] - (H - INS[2])) < 2 and r['ll'] < 160, r
-                return r['tl'] < 2 and r['tt'] < 2 and abs(r['tb'] - (H - INS[2])) < 2 and r['lr'] > W - 160, r
+                    return 0 < W - r['tr'] <= 60 and arriba_abajo and r['ll'] < 160, r
+                return 0 < r['tl'] <= 60 and arriba_abajo and r['lr'] > W - 160, r
             c = clases()
             ok, r = girada_bien('der')
             chk('girada' in c and 'acostada' not in c and ok, f'G. "No girar" (la de inicio): con el teléfono de lado la app queda derecha respecto al teléfono ({c}; {r})')
@@ -226,9 +228,9 @@ def main():
             # ---------------- F. En vertical no cambia
             ctx, pg, errs = pagina(b, 393, 852, (0, 0, 34))
             v = pg.evaluate("""(() => { const t = document.querySelector('.tabs').getBoundingClientRect();
-                return { tabsArriba: t.top, tabsAncho: t.width, topPos: getComputedStyle(document.querySelector('.top')).position,
+                return { tabsArriba: t.top, tabsAncho: t.width, tabsAbajo: innerHeight - t.bottom, topPos: getComputedStyle(document.querySelector('.top')).position,
                          lado: getComputedStyle(document.querySelector('.rc-lado')).display }; })()""")
-            chk(v['tabsArriba'] > 700 and v['tabsAncho'] > 380 and v['topPos'] == 'static' and v['lado'] == 'contents',
+            chk(v['tabsArriba'] > 700 and v['tabsAncho'] > 340 and 30 - 1 <= v['tabsAbajo'] <= 60 and v['topPos'] == 'static' and v['lado'] == 'contents',   # flotante, arriba de la rayita (34 px)
                 f'F. en vertical las pestañas siguen abajo y el encabezado arriba ({v})')
             c = pg.evaluate("document.documentElement.className")
             chk('girada' not in c and 'acostada' not in c, f'F. en vertical la app no se gira ni usa el diseño acostado ({c!r})')
