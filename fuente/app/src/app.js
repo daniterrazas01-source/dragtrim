@@ -295,49 +295,6 @@
     }
   }
 
-  // Carátula Tablero: los dos marcadores del GPS son barras curvas como las de los tableros digitales de los 80
-  // (rampa = precisión, joroba = frecuencia). Cada forma es una curva de Bézier (en un lienzo de 60×130) que se parte en
-  // segmentos del mismo largo; la barra crece hacia el lado de las agujas del reloj y la escala va del otro lado.
-  const FORMAS_TB = {
-    rampa: { p: [[17, 126], [17, 60], [24, 22], [44, 7]], w: [8, 19], marcas: [[30, 0], [15, .256], [8, .488], [4, .744], [2, 1]] },
-    joroba: { p: [[11, 126], [11, 32], [34, -4], [49, 47]], w: [6, 15], marcas: [[1, .177], [2, .354], [5, .589], [10, .766], [20, .943]] },
-  };
-  function dibujarMarcador(svg) {
-    const f = FORMAS_TB[svg.dataset.forma], [a, b, c, d] = f.p, M = 240, pts = [], acc = [0];
-    for (let i = 0; i <= M; i++) {
-      const t = i / M, m = 1 - t;
-      pts.push([0, 1].map((k) => m * m * m * a[k] + 3 * m * m * t * b[k] + 3 * m * t * t * c[k] + t * t * t * d[k]));
-      if (i) acc.push(acc[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
-    }
-    const en = (u) => {   // punto, normal hacia la barra y ancho a la fracción u del largo
-      const s = Math.min(1, Math.max(0, u)) * acc[M]; let i = 1;
-      while (i < M && acc[i] < s) i++;
-      const p0 = pts[i - 1], p1 = pts[i], tx = p1[0] - p0[0], ty = p1[1] - p0[1], n = Math.hypot(tx, ty) || 1;
-      const r = (s - acc[i - 1]) / ((acc[i] - acc[i - 1]) || 1);
-      return { x: p0[0] + tx * r, y: p0[1] + ty * r, nx: -ty / n, ny: tx / n, w: f.w[0] + (f.w[1] - f.w[0]) * u };
-    };
-    const N = 14, hueco = .022, num = (v) => v.toFixed(1), out = [];
-    for (let i = 0; i < N; i++) {
-      const u0 = i / N + hueco / 2, u1 = (i + 1) / N - hueco / 2, orilla = [], fuera = [];
-      for (let k = 0; k <= 2; k++) {
-        const q = en(u0 + (u1 - u0) * k / 2);
-        orilla.push(`${num(q.x)} ${num(q.y)}`); fuera.unshift(`${num(q.x + q.nx * q.w)} ${num(q.y + q.ny * q.w)}`);
-      }
-      out.push(`<path class="sg" data-u="${((i + .5) / N).toFixed(3)}" d="M${orilla.concat(fuera).join('L')}Z"/>`);
-    }
-    for (const [v, u] of f.marcas) {
-      const q = en(u), ox = -q.nx, oy = -q.ny;
-      out.push(`<path class="raya" d="M${num(q.x + ox * 1.5)} ${num(q.y + oy * 1.5)}L${num(q.x + ox * 4.5)} ${num(q.y + oy * 4.5)}"/>`);
-      out.push(`<text x="${num(q.x + ox * 7.5)}" y="${num(Math.max(5, q.y + oy * 7.5))}" text-anchor="${ox < -.35 ? 'end' : ox > .35 ? 'start' : 'middle'}">${v}</text>`);
-    }
-    svg.innerHTML = out.join('');
-  }
-  function marcador(svg, f, tono) {   // f de 0 a 1: hasta dónde se prende
-    if (!svg.firstChild) dibujarMarcador(svg);
-    svg.setAttribute('class', 'tb-barra' + (tono ? ' ' + tono : ''));
-    svg.querySelectorAll('.sg').forEach((g) => g.classList.toggle('on', +g.dataset.u <= f));
-  }
-
   function tickEstado() {
     chips();
     if (ses.fase === 'idle') {
@@ -346,7 +303,7 @@
       // rayitas de señal (rediseño 2026): 5 con ±5 m o mejor, ninguna sin lecturas; el color dice si sirve para medir
       let rayas = 0, tono = '', txt = 'Toca "Activar sensores"';
       if (!sens.activo) { pe.textContent = '—'; pe.className = 'val'; }
-      else if (!s) { pe.textContent = 'buscando…'; pe.className = 'val meh texto'; txt = 'Buscando señal: sal a cielo abierto'; }
+      else if (!s) { pe.textContent = 'buscando…'; pe.className = 'val meh'; txt = 'Buscando señal: sal a cielo abierto'; }
       else {
         pe.textContent = `±${Math.round(s.hacc)} m`;
         tono = !vivo ? 'bad' : s.hacc <= 8 ? 'good' : s.hacc <= 15 ? 'meh' : 'bad';
@@ -362,11 +319,6 @@
       if (gt) gt.textContent = txt;
       const hz = sens.gpsDts.length ? 1 / median(sens.gpsDts) : NaN;
       $('#sHz').textContent = isFin(hz) ? `${hz < 1.5 ? hz.toFixed(1) : Math.round(hz)} Hz` : '—';
-      const mb = document.querySelectorAll('#sStatus .tb-barra');   // solo en la carátula Tablero
-      if (mb.length === 2) {
-        marcador(mb[0], s && vivo ? Math.log(30 / Math.max(.5, s.hacc)) / Math.log(15) : 0, tono);   // 30 m abajo, 2 m arriba
-        marcador(mb[1], isFin(hz) ? Math.log(hz / .5) / Math.log(50) : 0, isFin(hz) ? 'vfd' : '');   // 0.5 a 25 Hz
-      }
       $('#sVel').textContent = s ? `${fmtV(s.v * 3.6, 0)} ${velU()}` : '—';
       $('#sStatus').style.setProperty('--vel', s && vivo ? Math.min(1, s.v * 3.6 / 240).toFixed(3) : '0');   // aguja del Tablero
       const ae = $('#sAcel');

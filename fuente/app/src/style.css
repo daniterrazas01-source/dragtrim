@@ -1271,7 +1271,7 @@ input[type="range"] { accent-color: var(--amber); }
     --amber: #e08a00; --green: #128a3e; --red: #c8231a; --on-color: #120d02;
     --vfd: #16211a; --led: #e08a00; --tab-on: var(--chalk); --arco: #e08a00;
     --bien: #0d6a2f; --aviso: #8a5200; --mal: #a8160d; --boton: #f2a516; --boton-go: #2fd36a;
-    --brillo: none; --halo: 0; --ventana: #c4d0b3; --sombra-ventana: inset 0 2px 4px rgba(0, 0, 0, .35);
+    --brillo: none; --ventana: #c4d0b3; --sombra-ventana: inset 0 2px 4px rgba(0, 0, 0, .35);
     --cara: linear-gradient(180deg, #ffffff, #eceee9); --cara-dial: #ffffff; --arco-apagado: #dde1e4; --marcas: #262b30; --led-apagado: #b6bfa8;
     --tecla: linear-gradient(180deg, #ffffff, #e1e4e7); --tecla-hundida: linear-gradient(180deg, #d3d7da, #e8eaec);
     --panel: #c3c8cb; --bisel: #9aa0a6; --orilla: #6f757b; --luz-arriba: rgba(255, 255, 255, .95); --apagado: #5f676e;
@@ -1287,7 +1287,7 @@ input[type="range"] { accent-color: var(--amber); }
   --amber: #e08a00; --green: #128a3e; --red: #c8231a; --on-color: #120d02;
   --vfd: #16211a; --led: #e08a00; --tab-on: var(--chalk); --arco: #e08a00;
   --bien: #0d6a2f; --aviso: #8a5200; --mal: #a8160d; --boton: #f2a516; --boton-go: #2fd36a;
-  --brillo: none; --halo: 0; --ventana: #c4d0b3; --sombra-ventana: inset 0 2px 4px rgba(0, 0, 0, .35);
+  --brillo: none; --ventana: #c4d0b3; --sombra-ventana: inset 0 2px 4px rgba(0, 0, 0, .35);
   --cara: linear-gradient(180deg, #ffffff, #eceee9); --cara-dial: #ffffff; --arco-apagado: #dde1e4; --marcas: #262b30; --led-apagado: #b6bfa8;
   --tecla: linear-gradient(180deg, #ffffff, #e1e4e7); --tecla-hundida: linear-gradient(180deg, #d3d7da, #e8eaec);
   --panel: #c3c8cb; --bisel: #9aa0a6; --orilla: #6f757b; --luz-arriba: rgba(255, 255, 255, .95); --apagado: #5f676e;
@@ -1403,12 +1403,11 @@ input[type="range"] { accent-color: var(--amber); }
 :where(:root[data-caratula="tablero"]) .stat .val.meh { color: var(--aviso); }
 :where(:root[data-caratula="tablero"]) .stat .val.bad { color: var(--mal); }
 
-/* Medir: velocímetro con aguja a la izquierda; GPS con sus dos marcadores a la derecha; el acelerómetro y la última corrida abajo */
-:where(:root[data-caratula="tablero"]) #sStatus { gap: 10px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "velo gps" "acel acel" "ult ult"; }
+/* Medir: velocímetro con aguja a la izquierda; GPS con su barra de LED y el acelerómetro a la derecha; la última corrida abajo */
+:where(:root[data-caratula="tablero"]) #sStatus { gap: 10px; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); grid-template-areas: "velo gps" "velo acel" "ult ult"; }
 :where(:root[data-caratula="tablero"]) .tb-velo { grid-area: velo; justify-content: flex-start; }
 :where(:root[data-caratula="tablero"]) #sStatus > .gps { grid-area: gps; }
-:where(:root[data-caratula="tablero"]) .tb-acel { grid-area: acel; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; padding-block: 10px; }
-:where(:root[data-caratula="tablero"]) .tb-acel .val { margin-top: 0; min-width: 132px; text-align: center; }
+:where(:root[data-caratula="tablero"]) .tb-acel { grid-area: acel; }
 :where(:root[data-caratula="tablero"]) #ultCorrida { grid-area: ult; }
 :where(:root[data-caratula="tablero"]) .tb-velo .val { text-align: center; }
 :where(:root[data-caratula="tablero"]) .tb-dial {
@@ -1435,21 +1434,13 @@ input[type="range"] { accent-color: var(--amber); }
   content: ""; position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; z-index: 1;
   background: radial-gradient(circle at 35% 30%, #eef0f2, #6d737a 60%, #2a2e33); box-shadow: 0 1px 3px rgba(0, 0, 0, .8);
 }
-/* GPS: dos marcadores de barra curva, con la forma de los tableros digitales de los 80 (1 nov, Daniel mandó uno de foto:
-   "solo toma la forma de los marcadores"): la rampa es la precisión (más arriba = más precisa; escala en metros) y la
-   joroba la frecuencia (escala en Hz). Los segmentos los dibuja app.js (dibujarMarcador) y se prenden de abajo hacia arriba. */
-:where(:root[data-caratula="tablero"]) .tb-marcadores { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 4px; }
-:where(:root[data-caratula="tablero"]) .tb-marcador { display: flex; flex-direction: column; min-width: 0; }
-:where(:root[data-caratula="tablero"]) .tb-barra { display: block; width: 100%; height: 150px; overflow: visible; color: var(--vfd); }
-:where(:root[data-caratula="tablero"]) .tb-barra.good { color: var(--bien); }
-:where(:root[data-caratula="tablero"]) .tb-barra.meh { color: var(--aviso); }
-:where(:root[data-caratula="tablero"]) .tb-barra.bad { color: var(--mal); }
-:where(:root[data-caratula="tablero"]) .tb-barra .sg { fill: var(--led-apagado); }
-:where(:root[data-caratula="tablero"]) .tb-barra .sg.on { fill: currentColor; stroke: currentColor; stroke-width: 1.6; stroke-opacity: var(--halo, .3); stroke-linejoin: round; paint-order: stroke; }
-:where(:root[data-caratula="tablero"]) .tb-barra .raya { stroke: var(--marcas); stroke-width: 1; stroke-linecap: round; }
-:where(:root[data-caratula="tablero"]) .tb-barra text { fill: var(--chalk-dim); font: 600 8.5px/1 var(--num); dominant-baseline: central; }
-:where(:root[data-caratula="tablero"]) .tb-marcador .val { margin-top: 6px; padding: 6px 2px 5px; font-size: 17px; text-align: center; white-space: nowrap; }
-:where(:root[data-caratula="tablero"]) .tb-marcador .val.texto { font-size: 12px; padding-block: 8px 7px; }
+:where(:root[data-caratula="tablero"]) .tb-fila { display: flex; align-items: center; gap: 10px; margin-top: 9px; }
+:where(:root[data-caratula="tablero"]) .tb-hz { font: 400 14px/1 var(--seg7); color: var(--chalk-dim); white-space: nowrap; }
+:where(:root[data-caratula="tablero"]) .barras { flex: 1; height: 11px; margin: 0; gap: 3px; align-items: stretch; }
+:where(:root[data-caratula="tablero"]) .barras i:nth-child(n) { flex: 1; width: auto; height: auto; border-radius: 2px; background: var(--led-apagado); }
+:where(:root[data-caratula="tablero"]) .barras.good i.on { background: var(--bien); box-shadow: 0 0 6px color-mix(in srgb, var(--bien) 70%, transparent); }
+:where(:root[data-caratula="tablero"]) .barras.meh i.on { background: var(--aviso); box-shadow: 0 0 6px color-mix(in srgb, var(--aviso) 70%, transparent); }
+:where(:root[data-caratula="tablero"]) .barras.bad i.on { background: var(--mal); box-shadow: 0 0 6px color-mix(in srgb, var(--mal) 70%, transparent); }
 :where(:root[data-caratula="tablero"]) .ultima .stat-fila .s { font: 400 15px/1 var(--seg7); color: var(--chalk-dim); }
 :where(:root[data-caratula="tablero"]) .tramos span { font: 400 8.5px/1 var(--leyenda); letter-spacing: .04em; }
 :where(:root[data-caratula="tablero"]) .tramos span::before { height: 4px; border-radius: 1px; background: var(--vfd); box-shadow: 0 0 5px color-mix(in srgb, var(--vfd) 60%, transparent); }
