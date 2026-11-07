@@ -169,6 +169,14 @@ mejor?").
    izquierda y quién ganó + botones a la derecha; Práctica: zonas para los pulgares a los lados del árbol (solo: a la
    derecha); carga más chica. Respeta las zonas seguras (isla del iPhone a un lado). `horizontal_test.py` (iPhone 852×393
    con zonas 59/59/21, S24 Ultra 915×412, chico 667×375, S25 con la barra de arriba 780×336).
+   **Práctica acostada, árbol de arriba a abajo** (0.8.2, sin publicar; 7 nov, Daniel: "el semáforo se ve muy chiquito y
+   el botón está muy grande… que el semáforo abarque toda la pantalla verticalmente y el botón que sea una tercera parte
+   más chico"): el árbol al centro mide todo el alto (`--pt-alto`; focos `--pt-foco` ≈ 49 px en iPhone, antes 30); a la
+   izquierda "Cerrar", el tipo de árbol, la reacción del carril izquierdo y su zona; a la derecha el marcador, quién ganó,
+   la reacción del derecho y su zona (solo: la reacción a la izquierda y la zona a la derecha). Las zonas miden 2/3 de lo
+   de antes (`--pt-zona-alto`; ancho 70 %, en solo 78 % de su lado) y van abajo pegadas a la orilla. `.pt-top`, `.pt-res`
+   y `.pt-zones` son `display: contents` y sus piezas se acomodan sueltas en la cuadrícula. horizontal_test D lo revisa
+   (también que con los textos más largos nada se encime). Race 1 vs 1 no cambió.
    **Ajustes → Orientación** (0.7.2, Daniel: "si no lo activas, la aplicación no se acuesta"): `S.orientacion` = 'no'
    (de inicio: "No girar"), 'medir' ("Solo Medir": Medir, midiendo y su resultado, y Race 1 vs 1; no Práctica, Calcular,
    Historial ni Ajustes) o 'todo' ("Toda la app"). `aplicarOrientacion()` al principio de app.js (al girar, al cambiar de

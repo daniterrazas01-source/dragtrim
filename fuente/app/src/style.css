@@ -1172,23 +1172,38 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
   :root.acostada .rc-res > .rc-ganador.dudosa { font-size: 16px; }
   :root.acostada .rc-res > .actions { grid-column: 2; }
 
-  /* ---- Práctica: el árbol al centro y las zonas para mantener el dedo a los lados (los pulgares) */
+  /* ---- Práctica (0.8.2, 7 nov, Daniel: "el semáforo se ve muy chiquito y el botón está muy grande… que el semáforo
+     abarque toda la pantalla verticalmente y el botón que sea una tercera parte más chico"): el árbol al centro, de arriba
+     a abajo; a la izquierda "Cerrar", el tipo de árbol, la reacción del carril izquierdo y su zona; a la derecha el
+     marcador, quién ganó, la reacción del derecho y su zona (solo: tu reacción a la izquierda y tu zona a la derecha).
+     Las zonas miden 2/3 de lo que medían (antes llenaban cada lado bajo la barra de arriba) y van abajo, pegadas a la
+     orilla, donde caen los pulgares. Lo de .pt-top, .pt-res y .pt-zones se acomoda suelto en la cuadrícula. */
   :root.acostada .pt {
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto;
-    grid-template-areas: "top top top" "zl tree zr" "zl res zr" "zl msg zr";
-    padding: var(--sa-t) var(--sa-r) var(--sa-b) var(--sa-l);
+    --pt-alto: calc(var(--alto) - var(--sa-t) - var(--sa-b) - 16px);   /* lo que mide el árbol: toda la pantalla a lo alto */
+    --pt-foco: calc((var(--pt-alto) - 72px) / 5.84);   /* 5 focos + 2 filas de chicos (.42) + 6 huecos de 8 px + 24 de orilla */
+    --pt-zona-alto: calc((var(--alto) - var(--sa-t) - var(--sa-b) - 62px) * 2 / 3);
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-rows: auto auto auto minmax(0, 1fr);
+    grid-template-areas: "x tree s" "tipo tree msg" "rl tree rr" "zl tree zr";
+    column-gap: 14px; padding: calc(8px + var(--sa-t)) calc(10px + var(--sa-r)) calc(8px + var(--sa-b)) calc(10px + var(--sa-l));
   }
-  :root.acostada .pt > .pt-top { grid-area: top; padding: 6px 14px; }
-  :root.acostada .pt > .pt-tree { grid-area: tree; padding: 0 12px; }
-  :root.acostada .pt > .pt-res { grid-area: res; padding-top: 6px; min-height: 0; column-gap: 14px; }
-  :root.acostada .pt > .pt-msg { grid-area: msg; margin-bottom: 8px; }
-  :root.acostada .pt > .pt-zones { display: contents; }
-  :root.acostada .pt .pt-zone.l { grid-area: zl; margin: 0 0 10px 10px; }
-  :root.acostada .pt .pt-zone.r { grid-area: zr; margin: 0 10px 10px 0; }
-  :root.acostada .pt.solo { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "top top" "tree zl" "res zl" "msg zl"; }
-  :root.acostada .pt.solo .pt-zone { width: auto; justify-self: stretch; margin: 0 10px 10px 0; }
-  :root.acostada .pt .pb { width: 7.6vh; height: 7.6vh; }
-  :root.acostada .pt .pb.s { width: 3.2vh; height: 3.2vh; }
+  :root.acostada .pt.solo { grid-template-areas: "x tree zl" "tipo tree zl" "rl tree zl" "msg tree zl"; }
+  :root.acostada .pt > :is(.pt-top, .pt-res, .pt-zones) { display: contents; }
+  :root.acostada .pt :is(#ptCerrar, #ptTipo, #ptScore, .pt-res > div, .pt-zone) { position: relative; z-index: 1; }
+  :root.acostada .pt #ptCerrar { grid-area: x; justify-self: start; align-self: start; }
+  :root.acostada .pt #ptTipo { grid-area: tipo; justify-self: start; margin-top: 6px; font-size: 13px; }
+  :root.acostada .pt #ptScore { grid-area: s; justify-self: end; align-self: start; }
+  :root.acostada .pt > .pt-msg { grid-area: msg; justify-self: end; text-align: right; margin: 6px 0 0; min-height: 0; }
+  :root.acostada .pt.solo > .pt-msg { justify-self: start; text-align: left; }
+  :root.acostada .pt > .pt-tree { grid-area: tree; align-self: center; gap: 16px; padding: 0; }
+  :root.acostada .pt .pt-lane { gap: 8px; padding: 12px; }
+  :root.acostada .pt .pb { width: var(--pt-foco); height: var(--pt-foco); }
+  :root.acostada .pt .pb.s { width: calc(.42 * var(--pt-foco)); height: calc(.42 * var(--pt-foco)); }
+  :root.acostada .pt .pt-res > .l { grid-area: rl; justify-self: start; text-align: left; margin: 8px 0 0; }
+  :root.acostada .pt .pt-res > .r { grid-area: rr; justify-self: end; text-align: right; margin: 8px 0 0; }
+  :root.acostada .pt .pt-zone { align-self: end; width: 70%; height: var(--pt-zona-alto); max-height: 100%; margin: 0; font-size: 18px; }
+  :root.acostada .pt .pt-zone.l { grid-area: zl; justify-self: start; }
+  :root.acostada .pt .pt-zone.r { grid-area: zr; justify-self: end; }
+  :root.acostada .pt.solo .pt-zone.l { justify-self: end; width: 78%; }
 
   /* ---- pantalla de carga: el logo y "By Rooster Racing" caben a lo alto */
   :root.acostada .carga { padding: 10px 24px calc(14px + var(--sa-b)); }

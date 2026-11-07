@@ -7,7 +7,8 @@
 #  B. Midiendo (corrida simulada): título, velocidad y "Cancelar" a la vista; el resultado con la boleta a la izquierda.
 #  C. Race 1 vs 1 (rival simulado): inicio con sus tres botones, sala con "Listo" a la vista, el árbol completo y centrado
 #     con su "Stage", y la boleta de los dos carriles con "Otra carrera" a la vista.
-#  D. Práctica solo y 1 vs 1: el árbol completo y las zonas para los pulgares a los lados.
+#  D. Práctica solo y 1 vs 1: el árbol de arriba a abajo (0.8.2), las zonas para los pulgares a los lados a 2/3 de lo que
+#     medían, y con los textos más largos nada se encima ni se sale.
 #  E. Calcular, Historial, Ajustes y la pantalla de carga: nada se sale.
 #  F. En vertical no cambia: pestañas abajo, encabezado arriba; y el manifiesto deja girar (orientation any).
 #  G. Ajustes → Orientación (Daniel): "No girar" (la de inicio) deja la app derecha respecto al teléfono aunque esté de
@@ -147,6 +148,28 @@ def main():
                     alto_ok = zl['b'] - zl['t'] >= 150
                     focos_ok = pg.evaluate(f"[...document.querySelectorAll('.pt-tree .pb')].filter(e => e.offsetParent).every(e => {{ const r = e.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight - {ins[2]} + 0.5; }})")
                     chk(not fuera and lado_ok and alto_ok and focos_ok, f'D. {n} Práctica {modo}: el árbol completo y las zonas para los pulgares a los lados ' + '; '.join(fuera))
+                    # 0.8.2 (Daniel: "que el semáforo abarque toda la pantalla verticalmente y el botón una tercera parte más
+                    # chico"): el árbol de arriba a abajo y la zona a 2/3 de lo que medía (antes: todo el alto bajo la barra)
+                    disponible = h - ins[2] - 16
+                    zona_antes = h - ins[2] - 62
+                    chk(arbol['b'] - arbol['t'] >= 0.97 * disponible, f'D. {n} Práctica {modo}: el árbol abarca toda la pantalla a lo alto ({arbol["b"] - arbol["t"]:.0f} de {disponible} px)')
+                    chk(abs((zl['b'] - zl['t']) - zona_antes * 2 / 3) <= 2, f'D. {n} Práctica {modo}: la zona mide 2/3 de lo de antes ({zl["b"] - zl["t"]:.0f} px; antes {zona_antes})')
+                    # con los textos más largos (reacción con su nota, quién ganó, marcador) nada se encima ni se sale
+                    choques = pg.evaluate("""(() => {
+                        const t = (id, s) => document.getElementById(id).textContent = s, antes = {};
+                        for (const id of ['ptRt_l', 'ptLab_l', 'ptRt_r', 'ptLab_r', 'ptMsg', 'ptScore', 'ptTipo']) antes[id] = document.getElementById(id).textContent;
+                        t('ptRt_l', '0.452'); t('ptLab_l', 'Muy buena (0.052 desde la verde)'); t('ptTipo', 'Árbol Full .5, auto 0.25 s');
+                        if (!document.getElementById('ptOverlay').classList.contains('solo')) {
+                            t('ptRt_r', '0.371'); t('ptLab_r', 'Luz roja (-0.029 desde la verde)'); t('ptMsg', 'Las dos rojas: pierde quien salió primero.'); t('ptScore', '12 – 10'); }
+                        const sels = ['#ptCerrar', '#ptTipo', '#ptScore', '#ptMsg', '.pt-res > .l', '.pt-res > .r', '#ptZona_l', '#ptZona_r', '.pt-tree'];
+                        const R = sels.map((s) => [s, document.querySelector(s).getBoundingClientRect()]).filter(([, b]) => b.width && b.height);
+                        const out = [];
+                        for (let i = 0; i < R.length; i++) for (let j = i + 1; j < R.length; j++) { const [a, A] = R[i], [c, B] = R[j];
+                            if (A.left < B.right - 1 && B.left < A.right - 1 && A.top < B.bottom - 1 && B.top < A.bottom - 1) out.push(a + ' / ' + c); }
+                        for (const [s, b] of R) if (b.bottom > innerHeight + 0.5 || b.right > innerWidth + 0.5 || b.left < -0.5 || b.top < -0.5) out.push(s + ' se sale');
+                        for (const id in antes) document.getElementById(id).textContent = antes[id];
+                        return out; })()""")
+                    chk(not choques, f'D. {n} Práctica {modo}: con los textos más largos nada se encima ni se sale ' + '; '.join(choques))
                     pg.screenshot(path=SH + f'horizontal_{nombre}_practica_{modo.replace(" ", "")}.png')
                     pg.click('#ptCerrar'); pg.wait_for_timeout(300)
                 # ---------------- E. Calcular, Historial, Ajustes
