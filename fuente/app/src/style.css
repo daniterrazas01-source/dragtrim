@@ -685,6 +685,14 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   background: rgba(var(--velo-color), var(--velo, .78)); transition: background-color .4s;
 }
 :root[data-fondo] body.sesion .fondo::after { background: rgba(var(--velo-color), .92); }
+/* Teléfono acostado (o pantalla ancha): el fondo armado de lado, con los stickers del tamaño de siempre (si no, el vertical
+   cubre la pantalla agrandado ~2.2 veces; fuente/fondos/acostados.py). También las formas que se prenden en Práctica.
+   Con html.girada la app sigue de pie aunque el teléfono esté acostado: ahí va el vertical. */
+@media (orientation: landscape) {
+  :root[data-fondo]:not(.girada) .fondo { background-image: var(--fondo-url-h, var(--fondo-url)); }
+  :root[data-fondo]:not(.girada) .ptg.v > i { --m: var(--brillo-verde-h, var(--brillo-verde)); }
+  :root[data-fondo]:not(.girada) .ptg.r > i { --m: var(--brillo-rojo-h, var(--brillo-rojo)); }
+}
 
 /* Paneles = stickers: borde recortado y sombra */
 :root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] :is(.status, .field, .howto, .kpis, .chart, .quality, .msg, .proximo, .seg, .c-res) {

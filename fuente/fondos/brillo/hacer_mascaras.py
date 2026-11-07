@@ -8,7 +8,8 @@ chicos y 2 grandes por color (pedidos de Daniel, 23 oct 2026).
 Cómo funciona: se separa cada sticker por la sombra gris que deja sobre el de abajo (blancos) o por su
 contorno negro (Neón; ahí también se usan cajas negras), se juntan las letras de un mismo logo, y se
 toman los logos de la lista LOGOS (cada uno por un punto dentro de él, en una imagen de 540 px de ancho).
-Uso:  python3 hacer_mascaras.py   (deja <fondo>-verde.png y <fondo>-rojo.png aquí; build.py los usa)
+Uso:  python3 hacer_mascaras.py   (deja <fondo>-verde.png y <fondo>-rojo.png aquí; build.py los usa); luego
+      python3 ../acostados.py, que hace con ellas las del teléfono acostado (brillo/acostados/)
 Para cambiar qué marcas se prenden, edita LOGOS y vuelve a correrlo.
 """
 import pathlib

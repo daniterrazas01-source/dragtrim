@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = '0.8.1';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
+  const APP_VERSION = '0.8.2';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -1373,7 +1373,7 @@
   seg('segUnidad', 'unidad', String);
   seg('segTema', 'tema', String);
   seg('segOrient', 'orientacion', String);
-  $('#segOrient').addEventListener('click', () => setTimeout(aplicarOrientacion, 0));
+  $('#segOrient').addEventListener('click', () => setTimeout(() => { aplicarOrientacion(); precargarAcostado(); }, 0));
   // la orientación se revisa al girar el teléfono, al cambiar de pantalla (Práctica, Race 1 vs 1, midiendo) y al iniciar
   if (mqLado) mqLado.addEventListener('change', aplicarOrientacion);
   if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', aplicarOrientacion);
@@ -1420,6 +1420,10 @@
       raiz.style.setProperty('--fondo-url', `url("fondos/${f.id}.webp")`);
       raiz.style.setProperty('--brillo-verde', `url("fondos/${f.id}_brillo_verde.webp")`);
       raiz.style.setProperty('--brillo-rojo', `url("fondos/${f.id}_brillo_rojo.webp")`);
+      // con el teléfono acostado: el mismo fondo armado de lado (style.css, @media (orientation: landscape))
+      raiz.style.setProperty('--fondo-url-h', `url("fondos/${f.id}_h.webp")`);
+      raiz.style.setProperty('--brillo-verde-h', `url("fondos/${f.id}_h_brillo_verde.webp")`);
+      raiz.style.setProperty('--brillo-rojo-h', `url("fondos/${f.id}_h_brillo_rojo.webp")`);
       const bf = BRILLO[f.id] || {};
       raiz.style.setProperty('--brillo-v-max', String(bf.verde || 1));
       raiz.style.setProperty('--brillo-r-max', String(bf.rojo || 1));
@@ -1427,8 +1431,26 @@
       raiz.style.setProperty('--velo', S.velo);
     } else {
       raiz.removeAttribute('data-fondo');
-      for (const v of ['--fondo-url', '--acento', '--brillo-verde', '--brillo-rojo', '--brillo-v-max', '--brillo-r-max']) raiz.style.removeProperty(v);
+      for (const v of ['--fondo-url', '--acento', '--brillo-verde', '--brillo-rojo', '--brillo-v-max', '--brillo-r-max', '--fondo-url-h', '--brillo-verde-h', '--brillo-rojo-h']) raiz.style.removeProperty(v);
     }
+    precargarAcostado();
+  }
+  // El fondo acostado se baja y se prepara antes de girar el teléfono: así no parpadea al girar y queda guardado para
+  // abrir sin señal en la pista. En un teléfono con "No girar" nunca se usa (ahí la app se queda de pie).
+  let precargaH = null, esperaH = 0;
+  function precargarAcostado() {
+    clearTimeout(esperaH);
+    const f = FONDOS.find((x) => x.id === S.fondo);
+    if (!f || (S.orientacion === 'no' && Math.min(screen.width, screen.height) <= 500)) return;
+    const url = `fondos/${f.id}_h.webp`;
+    if (precargaH && precargaH.dataset.url === url) return;
+    esperaH = setTimeout(() => {   // después de la pantalla de carga, para no competir con lo que se ve al abrir
+      const img = new Image();
+      img.dataset.url = url; img.src = url;
+      if (img.decode) img.decode().catch(() => {});
+      precargaH = img;
+      for (const c of ['verde', 'rojo']) fetch(`fondos/${f.id}_h_brillo_${c}.webp`).catch(() => {});
+    }, 2600);
   }
   function pintarSelFondo() {
     const cont = $('#selFondo');
@@ -1506,6 +1528,9 @@
   // (el fondo con su velo, la corrida, Práctica, la carga) para que se vea como parte de la app. En iPhone no cambia
   // nada: ahí la app ya se ve detrás de la hora (black-translucent).
   const ARRIBA = {"__ARRIBA__": 1};   // build.py: color promedio de lo de arriba de cada fondo
+  const ARRIBA_H = {"__ARRIBA_H__": 1};   // … y de su versión acostada (teléfono de lado)
+  const mqAncha = window.matchMedia ? matchMedia('(orientation: landscape)') : null;
+  const fondoAcostado = () => !!(mqAncha && mqAncha.matches) && !document.documentElement.classList.contains('girada');
   const rgba = (txt) => { const m = String(txt).match(/[\d.]+/g) || []; return [+m[0] || 0, +m[1] || 0, +m[2] || 0, m.length > 3 ? +m[3] : 1]; };
   const encima = (c, abajo) => abajo.map((x, i) => c[i] * c[3] + x * (1 - c[3]));
   function pintarBarra() {
@@ -1515,7 +1540,7 @@
     let c;
     if (fid && ARRIBA[fid]) {
       const velo = document.body.classList.contains('sesion') ? 0.92 : (parseFloat(raiz.style.getPropertyValue('--velo')) || 0.78);
-      c = encima([...rgba(getComputedStyle(raiz).getPropertyValue('--velo-color')).slice(0, 3), velo], ARRIBA[fid]);
+      c = encima([...rgba(getComputedStyle(raiz).getPropertyValue('--velo-color')).slice(0, 3), velo], (fondoAcostado() && ARRIBA_H[fid]) || ARRIBA[fid]);
     } else c = rgba(getComputedStyle(document.body).backgroundColor).slice(0, 3);
     // lo que tapa la pantalla completa, de abajo hacia arriba
     for (const el of [document.body.classList.contains('practica') && $('#ptOverlay'), document.body.classList.contains('carrera') && $('#rc'), $('#camApuntar'), $('#carga')])
@@ -1529,6 +1554,8 @@
   vigiaBarra.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-fondo', 'data-caratula', 'style'] });
   vigiaBarra.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true });
   matchMedia('(prefers-color-scheme: light)').addEventListener('change', pintarBarra);
+  // al girar el teléfono cambia el fondo (vertical o acostado); html.girada se pone al terminar el giro: otra vez después
+  if (mqAncha) mqAncha.addEventListener('change', () => { pintarBarra(); setTimeout(pintarBarra, 400); });
   pintarBarra();
   const inR = $('#inRollout');
   inR.value = S.rollout_ft;

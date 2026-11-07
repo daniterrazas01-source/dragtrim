@@ -103,6 +103,23 @@ mejor?").
    y deja su forma y su huella en `brillo/rooster-gallos*.png`; `hacer_mascaras.py` (PROPIOS, LOGOS['gallos'] = los del
    Blanco y negro) prende esos logos en verde y en rojo y salta solos los que quedaron tapados (JEGS, STRANGE, cápsula
    NOS). Brillo: verde 12.1 %, rojo 15.3 %.
+   **Fondos acostados** (0.8.2, **sin publicar**; 7 nov, Daniel: "cuando lo acuesta simplemente le hace zoom al fondo… que
+   se vea con el mismo zoom con el que se ve un fondo cuando está el teléfono en vertical… hazlo con todos los fondos"): con
+   la pantalla de lado (`@media (orientation: landscape)` sin `html.girada`; también tablets y computadora) cada fondo usa
+   su versión acostada `fondos/<id>_h.webp` (2260×1080) y en Práctica sus formas `fondos/<id>_h_brillo_<color>.webp`: los
+   stickers salen del tamaño que de pie (~4 % más grandes; antes ~2.2 veces). Variables `--fondo-url-h`, `--brillo-verde-h`
+   y `--brillo-rojo-h` (aplicarFondo; si faltan, el vertical); Android: `ARRIBA_H` (build.py) para la franja de la hora
+   (`fondoAcostado()` en pintarBarra); `precargarAcostado()` baja el acostado 2.6 s después de abrir (no parpadea al girar
+   y queda guardado para la pista sin señal), salvo con "No girar" en un teléfono (ahí nunca se ve). Los arma
+   `fuente/fondos/acostados.py` (2700×1290; solo numpy y PIL): a la izquierda las primeras 1290 filas del vertical, a la
+   derecha las últimas 1290 (las 216 de en medio no se ven) y la unión de 120 px tapada con 7–9 stickers completos del mismo
+   fondo, apilados con su sombra; las copias casi siempre en su **otra versión** (blanco↔negro; rojo↔verde; en Rojo
+   rojo↔negro; en Neón neón↔negro) para que no se note que se repiten; no prenden en Práctica. `RECETA` = qué sticker,
+   dónde, giro y versión; la buscó `acostados_buscar.py` (necesita scipy; 6 semillas por fondo, escogidas a ojo; `SIN` =
+   stickers que se separan mal). Botella NOS = Combinado rojo acostado + la botella en medio; Gallos = Blanco y negro
+   acostado + los logos de Rooster en `LUGAR_ACOSTADO` (dos R a la izquierda, R y RRG a la derecha). Si cambia un fondo
+   vertical o sus formas de Práctica, volver a correr acostados.py (y si cambian sus stickers, rehacer su receta).
+   acostado_test.py lo revisa. Vista previa: "Drag Tree en horizontal" con selector de fondo y "Nuevo / Antes".
    **Letra tipo Rooster Racing** (25 oct, con todos los fondos y sin fondo): **Saira Black Italic** (OFL, la más parecida
    a la letra del logo; `fuente/app/src/fuentes/`; build.py la mete en index.html como data URI) en lo que Daniel marcó:
    títulos de cada pantalla (`h2`), etiquetas (`.lab`: Modo, Árbol, Peso…), todos los selectores (`.seg button`), botones
@@ -489,6 +506,7 @@ fuente/matlab/                 script MATLAB Mobile v2.3 (mismo algoritmo); Drag
 fuente/pruebas/                pruebas (ver abajo)
 fuente/fondos/                 fondos originales (PNG); se publican como fondos/*.webp
 fuente/fondos/brillo/          logos que se prenden en Práctica para fondos de un solo color (hacer_mascaras.py + PNG)
+fuente/fondos/acostados.py     fondos para el teléfono acostado (acostados/ y brillo/acostados/; RECETA de la unión, que busca acostados_buscar.py)
 archivo/                       respaldo: originales/ (archivos de Daniel sin tocar, p. ej. ROOSTER_RACING.xlsx)
                                y versiones/ (index.html de cada versión publicada); ideas/ (diseños guardados); ver archivo/LEEME.md
 .claude/settings.json          "enableWorkflows": true (Daniel lo pidió el 24 oct para usar `/effort ultracode`;
@@ -552,6 +570,7 @@ python3 barra_test.py    # Android: color de la franja de la hora/cámara (theme
 python3 caratulas_test.py   # Ajustes General/Apariencia y las carátulas Original, 2026 y Tablero (cambio, se guarda, Medir, aguja, fondo)
 python3 atajos_test.py   # Medir: Corrida simulada / Race 1 vs 1 / Antes de la pista como semáforo (3 cuadros a la izquierda); abren su explicación a la derecha, una a la vez
 python3 horizontal_test.py  # teléfono acostado (iPhone, S24 Ultra, chico): riel, Medir, midiendo, resultado, Race 1 vs 1, Práctica, carga; vertical igual
+python3 acostado_test.py    # fondos acostados: el de lado con stickers del tamaño de pie, Práctica, "No girar" y de pie con el vertical, Android, precarga
 node carrera_nucleo_test.js; node qr_test.js; node enlace_test.js; node sala_nucleo_test.mjs   # Race 1 vs 1 sin navegador
 python3 carrera_test.py  # Race 1 vs 1: rival simulado, roja, dos teléfonos por WebRTC (códigos en texto) y QR con la cámara
 python3 sala_test.py     # Race 1 vs 1 por la sala en internet (sala_local.mjs): crear, unirse, carrera, errores, sin señal

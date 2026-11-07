@@ -9,7 +9,7 @@ toca) y escribe:
   fuente/fondos/brillo/rooster-gallos.png            la forma de los logos a 540 px de ancho: hacer_mascaras.py la
                                                      suma al verde y al rojo, para que se prendan en Práctica
   fuente/fondos/brillo/rooster-gallos-huella.png     lo que tapan los stickers (esos logos de la lista se saltan)
-Uso: python3 logos_rooster.py && python3 brillo/hacer_mascaras.py
+Uso: python3 logos_rooster.py && python3 brillo/hacer_mascaras.py && python3 acostados.py (este, para el teléfono acostado)
 Para moverlos: cambia LUGAR (centro a 540 px de ancho, ancho del logo, giro en grados). Quedan a los lados del árbol
 de Práctica (que ocupa más o menos x 208–332 a 540 px).
 """

@@ -6,7 +6,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageStat
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC, DIST = ROOT / 'src', ROOT / 'dist'
 DIST.mkdir(exist_ok=True)
-VERSION = 'v-0.8.1'
+VERSION = 'v-0.8.2'
 
 html = (SRC / 'index.template.html').read_text(encoding='utf-8')
 assert html.count('<!--LOGO-->') == 2
@@ -96,6 +96,7 @@ icono(512, maskable=True).save(DIST / 'icon-maskable-512.png')
 FONDOS_SRC = ROOT.parent / 'fondos'
 BRILLO = {}
 ARRIBA = {}
+ARRIBA_H = {}
 if FONDOS_SRC.exists():
     (DIST / 'fondos').mkdir(exist_ok=True)
     for png in sorted(FONDOS_SRC.glob('fondo_marcas_*.png')):
@@ -135,11 +136,27 @@ if FONDOS_SRC.exists():
             BRILLO.setdefault(fid, {})[nombre] = round(min(1.0, 0.20 / max(cubre, 1e-6)), 2)
             m = m.filter(ImageFilter.GaussianBlur(0.8))
             Image.merge('RGBA', (blanco, blanco, blanco, m)).save(DIST / 'fondos' / f'{fid}_brillo_{nombre}.webp', quality=70, alpha_quality=60, method=6)
+        # Teléfono acostado (7 nov 2026): el mismo fondo armado de lado con los stickers del tamaño de siempre
+        # (fuente/fondos/acostados.py), sus formas de Práctica y el color de arriba para Android. Misma escala que el vertical.
+        ac = FONDOS_SRC / 'acostados' / f'fondo_marcas_{fid}.png'
+        if ac.exists():
+            imh = Image.open(ac).convert('RGB')
+            imh.resize((round(imh.width * 1080 / imh.height), 1080), Image.LANCZOS).save(DIST / 'fondos' / f'{fid}_h.webp', quality=72, method=6)
+            ARRIBA_H[fid] = [round(c) for c in ImageStat.Stat(imh.crop((0, round(imh.height * 0.005), imh.width, round(imh.height * 0.04)))).mean]
+            chico_h = (round(imh.width * 540 / imh.height), 540)
+            blanco_h = Image.new('L', chico_h, 255)
+            for nombre in ('verde', 'rojo'):
+                m = Image.open(FONDOS_SRC / 'brillo' / 'acostados' / f'{fid}-{nombre}.png').convert('L').resize(chico_h, Image.NEAREST)
+                m = m.filter(ImageFilter.GaussianBlur(0.8))
+                Image.merge('RGBA', (blanco_h, blanco_h, blanco_h, m)).save(DIST / 'fondos' / f'{fid}_h_brillo_{nombre}.webp', quality=70, alpha_quality=60, method=6)
 # Fuerza máxima del brillo de cada fondo en Práctica (la usa app.js)
 html = html.replace('{"__BRILLO__": 1}', json.dumps(BRILLO, sort_keys=True))
 assert '{"__ARRIBA__": 1}' in html, 'falta ARRIBA en app.js'
 html = html.replace('{"__ARRIBA__": 1}', json.dumps(ARRIBA, sort_keys=True))
+assert '{"__ARRIBA_H__": 1}' in html, 'falta ARRIBA_H en app.js'
+html = html.replace('{"__ARRIBA_H__": 1}', json.dumps(ARRIBA_H, sort_keys=True))
 (DIST / 'index.html').write_text(html, encoding='utf-8')
 print('brillo por fondo:', BRILLO)
 print('color de arriba por fondo:', ARRIBA)
+print('fondos acostados:', sorted(ARRIBA_H))
 print('ok', sorted(os.listdir(DIST)), len(html), 'bytes html')
