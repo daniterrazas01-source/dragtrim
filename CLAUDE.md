@@ -89,7 +89,7 @@ mejor?").
      (build.py lo toma de `src/icono/`). En iPhone el ícono ya instalado no cambia (iOS lo guarda al instalar; no pedir
      reinstalar); las instalaciones nuevas sí lo traen.
 
-7. **Fondos de pantalla** (beta 0.4): 6 fondos sticker bomb que Daniel hizo (+ "Gallos" desde 0.6.2) (`fuente/fondos/*.png`,
+7. **Fondos de pantalla** (beta 0.4): 6 fondos sticker bomb que Daniel hizo (+ "Gallos" desde 0.6.2 y "Rooster" desde 0.8.2) (`fuente/fondos/*.png`,
    el build los convierte a WebP en `fondos/`). Con fondo, la app usa estilo sticker: paneles con
    borde blanco, títulos como etiqueta chueca, color principal según el fondo (neón / rojo / blanco).
    Ajustes: elegir fondo o "Sin fondo" y qué tanto se ve (velo). Por defecto: Combinado, nivel medio.
@@ -103,7 +103,7 @@ mejor?").
    y deja su forma y su huella en `brillo/rooster-gallos*.png`; `hacer_mascaras.py` (PROPIOS, LOGOS['gallos'] = los del
    Blanco y negro) prende esos logos en verde y en rojo y salta solos los que quedaron tapados (JEGS, STRANGE, cápsula
    NOS). Brillo: verde 12.1 %, rojo 15.3 %.
-   **Fondos acostados** (0.8.2, **sin publicar**; 7 nov, Daniel: "cuando lo acuesta simplemente le hace zoom al fondo… que
+   **Fondos acostados** (**publicado en la 0.8.2**, 7 nov; Daniel: "cuando lo acuesta simplemente le hace zoom al fondo… que
    se vea con el mismo zoom con el que se ve un fondo cuando está el teléfono en vertical… hazlo con todos los fondos"): con
    la pantalla de lado (`@media (orientation: landscape)` sin `html.girada`; también tablets y computadora) cada fondo usa
    su versión acostada `fondos/<id>_h.webp` (2260×1080) y en Práctica sus formas `fondos/<id>_h_brillo_<color>.webp`: los
@@ -120,7 +120,7 @@ mejor?").
    acostado + los logos de Rooster en `LUGAR_ACOSTADO` (dos R a la izquierda, R y RRG a la derecha). Si cambia un fondo
    vertical o sus formas de Práctica, volver a correr acostados.py (y si cambian sus stickers, rehacer su receta).
    acostado_test.py lo revisa. Vista previa: "Drag Tree en horizontal" con selector de fondo y "Nuevo / Antes".
-   **Fondo "Rooster"** (0.8.2, **sin publicar**; 7 nov, Daniel: "añadir un fondo más, que se llame Rooster… Ford y
+   **Fondo "Rooster"** (**publicado en la 0.8.2**, 7 nov; Daniel: "añadir un fondo más, que se llame Rooster… Ford y
    Chevrolet… que aparezcan tres veces cada uno… y los logos de marcas que ya tenemos: NOS, AEM, Holley, Summit,
    Arrancones, Two Step, Fueltech, Jex, MSD, Cuarto de Milla, la botellita de nitro, Moroso, el turbito y Aeromotive";
    **"Jex" se tomó como JEGS**, el de cuadritos; si era ZEX, cambiarlo en STICKERS): 8.º fondo, color principal rojo
@@ -186,7 +186,7 @@ mejor?").
    izquierda y quién ganó + botones a la derecha; Práctica: zonas para los pulgares a los lados del árbol (solo: a la
    derecha); carga más chica. Respeta las zonas seguras (isla del iPhone a un lado). `horizontal_test.py` (iPhone 852×393
    con zonas 59/59/21, S24 Ultra 915×412, chico 667×375, S25 con la barra de arriba 780×336).
-   **Práctica acostada, árbol de arriba a abajo** (0.8.2, sin publicar; 7 nov, Daniel: "el semáforo se ve muy chiquito y
+   **Práctica acostada, árbol de arriba a abajo** (**publicado en la 0.8.2**, 7 nov; Daniel: "el semáforo se ve muy chiquito y
    el botón está muy grande… que el semáforo abarque toda la pantalla verticalmente y el botón que sea una tercera parte
    más chico"): el árbol al centro mide todo el alto (`--pt-alto`; focos `--pt-foco` ≈ 49 px en iPhone, antes 30); a la
    izquierda "Cerrar", el tipo de árbol, la reacción del carril izquierdo y su zona; a la derecha el marcador, quién ganó,
@@ -553,7 +553,10 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.8.1** (1 nov 2026: las carátulas se llaman 1, 2
+caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.8.2** (7 nov 2026, Daniel: "Sí, publícala": los 8
+fondos con su versión para el teléfono acostado, con los stickers del mismo tamaño que de pie; Práctica acostada con el árbol de
+arriba a abajo y los botones 1/3 más chicos; fondo nuevo "Rooster" con 3 R de Rooster Racing, 3 Ford, 3 Chevrolet y las marcas
+que eligió Daniel; punto 7); antes **0.8.1** (1 nov 2026: las carátulas se llaman 1, 2
 y 3, sin explicación; tacha en la última corrida de Medir para quitarla hasta la siguiente corrida, punto 7); antes **0.8**
 (1 nov 2026: tres carátulas en Ajustes →
 Apariencia: la Original, la 2026 (de inicio) y el Tablero; Ajustes en dos pestañas, General y Apariencia; revisión final

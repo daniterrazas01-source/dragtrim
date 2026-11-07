@@ -701,6 +701,14 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
   background: rgba(var(--velo-color), var(--velo, .78)); transition: background-color .4s;
 }
 :root[data-fondo] body.sesion .fondo::after { background: rgba(var(--velo-color), .92); }
+/* Teléfono acostado (o pantalla ancha): el fondo armado de lado, con los stickers del tamaño de siempre (si no, el vertical
+   cubre la pantalla agrandado ~2.2 veces; fuente/fondos/acostados.py). También las formas que se prenden en Práctica.
+   Con html.girada la app sigue de pie aunque el teléfono esté acostado: ahí va el vertical. */
+@media (orientation: landscape) {
+  :root[data-fondo]:not(.girada) .fondo { background-image: var(--fondo-url-h, var(--fondo-url)); }
+  :root[data-fondo]:not(.girada) .ptg.v > i { --m: var(--brillo-verde-h, var(--brillo-verde)); }
+  :root[data-fondo]:not(.girada) .ptg.r > i { --m: var(--brillo-rojo-h, var(--brillo-rojo)); }
+}
 
 /* Paneles = stickers: borde recortado y sombra */
 :root:where(:not([data-caratula="2026"], [data-caratula="tablero"]))[data-fondo] :is(.status, .field, .howto, .kpis, .chart, .quality, .msg, .proximo, .seg, .c-res) {
@@ -1180,23 +1188,38 @@ body.carrera .tabs, body.carrera .top, body.carrera main { display: none; }
   :root.acostada .rc-res > .rc-ganador.dudosa { font-size: 16px; }
   :root.acostada .rc-res > .actions { grid-column: 2; }
 
-  /* ---- Práctica: el árbol al centro y las zonas para mantener el dedo a los lados (los pulgares) */
+  /* ---- Práctica (0.8.2, 7 nov, Daniel: "el semáforo se ve muy chiquito y el botón está muy grande… que el semáforo
+     abarque toda la pantalla verticalmente y el botón que sea una tercera parte más chico"): el árbol al centro, de arriba
+     a abajo; a la izquierda "Cerrar", el tipo de árbol, la reacción del carril izquierdo y su zona; a la derecha el
+     marcador, quién ganó, la reacción del derecho y su zona (solo: tu reacción a la izquierda y tu zona a la derecha).
+     Las zonas miden 2/3 de lo que medían (antes llenaban cada lado bajo la barra de arriba) y van abajo, pegadas a la
+     orilla, donde caen los pulgares. Lo de .pt-top, .pt-res y .pt-zones se acomoda suelto en la cuadrícula. */
   :root.acostada .pt {
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto;
-    grid-template-areas: "top top top" "zl tree zr" "zl res zr" "zl msg zr";
-    padding: var(--sa-t) var(--sa-r) var(--sa-b) var(--sa-l);
+    --pt-alto: calc(var(--alto) - var(--sa-t) - var(--sa-b) - 16px);   /* lo que mide el árbol: toda la pantalla a lo alto */
+    --pt-foco: calc((var(--pt-alto) - 72px) / 5.84);   /* 5 focos + 2 filas de chicos (.42) + 6 huecos de 8 px + 24 de orilla */
+    --pt-zona-alto: calc((var(--alto) - var(--sa-t) - var(--sa-b) - 62px) * 2 / 3);
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-rows: auto auto auto minmax(0, 1fr);
+    grid-template-areas: "x tree s" "tipo tree msg" "rl tree rr" "zl tree zr";
+    column-gap: 14px; padding: calc(8px + var(--sa-t)) calc(10px + var(--sa-r)) calc(8px + var(--sa-b)) calc(10px + var(--sa-l));
   }
-  :root.acostada .pt > .pt-top { grid-area: top; padding: 6px 14px; }
-  :root.acostada .pt > .pt-tree { grid-area: tree; padding: 0 12px; }
-  :root.acostada .pt > .pt-res { grid-area: res; padding-top: 6px; min-height: 0; column-gap: 14px; }
-  :root.acostada .pt > .pt-msg { grid-area: msg; margin-bottom: 8px; }
-  :root.acostada .pt > .pt-zones { display: contents; }
-  :root.acostada .pt .pt-zone.l { grid-area: zl; margin: 0 0 10px 10px; }
-  :root.acostada .pt .pt-zone.r { grid-area: zr; margin: 0 10px 10px 0; }
-  :root.acostada .pt.solo { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "top top" "tree zl" "res zl" "msg zl"; }
-  :root.acostada .pt.solo .pt-zone { width: auto; justify-self: stretch; margin: 0 10px 10px 0; }
-  :root.acostada .pt .pb { width: 7.6vh; height: 7.6vh; }
-  :root.acostada .pt .pb.s { width: 3.2vh; height: 3.2vh; }
+  :root.acostada .pt.solo { grid-template-areas: "x tree zl" "tipo tree zl" "rl tree zl" "msg tree zl"; }
+  :root.acostada .pt > :is(.pt-top, .pt-res, .pt-zones) { display: contents; }
+  :root.acostada .pt :is(#ptCerrar, #ptTipo, #ptScore, .pt-res > div, .pt-zone) { position: relative; z-index: 1; }
+  :root.acostada .pt #ptCerrar { grid-area: x; justify-self: start; align-self: start; }
+  :root.acostada .pt #ptTipo { grid-area: tipo; justify-self: start; margin-top: 6px; font-size: 13px; }
+  :root.acostada .pt #ptScore { grid-area: s; justify-self: end; align-self: start; }
+  :root.acostada .pt > .pt-msg { grid-area: msg; justify-self: end; text-align: right; margin: 6px 0 0; min-height: 0; }
+  :root.acostada .pt.solo > .pt-msg { justify-self: start; text-align: left; }
+  :root.acostada .pt > .pt-tree { grid-area: tree; align-self: center; gap: 16px; padding: 0; }
+  :root.acostada .pt .pt-lane { gap: 8px; padding: 12px; }
+  :root.acostada .pt .pb { width: var(--pt-foco); height: var(--pt-foco); }
+  :root.acostada .pt .pb.s { width: calc(.42 * var(--pt-foco)); height: calc(.42 * var(--pt-foco)); }
+  :root.acostada .pt .pt-res > .l { grid-area: rl; justify-self: start; text-align: left; margin: 8px 0 0; }
+  :root.acostada .pt .pt-res > .r { grid-area: rr; justify-self: end; text-align: right; margin: 8px 0 0; }
+  :root.acostada .pt .pt-zone { align-self: end; width: 70%; height: var(--pt-zona-alto); max-height: 100%; margin: 0; font-size: 18px; }
+  :root.acostada .pt .pt-zone.l { grid-area: zl; justify-self: start; }
+  :root.acostada .pt .pt-zone.r { grid-area: zr; justify-self: end; }
+  :root.acostada .pt.solo .pt-zone.l { justify-self: end; width: 78%; }
 
   /* ---- pantalla de carga: el logo y "By Rooster Racing" caben a lo alto */
   :root.acostada .carga { padding: 10px 24px calc(14px + var(--sa-b)); }
@@ -8057,7 +8080,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = '0.8.1';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
+  const APP_VERSION = '0.8.2';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -9428,7 +9451,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   seg('segUnidad', 'unidad', String);
   seg('segTema', 'tema', String);
   seg('segOrient', 'orientacion', String);
-  $('#segOrient').addEventListener('click', () => setTimeout(aplicarOrientacion, 0));
+  $('#segOrient').addEventListener('click', () => setTimeout(() => { aplicarOrientacion(); precargarAcostado(); }, 0));
   // la orientación se revisa al girar el teléfono, al cambiar de pantalla (Práctica, Race 1 vs 1, midiendo) y al iniciar
   if (mqLado) mqLado.addEventListener('change', aplicarOrientacion);
   if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', aplicarOrientacion);
@@ -9464,9 +9487,10 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     { id: 'rojo', nombre: 'Rojo', acento: '#ff3d2e' },
     { id: 'blanco_negro', nombre: 'Blanco y negro', acento: '#ffffff' },
     { id: 'gallos', nombre: 'Gallos', acento: '#ff3d2e' },   // Blanco y negro + logos de Rooster Racing, el equipo de Daniel (0.6.2)
+    { id: 'rooster', nombre: 'Rooster', acento: '#ff3d2e' },   // sticker bomb con Ford, Chevrolet y las marcas que eligió Daniel (0.8.2)
   ];
   // Fuerza máxima del brillo de Práctica por fondo: build.py la calcula según cuánto cubren los stickers.
-  const BRILLO = {"blanco_negro": {"rojo": 1.0, "verde": 1.0}, "botella_nos": {"rojo": 1.0, "verde": 1.0}, "combinado": {"rojo": 1.0, "verde": 1.0}, "combinado_rojo": {"rojo": 1.0, "verde": 1.0}, "gallos": {"rojo": 1.0, "verde": 1.0}, "neon": {"rojo": 1.0, "verde": 1.0}, "rojo": {"rojo": 1.0, "verde": 1.0}};
+  const BRILLO = {"blanco_negro": {"rojo": 1.0, "verde": 1.0}, "botella_nos": {"rojo": 1.0, "verde": 1.0}, "combinado": {"rojo": 1.0, "verde": 1.0}, "combinado_rojo": {"rojo": 1.0, "verde": 1.0}, "gallos": {"rojo": 1.0, "verde": 1.0}, "neon": {"rojo": 1.0, "verde": 1.0}, "rojo": {"rojo": 1.0, "verde": 1.0}, "rooster": {"rojo": 1.0, "verde": 1.0}};
   function aplicarFondo() {
     const f = FONDOS.find((x) => x.id === S.fondo);
     const raiz = document.documentElement;
@@ -9475,6 +9499,10 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
       raiz.style.setProperty('--fondo-url', `url("fondos/${f.id}.webp")`);
       raiz.style.setProperty('--brillo-verde', `url("fondos/${f.id}_brillo_verde.webp")`);
       raiz.style.setProperty('--brillo-rojo', `url("fondos/${f.id}_brillo_rojo.webp")`);
+      // con el teléfono acostado: el mismo fondo armado de lado (style.css, @media (orientation: landscape))
+      raiz.style.setProperty('--fondo-url-h', `url("fondos/${f.id}_h.webp")`);
+      raiz.style.setProperty('--brillo-verde-h', `url("fondos/${f.id}_h_brillo_verde.webp")`);
+      raiz.style.setProperty('--brillo-rojo-h', `url("fondos/${f.id}_h_brillo_rojo.webp")`);
       const bf = BRILLO[f.id] || {};
       raiz.style.setProperty('--brillo-v-max', String(bf.verde || 1));
       raiz.style.setProperty('--brillo-r-max', String(bf.rojo || 1));
@@ -9482,8 +9510,26 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
       raiz.style.setProperty('--velo', S.velo);
     } else {
       raiz.removeAttribute('data-fondo');
-      for (const v of ['--fondo-url', '--acento', '--brillo-verde', '--brillo-rojo', '--brillo-v-max', '--brillo-r-max']) raiz.style.removeProperty(v);
+      for (const v of ['--fondo-url', '--acento', '--brillo-verde', '--brillo-rojo', '--brillo-v-max', '--brillo-r-max', '--fondo-url-h', '--brillo-verde-h', '--brillo-rojo-h']) raiz.style.removeProperty(v);
     }
+    precargarAcostado();
+  }
+  // El fondo acostado se baja y se prepara antes de girar el teléfono: así no parpadea al girar y queda guardado para
+  // abrir sin señal en la pista. En un teléfono con "No girar" nunca se usa (ahí la app se queda de pie).
+  let precargaH = null, esperaH = 0;
+  function precargarAcostado() {
+    clearTimeout(esperaH);
+    const f = FONDOS.find((x) => x.id === S.fondo);
+    if (!f || (S.orientacion === 'no' && Math.min(screen.width, screen.height) <= 500)) return;
+    const url = `fondos/${f.id}_h.webp`;
+    if (precargaH && precargaH.dataset.url === url) return;
+    esperaH = setTimeout(() => {   // después de la pantalla de carga, para no competir con lo que se ve al abrir
+      const img = new Image();
+      img.dataset.url = url; img.src = url;
+      if (img.decode) img.decode().catch(() => {});
+      precargaH = img;
+      for (const c of ['verde', 'rojo']) fetch(`fondos/${f.id}_h_brillo_${c}.webp`).catch(() => {});
+    }, 2600);
   }
   function pintarSelFondo() {
     const cont = $('#selFondo');
@@ -9560,7 +9606,10 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   // franja, la del hoyito de la cámara, del color de theme-color. Se le da el color que queda arriba de la pantalla
   // (el fondo con su velo, la corrida, Práctica, la carga) para que se vea como parte de la app. En iPhone no cambia
   // nada: ahí la app ya se ve detrás de la hora (black-translucent).
-  const ARRIBA = {"blanco_negro": [168, 168, 168], "botella_nos": [170, 165, 156], "combinado": [166, 170, 144], "combinado_rojo": [170, 165, 156], "gallos": [168, 168, 168], "neon": [148, 179, 3], "rojo": [157, 140, 140]};   // build.py: color promedio de lo de arriba de cada fondo
+  const ARRIBA = {"blanco_negro": [168, 168, 168], "botella_nos": [170, 165, 156], "combinado": [166, 170, 144], "combinado_rojo": [170, 165, 156], "gallos": [168, 168, 168], "neon": [148, 179, 3], "rojo": [157, 140, 140], "rooster": [166, 129, 127]};   // build.py: color promedio de lo de arriba de cada fondo
+  const ARRIBA_H = {"blanco_negro": [151, 151, 151], "botella_nos": [180, 177, 162], "combinado": [166, 169, 155], "combinado_rojo": [180, 177, 162], "gallos": [151, 151, 151], "neon": [120, 144, 6], "rojo": [161, 157, 157], "rooster": [160, 142, 141]};   // … y de su versión acostada (teléfono de lado)
+  const mqAncha = window.matchMedia ? matchMedia('(orientation: landscape)') : null;
+  const fondoAcostado = () => !!(mqAncha && mqAncha.matches) && !document.documentElement.classList.contains('girada');
   const rgba = (txt) => { const m = String(txt).match(/[\d.]+/g) || []; return [+m[0] || 0, +m[1] || 0, +m[2] || 0, m.length > 3 ? +m[3] : 1]; };
   const encima = (c, abajo) => abajo.map((x, i) => c[i] * c[3] + x * (1 - c[3]));
   function pintarBarra() {
@@ -9570,7 +9619,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
     let c;
     if (fid && ARRIBA[fid]) {
       const velo = document.body.classList.contains('sesion') ? 0.92 : (parseFloat(raiz.style.getPropertyValue('--velo')) || 0.78);
-      c = encima([...rgba(getComputedStyle(raiz).getPropertyValue('--velo-color')).slice(0, 3), velo], ARRIBA[fid]);
+      c = encima([...rgba(getComputedStyle(raiz).getPropertyValue('--velo-color')).slice(0, 3), velo], (fondoAcostado() && ARRIBA_H[fid]) || ARRIBA[fid]);
     } else c = rgba(getComputedStyle(document.body).backgroundColor).slice(0, 3);
     // lo que tapa la pantalla completa, de abajo hacia arriba
     for (const el of [document.body.classList.contains('practica') && $('#ptOverlay'), document.body.classList.contains('carrera') && $('#rc'), $('#camApuntar'), $('#carga')])
@@ -9584,6 +9633,8 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
   vigiaBarra.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-fondo', 'data-caratula', 'style'] });
   vigiaBarra.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true });
   matchMedia('(prefers-color-scheme: light)').addEventListener('change', pintarBarra);
+  // al girar el teléfono cambia el fondo (vertical o acostado); html.girada se pone al terminar el giro: otra vez después
+  if (mqAncha) mqAncha.addEventListener('change', () => { pintarBarra(); setTimeout(pintarBarra, 400); });
   pintarBarra();
   const inR = $('#inRollout');
   inR.value = S.rollout_ft;
