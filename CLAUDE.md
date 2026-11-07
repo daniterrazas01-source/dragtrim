@@ -466,7 +466,8 @@ mejor?").
     - Publicado en la **0.7** (31 oct, Daniel: "publícala para probarla, jugar con ella para ver si le sale algún fallo").
       Al publicar, qr_camara_test.py falló solo en el caso extremo "QR lejos y de lado" (lo lee, pero a veces en más de 5 s;
       en la máquina de la mañana pasaba y su código no cambió): depende de la velocidad de la máquina. Si molesta en
-      teléfonos reales, hacer más seguido en el ciclo de qr.js los intentos ampliados.
+      teléfonos reales, hacer más seguido en el ciclo de qr.js los intentos ampliados. (7 nov, con la 0.8.2: en el
+      contenedor de ese día no lo leyó en ninguno de los 3 intentos, dos corridas; qr.js y la prueba siguen sin cambios.)
 
 15. **Graphify** (1 nov 2026, Daniel: "un segundo cerebro… que lo implementes en las sesiones que yo te lo pida, como en la
     de directory"): arma un mapa (grafo) del proyecto y se le pregunta (`graphify explain/path/query`) en vez de releer
