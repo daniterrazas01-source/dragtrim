@@ -51,6 +51,7 @@ podría mezclar ajustes.
 | `drag_0.7.4.html` | 0.7.4 | c75eca1 | Race 1 vs 1: nunca baja el árbol en un solo teléfono (latidos entre los dos durante la cuenta; si se pierde la señal antes de los ámbar, se cancela en los dos; si aun así bajó en uno, la carrera no cuenta) |
 | `drag_0.8.html` | 0.8 | a79acb1 | Tres carátulas en Ajustes → Apariencia: Original, 2026 (de inicio) y Tablero (tablero de auto de los 80 y 90); Ajustes en dos pestañas; revisión final con impeccable |
 | `drag_0.8.1.html` | 0.8.1 | d170769 | Las carátulas se llaman 1, 2 y 3, sin explicación; tacha en la última corrida de Medir para quitarla hasta la siguiente corrida |
+| `drag_0.8.2.html` | 0.8.2 | 1cb0df6 | Los 8 fondos con su versión para el teléfono acostado (stickers del mismo tamaño que de pie); Práctica acostada con el árbol de arriba a abajo y los botones 1/3 más chicos; fondo nuevo "Rooster" (3 R de Rooster Racing, 3 Ford, 3 Chevrolet) |
 
 El código fuente editable de cada versión está en `fuente/` de ese commit:
 `git checkout <commit>` o, en GitHub, "Browse files" en el commit.
