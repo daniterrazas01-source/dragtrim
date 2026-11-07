@@ -120,6 +120,23 @@ mejor?").
    acostado + los logos de Rooster en `LUGAR_ACOSTADO` (dos R a la izquierda, R y RRG a la derecha). Si cambia un fondo
    vertical o sus formas de Práctica, volver a correr acostados.py (y si cambian sus stickers, rehacer su receta).
    acostado_test.py lo revisa. Vista previa: "Drag Tree en horizontal" con selector de fondo y "Nuevo / Antes".
+   **Fondo "Rooster"** (0.8.2, **sin publicar**; 7 nov, Daniel: "añadir un fondo más, que se llame Rooster… Ford y
+   Chevrolet… que aparezcan tres veces cada uno… y los logos de marcas que ya tenemos: NOS, AEM, Holley, Summit,
+   Arrancones, Two Step, Fueltech, Jex, MSD, Cuarto de Milla, la botellita de nitro, Moroso, el turbito y Aeromotive";
+   **"Jex" se tomó como JEGS**, el de cuadritos; si era ZEX, cambiarlo en STICKERS): 8.º fondo, color principal rojo
+   (`#ff3d2e`), colores blanco, negro y el rojo de Rooster Racing (los stickers de neón pasan a rojo o blanco) + el azul
+   de Ford y el dorado de Chevrolet. Lo arma `fuente/fondos/rooster.py`: saca completos los stickers de esas marcas de los
+   fondos de Daniel (STICKERS: fondo, un punto del contorno negro de cada pieza, borde blanco; las palabras HOLLEY, MOROSO,
+   2-STEP y AEROMOTIVE se juntan por sus letras y se cierran los huequitos del contorno), dibuja Ford (óvalo y "Ford" en
+   **Yellowtail**, Apache 2.0, `rooster/letras/`) y Chevrolet (el moño: una cruz inclinada, dorado en dos tonos) con
+   orilla negra, borde blanco y sombra; luego (Daniel: "agrégale que aparezca tres veces este logo, el de la R con flama,
+   como en el fondo de gallos") **3 R con flamas** de Rooster Racing, el mismo sticker de Gallos (`logos_rooster.py`).
+   Encima, completos y repartidos: las 3 R, 3 Ford (2 azules, 1 negro), 3 Chevrolet (2 dorados, 1 rojo) y uno de cada
+   marca (las R, Ford y Chevrolet lejos de la columna del árbol de Práctica); abajo, tapando todo, más de las mismas marcas
+   en sus dos versiones (VERSIONES), parejo entre marcas. De pie y acostado a la vez (los stickers del mismo tamaño).
+   Práctica: verde = las R, Ford, Chevrolet, AEM y JEGS de encima; rojo = las R, Ford, Chevrolet y lo rojo.
+   `rooster/receta.json` = el acomodo (`python3 rooster.py buscar N` busca otro, necesita scipy; `python3 rooster.py`
+   arma los PNG). Ojo: Ford y Chevrolet son marcas registradas, como los demás stickers (para tiendas de apps, cambiarlas).
    **Letra tipo Rooster Racing** (25 oct, con todos los fondos y sin fondo): **Saira Black Italic** (OFL, la más parecida
    a la letra del logo; `fuente/app/src/fuentes/`; build.py la mete en index.html como data URI) en lo que Daniel marcó:
    títulos de cada pantalla (`h2`), etiquetas (`.lab`: Modo, Árbol, Peso…), todos los selectores (`.seg button`), botones

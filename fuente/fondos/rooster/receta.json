@@ -1,0 +1,2194 @@
+{
+"vertical": [
+{
+"tipo": "2step",
+"v": 1,
+"giro": 24,
+"x": 768,
+"y": 1472
+},
+{
+"tipo": "holley",
+"v": 1,
+"giro": 16,
+"x": 152,
+"y": 2176
+},
+{
+"tipo": "summit",
+"v": 0,
+"giro": -24,
+"x": 332,
+"y": 2464
+},
+{
+"tipo": "cuarto",
+"v": 0,
+"giro": -8,
+"x": 972,
+"y": 2300
+},
+{
+"tipo": "summit",
+"v": 1,
+"giro": -16,
+"x": -60,
+"y": 2416
+},
+{
+"tipo": "2step",
+"v": 1,
+"giro": 16,
+"x": 896,
+"y": 488
+},
+{
+"tipo": "aeromotive",
+"v": 1,
+"giro": 8,
+"x": -60,
+"y": 1596
+},
+{
+"tipo": "nos",
+"v": 1,
+"giro": 16,
+"x": 108,
+"y": 900
+},
+{
+"tipo": "aeromotive",
+"v": 1,
+"giro": -16,
+"x": 808,
+"y": 1944
+},
+{
+"tipo": "moroso",
+"v": 0,
+"giro": 0,
+"x": -76,
+"y": 2024
+},
+{
+"tipo": "arrancones",
+"v": 1,
+"giro": -16,
+"x": 324,
+"y": 1404
+},
+{
+"tipo": "summit",
+"v": 1,
+"giro": -24,
+"x": 124,
+"y": 276
+},
+{
+"tipo": "nos_pastilla",
+"v": 1,
+"giro": -24,
+"x": 224,
+"y": 2180
+},
+{
+"tipo": "fueltech",
+"v": 0,
+"giro": -24,
+"x": 856,
+"y": 72
+},
+{
+"tipo": "botella",
+"v": 1,
+"giro": -24,
+"x": 472,
+"y": -112
+},
+{
+"tipo": "2step",
+"v": 1,
+"giro": -24,
+"x": -120,
+"y": 1200
+},
+{
+"tipo": "fueltech",
+"v": 0,
+"giro": 16,
+"x": -80,
+"y": 200
+},
+{
+"tipo": "aeromotive",
+"v": 0,
+"giro": 0,
+"x": -28,
+"y": -64
+},
+{
+"tipo": "msd_circulo",
+"v": 0,
+"giro": 0,
+"x": 1224,
+"y": 1044
+},
+{
+"tipo": "summit",
+"v": 1,
+"giro": 16,
+"x": 816,
+"y": 2572
+},
+{
+"tipo": "msd",
+"v": 0,
+"giro": -16,
+"x": 592,
+"y": 1228
+},
+{
+"tipo": "2step",
+"v": 0,
+"giro": 16,
+"x": 260,
+"y": 104
+},
+{
+"tipo": "turbo",
+"v": 0,
+"giro": -8,
+"x": 648,
+"y": 1940
+},
+{
+"tipo": "msd_circulo",
+"v": 1,
+"giro": -16,
+"x": -48,
+"y": 1868
+},
+{
+"tipo": "aem",
+"v": 0,
+"giro": 8,
+"x": 864,
+"y": -68
+},
+{
+"tipo": "jegs",
+"v": 0,
+"giro": 24,
+"x": 28,
+"y": 552
+},
+{
+"tipo": "jegs",
+"v": 0,
+"giro": 16,
+"x": 352,
+"y": 1592
+},
+{
+"tipo": "arrancones",
+"v": 1,
+"giro": 24,
+"x": 192,
+"y": 2344
+},
+{
+"tipo": "moroso",
+"v": 1,
+"giro": -16,
+"x": 420,
+"y": 1496
+},
+{
+"tipo": "aeromotive",
+"v": 1,
+"giro": 16,
+"x": -76,
+"y": 2072
+},
+{
+"tipo": "2step",
+"v": 0,
+"giro": -16,
+"x": 68,
+"y": 2676
+},
+{
+"tipo": "moroso",
+"v": 1,
+"giro": 0,
+"x": 928,
+"y": 796
+},
+{
+"tipo": "holley",
+"v": 1,
+"giro": 24,
+"x": 916,
+"y": 1160
+},
+{
+"tipo": "turbo",
+"v": 1,
+"giro": 8,
+"x": -120,
+"y": 1488
+},
+{
+"tipo": "holley",
+"v": 1,
+"giro": -24,
+"x": -120,
+"y": 220
+},
+{
+"tipo": "aem",
+"v": 0,
+"giro": -16,
+"x": 384,
+"y": -60
+},
+{
+"tipo": "botella",
+"v": 0,
+"giro": 0,
+"x": -72,
+"y": 936
+},
+{
+"tipo": "cuarto",
+"v": 1,
+"giro": -24,
+"x": -40,
+"y": 2332
+},
+{
+"tipo": "cuarto",
+"v": 1,
+"giro": 16,
+"x": 880,
+"y": 1760
+},
+{
+"tipo": "msd_circulo",
+"v": 1,
+"giro": -24,
+"x": -40,
+"y": 2672
+},
+{
+"tipo": "arrancones",
+"v": 1,
+"giro": -16,
+"x": 348,
+"y": 724
+},
+{
+"tipo": "fueltech",
+"v": 1,
+"giro": 8,
+"x": 724,
+"y": 2224
+},
+{
+"tipo": "nos_pastilla",
+"v": 0,
+"giro": 8,
+"x": 360,
+"y": 1952
+},
+{
+"tipo": "nos_pastilla",
+"v": 0,
+"giro": 8,
+"x": 784,
+"y": 536
+},
+{
+"tipo": "arrancones",
+"v": 0,
+"giro": -8,
+"x": 364,
+"y": 252
+},
+{
+"tipo": "summit",
+"v": 0,
+"giro": 16,
+"x": -48,
+"y": 508
+},
+{
+"tipo": "holley",
+"v": 0,
+"giro": -8,
+"x": -16,
+"y": 1188
+},
+{
+"tipo": "cuarto",
+"v": 0,
+"giro": -24,
+"x": -72,
+"y": 1424
+},
+{
+"tipo": "msd",
+"v": 0,
+"giro": -24,
+"x": 912,
+"y": -68
+},
+{
+"tipo": "aeromotive",
+"v": 0,
+"giro": -8,
+"x": -104,
+"y": 1812
+},
+{
+"tipo": "arrancones",
+"v": 0,
+"giro": 16,
+"x": 324,
+"y": 2024
+},
+{
+"tipo": "msd_circulo",
+"v": 0,
+"giro": -24,
+"x": 432,
+"y": 1048
+},
+{
+"tipo": "nos",
+"v": 1,
+"giro": 0,
+"x": 868,
+"y": 1552
+},
+{
+"tipo": "turbo",
+"v": 1,
+"giro": -8,
+"x": -72,
+"y": 768
+},
+{
+"tipo": "botella",
+"v": 0,
+"giro": 16,
+"x": 1148,
+"y": 2368
+},
+{
+"tipo": "aem",
+"v": 1,
+"giro": -24,
+"x": 900,
+"y": 1156
+},
+{
+"tipo": "nos",
+"v": 1,
+"giro": -24,
+"x": 396,
+"y": 2356
+},
+{
+"tipo": "jegs",
+"v": 0,
+"giro": -24,
+"x": 896,
+"y": 256
+},
+{
+"tipo": "nos_pastilla",
+"v": 0,
+"giro": 0,
+"x": 1036,
+"y": 2112
+},
+{
+"tipo": "holley",
+"v": 1,
+"giro": -24,
+"x": 380,
+"y": 20
+},
+{
+"tipo": "aeromotive",
+"v": 0,
+"giro": 8,
+"x": 868,
+"y": 80
+},
+{
+"tipo": "2step",
+"v": 1,
+"giro": 8,
+"x": 96,
+"y": 2344
+},
+{
+"tipo": "nos",
+"v": 1,
+"giro": -8,
+"x": 880,
+"y": 892
+},
+{
+"tipo": "nos",
+"v": 1,
+"giro": 24,
+"x": 384,
+"y": 1468
+},
+{
+"tipo": "moroso",
+"v": 0,
+"giro": 0,
+"x": -72,
+"y": 184
+},
+{
+"tipo": "jegs",
+"v": 1,
+"giro": 24,
+"x": 872,
+"y": 1820
+},
+{
+"tipo": "holley",
+"v": 1,
+"giro": -16,
+"x": 424,
+"y": 760
+},
+{
+"tipo": "nos_pastilla",
+"v": 1,
+"giro": -24,
+"x": 1048,
+"y": 1400
+},
+{
+"tipo": "cuarto",
+"v": 1,
+"giro": -8,
+"x": 396,
+"y": 952
+},
+{
+"tipo": "turbo",
+"v": 0,
+"giro": -24,
+"x": -80,
+"y": 292
+},
+{
+"tipo": "msd",
+"v": 0,
+"giro": 16,
+"x": -80,
+"y": 1188
+},
+{
+"tipo": "aem",
+"v": 1,
+"giro": -24,
+"x": 556,
+"y": 2048
+},
+{
+"tipo": "nos_pastilla",
+"v": 0,
+"giro": -16,
+"x": 992,
+"y": 2644
+},
+{
+"tipo": "msd_circulo",
+"v": 0,
+"giro": -16,
+"x": 1160,
+"y": 108
+},
+{
+"tipo": "jegs",
+"v": 0,
+"giro": 0,
+"x": -20,
+"y": 2048
+},
+{
+"tipo": "fueltech",
+"v": 1,
+"giro": -24,
+"x": 504,
+"y": 432
+},
+{
+"tipo": "aeromotive",
+"v": 1,
+"giro": 24,
+"x": 528,
+"y": 932
+},
+{
+"tipo": "fueltech",
+"v": 1,
+"giro": 16,
+"x": 344,
+"y": 1664
+},
+{
+"tipo": "summit",
+"v": 0,
+"giro": 24,
+"x": 360,
+"y": 1252
+},
+{
+"tipo": "moroso",
+"v": 0,
+"giro": -24,
+"x": -40,
+"y": 2436
+},
+{
+"tipo": "2step",
+"v": 1,
+"giro": 24,
+"x": -24,
+"y": 664
+},
+{
+"tipo": "botella",
+"v": 1,
+"giro": -24,
+"x": 1136,
+"y": 260
+},
+{
+"tipo": "arrancones",
+"v": 0,
+"giro": 0,
+"x": -24,
+"y": 448
+},
+{
+"tipo": "turbo",
+"v": 1,
+"giro": 16,
+"x": 700,
+"y": 2604
+},
+{
+"tipo": "turbo",
+"v": 0,
+"giro": 24,
+"x": 364,
+"y": 148
+},
+{
+"tipo": "moroso",
+"v": 1,
+"giro": -24,
+"x": -44,
+"y": 2656
+},
+{
+"tipo": "botella",
+"v": 0,
+"giro": 8,
+"x": 376,
+"y": 1992
+},
+{
+"tipo": "aem",
+"v": 1,
+"giro": 24,
+"x": 868,
+"y": 1608
+},
+{
+"tipo": "2step",
+"v": 1,
+"giro": -16,
+"x": 296,
+"y": 1588
+},
+{
+"tipo": "msd_circulo",
+"v": 0,
+"giro": 0,
+"x": -8,
+"y": 2396
+},
+{
+"tipo": "summit",
+"v": 1,
+"giro": 0,
+"x": 504,
+"y": -4
+},
+{
+"tipo": "arrancones",
+"v": 0,
+"giro": 8,
+"x": 756,
+"y": 2432
+},
+{
+"tipo": "aem",
+"v": 0,
+"giro": 0,
+"x": -12,
+"y": -24
+},
+{
+"tipo": "holley",
+"v": 1,
+"giro": 24,
+"x": 780,
+"y": 1988
+},
+{
+"tipo": "msd",
+"v": 0,
+"giro": 0,
+"x": 924,
+"y": 624
+},
+{
+"tipo": "botella",
+"v": 1,
+"giro": 16,
+"x": 408,
+"y": 2324
+},
+{
+"tipo": "fueltech",
+"v": 1,
+"giro": 8,
+"x": 948,
+"y": 1208
+},
+{
+"tipo": "aeromotive",
+"v": 0,
+"giro": 16,
+"x": 648,
+"y": 1620
+},
+{
+"tipo": "jegs",
+"v": 1,
+"giro": 8,
+"x": -28,
+"y": 1616
+},
+{
+"tipo": "cuarto",
+"v": 0,
+"giro": -8,
+"x": 240,
+"y": 1120
+},
+{
+"tipo": "summit",
+"v": 1,
+"giro": -8,
+"x": -24,
+"y": 876
+},
+{
+"tipo": "botella",
+"v": 1,
+"giro": -24,
+"x": 320,
+"y": 556
+},
+{
+"tipo": "msd",
+"v": 1,
+"giro": 24,
+"x": 640,
+"y": 144
+},
+{
+"tipo": "summit",
+"v": 1,
+"giro": 0,
+"x": 760,
+"y": 1084
+},
+{
+"tipo": "msd_circulo",
+"v": 0,
+"giro": 24,
+"x": -24,
+"y": 8
+},
+{
+"tipo": "msd",
+"v": 0,
+"giro": -24,
+"x": 492,
+"y": 2164
+},
+{
+"tipo": "holley",
+"v": 1,
+"giro": 96,
+"x": 484,
+"y": 1448
+},
+{
+"tipo": "nos_pastilla",
+"v": 0,
+"giro": 8,
+"x": 976,
+"y": -28
+},
+{
+"tipo": "jegs",
+"v": 0,
+"giro": -24,
+"x": 412,
+"y": 304
+},
+{
+"tipo": "moroso",
+"v": 0,
+"giro": -84,
+"x": 144,
+"y": 920
+},
+{
+"tipo": "aeromotive",
+"v": 1,
+"giro": 84,
+"x": 1168,
+"y": 1016
+},
+{
+"tipo": "2step",
+"v": 1,
+"giro": 8,
+"x": 116,
+"y": -44
+},
+{
+"tipo": "fueltech",
+"v": 0,
+"giro": -24,
+"x": 860,
+"y": 712
+},
+{
+"tipo": "aem",
+"v": 0,
+"giro": 16,
+"x": -28,
+"y": 1396
+},
+{
+"tipo": "arrancones",
+"v": 1,
+"giro": -96,
+"x": 1112,
+"y": 1608
+},
+{
+"tipo": "nos",
+"v": 1,
+"giro": 0,
+"x": 12,
+"y": 216
+},
+{
+"tipo": "cuarto",
+"v": 1,
+"giro": 24,
+"x": 868,
+"y": 460
+},
+{
+"tipo": "turbo",
+"v": 1,
+"giro": -8,
+"x": 608,
+"y": 1104
+},
+{
+"tipo": "cuarto",
+"v": 0,
+"giro": -24,
+"x": 648,
+"y": 1580
+},
+{
+"tipo": "nos",
+"v": 0,
+"giro": -24,
+"x": -64,
+"y": 2492
+},
+{
+"tipo": "nos_pastilla",
+"v": 0,
+"giro": 24,
+"x": 500,
+"y": -32
+},
+{
+"tipo": "nos",
+"v": 0,
+"giro": 16,
+"x": 548,
+"y": 1328
+},
+{
+"tipo": "fueltech",
+"v": 0,
+"giro": 0,
+"x": 648,
+"y": 1972
+},
+{
+"tipo": "summit",
+"v": 0,
+"giro": -16,
+"x": -40,
+"y": 2196
+},
+{
+"tipo": "arrancones",
+"v": 1,
+"giro": -84,
+"x": 404,
+"y": 1704
+},
+{
+"tipo": "aem",
+"v": 0,
+"giro": -24,
+"x": 448,
+"y": 756
+},
+{
+"tipo": "msd",
+"v": 1,
+"giro": 24,
+"x": 904,
+"y": 2160
+},
+{
+"tipo": "jegs",
+"v": 1,
+"giro": 24,
+"x": 816,
+"y": 2468
+},
+{
+"tipo": "aem",
+"v": 0,
+"giro": -8,
+"x": -16,
+"y": 1844
+},
+{
+"tipo": "summit",
+"v": 0,
+"giro": 96,
+"x": -4,
+"y": 1044
+},
+{
+"tipo": "msd",
+"v": 1,
+"giro": 0,
+"x": -8,
+"y": 536
+},
+{
+"tipo": "nos_pastilla",
+"v": 1,
+"giro": -8,
+"x": 956,
+"y": 204
+},
+{
+"tipo": "jegs",
+"v": 0,
+"giro": 8,
+"x": 312,
+"y": 2536
+},
+{
+"tipo": "turbo",
+"v": 0,
+"giro": 12,
+"x": 988,
+"y": 648,
+"encima": true
+},
+{
+"tipo": "botella",
+"v": 0,
+"giro": 8,
+"x": 1008,
+"y": 1740,
+"encima": true
+},
+{
+"tipo": "2step",
+"v": 0,
+"giro": -12,
+"x": 812,
+"y": 40,
+"encima": true
+},
+{
+"tipo": "moroso",
+"v": 0,
+"giro": 12,
+"x": 320,
+"y": 472,
+"encima": true
+},
+{
+"tipo": "holley",
+"v": 0,
+"giro": 12,
+"x": 372,
+"y": 2192,
+"encima": true
+},
+{
+"tipo": "aeromotive",
+"v": 0,
+"giro": -12,
+"x": 240,
+"y": 1528,
+"encima": true
+},
+{
+"tipo": "cuarto",
+"v": 0,
+"giro": 12,
+"x": 68,
+"y": 68,
+"encima": true
+},
+{
+"tipo": "fueltech",
+"v": 0,
+"giro": -12,
+"x": 728,
+"y": 1140,
+"encima": true
+},
+{
+"tipo": "arrancones",
+"v": 0,
+"giro": 0,
+"x": 228,
+"y": 1024,
+"encima": true
+},
+{
+"tipo": "nos",
+"v": 0,
+"giro": 8,
+"x": 492,
+"y": 128,
+"encima": true
+},
+{
+"tipo": "summit",
+"v": 0,
+"giro": -12,
+"x": 468,
+"y": 620,
+"encima": true
+},
+{
+"tipo": "msd",
+"v": 0,
+"giro": 12,
+"x": 536,
+"y": 1776,
+"encima": true
+},
+{
+"tipo": "aem",
+"v": 0,
+"giro": -12,
+"x": 576,
+"y": 2352,
+"encima": true
+},
+{
+"tipo": "jegs",
+"v": 0,
+"giro": 4,
+"x": 240,
+"y": 1228,
+"encima": true
+},
+{
+"tipo": "chevrolet",
+"v": 2,
+"giro": 12,
+"x": 788,
+"y": 932,
+"encima": true
+},
+{
+"tipo": "ford",
+"v": 2,
+"giro": -12,
+"x": 40,
+"y": 2040,
+"encima": true
+},
+{
+"tipo": "rooster_r",
+"v": 2,
+"giro": 8,
+"x": 72,
+"y": 2416,
+"encima": true
+},
+{
+"tipo": "chevrolet",
+"v": 1,
+"giro": 12,
+"x": 792,
+"y": 2072,
+"encima": true
+},
+{
+"tipo": "ford",
+"v": 1,
+"giro": 12,
+"x": 796,
+"y": 348,
+"encima": true
+},
+{
+"tipo": "rooster_r",
+"v": 1,
+"giro": -12,
+"x": 12,
+"y": 752,
+"encima": true
+},
+{
+"tipo": "chevrolet",
+"v": 0,
+"giro": 12,
+"x": 8,
+"y": 316,
+"encima": true
+},
+{
+"tipo": "ford",
+"v": 0,
+"giro": 12,
+"x": 780,
+"y": 1420,
+"encima": true
+},
+{
+"tipo": "rooster_r",
+"v": 0,
+"giro": -12,
+"x": 64,
+"y": 1676,
+"encima": true
+}
+],
+"acostado": [
+{
+"tipo": "holley",
+"v": 0,
+"giro": 16,
+"x": 1756,
+"y": 932
+},
+{
+"tipo": "msd",
+"v": 1,
+"giro": 0,
+"x": 2324,
+"y": 192
+},
+{
+"tipo": "nos",
+"v": 1,
+"giro": 24,
+"x": 1684,
+"y": 728
+},
+{
+"tipo": "2step",
+"v": 1,
+"giro": -24,
+"x": 1160,
+"y": 248
+},
+{
+"tipo": "fueltech",
+"v": 1,
+"giro": 24,
+"x": 360,
+"y": 1000
+},
+{
+"tipo": "jegs",
+"v": 0,
+"giro": -24,
+"x": 620,
+"y": 320
+},
+{
+"tipo": "nos",
+"v": 1,
+"giro": 8,
+"x": 100,
+"y": 568
+},
+{
+"tipo": "2step",
+"v": 0,
+"giro": -24,
+"x": 8,
+"y": -48
+},
+{
+"tipo": "msd_circulo",
+"v": 0,
+"giro": 16,
+"x": -68,
+"y": 1024
+},
+{
+"tipo": "aem",
+"v": 1,
+"giro": -16,
+"x": 2244,
+"y": 896
+},
+{
+"tipo": "aeromotive",
+"v": 1,
+"giro": 16,
+"x": 892,
+"y": 572
+},
+{
+"tipo": "cuarto",
+"v": 1,
+"giro": 8,
+"x": 1260,
+"y": 912
+},
+{
+"tipo": "msd_circulo",
+"v": 1,
+"giro": 16,
+"x": 664,
+"y": 80
+},
+{
+"tipo": "moroso",
+"v": 0,
+"giro": -24,
+"x": -48,
+"y": 684
+},
+{
+"tipo": "holley",
+"v": 1,
+"giro": 8,
+"x": 2228,
+"y": 88
+},
+{
+"tipo": "summit",
+"v": 1,
+"giro": -24,
+"x": 1184,
+"y": 380
+},
+{
+"tipo": "jegs",
+"v": 1,
+"giro": 8,
+"x": 360,
+"y": 684
+},
+{
+"tipo": "nos_pastilla",
+"v": 1,
+"giro": 0,
+"x": 968,
+"y": 1176
+},
+{
+"tipo": "2step",
+"v": 0,
+"giro": -24,
+"x": 244,
+"y": 352
+},
+{
+"tipo": "holley",
+"v": 1,
+"giro": -8,
+"x": 600,
+"y": 556
+},
+{
+"tipo": "botella",
+"v": 1,
+"giro": 24,
+"x": 1456,
+"y": 12
+},
+{
+"tipo": "cuarto",
+"v": 1,
+"giro": -16,
+"x": 2356,
+"y": -116
+},
+{
+"tipo": "fueltech",
+"v": 0,
+"giro": 0,
+"x": 2312,
+"y": 1128
+},
+{
+"tipo": "arrancones",
+"v": 1,
+"giro": 16,
+"x": 2192,
+"y": 628
+},
+{
+"tipo": "botella",
+"v": 1,
+"giro": -24,
+"x": 1716,
+"y": 1008
+},
+{
+"tipo": "fueltech",
+"v": 0,
+"giro": -16,
+"x": 1664,
+"y": 212
+},
+{
+"tipo": "turbo",
+"v": 0,
+"giro": 8,
+"x": 1824,
+"y": 700
+},
+{
+"tipo": "2step",
+"v": 1,
+"giro": -8,
+"x": 344,
+"y": 920
+},
+{
+"tipo": "aeromotive",
+"v": 0,
+"giro": -8,
+"x": -44,
+"y": 1176
+},
+{
+"tipo": "arrancones",
+"v": 0,
+"giro": 0,
+"x": 1788,
+"y": 400
+},
+{
+"tipo": "nos",
+"v": 0,
+"giro": -16,
+"x": 464,
+"y": 140
+},
+{
+"tipo": "cuarto",
+"v": 1,
+"giro": 16,
+"x": 1876,
+"y": -24
+},
+{
+"tipo": "msd_circulo",
+"v": 1,
+"giro": -8,
+"x": -20,
+"y": 68
+},
+{
+"tipo": "aem",
+"v": 0,
+"giro": -16,
+"x": 772,
+"y": -84
+},
+{
+"tipo": "jegs",
+"v": 1,
+"giro": 16,
+"x": 1476,
+"y": -116
+},
+{
+"tipo": "arrancones",
+"v": 1,
+"giro": 0,
+"x": 160,
+"y": 416
+},
+{
+"tipo": "summit",
+"v": 0,
+"giro": 0,
+"x": 1776,
+"y": 1076
+},
+{
+"tipo": "2step",
+"v": 1,
+"giro": 24,
+"x": 2344,
+"y": 752
+},
+{
+"tipo": "aeromotive",
+"v": 1,
+"giro": -16,
+"x": 56,
+"y": 692
+},
+{
+"tipo": "moroso",
+"v": 1,
+"giro": 8,
+"x": 808,
+"y": 408
+},
+{
+"tipo": "msd",
+"v": 1,
+"giro": -8,
+"x": 988,
+"y": 788
+},
+{
+"tipo": "summit",
+"v": 0,
+"giro": 16,
+"x": 2276,
+"y": 112
+},
+{
+"tipo": "aem",
+"v": 0,
+"giro": -24,
+"x": -120,
+"y": 888
+},
+{
+"tipo": "moroso",
+"v": 0,
+"giro": -8,
+"x": 544,
+"y": 1184
+},
+{
+"tipo": "nos_pastilla",
+"v": 0,
+"giro": -24,
+"x": 2020,
+"y": 496
+},
+{
+"tipo": "summit",
+"v": 0,
+"giro": 0,
+"x": 2296,
+"y": 1064
+},
+{
+"tipo": "nos_pastilla",
+"v": 1,
+"giro": -8,
+"x": 1348,
+"y": 716
+},
+{
+"tipo": "cuarto",
+"v": 1,
+"giro": -24,
+"x": 984,
+"y": -92
+},
+{
+"tipo": "msd",
+"v": 0,
+"giro": -8,
+"x": -44,
+"y": 136
+},
+{
+"tipo": "holley",
+"v": 0,
+"giro": -16,
+"x": -24,
+"y": 644
+},
+{
+"tipo": "nos_pastilla",
+"v": 1,
+"giro": 24,
+"x": 236,
+"y": 1020
+},
+{
+"tipo": "cuarto",
+"v": 0,
+"giro": 24,
+"x": 792,
+"y": 680
+},
+{
+"tipo": "aeromotive",
+"v": 1,
+"giro": 0,
+"x": 2032,
+"y": -56
+},
+{
+"tipo": "holley",
+"v": 0,
+"giro": 16,
+"x": 408,
+"y": 416
+},
+{
+"tipo": "moroso",
+"v": 0,
+"giro": -16,
+"x": 1940,
+"y": 268
+},
+{
+"tipo": "msd_circulo",
+"v": 0,
+"giro": 24,
+"x": 1832,
+"y": 36
+},
+{
+"tipo": "turbo",
+"v": 1,
+"giro": -24,
+"x": -72,
+"y": -52
+},
+{
+"tipo": "nos",
+"v": 0,
+"giro": 0,
+"x": 872,
+"y": 488
+},
+{
+"tipo": "arrancones",
+"v": 0,
+"giro": -8,
+"x": 1696,
+"y": 824
+},
+{
+"tipo": "arrancones",
+"v": 1,
+"giro": -16,
+"x": 604,
+"y": 836
+},
+{
+"tipo": "jegs",
+"v": 0,
+"giro": 8,
+"x": 300,
+"y": -60
+},
+{
+"tipo": "turbo",
+"v": 0,
+"giro": -8,
+"x": -36,
+"y": 512
+},
+{
+"tipo": "holley",
+"v": 0,
+"giro": -24,
+"x": 920,
+"y": 1100
+},
+{
+"tipo": "aeromotive",
+"v": 0,
+"giro": -16,
+"x": 2220,
+"y": 1116
+},
+{
+"tipo": "msd",
+"v": 0,
+"giro": -8,
+"x": 2304,
+"y": 436
+},
+{
+"tipo": "summit",
+"v": 1,
+"giro": -8,
+"x": 836,
+"y": 208
+},
+{
+"tipo": "botella",
+"v": 1,
+"giro": 24,
+"x": 992,
+"y": 540
+},
+{
+"tipo": "2step",
+"v": 0,
+"giro": 0,
+"x": -8,
+"y": 1220
+},
+{
+"tipo": "aeromotive",
+"v": 0,
+"giro": 0,
+"x": 1956,
+"y": 204
+},
+{
+"tipo": "2step",
+"v": 1,
+"giro": 24,
+"x": 1896,
+"y": 576
+},
+{
+"tipo": "msd_circulo",
+"v": 0,
+"giro": 16,
+"x": 1624,
+"y": 780
+},
+{
+"tipo": "nos",
+"v": 0,
+"giro": -16,
+"x": 1348,
+"y": 880
+},
+{
+"tipo": "fueltech",
+"v": 1,
+"giro": -16,
+"x": -32,
+"y": 852
+},
+{
+"tipo": "moroso",
+"v": 0,
+"giro": -8,
+"x": 824,
+"y": 44
+},
+{
+"tipo": "fueltech",
+"v": 0,
+"giro": 24,
+"x": -28,
+"y": 96
+},
+{
+"tipo": "nos",
+"v": 1,
+"giro": -24,
+"x": 512,
+"y": 936
+},
+{
+"tipo": "cuarto",
+"v": 0,
+"giro": 8,
+"x": 1904,
+"y": 1148
+},
+{
+"tipo": "turbo",
+"v": 0,
+"giro": 24,
+"x": 648,
+"y": -56
+},
+{
+"tipo": "botella",
+"v": 0,
+"giro": 8,
+"x": 2096,
+"y": 356
+},
+{
+"tipo": "msd",
+"v": 1,
+"giro": -16,
+"x": 1564,
+"y": 108
+},
+{
+"tipo": "aeromotive",
+"v": 0,
+"giro": 0,
+"x": 1564,
+"y": -32
+},
+{
+"tipo": "msd_circulo",
+"v": 1,
+"giro": 16,
+"x": 2136,
+"y": -36
+},
+{
+"tipo": "nos_pastilla",
+"v": 0,
+"giro": 8,
+"x": 524,
+"y": 764
+},
+{
+"tipo": "jegs",
+"v": 1,
+"giro": -8,
+"x": 1488,
+"y": 492
+},
+{
+"tipo": "fueltech",
+"v": 1,
+"giro": -24,
+"x": 1920,
+"y": 848
+},
+{
+"tipo": "arrancones",
+"v": 1,
+"giro": -8,
+"x": 608,
+"y": 300
+},
+{
+"tipo": "aem",
+"v": 0,
+"giro": -16,
+"x": 504,
+"y": 536
+},
+{
+"tipo": "holley",
+"v": 0,
+"giro": -8,
+"x": 388,
+"y": 1184
+},
+{
+"tipo": "2step",
+"v": 1,
+"giro": 96,
+"x": -48,
+"y": 352
+},
+{
+"tipo": "turbo",
+"v": 1,
+"giro": -24,
+"x": 2384,
+"y": 152
+},
+{
+"tipo": "nos",
+"v": 1,
+"giro": -8,
+"x": 1664,
+"y": 352
+},
+{
+"tipo": "summit",
+"v": 0,
+"giro": -84,
+"x": 940,
+"y": 828
+},
+{
+"tipo": "botella",
+"v": 0,
+"giro": 16,
+"x": 1512,
+"y": 780
+},
+{
+"tipo": "msd",
+"v": 0,
+"giro": 24,
+"x": 2316,
+"y": 816
+},
+{
+"tipo": "nos_pastilla",
+"v": 0,
+"giro": 0,
+"x": 1972,
+"y": 100
+},
+{
+"tipo": "jegs",
+"v": 1,
+"giro": 8,
+"x": 1344,
+"y": 1032
+},
+{
+"tipo": "moroso",
+"v": 1,
+"giro": -24,
+"x": 288,
+"y": 932
+},
+{
+"tipo": "holley",
+"v": 0,
+"giro": -8,
+"x": 832,
+"y": 536
+},
+{
+"tipo": "aeromotive",
+"v": 0,
+"giro": -96,
+"x": 2588,
+"y": 168
+},
+{
+"tipo": "botella",
+"v": 0,
+"giro": 24,
+"x": 1040,
+"y": 84
+},
+{
+"tipo": "summit",
+"v": 1,
+"giro": -16,
+"x": 1168,
+"y": -92
+},
+{
+"tipo": "aem",
+"v": 1,
+"giro": 16,
+"x": 160,
+"y": 316
+},
+{
+"tipo": "2step",
+"v": 0,
+"giro": 8,
+"x": 1696,
+"y": 272
+},
+{
+"tipo": "fueltech",
+"v": 1,
+"giro": -84,
+"x": 1592,
+"y": 524
+},
+{
+"tipo": "msd_circulo",
+"v": 1,
+"giro": -16,
+"x": 1420,
+"y": -12
+},
+{
+"tipo": "cuarto",
+"v": 0,
+"giro": 24,
+"x": 344,
+"y": 612
+},
+{
+"tipo": "turbo",
+"v": 1,
+"giro": -8,
+"x": 2004,
+"y": 368
+},
+{
+"tipo": "aem",
+"v": 1,
+"giro": 0,
+"x": 2272,
+"y": -12
+},
+{
+"tipo": "moroso",
+"v": 0,
+"giro": 84,
+"x": -24,
+"y": -8
+},
+{
+"tipo": "arrancones",
+"v": 0,
+"giro": -16,
+"x": 448,
+"y": 1060
+},
+{
+"tipo": "cuarto",
+"v": 0,
+"giro": 8,
+"x": 768,
+"y": -40
+},
+{
+"tipo": "nos",
+"v": 0,
+"giro": 8,
+"x": 2268,
+"y": 1080
+},
+{
+"tipo": "jegs",
+"v": 1,
+"giro": 0,
+"x": 88,
+"y": -32
+},
+{
+"tipo": "nos_pastilla",
+"v": 0,
+"giro": -24,
+"x": 780,
+"y": 352
+},
+{
+"tipo": "msd",
+"v": 0,
+"giro": -8,
+"x": 1164,
+"y": 588
+},
+{
+"tipo": "jegs",
+"v": 1,
+"giro": 24,
+"x": 2240,
+"y": 588
+},
+{
+"tipo": "fueltech",
+"v": 1,
+"giro": 0,
+"x": 748,
+"y": 752
+},
+{
+"tipo": "aem",
+"v": 0,
+"giro": -24,
+"x": 1252,
+"y": 184
+},
+{
+"tipo": "nos",
+"v": 1,
+"giro": -24,
+"x": -36,
+"y": 1016
+},
+{
+"tipo": "msd",
+"v": 1,
+"giro": 0,
+"x": -12,
+"y": 748
+},
+{
+"tipo": "summit",
+"v": 1,
+"giro": 24,
+"x": 2176,
+"y": 296
+},
+{
+"tipo": "arrancones",
+"v": 1,
+"giro": 0,
+"x": 1632,
+"y": 0
+},
+{
+"tipo": "jegs",
+"v": 1,
+"giro": 16,
+"x": 1756,
+"y": 992
+},
+{
+"tipo": "aem",
+"v": 0,
+"giro": 8,
+"x": 1848,
+"y": 716
+},
+{
+"tipo": "nos_pastilla",
+"v": 0,
+"giro": 24,
+"x": -24,
+"y": 352
+},
+{
+"tipo": "summit",
+"v": 0,
+"giro": -84,
+"x": 524,
+"y": -20
+},
+{
+"tipo": "msd",
+"v": 0,
+"giro": -16,
+"x": 1028,
+"y": 980
+},
+{
+"tipo": "turbo",
+"v": 0,
+"giro": -12,
+"x": 1508,
+"y": 1040,
+"encima": true
+},
+{
+"tipo": "botella",
+"v": 0,
+"giro": -12,
+"x": 60,
+"y": 68,
+"encima": true
+},
+{
+"tipo": "2step",
+"v": 0,
+"giro": -8,
+"x": 2212,
+"y": 72,
+"encima": true
+},
+{
+"tipo": "moroso",
+"v": 0,
+"giro": -12,
+"x": 1480,
+"y": 680,
+"encima": true
+},
+{
+"tipo": "holley",
+"v": 0,
+"giro": 12,
+"x": 2200,
+"y": 1020,
+"encima": true
+},
+{
+"tipo": "aeromotive",
+"v": 0,
+"giro": 12,
+"x": 1540,
+"y": 376,
+"encima": true
+},
+{
+"tipo": "cuarto",
+"v": 0,
+"giro": -12,
+"x": 72,
+"y": 972,
+"encima": true
+},
+{
+"tipo": "fueltech",
+"v": 0,
+"giro": 12,
+"x": 2212,
+"y": 488,
+"encima": true
+},
+{
+"tipo": "arrancones",
+"v": 0,
+"giro": 4,
+"x": 660,
+"y": 644,
+"encima": true
+},
+{
+"tipo": "nos",
+"v": 0,
+"giro": -12,
+"x": 1176,
+"y": 64,
+"encima": true
+},
+{
+"tipo": "summit",
+"v": 0,
+"giro": 0,
+"x": 68,
+"y": 576,
+"encima": true
+},
+{
+"tipo": "msd",
+"v": 0,
+"giro": -4,
+"x": 716,
+"y": 116,
+"encima": true
+},
+{
+"tipo": "aem",
+"v": 0,
+"giro": -12,
+"x": 1112,
+"y": 796,
+"encima": true
+},
+{
+"tipo": "jegs",
+"v": 0,
+"giro": -12,
+"x": 1080,
+"y": 356,
+"encima": true
+},
+{
+"tipo": "chevrolet",
+"v": 2,
+"giro": 12,
+"x": 1592,
+"y": 104,
+"encima": true
+},
+{
+"tipo": "ford",
+"v": 2,
+"giro": 12,
+"x": 648,
+"y": 924,
+"encima": true
+},
+{
+"tipo": "rooster_r",
+"v": 2,
+"giro": -12,
+"x": 1580,
+"y": 880,
+"encima": true
+},
+{
+"tipo": "chevrolet",
+"v": 1,
+"giro": 12,
+"x": 2072,
+"y": 852,
+"encima": true
+},
+{
+"tipo": "ford",
+"v": 1,
+"giro": 12,
+"x": 172,
+"y": 164,
+"encima": true
+},
+{
+"tipo": "rooster_r",
+"v": 1,
+"giro": 0,
+"x": 2016,
+"y": 236,
+"encima": true
+},
+{
+"tipo": "chevrolet",
+"v": 0,
+"giro": -12,
+"x": 264,
+"y": 796,
+"encima": true
+},
+{
+"tipo": "ford",
+"v": 0,
+"giro": -12,
+"x": 1756,
+"y": 504,
+"encima": true
+},
+{
+"tipo": "rooster_r",
+"v": 0,
+"giro": 0,
+"x": 488,
+"y": 476,
+"encima": true
+}
+]
+}

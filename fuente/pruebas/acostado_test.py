@@ -1,7 +1,7 @@
 # Fondos con el teléfono acostado (7 nov 2026, Daniel: "cuando lo acuesta simplemente le hace zoom al fondo… que se vea con
 # el mismo zoom con el que se ve un fondo cuando está el teléfono en vertical"). fuente/fondos/acostados.py arma cada fondo
 # de lado (2700×1290) con los mismos stickers; build.py lo deja en fondos/<id>_h.webp con sus formas de Práctica.
-#  A. Los 7 fondos traen su versión acostada (proporción de lado) y sus formas verde y roja de Práctica (que cubran
+#  A. Los 8 fondos traen su versión acostada (proporción de lado) y sus formas verde y roja de Práctica (que cubran
 #     4–22 % de la pantalla, como las verticales).
 #  B. Con el teléfono acostado y "Toda la app" (iPhone, S24 Ultra, S25 con la barra de arriba): el fondo es el acostado y
 #     los stickers salen del tamaño que en vertical (a lo más 8 % más grandes; antes ~2.2 veces).
@@ -20,7 +20,7 @@ SH = os.path.join(AQUI, 'capturas', '')
 os.makedirs(SH, exist_ok=True)
 PUERTO = 8791
 URL = f'http://localhost:{PUERTO}/index.html'
-FONDOS = ['combinado', 'combinado_rojo', 'botella_nos', 'neon', 'rojo', 'blanco_negro', 'gallos']
+FONDOS = ['combinado', 'combinado_rojo', 'botella_nos', 'neon', 'rojo', 'blanco_negro', 'gallos', 'rooster']
 UA_ANDROID = 'Mozilla/5.0 (Linux; Android 15; SM-S931B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36'
 
 fallas = []
@@ -66,7 +66,7 @@ def main():
             chk(m.width > m.height and 4 <= cubre <= 22, f'A. {fid}: forma {c} del acostado ({m.width}×{m.height}) cubre {cubre:.1f} % de la pantalla')
     html = open(os.path.join(DIST, 'index.html'), encoding='utf-8').read()
     ARRIBA_H = json.loads(re.search(r'const ARRIBA_H = (\{[^}]*\})', html).group(1))
-    chk(sorted(ARRIBA_H) == sorted(FONDOS), f'A. build.py dejó el color de arriba de los 7 acostados ({sorted(ARRIBA_H)})')
+    chk(sorted(ARRIBA_H) == sorted(FONDOS), f'A. build.py dejó el color de arriba de los 8 acostados ({sorted(ARRIBA_H)})')
 
     srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(PUERTO), '-d', DIST], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     time.sleep(0.7)

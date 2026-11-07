@@ -73,7 +73,7 @@ def main():
             b = p.chromium.launch()
             man = json.load(open(os.path.join(DIST, 'manifest.webmanifest'), encoding='utf-8'))
             chk(man['theme_color'] == man['background_color'] == '#141618', f"M. el manifiesto arranca del color de la carga ({man['theme_color']}, {man['background_color']})")
-            chk(len(ARRIBA) == 7 and all(len(v) == 3 for v in ARRIBA.values()), f'M. build.py dejó el color de arriba de los 7 fondos ({sorted(ARRIBA)})')
+            chk(len(ARRIBA) == 8 and all(len(v) == 3 for v in ARRIBA.values()), f'M. build.py dejó el color de arriba de los 8 fondos ({sorted(ARRIBA)})')
 
             # A. cada fondo, oscuro y claro, con los tres velos: la franja = lo de arriba del fondo con su velo
             for fid in sorted(ARRIBA):
