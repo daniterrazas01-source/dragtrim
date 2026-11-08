@@ -1,8 +1,9 @@
 """Fondo "Gallos": el Blanco y negro con los logos de Rooster Racing (el equipo de Daniel) como stickers (25 oct 2026).
 
 - Logo 1 (archivo/originales/logo_rooster_racing.png): solo la R roja con flamas (sin el texto), sticker con borde
-  blanco y orilla negra; van tres.
-- Logo 2 (archivo/originales/logo_rrg.png): el logo RRG completo, sobre un sticker negro con borde blanco.
+  blanco y orilla negra; van cinco (eran tres; 8 nov 2026, Daniel: "la R con flamas que aparezca otras 2 veces más").
+- Logo 2 (archivo/originales/logo_rrg.png): el logo RRG completo, sobre un sticker negro con borde blanco; van cuatro (era
+  uno; Daniel: "que aparezca el sticker de RRG otras 3 veces").
 Toma el Blanco y negro original (archivo/originales/fondo_marcas_blanco_negro_sin_rooster.png; el de la app no se
 toca) y escribe:
   fuente/fondos/fondo_marcas_gallos.png              el fondo (build.py lo pasa a WebP y lo agrega a los fondos)
@@ -23,6 +24,12 @@ LUGAR = [
     ('r_flamas', dict(cx=106, cy=640, ancho=200, giro=6)),   # izquierda, a media pantalla
     ('r_flamas', dict(cx=100, cy=330, ancho=172, giro=-5)),  # izquierda, arriba
     ('r_flamas', dict(cx=442, cy=600, ancho=172, giro=-8)),  # derecha, a media pantalla
+    # 8 nov 2026: 3 RRG y 2 R más; a la izquierda quedan R, RRG, R, RRG, R y a la derecha RRG, R, R, RRG
+    ('rrg', dict(cx=108, cy=482, ancho=166, giro=5)),        # izquierda, entre las dos R
+    ('rrg', dict(cx=104, cy=878, ancho=172, giro=-6)),       # izquierda, abajo
+    ('rrg', dict(cx=438, cy=812, ancho=166, giro=7)),        # derecha, abajo
+    ('r_flamas', dict(cx=440, cy=392, ancho=180, giro=7)),   # derecha, arriba de la otra R
+    ('r_flamas', dict(cx=112, cy=1062, ancho=186, giro=-7)), # izquierda, hasta abajo
 ]
 K = 1290 / 540   # el fondo original mide 1290 px de ancho
 

@@ -12,7 +12,7 @@ stickers repetidos):
     versión (cambio(): la misma marca en blanco o en negro, en rojo o en verde…), así no se ve que se repiten.
     RECETA dice cuáles, dónde, con qué giro y en qué versión; no se inventa ningún sticker;
   - Botella NOS = Combinado rojo acostado + la botella (sale de comparar los dos verticales), en medio;
-  - Gallos = Blanco y negro acostado + los logos de Rooster Racing (logos_rooster.py) en LUGAR_ACOSTADO.
+  - Gallos = Blanco y negro acostado + los logos de Rooster Racing (logos_rooster.py) en LUGAR_ACOSTADO (5 R y 4 RRG).
 Escribe acostados/fondo_marcas_<id>.png y brillo/acostados/<id>-<color>.png (las formas que se prenden en Práctica,
 con la misma receta; las copias en su otra versión no se prenden); build.py los pasa a WebP (fondos/<id>_h.webp y
 fondos/<id>_h_brillo_<color>.webp) y la app los usa con la pantalla de lado (style.css, @media (orientation: landscape)).
@@ -105,6 +105,12 @@ LUGAR_ACOSTADO = [
     ('r_flamas', dict(cx=150, cy=140, ancho=172, giro=-5)),  # izquierda, arriba
     ('r_flamas', dict(cx=262, cy=405, ancho=200, giro=6)),   # izquierda, abajo
     ('r_flamas', dict(cx=850, cy=420, ancho=172, giro=-8)),  # derecha, abajo
+    # 8 nov 2026 (como de pie: 4 RRG y 5 R en total)
+    ('rrg', dict(cx=362, cy=232, ancho=166, giro=6)),        # izquierda, junto al árbol
+    ('rrg', dict(cx=776, cy=252, ancho=166, giro=-6)),       # derecha, junto al árbol
+    ('rrg', dict(cx=1046, cy=455, ancho=150, giro=4)),       # derecha, abajo en la orilla
+    ('r_flamas', dict(cx=100, cy=285, ancho=160, giro=7)),   # izquierda, en medio
+    ('r_flamas', dict(cx=1036, cy=288, ancho=160, giro=-7)), # derecha, en medio
 ]
 
 

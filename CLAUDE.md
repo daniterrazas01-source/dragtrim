@@ -103,6 +103,12 @@ mejor?").
    y deja su forma y su huella en `brillo/rooster-gallos*.png`; `hacer_mascaras.py` (PROPIOS, LOGOS['gallos'] = los del
    Blanco y negro) prende esos logos en verde y en rojo y salta solos los que quedaron tapados (JEGS, STRANGE, cápsula
    NOS). Brillo: verde 12.1 %, rojo 15.3 %.
+   **Más logos de Rooster en Gallos** (0.8.3, **sin publicar**; 8 nov, Daniel: "ponle que aparezca el sticker de RRG otras 3
+   veces y el de la R con flamas… otras 2 veces más, o sean 5"): **5 R y 4 RRG**, de pie (LUGAR: a la izquierda R, RRG, R,
+   RRG, R y a la derecha RRG, R, R, RRG, todos fuera de la columna del árbol) y acostado (LUGAR_ACOSTADO en acostados.py,
+   a los dos lados del árbol, sin tocar la orilla). Tapan más logos del Blanco y negro: `hacer_mascaras.py` ahora también
+   salta los que quedan tapados **en parte** por un logo propio (punto a ≤16 px de la huella que ya no se encuentra; p. ej.
+   NITROUS OUTLET bajo el RRG de abajo a la derecha). Brillo de pie: verde 14.2 %, rojo 17.1 %.
    **Fondos acostados** (**publicado en la 0.8.2**, 7 nov; Daniel: "cuando lo acuesta simplemente le hace zoom al fondo… que
    se vea con el mismo zoom con el que se ve un fondo cuando está el teléfono en vertical… hazlo con todos los fondos"): con
    la pantalla de lado (`@media (orientation: landscape)` sin `html.girada`; también tablets y computadora) cada fondo usa
