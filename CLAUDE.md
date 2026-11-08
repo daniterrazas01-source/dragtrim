@@ -103,7 +103,7 @@ mejor?").
    y deja su forma y su huella en `brillo/rooster-gallos*.png`; `hacer_mascaras.py` (PROPIOS, LOGOS['gallos'] = los del
    Blanco y negro) prende esos logos en verde y en rojo y salta solos los que quedaron tapados (JEGS, STRANGE, cápsula
    NOS). Brillo: verde 12.1 %, rojo 15.3 %.
-   **Más logos de Rooster en Gallos** (0.8.3, **sin publicar**; 8 nov, Daniel: "ponle que aparezca el sticker de RRG otras 3
+   **Más logos de Rooster en Gallos** (**publicado en la 0.8.3**, 8 nov; Daniel: "ponle que aparezca el sticker de RRG otras 3
    veces y el de la R con flamas… otras 2 veces más, o sean 5"): **5 R y 4 RRG**, de pie (LUGAR: a la izquierda R, RRG, R,
    RRG, R y a la derecha RRG, R, R, RRG, todos fuera de la columna del árbol) y acostado (LUGAR_ACOSTADO en acostados.py,
    a los dos lados del árbol, sin tocar la orilla). Tapan más logos del Blanco y negro: `hacer_mascaras.py` ahora también
@@ -559,7 +559,8 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.8.2** (7 nov 2026, Daniel: "Sí, publícala": los 8
+caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.8.3** (8 nov 2026, Daniel: "Sí, publícala": el fondo
+Gallos con 5 R con flamas y 4 RRG, de pie y acostado, punto 7); antes **0.8.2** (7 nov 2026: los 8
 fondos con su versión para el teléfono acostado, con los stickers del mismo tamaño que de pie; Práctica acostada con el árbol de
 arriba a abajo y los botones 1/3 más chicos; fondo nuevo "Rooster" con 3 R de Rooster Racing, 3 Ford, 3 Chevrolet y las marcas
 que eligió Daniel; punto 7); antes **0.8.1** (1 nov 2026: las carátulas se llaman 1, 2
