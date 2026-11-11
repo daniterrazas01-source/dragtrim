@@ -4,6 +4,9 @@ Medidor de tiempos de arrancones (1/8 y 1/4 de milla) con el GPS y el aceleróme
 teléfono, más un simulador de semáforo para practicar la salida. El dueño (Daniel) corre en
 autódromo con semáforo profesional. **Habla con él en español**, de forma clara y sin jerga
 técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro estás.
+También en español lo que ve en la app mientras trabajas: la descripción de cada paso (comandos, búsquedas,
+archivos) y las tareas (1 nov, Daniel: "estás poniendo las instrucciones en inglés… ¿puedes ponerlas en español
+mejor?").
 
 - App publicada (GitHub Pages): https://daniterrazas01-source.github.io/dragtrim/
 - Repo: `daniterrazas01-source/dragtrim`. Pages sirve la raíz de **`gh-pages`** (confirmado con el
@@ -86,7 +89,7 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
      (build.py lo toma de `src/icono/`). En iPhone el ícono ya instalado no cambia (iOS lo guarda al instalar; no pedir
      reinstalar); las instalaciones nuevas sí lo traen.
 
-7. **Fondos de pantalla** (beta 0.4): 6 fondos sticker bomb que Daniel hizo (+ "Gallos" desde 0.6.2) (`fuente/fondos/*.png`,
+7. **Fondos de pantalla** (beta 0.4): 6 fondos sticker bomb que Daniel hizo (+ "Gallos" desde 0.6.2 y "Rooster" desde 0.8.2) (`fuente/fondos/*.png`,
    el build los convierte a WebP en `fondos/`). Con fondo, la app usa estilo sticker: paneles con
    borde blanco, títulos como etiqueta chueca, color principal según el fondo (neón / rojo / blanco).
    Ajustes: elegir fondo o "Sin fondo" y qué tanto se ve (velo). Por defecto: Combinado, nivel medio.
@@ -100,6 +103,46 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    y deja su forma y su huella en `brillo/rooster-gallos*.png`; `hacer_mascaras.py` (PROPIOS, LOGOS['gallos'] = los del
    Blanco y negro) prende esos logos en verde y en rojo y salta solos los que quedaron tapados (JEGS, STRANGE, cápsula
    NOS). Brillo: verde 12.1 %, rojo 15.3 %.
+   **Más logos de Rooster en Gallos** (**publicado en la 0.8.3**, 8 nov; Daniel: "ponle que aparezca el sticker de RRG otras 3
+   veces y el de la R con flamas… otras 2 veces más, o sean 5"): **5 R y 4 RRG**, de pie (LUGAR: a la izquierda R, RRG, R,
+   RRG, R y a la derecha RRG, R, R, RRG, todos fuera de la columna del árbol) y acostado (LUGAR_ACOSTADO en acostados.py,
+   a los dos lados del árbol, sin tocar la orilla). Tapan más logos del Blanco y negro: `hacer_mascaras.py` ahora también
+   salta los que quedan tapados **en parte** por un logo propio (punto a ≤16 px de la huella que ya no se encuentra; p. ej.
+   NITROUS OUTLET bajo el RRG de abajo a la derecha). Brillo de pie: verde 14.2 %, rojo 17.1 %.
+   **Fondos acostados** (**publicado en la 0.8.2**, 7 nov; Daniel: "cuando lo acuesta simplemente le hace zoom al fondo… que
+   se vea con el mismo zoom con el que se ve un fondo cuando está el teléfono en vertical… hazlo con todos los fondos"): con
+   la pantalla de lado (`@media (orientation: landscape)` sin `html.girada`; también tablets y computadora) cada fondo usa
+   su versión acostada `fondos/<id>_h.webp` (2260×1080) y en Práctica sus formas `fondos/<id>_h_brillo_<color>.webp`: los
+   stickers salen del tamaño que de pie (~4 % más grandes; antes ~2.2 veces). Variables `--fondo-url-h`, `--brillo-verde-h`
+   y `--brillo-rojo-h` (aplicarFondo; si faltan, el vertical); Android: `ARRIBA_H` (build.py) para la franja de la hora
+   (`fondoAcostado()` en pintarBarra); `precargarAcostado()` baja el acostado 2.6 s después de abrir (no parpadea al girar
+   y queda guardado para la pista sin señal), salvo con "No girar" en un teléfono (ahí nunca se ve). Los arma
+   `fuente/fondos/acostados.py` (2700×1290; solo numpy y PIL): a la izquierda las primeras 1290 filas del vertical, a la
+   derecha las últimas 1290 (las 216 de en medio no se ven) y la unión de 120 px tapada con 7–9 stickers completos del mismo
+   fondo, apilados con su sombra; las copias casi siempre en su **otra versión** (blanco↔negro; rojo↔verde; en Rojo
+   rojo↔negro; en Neón neón↔negro) para que no se note que se repiten; no prenden en Práctica. `RECETA` = qué sticker,
+   dónde, giro y versión; la buscó `acostados_buscar.py` (necesita scipy; 6 semillas por fondo, escogidas a ojo; `SIN` =
+   stickers que se separan mal). Botella NOS = Combinado rojo acostado + la botella en medio; Gallos = Blanco y negro
+   acostado + los logos de Rooster en `LUGAR_ACOSTADO` (dos R a la izquierda, R y RRG a la derecha). Si cambia un fondo
+   vertical o sus formas de Práctica, volver a correr acostados.py (y si cambian sus stickers, rehacer su receta).
+   acostado_test.py lo revisa. Vista previa: "Drag Tree en horizontal" con selector de fondo y "Nuevo / Antes".
+   **Fondo "Rooster"** (**publicado en la 0.8.2**, 7 nov; Daniel: "añadir un fondo más, que se llame Rooster… Ford y
+   Chevrolet… que aparezcan tres veces cada uno… y los logos de marcas que ya tenemos: NOS, AEM, Holley, Summit,
+   Arrancones, Two Step, Fueltech, Jex, MSD, Cuarto de Milla, la botellita de nitro, Moroso, el turbito y Aeromotive";
+   **"Jex" se tomó como JEGS**, el de cuadritos; si era ZEX, cambiarlo en STICKERS): 8.º fondo, color principal rojo
+   (`#ff3d2e`), colores blanco, negro y el rojo de Rooster Racing (los stickers de neón pasan a rojo o blanco) + el azul
+   de Ford y el dorado de Chevrolet. Lo arma `fuente/fondos/rooster.py`: saca completos los stickers de esas marcas de los
+   fondos de Daniel (STICKERS: fondo, un punto del contorno negro de cada pieza, borde blanco; las palabras HOLLEY, MOROSO,
+   2-STEP y AEROMOTIVE se juntan por sus letras y se cierran los huequitos del contorno), dibuja Ford (óvalo y "Ford" en
+   **Yellowtail**, Apache 2.0, `rooster/letras/`) y Chevrolet (el moño: una cruz inclinada, dorado en dos tonos) con
+   orilla negra, borde blanco y sombra; luego (Daniel: "agrégale que aparezca tres veces este logo, el de la R con flama,
+   como en el fondo de gallos") **3 R con flamas** de Rooster Racing, el mismo sticker de Gallos (`logos_rooster.py`).
+   Encima, completos y repartidos: las 3 R, 3 Ford (2 azules, 1 negro), 3 Chevrolet (2 dorados, 1 rojo) y uno de cada
+   marca (las R, Ford y Chevrolet lejos de la columna del árbol de Práctica); abajo, tapando todo, más de las mismas marcas
+   en sus dos versiones (VERSIONES), parejo entre marcas. De pie y acostado a la vez (los stickers del mismo tamaño).
+   Práctica: verde = las R, Ford, Chevrolet, AEM y JEGS de encima; rojo = las R, Ford, Chevrolet y lo rojo.
+   `rooster/receta.json` = el acomodo (`python3 rooster.py buscar N` busca otro, necesita scipy; `python3 rooster.py`
+   arma los PNG). Ojo: Ford y Chevrolet son marcas registradas, como los demás stickers (para tiendas de apps, cambiarlas).
    **Letra tipo Rooster Racing** (25 oct, con todos los fondos y sin fondo): **Saira Black Italic** (OFL, la más parecida
    a la letra del logo; `fuente/app/src/fuentes/`; build.py la mete en index.html como data URI) en lo que Daniel marcó:
    títulos de cada pantalla (`h2`), etiquetas (`.lab`: Modo, Árbol, Peso…), todos los selectores (`.seg button`), botones
@@ -149,6 +192,14 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    izquierda y quién ganó + botones a la derecha; Práctica: zonas para los pulgares a los lados del árbol (solo: a la
    derecha); carga más chica. Respeta las zonas seguras (isla del iPhone a un lado). `horizontal_test.py` (iPhone 852×393
    con zonas 59/59/21, S24 Ultra 915×412, chico 667×375, S25 con la barra de arriba 780×336).
+   **Práctica acostada, árbol de arriba a abajo** (**publicado en la 0.8.2**, 7 nov; Daniel: "el semáforo se ve muy chiquito y
+   el botón está muy grande… que el semáforo abarque toda la pantalla verticalmente y el botón que sea una tercera parte
+   más chico"): el árbol al centro mide todo el alto (`--pt-alto`; focos `--pt-foco` ≈ 49 px en iPhone, antes 30); a la
+   izquierda "Cerrar", el tipo de árbol, la reacción del carril izquierdo y su zona; a la derecha el marcador, quién ganó,
+   la reacción del derecho y su zona (solo: la reacción a la izquierda y la zona a la derecha). Las zonas miden 2/3 de lo
+   de antes (`--pt-zona-alto`; ancho 70 %, en solo 78 % de su lado) y van abajo pegadas a la orilla. `.pt-top`, `.pt-res`
+   y `.pt-zones` son `display: contents` y sus piezas se acomodan sueltas en la cuadrícula. horizontal_test D lo revisa
+   (también que con los textos más largos nada se encime). Race 1 vs 1 no cambió.
    **Ajustes → Orientación** (0.7.2, Daniel: "si no lo activas, la aplicación no se acuesta"): `S.orientacion` = 'no'
    (de inicio: "No girar"), 'medir' ("Solo Medir": Medir, midiendo y su resultado, y Race 1 vs 1; no Práctica, Calcular,
    Historial ni Ajustes) o 'todo' ("Toda la app"). `aplicarOrientacion()` al principio de app.js (al girar, al cambiar de
@@ -174,6 +225,71 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
    cada fondo, `--acento`, en vez del ámbar de la maqueta; sin fondo, el de la app) y **sin cambiar la letra** ("esa sí no la
    quiero que se mueva": Saira Black Italic donde está hoy, p. ej. "1/8 de milla", "1/4 de milla", "Armar medición"; nada de
    Barlow). Luego lo dejó **para otro día**: no empezar hasta que lo pida (esa semana prueba la 0.7.3 y avisa si ve fallos).
+   **Rediseño hecho, sin publicar** (1 nov, Daniel: "vamos con el rediseño"; rama `claude/determined-bardeen-6zalo0`):
+   sin fondo, negro OLED (#050607); losas grafito (`--surface` #101317, orilla `--raya`, radio `--r-losa` 20 px) en vez de
+   paneles con borde; cristal (`--glass`, blur 22 px) solo en la barra de pestañas, la píldora de sensores, los selectores
+   y los botones secundarios; botones principales de 56 px con brillo; pestañas **flotantes** de cristal con íconos
+   (`--tabs-h` 62 px, a `--tabs-b` = máx(12 px, zona segura − 4) del borde: arriba de la rayita del iPhone) y una
+   pastilla que se desliza (los botones van encima: `position: relative; z-index: 1`, si no la pastilla se queda con el
+   toque). Medir: GPS a lo ancho con precisión, frecuencia y **rayitas de señal** (`#sBarras`, `#sGpsTxt` en
+   tickEstado) y la **última corrida** con sus tramos (`#ultCorrida`, `pintarUltima()` al mostrar Medir; se toca y abre
+   su boleta; desde la 0.8.1 trae una **tacha** arriba a la derecha, `#ultQuitar` dentro de `#ultCaja`, que la quita hasta la
+   siguiente corrida: guarda su id en `dragtrim.ultOculta`; 1 nov, Daniel: "un botón de tacha para poder quitar esa parte
+   cuando no la quieras ver"). Con fondo: el color del fondo en botones, selector y pestaña elegida; las losas son oscuras sobre el fondo
+   (sin el borde blanco de sticker); se quedan los títulos como etiqueta chueca y la boleta pegada. Árbol (Práctica y
+   Race): caja con orilla y focos con brillo (mismos colores; prenden al instante). De lado: el riel es una tarjeta de
+   cristal. Se quedaron a propósito: la letra, el logo, la boleta, la medición neutral y el **semáforo vertical de
+   atajos** de la 0.6.8 (la maqueta los ponía en fila; Daniel los pidió verticales). barra_test y horizontal_test se
+   ajustaron al negro nuevo y a la barra flotante. Vista previa: artefacto "Drag Tree 2026" (claude.ai/artifact/5RKtcktzFLSDrs6MRpKeJR; app.html = dist/index.html con las zonas
+   seguras en 59/34 px, como "Drag Tree en iPhone"). **Publicado en la 0.8** (1 nov, con las tres carátulas).
+   **Carátulas** (1 nov, Daniel: "Me gustó… vamos a hacer tres interfaces o tres carátulas: la original, la que me acabas
+   de dar y vamos a trabajar otra"; la tercera la describe él después): se eligen en **Ajustes → Apariencia** (`S.caratula`
+   'original' | '2026', de inicio '2026'; `aplicarCaratula()` en app.js pone `<html data-caratula>`). `style.css` es la
+   Original (la de la 0.7.4) y junto a cada regla que la 2026 cambia va su versión con `:where(:root[data-caratula="2026"])`
+   (no cambia la especificidad ni el orden); las reglas que la 2026 quita llevan `:where(:not([data-caratula="2026"]))`.
+   Se armó con `fuente/app/tools/fusionar_caratula.py` (compara las dos hojas completas regla por regla). Comprobado píxel a
+   píxel (4 fondos × claro/oscuro × 9 pantallas, sin Ajustes): la Original = la 0.7.4 (0 diferencias) y la 2026 = el
+   rediseño (1 píxel de orilla del logo en claro sin fondo, mismo tamaño y estilos: ruido). Lo que cambia de marcado: el
+   bloque de sensores de Medir sale de una plantilla por carátula (`tplStatusOriginal` / `tplStatus2026` en
+   index.template.html; tickEstado y pintarUltima aguantan que falten `#sBarras`, `#sGpsTxt` y `#ultCorrida`) y las
+   pestañas traen ícono (`.tabs button svg`, oculto en la Original). Al cambiar algo de la interfaz, revisarlo en las dos.
+   **Ajustes en dos pestañas** (1 nov, Daniel: "orientación, tema y fondo de pantalla… en una sola pestaña… y tipo de
+   carátula"): `#segAjustes` (role tablist, flechas/Inicio/Fin) con **General** (rollout, unidades, arranque válido,
+   acelerómetro, cámara, instalar, borrar historial) y **Apariencia** (carátula, fondo y qué tanto se ve, tema,
+   orientación, animaciones). Los botones de carátula dicen **1, 2 y 3** (= Original, 2026, Tablero; por dentro se guardan
+   con su nombre) y **sin explicación** (1 nov, Daniel: "en vez de que se llamen original, 2026 y tablero solo ponles 1, 2
+   y 3, además quita la explicación"; 0.8.1). Los `.seg` aceptan `aria-selected` además de `aria-checked`.
+   caratulas_test.py lo revisa; barra, calc y horizontal tocan antes `#ajTabApariencia`.
+   **Carátula Tablero** (1 nov, Daniel: "inspírate en los tableros de los autos de los 80s y 90s… entre digitales y
+   analógicos… y esencia de los 2000s… utiliza la skill de UI/UX"; UI/UX Pro Max: Skeuomorphism + Retro-Futurism sin
+   "glitch" + Y2K, su `--design-system` salió fuera de tema y se buscó por estilo/letra): `S.caratula = 'tablero'`. Se arma
+   **sobre la 2026**: todas las reglas de la 2026 llevan `:where(:root:is([data-caratula="2026"], [data-caratula="tablero"]))`
+   (y sus guardas `:not(... , ...)`) y al final de style.css va el bloque "CARÁTULA TABLERO" con
+   `:where(:root[data-caratula="tablero"])`, que le gana por ir después (al tocar una regla de la 2026, revisar el Tablero).
+   De noche: fibra de carbono (`--carbono`), cápsulas con bisel de cromo, ventanas de pantalla VFD que brillan
+   (`--vfd` #3ff0d2; `--brillo` usa currentColor), números de 7 segmentos **DSEG7 Classic Bold Italic** (OFL, de npm
+   `dseg` 0.46.0; `unicode-range` solo dígitos . : - para que las letras y unidades salgan en otra letra; se carga al haber
+   dígitos) y leyendas **Michroma** (OFL, Google Fonts); botones como teclas iluminadas, consola fija abajo con un foquito
+   en la tecla elegida (`.tabs::before`), selectores como interruptores con foquito (`.seg button…::after`). De día (tema
+   claro): medidores de cara blanca de los 2000 y ventanas LCD (`--ventana` #c4d0b3, números oscuros sin brillo), aluminio
+   cepillado. Con fondo: brilla el color del fondo (`--vfd`, `--boton`, `--led` = `--acento`; en Gallos/rojos parece LED
+   rojo). Lo analógico: velocímetro con aguja en Medir (`tplStatusTablero`: `.tb-dial` + `.tb-aguja`, `--vel` en `#sStatus`
+   desde tickEstado) y al medir (`#liveMain` es un velocímetro: arco, rayitas y zona roja con `::before`, aguja con
+   `::after`; `--vel` en `#medirSesion` = velocidad/240 km/h en espera y corriendo; en el centro, la velocidad o ya
+   corriendo la distancia, como el odómetro dentro del velocímetro). La Saira no cambia (títulos con cromo, selectores,
+   botones, pestañas). Práctica y Race 1 vs 1 siempre de noche (`.rc` redefine los colores). build.py mete en index.html
+   todas las `url("fuentes/*.woff2")` (licencias en `src/fuentes/OFL-*.txt`). Comprobado: con el Tablero agregado, la
+   Original y la 2026 siguen igual píxel a píxel (0 diferencias); caratulas_test.py (E) revisa el Tablero.
+   Vista previa: el mismo artefacto "Drag Tree 2026" (abajo, botones Original / 2026 / Tablero que tocan los de Ajustes
+   → Apariencia dentro de la app; se guarda como si se tocara ahí).
+   Daniel pidió (1 nov) que en el Tablero la precisión y la frecuencia del GPS fueran barras curvas como un tablero
+   digital de los 80 (foto de un Corvette) y luego lo descartó: "deja la carátula de tablero como anteriormente estaba"
+   (se hizo y se deshizo, commits d2abd1f y 51c9271). No retomarlo salvo que lo pida.
+   **Revisión final con impeccable y publicación (0.8, 1 nov**, Daniel: "revísala con impecable y luego publícala"; la
+   Original no se revisó: "esa ya está correcta"): el detector solo marcó cosas de la Original y de la plantilla común
+   (no se tocan); a ojo, en la 2026 y el Tablero de noche, de día y con fondo, se arregló que los recuadros de la boleta
+   (`.kpis > div`) dejen el valor abajo aunque el nombre ocupe dos renglones (en el Tablero "Tiempo 1/4 de milla"
+   desalineaba su pantalla) y las leyendas de los tramos de la última corrida en el Tablero (más grandes y separadas).
    **Deslizar entre pestañas** (0.6.2, 25 oct, Daniel lo pidió "como nativa de iPhone"): con el dedo a la izquierda/derecha
    se pasa a la pestaña de al lado. Al tomar el dedo de lado, las pestañas de los lados ya se pintan (`prepararVista`,
    `data-entra` = sin la cascada de entrada) a ±ancho y se mueven pegadas a la actual; cada una se pone a la altura donde
@@ -381,7 +497,8 @@ técnica innecesaria; prueba todo antes de publicar y dile qué tan seguro está
     - Publicado en la **0.7** (31 oct, Daniel: "publícala para probarla, jugar con ella para ver si le sale algún fallo").
       Al publicar, qr_camara_test.py falló solo en el caso extremo "QR lejos y de lado" (lo lee, pero a veces en más de 5 s;
       en la máquina de la mañana pasaba y su código no cambió): depende de la velocidad de la máquina. Si molesta en
-      teléfonos reales, hacer más seguido en el ciclo de qr.js los intentos ampliados.
+      teléfonos reales, hacer más seguido en el ciclo de qr.js los intentos ampliados. (7 nov, con la 0.8.2: en el
+      contenedor de ese día no lo leyó en ninguno de los 3 intentos, dos corridas; qr.js y la prueba siguen sin cambios.)
 
 15. **Graphify** (1 nov 2026, Daniel: "un segundo cerebro… que lo implementes en las sesiones que yo te lo pida, como en la
     de directory"): arma un mapa (grafo) del proyecto y se le pregunta (`graphify explain/path/query`) en vez de releer
@@ -415,11 +532,13 @@ fuente/app/src/index.template.html, style.css
 fuente/app/src/logo.svg, icono/  logo de la barra de arriba y de la carga, e ícono (los genera archivo/logo_pendiente/v5/hacer_logo.py)
 fuente/app/src/carga/          logo de Rooster Racing para la pantalla de carga
 fuente/app/tools/build.py      junta todo en un index.html autocontenido + sw.js + íconos (sube VERSION al cambiar)
+fuente/app/tools/fusionar_caratula.py   arma style.css con varias carátulas a partir de hojas completas (punto 7)
 fuente/publicar.sh             build + copia a la raíz
 fuente/matlab/                 script MATLAB Mobile v2.3 (mismo algoritmo); Drag_tree_v2_unico.m = todo en un archivo
 fuente/pruebas/                pruebas (ver abajo)
 fuente/fondos/                 fondos originales (PNG); se publican como fondos/*.webp
 fuente/fondos/brillo/          logos que se prenden en Práctica para fondos de un solo color (hacer_mascaras.py + PNG)
+fuente/fondos/acostados.py     fondos para el teléfono acostado (acostados/ y brillo/acostados/; RECETA de la unión, que busca acostados_buscar.py)
 archivo/                       respaldo: originales/ (archivos de Daniel sin tocar, p. ej. ROOSTER_RACING.xlsx)
                                y versiones/ (index.html de cada versión publicada); ideas/ (diseños guardados); ver archivo/LEEME.md
 .claude/settings.json          "enableWorkflows": true (Daniel lo pidió el 24 oct para usar `/effort ultracode`;
@@ -440,7 +559,15 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.7.4** (31 oct 2026: Race 1 vs 1, nunca baja el
+caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.8.3** (8 nov 2026, Daniel: "Sí, publícala": el fondo
+Gallos con 5 R con flamas y 4 RRG, de pie y acostado, punto 7); antes **0.8.2** (7 nov 2026: los 8
+fondos con su versión para el teléfono acostado, con los stickers del mismo tamaño que de pie; Práctica acostada con el árbol de
+arriba a abajo y los botones 1/3 más chicos; fondo nuevo "Rooster" con 3 R de Rooster Racing, 3 Ford, 3 Chevrolet y las marcas
+que eligió Daniel; punto 7); antes **0.8.1** (1 nov 2026: las carátulas se llaman 1, 2
+y 3, sin explicación; tacha en la última corrida de Medir para quitarla hasta la siguiente corrida, punto 7); antes **0.8**
+(1 nov 2026: tres carátulas en Ajustes →
+Apariencia: la Original, la 2026 (de inicio) y el Tablero; Ajustes en dos pestañas, General y Apariencia; revisión final
+con impeccable, punto 7); antes **0.7.4** (31 oct 2026: Race 1 vs 1, nunca baja el
 árbol en un solo teléfono: latidos entre los dos durante la cuenta y revisión 1 s antes de los ámbar; si aun así bajó en uno,
 la carrera queda anulada; sincronia_test.py + red_mala.mjs, punto 14); antes **0.7.3** (31 oct 2026: pulido con impeccable:
 avisos como recuadro con tinte, sin rebote, sensores alineados, boletas sin cortes y la boleta de la carrera más ancha de lado,
@@ -476,8 +603,10 @@ python3 instalar_test.py # guía de instalación por teléfono/navegador, iPad v
 python3 deslizar_test.py # deslizar el dedo entre pestañas (toques reales por CDP): pasa, regresa, orillas, corrida, semáforo
 python3 carga_test.py    # pantalla de carga: logo + "By" Rooster Racing, 2 s, se desvanece, sin "beta" (con ?carga)
 python3 barra_test.py    # Android: color de la franja de la hora/cámara (theme-color) por fondo, velo, tema, corrida, Práctica, carga; pantallas de Samsung
+python3 caratulas_test.py   # Ajustes General/Apariencia y las carátulas Original, 2026 y Tablero (cambio, se guarda, Medir, aguja, fondo)
 python3 atajos_test.py   # Medir: Corrida simulada / Race 1 vs 1 / Antes de la pista como semáforo (3 cuadros a la izquierda); abren su explicación a la derecha, una a la vez
 python3 horizontal_test.py  # teléfono acostado (iPhone, S24 Ultra, chico): riel, Medir, midiendo, resultado, Race 1 vs 1, Práctica, carga; vertical igual
+python3 acostado_test.py    # fondos acostados: el de lado con stickers del tamaño de pie, Práctica, "No girar" y de pie con el vertical, Android, precarga
 node carrera_nucleo_test.js; node qr_test.js; node enlace_test.js; node sala_nucleo_test.mjs   # Race 1 vs 1 sin navegador
 python3 carrera_test.py  # Race 1 vs 1: rival simulado, roja, dos teléfonos por WebRTC (códigos en texto) y QR con la cámara
 python3 sala_test.py     # Race 1 vs 1 por la sala en internet (sala_local.mjs): crear, unirse, carrera, errores, sin señal

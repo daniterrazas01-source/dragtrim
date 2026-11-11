@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = '0.7.4';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
+  const APP_VERSION = '0.8.3';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
@@ -11,7 +11,7 @@
     get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
   };
-  const DEF = { dist: 402.336, rollout_ft: 1, unidad: 'kmh', orientacion: 'no', v_confirma_kmh: 50, t_confirma: 8, usar_acc: true, tema: 'auto', anim: true, fondo: 'combinado', velo: '0.78',
+  const DEF = { dist: 402.336, rollout_ft: 1, unidad: 'kmh', orientacion: 'no', v_confirma_kmh: 50, t_confirma: 8, usar_acc: true, tema: 'auto', anim: true, fondo: 'combinado', velo: '0.78', caratula: '2026',
     // Semáforo con cámara (beta 0.6): zona del árbol por carril (normalizada al cuadro orig), cámara física elegida,
     // retraso cámara↔giroscopio medido por carril (últimos valores), sesgo del acelerómetro y correcciones con boleta (ms)
     cam: false, cam_arbol: 'pro', cam_zona: { izq: null, der: null }, cam_orig: null, cam_camara: null, cam_info: null,
@@ -300,15 +300,27 @@
     if (ses.fase === 'idle') {
       const s = sens.ultGps, vivo = s && nowS() - sens.ultGpsRec < 4;
       const pe = $('#sPrec');
+      // rayitas de señal (rediseño 2026): 5 con ±5 m o mejor, ninguna sin lecturas; el color dice si sirve para medir
+      let rayas = 0, tono = '', txt = 'Toca "Activar sensores"';
       if (!sens.activo) { pe.textContent = '—'; pe.className = 'val'; }
-      else if (!s) { pe.textContent = 'buscando…'; pe.className = 'val meh'; }
+      else if (!s) { pe.textContent = 'buscando…'; pe.className = 'val meh'; txt = 'Buscando señal: sal a cielo abierto'; }
       else {
         pe.textContent = `±${Math.round(s.hacc)} m`;
-        pe.className = 'val ' + (!vivo ? 'bad' : s.hacc <= 8 ? 'good' : s.hacc <= 15 ? 'meh' : 'bad');
+        tono = !vivo ? 'bad' : s.hacc <= 8 ? 'good' : s.hacc <= 15 ? 'meh' : 'bad';
+        pe.className = 'val ' + tono;
+        rayas = !vivo ? 0 : s.hacc <= 5 ? 5 : s.hacc <= 8 ? 4 : s.hacc <= 15 ? 3 : s.hacc <= 25 ? 2 : 1;
+        txt = !vivo ? 'Sin lecturas nuevas del GPS' : tono === 'good' ? 'Señal buena para medir' : tono === 'meh' ? 'Señal regular: busca cielo abierto' : 'Señal débil: espera o muévete a cielo abierto';
       }
+      const br = $('#sBarras'), gt = $('#sGpsTxt');   // solo en la carátula 2026
+      if (br) {
+        br.className = 'barras ' + tono;
+        [...br.children].forEach((x, i) => x.classList.toggle('on', i < rayas));
+      }
+      if (gt) gt.textContent = txt;
       const hz = sens.gpsDts.length ? 1 / median(sens.gpsDts) : NaN;
       $('#sHz').textContent = isFin(hz) ? `${hz < 1.5 ? hz.toFixed(1) : Math.round(hz)} Hz` : '—';
       $('#sVel').textContent = s ? `${fmtV(s.v * 3.6, 0)} ${velU()}` : '—';
+      $('#sStatus').style.setProperty('--vel', s && vivo ? Math.min(1, s.v * 3.6 / 240).toFixed(3) : '0');   // aguja del Tablero
       const ae = $('#sAcel');
       const accVivo = sens.ultAccRec > 0 && nowS() - sens.ultAccRec < 2;
       ae.textContent = accVivo && isFin(sens.accHz) ? `${Math.round(sens.accHz)} Hz` : (sens.activo ? 'sin datos' : '—');
@@ -373,6 +385,7 @@
     $('#sesTitulo').textContent = 'Esperando tu arranque';
     $('#sesTexto').textContent = 'La app no da la salida: arranca con el semáforo de la pista. El burnout, la alineación y el stage se ignoran.';
     $('#liveMain').innerHTML = `0<small>${velU()}</small>`;
+    $('#medirSesion').style.setProperty('--vel', '0');   // aguja del Tablero
     $('#liveSub').hidden = true; $('#track').hidden = true; $('#trackFill').style.width = '0';
     $('#btnTerminar').hidden = true; $('#btnCancelar').hidden = false;
     $('#eventLog').innerHTML = ''; $('#gpsLine').textContent = ses.demo ? 'Corrida simulada' : '';
@@ -438,6 +451,7 @@
         finCorrida(e.motivo);
       }
     }
+    if (ses.fase === 'corrida' || ses.fase === 'espera') $('#medirSesion').style.setProperty('--vel', Math.min(1, s.v * 3.6 / 240).toFixed(3));   // aguja del Tablero
     if (ses.fase === 'corrida') {
       const tope = ses.det.cfg.distancia_final + ses.det.cfg.margen_final_m;
       $('#liveMain').innerHTML = `${Math.round(ses.det.dVivo)}<small>m</small>`;
@@ -1175,7 +1189,36 @@
   }
 
   // ------------------------------------------------------------ navegación
+  // Última corrida en Medir (rediseño 2026): su tiempo, velocidad y tramos; tocarla abre su boleta
+  const CORTO = { '60 ft': "60'", '330 ft': "330'", '1/8 mi': '1/8', '1000 ft': "1000'", '1/4 mi': '1/4' };
+  async function pintarUltima() {
+    const b = $('#ultCorrida'), caja = $('#ultCaja');
+    if (!b || !caja) return;
+    const r = (await DB.todos()).find((x) => x.ok);
+    // la tacha la quita hasta la siguiente corrida (1 nov, Daniel): se guarda cuál se quitó
+    caja.hidden = !r || LS.get('dragtrim.ultOculta', null) === r.id;
+    caja.classList.remove('saliendo');
+    if (caja.hidden) return;
+    const Df = r.cfg.distancia_final, et = etPrincipal(r);
+    const tramos = (r.hitos || []).filter((h) => h.dist_m <= Df + 0.01 && isFin(h.t))
+      .map((h) => `<span>${CORTO[h.nombre] || esc(h.nombre)}<b>${h.t.toFixed(2)}</b></span>`).join('');
+    b.innerHTML = `<span class="k">Última corrida · ${Df < 300 ? '1/8' : '1/4'}${r.demo ? ' · simulada' : ''}</span>
+      <span class="stat-fila"><span class="val">${fmtT(et.t)}<small>s</small></span><span class="s">${fmtV(r.trampa_kmh)} ${velU()}</span></span>
+      <span class="tramos" style="--n:${(r.hitos || []).filter((h) => h.dist_m <= Df + 0.01).length || 1}">${tramos}</span>`;
+    b.setAttribute('aria-label', `Última corrida: ${fmtT(et.t)} segundos en ${nombreDist(Df)}. Abrir su boleta`);
+    b.onclick = () => mostrarResultado(r, false);
+    $('#ultQuitar').onclick = () => {
+      LS.set('dragtrim.ultOculta', r.id);
+      const conFoco = document.activeElement === $('#ultQuitar');
+      const fin = () => {
+        caja.hidden = true; caja.classList.remove('saliendo');
+        if (conFoco) { const p = [...document.querySelectorAll('#medirIdle .primary')].find((e) => e.offsetParent); if (p) p.focus({ preventScroll: true }); }
+      };
+      if (conAnim()) { caja.classList.add('saliendo'); setTimeout(fin, 160); } else fin();
+    };
+  }
   function mostrarVista(id, tabActivo) {
+    if (id === 'vMedir') pintarUltima();
     for (const v of document.querySelectorAll('.view')) { v.hidden = v.id !== id; if (v.hidden) delete v.dataset.entra; }   // data-entra: ver deslizar
     const tab = tabActivo || id;
     for (const b of document.querySelectorAll('.tabs button')) {
@@ -1330,7 +1373,7 @@
   seg('segUnidad', 'unidad', String);
   seg('segTema', 'tema', String);
   seg('segOrient', 'orientacion', String);
-  $('#segOrient').addEventListener('click', () => setTimeout(aplicarOrientacion, 0));
+  $('#segOrient').addEventListener('click', () => setTimeout(() => { aplicarOrientacion(); precargarAcostado(); }, 0));
   // la orientación se revisa al girar el teléfono, al cambiar de pantalla (Práctica, Race 1 vs 1, midiendo) y al iniciar
   if (mqLado) mqLado.addEventListener('change', aplicarOrientacion);
   if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', aplicarOrientacion);
@@ -1341,7 +1384,7 @@
   // elegido: con un texto largo ("Atmosférico", "Automático" a 320 px) los botones no miden lo mismo y la marca, que
   // los suponía iguales, quedaba corrida.
   function marcaSeg(s) {
-    const b = s && s.querySelector(':scope > button[aria-checked="true"]');
+    const b = s && s.querySelector(':scope > button:is([aria-checked="true"], [aria-selected="true"])');
     if (!b || !b.offsetWidth) return;
     const rb = b.getBoundingClientRect(), rs = s.getBoundingClientRect();   // con fracciones de píxel (offsetLeft redondea)
     s.style.setProperty('--seg-x', (rb.left - rs.left - s.clientLeft).toFixed(2) + 'px');   // desde el borde interior
@@ -1353,7 +1396,7 @@
     const mo = new MutationObserver((ms) => ms.forEach((m) => marcaSeg(m.target.closest && m.target.closest('.seg'))));
     document.querySelectorAll('.seg').forEach((s) => {
       ro.observe(s); s.querySelectorAll(':scope > button').forEach((b) => ro.observe(b));
-      mo.observe(s, { subtree: true, attributes: true, attributeFilter: ['aria-checked'] });
+      mo.observe(s, { subtree: true, attributes: true, attributeFilter: ['aria-checked', 'aria-selected'] });
       marcaSeg(s);
     });
   }
@@ -1366,6 +1409,7 @@
     { id: 'rojo', nombre: 'Rojo', acento: '#ff3d2e' },
     { id: 'blanco_negro', nombre: 'Blanco y negro', acento: '#ffffff' },
     { id: 'gallos', nombre: 'Gallos', acento: '#ff3d2e' },   // Blanco y negro + logos de Rooster Racing, el equipo de Daniel (0.6.2)
+    { id: 'rooster', nombre: 'Rooster', acento: '#ff3d2e' },   // sticker bomb con Ford, Chevrolet y las marcas que eligió Daniel (0.8.2)
   ];
   // Fuerza máxima del brillo de Práctica por fondo: build.py la calcula según cuánto cubren los stickers.
   const BRILLO = {"__BRILLO__": 1};
@@ -1377,6 +1421,10 @@
       raiz.style.setProperty('--fondo-url', `url("fondos/${f.id}.webp")`);
       raiz.style.setProperty('--brillo-verde', `url("fondos/${f.id}_brillo_verde.webp")`);
       raiz.style.setProperty('--brillo-rojo', `url("fondos/${f.id}_brillo_rojo.webp")`);
+      // con el teléfono acostado: el mismo fondo armado de lado (style.css, @media (orientation: landscape))
+      raiz.style.setProperty('--fondo-url-h', `url("fondos/${f.id}_h.webp")`);
+      raiz.style.setProperty('--brillo-verde-h', `url("fondos/${f.id}_h_brillo_verde.webp")`);
+      raiz.style.setProperty('--brillo-rojo-h', `url("fondos/${f.id}_h_brillo_rojo.webp")`);
       const bf = BRILLO[f.id] || {};
       raiz.style.setProperty('--brillo-v-max', String(bf.verde || 1));
       raiz.style.setProperty('--brillo-r-max', String(bf.rojo || 1));
@@ -1384,8 +1432,26 @@
       raiz.style.setProperty('--velo', S.velo);
     } else {
       raiz.removeAttribute('data-fondo');
-      for (const v of ['--fondo-url', '--acento', '--brillo-verde', '--brillo-rojo', '--brillo-v-max', '--brillo-r-max']) raiz.style.removeProperty(v);
+      for (const v of ['--fondo-url', '--acento', '--brillo-verde', '--brillo-rojo', '--brillo-v-max', '--brillo-r-max', '--fondo-url-h', '--brillo-verde-h', '--brillo-rojo-h']) raiz.style.removeProperty(v);
     }
+    precargarAcostado();
+  }
+  // El fondo acostado se baja y se prepara antes de girar el teléfono: así no parpadea al girar y queda guardado para
+  // abrir sin señal en la pista. En un teléfono con "No girar" nunca se usa (ahí la app se queda de pie).
+  let precargaH = null, esperaH = 0;
+  function precargarAcostado() {
+    clearTimeout(esperaH);
+    const f = FONDOS.find((x) => x.id === S.fondo);
+    if (!f || (S.orientacion === 'no' && Math.min(screen.width, screen.height) <= 500)) return;
+    const url = `fondos/${f.id}_h.webp`;
+    if (precargaH && precargaH.dataset.url === url) return;
+    esperaH = setTimeout(() => {   // después de la pantalla de carga, para no competir con lo que se ve al abrir
+      const img = new Image();
+      img.dataset.url = url; img.src = url;
+      if (img.decode) img.decode().catch(() => {});
+      precargaH = img;
+      for (const c of ['verde', 'rojo']) fetch(`fondos/${f.id}_h_brillo_${c}.webp`).catch(() => {});
+    }, 2600);
   }
   function pintarSelFondo() {
     const cont = $('#selFondo');
@@ -1412,12 +1478,60 @@
   }
   aplicarTema();
 
+  // ------------------------------------------------------------ carátulas (1 nov, Daniel: "tres interfaces")
+  // Ajustes → Apariencia. <html data-caratula> elige los estilos (style.css: cada carátula junto a la Original) y el
+  // bloque de sensores de Medir sale de su plantilla (index.template.html, tplStatus*). La tercera está por definirse.
+  const CARATULAS = {
+    // en Ajustes se llaman 1, 2 y 3, sin explicación (1 nov, Daniel); por dentro siguen con su nombre (se guarda así)
+    original: { tpl: 'tplStatusOriginal' },
+    2026: { tpl: 'tplStatus2026' },
+    tablero: { tpl: 'tplStatusTablero' },
+  };
+  function aplicarCaratula() {
+    if (!CARATULAS[S.caratula]) S.caratula = DEF.caratula;
+    const c = CARATULAS[S.caratula], st = $('#sStatus');
+    document.documentElement.setAttribute('data-caratula', S.caratula);
+    if (st.dataset.caratula !== S.caratula) {
+      st.replaceChildren(document.getElementById(c.tpl).content.cloneNode(true));
+      st.dataset.caratula = S.caratula;
+      tickEstado(); pintarUltima();
+    }
+  }
+  seg('segCaratula', 'caratula', String);
+  $('#segCaratula').addEventListener('click', aplicarCaratula);
+  aplicarCaratula();
+
+  // Ajustes en dos pestañas: General y Apariencia (carátula, fondo, tema, orientación, animaciones). Con las flechas
+  // del teclado se pasa de una a otra, como en cualquier lista de pestañas.
+  (() => {
+    const tabs = [...document.querySelectorAll('#segAjustes [role="tab"]')];
+    const elegir = (t, foco) => {
+      for (const b of tabs) {
+        const si = b === t;
+        b.setAttribute('aria-selected', String(si)); b.tabIndex = si ? 0 : -1;
+        $('#' + b.getAttribute('aria-controls')).hidden = !si;
+      }
+      if (foco) t.focus();
+    };
+    tabs.forEach((b, i) => {
+      b.onclick = () => elegir(b);
+      b.onkeydown = (e) => {
+        const k = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+        if (k === undefined) return;
+        e.preventDefault(); elegir(tabs[(k + tabs.length) % tabs.length], true);
+      };
+    });
+  })();
+
   // ------------------------------------------------------------ franja de la hora y la cámara en Android (0.6.7)
   // En Android (Samsung y los demás) la app instalada no se dibuja detrás de la hora y la batería: el sistema pinta esa
   // franja, la del hoyito de la cámara, del color de theme-color. Se le da el color que queda arriba de la pantalla
   // (el fondo con su velo, la corrida, Práctica, la carga) para que se vea como parte de la app. En iPhone no cambia
   // nada: ahí la app ya se ve detrás de la hora (black-translucent).
   const ARRIBA = {"__ARRIBA__": 1};   // build.py: color promedio de lo de arriba de cada fondo
+  const ARRIBA_H = {"__ARRIBA_H__": 1};   // … y de su versión acostada (teléfono de lado)
+  const mqAncha = window.matchMedia ? matchMedia('(orientation: landscape)') : null;
+  const fondoAcostado = () => !!(mqAncha && mqAncha.matches) && !document.documentElement.classList.contains('girada');
   const rgba = (txt) => { const m = String(txt).match(/[\d.]+/g) || []; return [+m[0] || 0, +m[1] || 0, +m[2] || 0, m.length > 3 ? +m[3] : 1]; };
   const encima = (c, abajo) => abajo.map((x, i) => c[i] * c[3] + x * (1 - c[3]));
   function pintarBarra() {
@@ -1427,7 +1541,7 @@
     let c;
     if (fid && ARRIBA[fid]) {
       const velo = document.body.classList.contains('sesion') ? 0.92 : (parseFloat(raiz.style.getPropertyValue('--velo')) || 0.78);
-      c = encima([...rgba(getComputedStyle(raiz).getPropertyValue('--velo-color')).slice(0, 3), velo], ARRIBA[fid]);
+      c = encima([...rgba(getComputedStyle(raiz).getPropertyValue('--velo-color')).slice(0, 3), velo], (fondoAcostado() && ARRIBA_H[fid]) || ARRIBA[fid]);
     } else c = rgba(getComputedStyle(document.body).backgroundColor).slice(0, 3);
     // lo que tapa la pantalla completa, de abajo hacia arriba
     for (const el of [document.body.classList.contains('practica') && $('#ptOverlay'), document.body.classList.contains('carrera') && $('#rc'), $('#camApuntar'), $('#carga')])
@@ -1438,9 +1552,11 @@
   // cambia sola con el tema, el fondo, el velo, la corrida, Práctica, la cámara y al quitarse la carga
   // (la clase de <html> no se vigila: cambia al deslizar entre pestañas y ahí no debe hacer trabajo de más)
   const vigiaBarra = new MutationObserver(pintarBarra);
-  vigiaBarra.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-fondo', 'style'] });
+  vigiaBarra.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-fondo', 'data-caratula', 'style'] });
   vigiaBarra.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true });
   matchMedia('(prefers-color-scheme: light)').addEventListener('change', pintarBarra);
+  // al girar el teléfono cambia el fondo (vertical o acostado); html.girada se pone al terminar el giro: otra vez después
+  if (mqAncha) mqAncha.addEventListener('change', () => { pintarBarra(); setTimeout(pintarBarra, 400); });
   pintarBarra();
   const inR = $('#inRollout');
   inR.value = S.rollout_ft;
@@ -1669,6 +1785,7 @@
     subir();
     return v;
   }
+  pintarUltima();   // la última corrida en Medir al abrir la app
   window.DragApp = {
     version: APP_VERSION, ajustes: S,
     sensoresActivos: () => sens.activo, activarSensores, pedirPantalla,

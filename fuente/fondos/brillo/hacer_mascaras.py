@@ -8,7 +8,8 @@ chicos y 2 grandes por color (pedidos de Daniel, 23 oct 2026).
 Cómo funciona: se separa cada sticker por la sombra gris que deja sobre el de abajo (blancos) o por su
 contorno negro (Neón; ahí también se usan cajas negras), se juntan las letras de un mismo logo, y se
 toman los logos de la lista LOGOS (cada uno por un punto dentro de él, en una imagen de 540 px de ancho).
-Uso:  python3 hacer_mascaras.py   (deja <fondo>-verde.png y <fondo>-rojo.png aquí; build.py los usa)
+Uso:  python3 hacer_mascaras.py   (deja <fondo>-verde.png y <fondo>-rojo.png aquí; build.py los usa); luego
+      python3 ../acostados.py, que hace con ellas las del teléfono acostado (brillo/acostados/)
 Para cambiar qué marcas se prenden, edita LOGOS y vuelve a correrlo.
 """
 import pathlib
@@ -393,10 +394,11 @@ def main():
     for fid, por_color in LOGOS.items():
         im = Image.open(FONDOS / f'fondo_marcas_{fid}.png').convert('RGB')
         im = im.resize((ANCHO, round(im.height * ANCHO / im.width)), Image.LANCZOS)
-        propios = huella = None
+        propios = huella = cerca = None
         if fid in PROPIOS:
             leer = lambda f: np.array(Image.open(AQUI / f).convert('L').resize(im.size, Image.NEAREST)) > 127
             propios, huella = leer(PROPIOS[fid][0]), leer(PROPIOS[fid][1])
+            cerca = ~erosionar(~huella, 16)   # a 16 px de un logo propio: si ya no se encuentra, es que quedó tapado en parte
         m, palabras = cuerpos(fid, im)
         etq, G, bb, area = grupos(m, palabras=palabras)
         de_comp = {c: r for r, comps in G.items() for c in comps}
@@ -413,6 +415,9 @@ def main():
                     sale |= np.isin(etq, G[de_comp[c]])
                 elif cajas is not None and cajas[y, x] > 0:
                     sale |= cajas == cajas[y, x]
+                elif cerca is not None and cerca[y, x]:
+                    print(f'{fid:15} {color:5} {nombre}: tapado en parte por un logo propio, no se prende')
+                    continue
                 else:
                     raise SystemExit(f'{fid} {color}: no encontré el logo {nombre} en ({x}, {y})')
                 n += 1

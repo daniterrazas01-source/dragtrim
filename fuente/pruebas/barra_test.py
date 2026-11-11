@@ -73,7 +73,7 @@ def main():
             b = p.chromium.launch()
             man = json.load(open(os.path.join(DIST, 'manifest.webmanifest'), encoding='utf-8'))
             chk(man['theme_color'] == man['background_color'] == '#141618', f"M. el manifiesto arranca del color de la carga ({man['theme_color']}, {man['background_color']})")
-            chk(len(ARRIBA) == 7 and all(len(v) == 3 for v in ARRIBA.values()), f'M. build.py dejó el color de arriba de los 7 fondos ({sorted(ARRIBA)})')
+            chk(len(ARRIBA) == 8 and all(len(v) == 3 for v in ARRIBA.values()), f'M. build.py dejó el color de arriba de los 8 fondos ({sorted(ARRIBA)})')
 
             # A. cada fondo, oscuro y claro, con los tres velos: la franja = lo de arriba del fondo con su velo
             for fid in sorted(ARRIBA):
@@ -90,8 +90,8 @@ def main():
                         chk(not errs, f'A. {fid} {tema} sin errores: ' + '; '.join(errs))
                         ctx.close()
 
-            # B. sin fondo: el color de la app; con tema Automático sigue al teléfono cuando cambia (modo oscuro al anochecer)
-            for tema, color in (('dark', '#24282c'), ('light', '#eef0ec')):
+            # B. sin fondo: el color de la app (negro OLED desde el rediseño 2026); con tema Automático sigue al teléfono cuando cambia (modo oscuro al anochecer)
+            for tema, color in (('dark', '#050607'), ('light', '#eef0ec')):
                 ctx, pg, errs = abrir(b, {'fondo': 'ninguno', 'tema': tema})
                 chk(barra(pg) == color, f'B. sin fondo, tema {tema}: {barra(pg)} = {color}')
                 chk(dist(deh(barra(pg)), arriba_pintado(pg)) <= 2, 'B. igual a lo pintado arriba')
@@ -100,20 +100,21 @@ def main():
             ctx, pg, errs = abrir(b, {'fondo': 'ninguno', 'tema': 'auto'}, esquema='dark')
             antes = barra(pg)
             pg.emulate_media(color_scheme='light'); pg.wait_for_timeout(150)
-            chk(antes == '#24282c' and barra(pg) == '#eef0ec', f'B. Automático: el teléfono pasa a claro y la franja también ({antes} -> {barra(pg)})')
+            chk(antes == '#050607' and barra(pg) == '#eef0ec', f'B. Automático: el teléfono pasa a claro y la franja también ({antes} -> {barra(pg)})')
             pg.emulate_media(color_scheme='dark'); pg.wait_for_timeout(150)
-            chk(barra(pg) == '#24282c', f'B. y regresa a oscuro ({barra(pg)})')
+            chk(barra(pg) == '#050607', f'B. y regresa a oscuro ({barra(pg)})')
             ctx.close()
 
             # C. cambiar fondo, velo y tema en Ajustes: cambia al momento
             ctx, pg, errs = abrir(b, {'fondo': 'combinado', 'tema': 'dark', 'velo': '0.78'})
             pg.click('.tabs button[data-view="vAjustes"]'); pg.wait_for_timeout(300)
+            pg.click('#ajTabApariencia'); pg.wait_for_timeout(150)   # fondo y velo están en Ajustes → Apariencia
             pg.click('#segVelo button[data-v="0.64"]'); pg.wait_for_timeout(150)
             chk(dist(deh(barra(pg)), encima(VELO_OSC, 0.64, ARRIBA['combinado'])) <= 1.5, f'C. velo "Mucho": {barra(pg)}')
             pg.click('#selFondo button:has-text("Rojo") >> nth=-1'); pg.wait_for_timeout(150)
             chk(dist(deh(barra(pg)), encima(VELO_OSC, 0.64, ARRIBA['rojo'])) <= 1.5, f'C. fondo Rojo: {barra(pg)}')
             pg.click('#selFondo button:has-text("Sin fondo")'); pg.wait_for_timeout(150)
-            chk(barra(pg) == '#24282c', f'C. Sin fondo: {barra(pg)}')
+            chk(barra(pg) == '#050607', f'C. Sin fondo: {barra(pg)}')
             chk(not errs, 'C. sin errores: ' + '; '.join(errs))
             ctx.close()
 
@@ -136,7 +137,7 @@ def main():
                     antes = barra(pg)
                     pg.click('.tabs button[data-view="vPractica"]'); pg.wait_for_timeout(300)
                     pg.click('#btnPractica'); pg.wait_for_timeout(300)
-                    if fid == 'ninguno': esperado = (0x14, 0x16, 0x18)
+                    if fid == 'ninguno': esperado = (0x05, 0x06, 0x07)   # rediseño 2026: Práctica en negro OLED
                     else: esperado = encima(VELO_OSC, 0.84, encima(VELO_OSC if tema == 'dark' else VELO_CLA, 0.78, ARRIBA[fid]))
                     chk(dist(deh(barra(pg)), esperado) <= 1.5, f'E. Práctica {fid} {tema}: {barra(pg)} = {hexa(esperado)}')
                     chk(dist(deh(barra(pg)), arriba_pintado(pg)) <= 30, f'E. se parece a lo pintado arriba ({hexa(arriba_pintado(pg))})')
@@ -194,7 +195,7 @@ def main():
                 pg.goto(f'http://localhost:{PUERTO}/index.html', wait_until='domcontentloaded'); pg.wait_for_timeout(400)
                 r = pg.evaluate("""(() => { const top = document.querySelector('.brand').getBoundingClientRect(), t = document.querySelector('.tabs').getBoundingClientRect(),
                     b = document.querySelector('.tabs button').getBoundingClientRect();
-                    return { logo: top.top >= 32, tabs: Math.abs(t.bottom - innerHeight) < 1 && b.bottom <= innerHeight - 24 + 1 }; })()""")
+                    return { logo: top.top >= 32, tabs: t.bottom <= innerHeight - 20 + 1 && t.bottom > innerHeight - 70 && b.bottom <= innerHeight - 24 + 1 }; })()""")
                 im = Image.open(io.BytesIO(pg.screenshot(clip={'x': 0, 'y': 0, 'width': 412, 'height': 32}))).convert('L')
                 varia = ImageStat.Stat(im).stddev[0]
                 chk(r['logo'] and r['tabs'], f'H. {fid}: el logo queda abajo de la hora y la cámara y las pestañas arriba de la barra de gestos ({r})')

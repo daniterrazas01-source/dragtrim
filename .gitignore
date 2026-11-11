@@ -2,3 +2,7 @@ fuente/app/dist/
 fuente/pruebas/capturas/
 __pycache__/
 graphify-out/
+# fondos acostados: vistas, catálogos y recetas de prueba de acostados_buscar.py (se rearman; lo que vale está en RECETA)
+fuente/fondos/acostados/vista_*.png
+fuente/fondos/acostados/catalogo_*.png
+fuente/fondos/acostados/recetas_*.json

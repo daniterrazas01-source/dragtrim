@@ -7,7 +7,8 @@
 #  B. Midiendo (corrida simulada): título, velocidad y "Cancelar" a la vista; el resultado con la boleta a la izquierda.
 #  C. Race 1 vs 1 (rival simulado): inicio con sus tres botones, sala con "Listo" a la vista, el árbol completo y centrado
 #     con su "Stage", y la boleta de los dos carriles con "Otra carrera" a la vista.
-#  D. Práctica solo y 1 vs 1: el árbol completo y las zonas para los pulgares a los lados.
+#  D. Práctica solo y 1 vs 1: el árbol de arriba a abajo (0.8.2), las zonas para los pulgares a los lados a 2/3 de lo que
+#     medían, y con los textos más largos nada se encima ni se sale.
 #  E. Calcular, Historial, Ajustes y la pantalla de carga: nada se sale.
 #  F. En vertical no cambia: pestañas abajo, encabezado arriba; y el manifiesto deja girar (orientation any).
 #  G. Ajustes → Orientación (Daniel): "No girar" (la de inicio) deja la app derecha respecto al teléfono aunque esté de
@@ -147,6 +148,28 @@ def main():
                     alto_ok = zl['b'] - zl['t'] >= 150
                     focos_ok = pg.evaluate(f"[...document.querySelectorAll('.pt-tree .pb')].filter(e => e.offsetParent).every(e => {{ const r = e.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight - {ins[2]} + 0.5; }})")
                     chk(not fuera and lado_ok and alto_ok and focos_ok, f'D. {n} Práctica {modo}: el árbol completo y las zonas para los pulgares a los lados ' + '; '.join(fuera))
+                    # 0.8.2 (Daniel: "que el semáforo abarque toda la pantalla verticalmente y el botón una tercera parte más
+                    # chico"): el árbol de arriba a abajo y la zona a 2/3 de lo que medía (antes: todo el alto bajo la barra)
+                    disponible = h - ins[2] - 16
+                    zona_antes = h - ins[2] - 62
+                    chk(arbol['b'] - arbol['t'] >= 0.97 * disponible, f'D. {n} Práctica {modo}: el árbol abarca toda la pantalla a lo alto ({arbol["b"] - arbol["t"]:.0f} de {disponible} px)')
+                    chk(abs((zl['b'] - zl['t']) - zona_antes * 2 / 3) <= 2, f'D. {n} Práctica {modo}: la zona mide 2/3 de lo de antes ({zl["b"] - zl["t"]:.0f} px; antes {zona_antes})')
+                    # con los textos más largos (reacción con su nota, quién ganó, marcador) nada se encima ni se sale
+                    choques = pg.evaluate("""(() => {
+                        const t = (id, s) => document.getElementById(id).textContent = s, antes = {};
+                        for (const id of ['ptRt_l', 'ptLab_l', 'ptRt_r', 'ptLab_r', 'ptMsg', 'ptScore', 'ptTipo']) antes[id] = document.getElementById(id).textContent;
+                        t('ptRt_l', '0.452'); t('ptLab_l', 'Muy buena (0.052 desde la verde)'); t('ptTipo', 'Árbol Full .5, auto 0.25 s');
+                        if (!document.getElementById('ptOverlay').classList.contains('solo')) {
+                            t('ptRt_r', '0.371'); t('ptLab_r', 'Luz roja (-0.029 desde la verde)'); t('ptMsg', 'Las dos rojas: pierde quien salió primero.'); t('ptScore', '12 – 10'); }
+                        const sels = ['#ptCerrar', '#ptTipo', '#ptScore', '#ptMsg', '.pt-res > .l', '.pt-res > .r', '#ptZona_l', '#ptZona_r', '.pt-tree'];
+                        const R = sels.map((s) => [s, document.querySelector(s).getBoundingClientRect()]).filter(([, b]) => b.width && b.height);
+                        const out = [];
+                        for (let i = 0; i < R.length; i++) for (let j = i + 1; j < R.length; j++) { const [a, A] = R[i], [c, B] = R[j];
+                            if (A.left < B.right - 1 && B.left < A.right - 1 && A.top < B.bottom - 1 && B.top < A.bottom - 1) out.push(a + ' / ' + c); }
+                        for (const [s, b] of R) if (b.bottom > innerHeight + 0.5 || b.right > innerWidth + 0.5 || b.left < -0.5 || b.top < -0.5) out.push(s + ' se sale');
+                        for (const id in antes) document.getElementById(id).textContent = antes[id];
+                        return out; })()""")
+                    chk(not choques, f'D. {n} Práctica {modo}: con los textos más largos nada se encima ni se sale ' + '; '.join(choques))
                     pg.screenshot(path=SH + f'horizontal_{nombre}_practica_{modo.replace(" ", "")}.png')
                     pg.click('#ptCerrar'); pg.wait_for_timeout(300)
                 # ---------------- E. Calcular, Historial, Ajustes
@@ -171,10 +194,12 @@ def main():
             def girada_bien(lado_tabs):
                 r = pg.evaluate("""(() => { const t = document.querySelector('.tabs').getBoundingClientRect(), l = document.querySelector('.brand').getBoundingClientRect();
                     return { tl: t.left, tr: t.right, tt: t.top, tb: t.bottom, ll: l.left, lr: l.right }; })()""")
-                # las pestañas van de lado a lado salvo la rayita de inicio del iPhone (zona segura de abajo, 21 px)
+                # rediseño 2026: la barra de cristal flota casi de lado a lado (12 px de orilla), lejos de la isla y de la rayita
+                # de inicio del iPhone (zona segura de abajo, 21 px)
+                arriba_abajo = r['tt'] <= 14 and H - INS[2] - 14 <= r['tb'] <= H - INS[2] + 1
                 if lado_tabs == 'der':   # lo de arriba del teléfono a la izquierda: logo a la izquierda, pestañas a la derecha
-                    return abs(r['tr'] - W) < 2 and r['tt'] < 2 and abs(r['tb'] - (H - INS[2])) < 2 and r['ll'] < 160, r
-                return r['tl'] < 2 and r['tt'] < 2 and abs(r['tb'] - (H - INS[2])) < 2 and r['lr'] > W - 160, r
+                    return 0 < W - r['tr'] <= 60 and arriba_abajo and r['ll'] < 160, r
+                return 0 < r['tl'] <= 60 and arriba_abajo and r['lr'] > W - 160, r
             c = clases()
             ok, r = girada_bien('der')
             chk('girada' in c and 'acostada' not in c and ok, f'G. "No girar" (la de inicio): con el teléfono de lado la app queda derecha respecto al teléfono ({c}; {r})')
@@ -184,6 +209,7 @@ def main():
             alto = pg.evaluate("(() => { const m = document.getElementById('marco'); m.scrollTop = 500; return [m.scrollTop, m.scrollHeight > m.clientHeight]; })()")
             chk(alto[0] > 0 and alto[1], f'G. con la app girada Ajustes se desplaza ({alto})')
             chk(pg.evaluate("document.querySelector('#segOrient button[data-v=\"no\"]').getAttribute('aria-checked') === 'true'"), 'G. Ajustes muestra "No girar" elegido')
+            pg.click('#ajTabApariencia'); pg.wait_for_timeout(200)   # la orientación está en Ajustes → Apariencia
             pg.evaluate("document.querySelector('#segOrient').scrollIntoView({block: 'center'})"); pg.wait_for_timeout(200)
             pg.screenshot(path=SH + 'horizontal_girada_ajustes.png')
             # al otro lado: pestañas a la izquierda
@@ -218,6 +244,7 @@ def main():
             pg.click('#rcSalir'); pg.wait_for_timeout(300)
             # "Toda la app"
             pg.click('.tabs button[data-view="vAjustes"]'); pg.wait_for_timeout(300)
+            pg.click('#ajTabApariencia'); pg.wait_for_timeout(200)
             pg.click('#segOrient button[data-v="todo"]'); pg.wait_for_timeout(300)
             c = clases()
             chk('acostada' in c and 'girada' not in c, f'G. "Toda la app": Ajustes también se acuesta ({c})')
@@ -226,9 +253,9 @@ def main():
             # ---------------- F. En vertical no cambia
             ctx, pg, errs = pagina(b, 393, 852, (0, 0, 34))
             v = pg.evaluate("""(() => { const t = document.querySelector('.tabs').getBoundingClientRect();
-                return { tabsArriba: t.top, tabsAncho: t.width, topPos: getComputedStyle(document.querySelector('.top')).position,
+                return { tabsArriba: t.top, tabsAncho: t.width, tabsAbajo: innerHeight - t.bottom, topPos: getComputedStyle(document.querySelector('.top')).position,
                          lado: getComputedStyle(document.querySelector('.rc-lado')).display }; })()""")
-            chk(v['tabsArriba'] > 700 and v['tabsAncho'] > 380 and v['topPos'] == 'static' and v['lado'] == 'contents',
+            chk(v['tabsArriba'] > 700 and v['tabsAncho'] > 340 and 30 - 1 <= v['tabsAbajo'] <= 60 and v['topPos'] == 'static' and v['lado'] == 'contents',   # flotante, arriba de la rayita (34 px)
                 f'F. en vertical las pestañas siguen abajo y el encabezado arriba ({v})')
             c = pg.evaluate("document.documentElement.className")
             chk('girada' not in c and 'acostada' not in c, f'F. en vertical la app no se gira ni usa el diseño acostado ({c!r})')
