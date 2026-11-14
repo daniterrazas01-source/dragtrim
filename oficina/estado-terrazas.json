@@ -1,0 +1,18 @@
+{
+  "actualizado": "2026-11-14T00:30:01Z",
+  "agentes": [
+    {
+      "id": "terrazas-546cae76",
+      "nombre": "DragTree 546c",
+      "persona": "Alberto Terrazas",
+      "area": "terrazas",
+      "actividad": "Esperando instrucciones",
+      "estado": "esperando",
+      "modo": "normal",
+      "dispositivo": "tableta-android",
+      "origen": "tableta-android",
+      "actualizado": "2026-11-14T00:30:00Z"
+    }
+  ],
+  "archivos_recientes": []
+}
