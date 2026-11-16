@@ -314,7 +314,9 @@ usarlo o subirlo.
    Pasa con más de 1/3 del ancho o rápido (> 0.3 px/ms y > 24 px, sin regresar el dedo); si el dedo se detuvo > 80 ms
    antes de soltar, no cuenta la velocidad. Termina con la curva de iOS cubic-bezier(.25, 1, .5, 1) en 240–420 ms según
    la velocidad del dedo; la pestaña de abajo se marca al soltar. En la primera y la última, orilla elástica. Mientras
-   termina (`ocupado`) no se toman toques, deslizadas ni clics. No se usa sin pestañas (corrida, resultado de corrida,
+   termina (`ocupado`) no se toman toques, deslizadas ni clics. **0.8.5** (16 nov): `:root.desliza-tab { overflow-anchor:
+   none }` en style.css: Chrome (Android) movía la página solo ("scroll anchoring") al asomar una pestaña alta como
+   Práctica y la vecina salía ~877 px arriba (deslizar_test L, que fallaba en todas las versiones); lo encontró el ayudante. No se usa sin pestañas (corrida, resultado de corrida,
    semáforo de Práctica, cámara), desde la orilla (24 px: gesto de "atrás" de iPhone y Android), en un campo con el
    cursor, en un deslizador ni en algo que se recorre de lado (tablas de Calcular). Bloquea el clic del dedo 400 ms
    después de soltar. Sin animaciones: cambia al soltar, sin seguir al dedo. Código al final de la navegación en app.js.
@@ -364,7 +366,7 @@ usarlo o subirlo.
    - Pruebas al cerrar (15 nov, sin `semaforo`): todo bien salvo dos que ya fallaban antes del cambio y no son de
      medir: `qr_camara_test.py` (el caso conocido "QR lejos y de lado", punto 14) y `deslizar_test.py` "L. de Calcular
      bajada a Práctica: empieza arriba, sin brinco (−877 → 0 px)", que falla igual con la 0.8.3 en este contenedor
-     (pendiente de revisar: puede venir de la Práctica acostada de la 0.8.2 o del contenedor).
+     (resuelto en la 0.8.5: era el "scroll anchoring" de Chrome, ver punto 7, deslizar entre pestañas).
    - `calibrar.js` todavía busca rollout × retraso fijo de la velocidad; con la v2.4 (que también usa la posición) el
      "retraso" ya no es el ajuste natural: lo que toca calibrar es rollout y escala de la pista (pendiente).
 
@@ -608,7 +610,9 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.8.4** (16 nov 2026, Daniel: "Sí, publica la
+caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.8.5** (16 nov 2026, Daniel: "Sí, aplícalo y
+publica la 0.8.5": al deslizar a Práctica desde Calcular bajada, en Chrome de Android la pestaña se asomaba fuera de la
+pantalla; una línea de CSS, punto 7); antes **0.8.4** (16 nov 2026, Daniel: "Sí, publica la
 0.8.4": algoritmo v2.4, la medición usa también la posición del GPS y aguanta que el teléfono se mueva al arrancar; no
 cambia nada de lo que se ve; punto 8); antes **0.8.3** (8 nov 2026, Daniel: "Sí, publícala": el fondo
 Gallos con 5 R con flamas y 4 RRG, de pie y acostado, punto 7); antes **0.8.2** (7 nov 2026: los 8

@@ -819,6 +819,7 @@ body.practica .tabs, body.practica .top, body.practica main { display: none; }
 /* Deslizar entre pestañas (app.js): la actual y las de los lados se mueven juntas con el dedo. Las que se asoman ya
    vienen pintadas (data-entra): sin la cascada de entrada, que se queda apagada hasta que se ocultan. */
 :root.desliza-tab main { position: relative; overflow-x: clip; }
+:root.desliza-tab { overflow-anchor: none; }   /* 0.8.5: Chrome no debe mover la página al asomar la pestaña vecina */
 :root.desliza-tab main > .view:not([hidden]) { will-change: transform; }
 :where(.view[data-entra]) > *, :where(.view[data-entra] #medirIdle) > *, :where(.view[data-entra] .atajo-panel) > *, :where(.view[data-entra] .aj-panel) > * { animation: none; }
 
@@ -8282,7 +8283,7 @@ html.cam-abierta, html.cam-abierta body { overflow: hidden; }
 (function () {
   'use strict';
   const C = window.DragCore;
-  const APP_VERSION = '0.8.4';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
+  const APP_VERSION = '0.8.5';   // sin "beta" desde 0.6.4 (Daniel quitó la etiqueta)
   const $ = (s) => document.querySelector(s);
   const isFin = Number.isFinite;
 
