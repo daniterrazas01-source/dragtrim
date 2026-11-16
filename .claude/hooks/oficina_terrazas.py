@@ -78,6 +78,23 @@ def titulo_sesion(d):
         return None
 
 
+def modelo_y_esfuerzo(d):
+    """Qué modelo atiende la sesión (haiku, sonnet, opus, fable) y con qué esfuerzo (low, medium, high, xhigh, max)."""
+    modelo = esfuerzo = None
+    try:
+        with open(d.get("transcript_path"), "rb") as f:
+            f.seek(0, 2)
+            f.seek(max(0, f.tell() - 1_000_000))
+            cola = f.read().decode("utf-8", "ignore")
+        m = [x for x in re.findall(r'"model"\s*:\s*"([^"]+)"', cola) if not x.startswith("<")]
+        modelo = next((x for x in ("haiku", "sonnet", "opus", "fable") if m and x in m[-1].lower()), None)
+        e = re.findall(r'"effort"\s*:\s*"([a-z]+)"', cola)
+        esfuerzo = e[-1] if e else None
+    except Exception:
+        pass
+    return modelo, esfuerzo or (os.environ.get("CLAUDE_EFFORT") or "").lower() or None
+
+
 def remoto():
     """Lo que ya publicaron las OTRAS sesiones de la tableta (para no borrarlas)."""
     try:
@@ -180,6 +197,12 @@ def main():
            "actividad": corto(actividad), "estado": estado,
            "modo": "ultra" if g.get("ultra") and estado == "trabajando" else "normal",
            "dispositivo": "tableta-android", "origen": "tableta-android", "actualizado": ahora()}
+    modelo, esfuerzo = modelo_y_esfuerzo(d)
+    g["modelo"], g["esfuerzo"] = modelo or g.get("modelo"), esfuerzo or g.get("esfuerzo")
+    if g.get("modelo"):
+        mio["modelo"] = g["modelo"]
+    if g.get("esfuerzo"):
+        mio["esfuerzo"] = g["esfuerzo"]
     ay = g.get("ayudante")
     if ay and estado == "trabajando" and not viejo(ay.get("visto"), 3):     # lo que hace su ayudante, mientras siga fresco
         mio.update({"ayudante_actividad": ay["actividad"], "ayudante_area": ay["area"], "ayudante_visto": ay["visto"]})
