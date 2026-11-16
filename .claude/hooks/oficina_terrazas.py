@@ -87,7 +87,7 @@ def remoto():
         return {}
 
 
-def viejo(fecha, minutos=30):
+def viejo(fecha, minutos=24 * 60):   # la oficina decide el vencimiento (24 h); aquí solo se limpia lo ya vencido
     try:
         t = datetime.strptime(str(fecha), "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
         return (datetime.now(timezone.utc) - t).total_seconds() > minutos * 60
@@ -118,8 +118,7 @@ def publicar(mio, mis_archivos):
 
 def main():
     d = json.loads(sys.stdin.buffer.read().decode("utf-8-sig", "replace") or "{}")
-    if d.get("agent_id"):
-        return                                           # los ayudantes no salen como monitos aparte
+    de_ayudante = bool(d.get("agent_id"))               # lo hace un ayudante (subagente) de esta sesión
     ses = re.sub(r"[^A-Za-z0-9]", "", str(d.get("session_id") or "x"))[:8] or "x"
     ev = d.get("hook_event_name")
     tool = d.get("tool_name") or ""
@@ -127,7 +126,21 @@ def main():
     g = leer_guarda(ses)
     area, actividad, estado, urgente = "terrazas", None, "trabajando", False
 
-    if ev == "PreToolUse":
+    if de_ayudante:
+        # El ayudante no sale como monito aparte: la oficina se lo encarga a Nitro. Aquí solo se anota qué hace.
+        if ev != "PreToolUse":
+            return
+        ruta = inp.get("file_path") or inp.get("notebook_path") or ""
+        nombre = os.path.basename(ruta) if ruta else ""
+        if tool in QUE:
+            hace, donde = QUE[tool][1].format(f=nombre or "un archivo"), QUE[tool][0]
+        elif tool == "Bash":
+            hace, donde = inp.get("description") or "Usando la terminal", "escritorio"
+        else:
+            hace, donde = "Trabajando", "escritorio"
+        g["ayudante"] = {"actividad": corto(hace), "area": donde, "visto": ahora()}
+        actividad = g.get("actividad") or "Coordinando a su ayudante"
+    elif ev == "PreToolUse":
         ruta = inp.get("file_path") or inp.get("notebook_path") or ""
         nombre = os.path.basename(ruta) if ruta else ""
         if tool in QUE:
@@ -153,6 +166,7 @@ def main():
     elif ev in ("Stop", "SessionStart", "SessionEnd") or (ev == "Notification" and d.get("notification_type") == "idle_prompt"):
         actividad, estado, urgente = "Esperando instrucciones", "esperando", True
         g["ultra"] = False
+        g.pop("ayudante", None)
     elif ev == "Notification":
         actividad, estado = "Esperando permiso", "esperando"
     else:
@@ -160,10 +174,15 @@ def main():
 
     nombre = (titulo_sesion(d) or g.get("nombre") or f"DragTree {ses[:4]}")[:18]
     g["nombre"] = nombre
+    if not de_ayudante:
+        g["actividad"] = actividad
     mio = {"id": f"terrazas-{ses}", "nombre": nombre, "persona": "Alberto Terrazas", "area": area,
            "actividad": corto(actividad), "estado": estado,
            "modo": "ultra" if g.get("ultra") and estado == "trabajando" else "normal",
            "dispositivo": "tableta-android", "origen": "tableta-android", "actualizado": ahora()}
+    ay = g.get("ayudante")
+    if ay and estado == "trabajando" and not viejo(ay.get("visto"), 3):     # lo que hace su ayudante, mientras siga fresco
+        mio.update({"ayudante_actividad": ay["actividad"], "ayudante_area": ay["area"], "ayudante_visto": ay["visto"]})
     if urgente or time.time() - g.get("enviado", 0) >= CADA:
         try:
             publicar(mio, g["archivos"])
