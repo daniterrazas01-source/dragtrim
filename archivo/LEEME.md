@@ -54,6 +54,7 @@ podría mezclar ajustes.
 | `drag_0.8.2.html` | 0.8.2 | 1cb0df6 | Los 8 fondos con su versión para el teléfono acostado (stickers del mismo tamaño que de pie); Práctica acostada con el árbol de arriba a abajo y los botones 1/3 más chicos; fondo nuevo "Rooster" (3 R de Rooster Racing, 3 Ford, 3 Chevrolet) |
 | `drag_0.8.3.html` | 0.8.3 | c2d0c96 | El fondo Gallos con 5 R con flamas (antes 3) y 4 RRG (antes 1), de pie y acostado |
 | `drag_0.8.4.html` | 0.8.4 | 21da349 | La medición usa también la posición del GPS (algoritmo v2.4, fusión por nodos): aguanta que el teléfono se mueva al arrancar; salió de la corrida real del 15 nov |
+| `drag_0.8.5.html` | 0.8.5 | 47b0b80 | Deslizar a Práctica desde Calcular bajada: en Chrome de Android la pestaña ya no se asoma fuera de la pantalla |
 
 El código fuente editable de cada versión está en `fuente/` de ese commit:
 `git checkout <commit>` o, en GitHub, "Browse files" en el commit.
