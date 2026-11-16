@@ -13,6 +13,12 @@ esfuerzo alto"): para delegar trabajo se lanza un ayudante, que sale en la Ofici
 `.claude/hooks/oficina_terrazas.py`). **Nunca con el modelo de la sesión (Opus) ni con Fable**: siempre con `model`
 puesto, Haiku para lo sencillo y como máximo **Sonnet con esfuerzo alto** (`model: sonnet`, `effort: high`) cuando la
 tarea lo necesite. Al terminar, avisarle a Daniel (pidió que se le avise cuando termine el ayudante).
+**Trabajar en equipo** (16 nov, Daniel: "en dado caso que consideres que el agente no pueda, hazlo tú; a él dale lo más
+fácil… trabajen juntos en futuros trabajos"): en los trabajos que siguen, repartir: al ayudante lo sencillo y mecánico
+(buscar, leer, correr pruebas, capturas, revisar resultados, cambios chicos y claros) y la sesión se queda con lo difícil
+(diseño, algoritmo, decisiones, lo que toca la medición o lo publicado). Si el ayudante no puede o se atora, la sesión lo
+termina ella misma; no se le sube el modelo más allá de Sonnet con esfuerzo alto. Revisar siempre lo que entregue antes de
+usarlo o subirlo.
 
 - App publicada (GitHub Pages): https://daniterrazas01-source.github.io/dragtrim/
 - Repo: `daniterrazas01-source/dragtrim`. Pages sirve la raíz de **`gh-pages`** (confirmado con el
