@@ -8,6 +8,12 @@ También en español lo que ve en la app mientras trabajas: la descripción de c
 archivos) y las tareas (1 nov, Daniel: "estás poniendo las instrucciones en inglés… ¿puedes ponerlas en español
 mejor?").
 
+**Ayudantes (subagentes)** (16 nov, Daniel: "él va a ser tu agente, y si necesita más poder, que máximo suba a Sonnet en
+esfuerzo alto"): para delegar trabajo se lanza un ayudante, que sale en la Oficina junto al monito de la sesión (hook
+`.claude/hooks/oficina_terrazas.py`). **Nunca con el modelo de la sesión (Opus) ni con Fable**: siempre con `model`
+puesto, Haiku para lo sencillo y como máximo **Sonnet con esfuerzo alto** (`model: sonnet`, `effort: high`) cuando la
+tarea lo necesite. Al terminar, avisarle a Daniel (pidió que se le avise cuando termine el ayudante).
+
 - App publicada (GitHub Pages): https://daniterrazas01-source.github.io/dragtrim/
 - Repo: `daniterrazas01-source/dragtrim`. Pages sirve la raíz de **`gh-pages`** (confirmado con el
   flujo "pages build and deployment"); se hace push a `main` y a `gh-pages` para mantenerlas iguales.
