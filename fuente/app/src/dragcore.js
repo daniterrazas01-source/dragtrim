@@ -1,4 +1,4 @@
-/* dragcore.js — Algoritmo del medidor Drag Tree (port de drag_procesar.m v2.2)
+/* dragcore.js — Algoritmo del medidor Drag Tree (gemelo de drag_procesar.m v2.4)
  * Funciona en navegador (window.DragCore) y en Node (module.exports).
  * Unidades: tiempo [s], velocidad [m/s], distancia [m], aceleración [m/s^2].
  */
@@ -9,7 +9,7 @@
 
   function defaultConfig() {
     return {
-      version: 'beta 0.2 (algoritmo v2.3)',
+      version: 'beta 0.2 (algoritmo v2.4)',
       rollout_ft: 1.0,
       distancia_final: 402.336,
       hitos: [
@@ -34,7 +34,20 @@
       refinar_inicio: true,  // inicio por tangente + gravedad del reposo justo antes
       reposo_s: 0.7,         // s de reposo (en stage) usados para medir la gravedad
       pre_integracion_s: 0.2, // s antes del inicio desde donde se integra (auto aún quieto)
-      fusion: 'modelo',      // 'modelo': corrección suave ajustada a todo el GPS; 'puntos': pasa por cada lectura
+      primer_pico: true,     // el arranque se busca en el primer empujón fuerte (no en el mayor de todos)
+      // Fusión con el GPS (v2.4). 'nodos': corrección lineal a tramos ajustada a la velocidad GPS (con su
+      // retraso) y a la posición GPS (a tiempo); aguanta que el teléfono se mueva en su soporte.
+      // 'modelo' (v2.3): deriva + escala; 'puntos': pasa por cada lectura.
+      fusion: 'nodos',
+      nodo_s: 3.0,           // 'nodos': separación de los nodos de la corrección
+      suave_nodos: 2.0,      // 'nodos': qué tanto se pide que la corrección sea suave
+      sigma_v: 0.3,          // 'nodos': error típico de la velocidad GPS (m/s)
+      sigma_p: 1.5,          // 'nodos': error típico de la posición GPS a lo largo de la pista (m)
+      sigma_b: 2.0,          // 'nodos': cuánto puede estar corrida la posición de reposo (m)
+      t_min_v: 0.3,          // 'nodos': s después del arranque desde donde cuenta la velocidad GPS
+      t_min_p: 0.2,          // 'nodos': lo mismo para la posición
+      latencia_pos_s: 0,     // retraso de la posición GPS (en el S22 Ultra llega a tiempo)
+      lateral_max_m: 15,     // si el recorrido se sale más que esto de una recta, no se usa la posición
       peso_residuo: 0.5,     // en 'modelo', cuánto del residuo de cada lectura GPS se agrega
       latencia_gps_s: NaN,   // NaN = estimar
       latencia_max_s: 1.0,   // el navegador agrega algo de retraso al GPS
@@ -259,6 +272,120 @@
     return [(d * c - b * f) / det, (a * f - b * d) / det];
   }
 
+  // Metros por grado de latitud y de longitud (elipsoide WGS84) a la latitud dada
+  function mPorGrado(latDeg) {
+    const f = latDeg * Math.PI / 180;
+    return [111132.954 - 559.822 * Math.cos(2 * f) + 1.175 * Math.cos(4 * f),
+      111412.84 * Math.cos(f) - 93.5 * Math.cos(3 * f) + 0.118 * Math.cos(5 * f)];
+  }
+
+  // Sistema lineal chico (Gauss con pivoteo parcial); null si no tiene solución única
+  function resolver(Ain, bin) {
+    const n = bin.length, A = Ain.map(r => r.slice()), b = bin.slice();
+    for (let i = 0; i < n; i++) {
+      let p = i; for (let r = i + 1; r < n; r++) if (Math.abs(A[r][i]) > Math.abs(A[p][i])) p = r;
+      if (Math.abs(A[p][i]) < 1e-12) return null;
+      const ta = A[i]; A[i] = A[p]; A[p] = ta; const tb = b[i]; b[i] = b[p]; b[p] = tb;
+      for (let r = i + 1; r < n; r++) { const f = A[r][i] / A[i][i]; for (let c = i; c < n; c++) A[r][c] -= f * A[i][c]; b[r] -= f * b[i]; }
+    }
+    const x = new Array(n);
+    for (let i = n - 1; i >= 0; i--) { let q = b[i]; for (let c = i + 1; c < n; c++) q -= A[i][c] * x[c]; x[i] = q / A[i][i]; }
+    return x;
+  }
+
+  /* Fusión por nodos (v2.4). La velocidad del acelerómetro se corrige con c(t): lineal a tramos, 0 en el
+   * arranque y un nodo cada cfg.nodo_s. Los nodos y el desfase b de la posición salen de mínimos cuadrados con
+   *   velocidad GPS:  vG_k = vAcc(t_k − L) + c(t_k − L)          (L = retraso de la velocidad GPS, se busca)
+   *   posición GPS:   pG_k = b + ∫ (vAcc + c) hasta t_k − Lp      (a lo largo de la pista; Lp = latencia_pos_s)
+   * más dos condiciones suaves (b cerca de 0, c sin quiebres). A diferencia de 'modelo' (deriva + escala),
+   * sigue un error que cambia a media corrida: p. ej. el teléfono que se inclina en su soporte al arrancar. */
+  function fusionNodos(t, vAcc, t0, tG, vG, pG, cfg) {
+    const Tn = cfg.nodo_s, tEnd = t[t.length - 1];
+    const dAcc = cumtrapz(t, vAcc);
+    const tUlt = Math.min(tEnd, tG[tG.length - 1]);
+    const J = Math.max(1, Math.ceil((tUlt - t0) / Tn - 1e-9));
+    const hat = (j, x) => {            // nodo j = 1..J; después del último nodo la corrección queda constante
+      const a = t0 + (j - 1) * Tn, b = a + Tn;
+      if (x <= a) return 0;
+      if (x <= b) return (x - a) / Tn;
+      if (j === J) return 1;
+      return x < b + Tn ? (b + Tn - x) / Tn : 0;
+    };
+    const ihat = (j, x) => {           // integral de hat desde t0
+      const a = t0 + (j - 1) * Tn, b = a + Tn;
+      if (x <= a) return 0;
+      if (x <= b) return (x - a) * (x - a) / (2 * Tn);
+      if (j === J) return Tn / 2 + (x - b);
+      if (x < b + Tn) return Tn / 2 + (x - b) - (x - b) * (x - b) / (2 * Tn);
+      return Tn;
+    };
+    const conPos = !!pG && pG.some(isFin);
+    const nP = J + 1;                  // incógnitas: nodos 1..J y b
+    const wv = 1 / cfg.sigma_v, wp = 1 / cfg.sigma_p, Lp = cfg.latencia_pos_s;
+    function ajustar(L, okV, okP) {
+      const N = []; for (let a = 0; a < nP; a++) N.push(new Array(nP).fill(0));
+      const y = new Array(nP).fill(0), filas = [];
+      const agrega = (f, rhs, w, tipo, k) => {
+        for (let a = 0; a < nP; a++) {
+          if (!f[a]) continue;
+          y[a] += w * w * f[a] * rhs;
+          for (let b = 0; b < nP; b++) if (f[b]) N[a][b] += w * w * f[a] * f[b];
+        }
+        if (tipo) filas.push({ f, rhs, w, tipo, k, res: 0 });
+      };
+      let nv = 0, np = 0;
+      for (let k = 0; k < tG.length; k++) {
+        const x = tG[k] - L;
+        if (x > t0 + cfg.t_min_v && x < tEnd && (!okV || okV[k])) {
+          const f = new Array(nP).fill(0); for (let j = 1; j <= J; j++) f[j - 1] = hat(j, x);
+          agrega(f, vG[k] - interp1(t, vAcc, x), wv, 'v', k); nv++;
+        }
+        const xp = tG[k] - Lp;
+        if (conPos && isFin(pG[k]) && xp > t0 + cfg.t_min_p && xp < tEnd && (!okP || okP[k])) {
+          const f = new Array(nP).fill(0); for (let j = 1; j <= J; j++) f[j - 1] = ihat(j, xp);
+          f[J] = 1;
+          agrega(f, pG[k] - interp1(t, dAcc, xp), wp, 'p', k); np++;
+        }
+      }
+      if (nv < 3) return null;
+      { const f = new Array(nP).fill(0); f[J] = 1; agrega(f, 0, 1 / cfg.sigma_b, '', -1); }
+      for (let j = 1; j <= J; j++) {   // segunda diferencia de los nodos (el nodo 0 vale 0; el último, pendiente 0)
+        const f = new Array(nP).fill(0);
+        if (j > 1) f[j - 2] = 1;
+        if (j < J) { f[j - 1] = -2; f[j] = 1; } else f[j - 1] = -1;
+        agrega(f, 0, cfg.suave_nodos, '', -1);
+      }
+      const th = resolver(N, y); if (!th) return null;
+      let sse = 0;
+      for (const q of filas) { let pr = 0; for (let a = 0; a < nP; a++) pr += q.f[a] * th[a]; q.res = q.rhs - pr; sse += (q.w * q.res) * (q.w * q.res); }
+      return { th, costo: sse / filas.length, filas, nv, np, L };
+    }
+    function buscar(okV, okP) {
+      if (isFin(cfg.latencia_gps_s)) return ajustar(cfg.latencia_gps_s, okV, okP);
+      let mejor = null;
+      for (let L = 0; L <= cfg.latencia_max_s + 1e-9; L += 0.02) {
+        const r = ajustar(Math.round(L * 100) / 100, okV, okP);
+        if (r && (!mejor || r.costo < mejor.costo)) mejor = r;
+      }
+      return mejor;
+    }
+    let m = buscar(null, null);
+    if (!m) return null;
+    // lecturas atípicas (saltos del GPS): se quitan y se vuelve a ajustar
+    let desc = 0;
+    const okV = tG.map(() => true), okP = tG.map(() => true);
+    for (const tipo of ['v', 'p']) {
+      const rs = m.filas.filter(q => q.tipo === tipo);
+      if (rs.length < 5) continue;
+      const lim = Math.max(tipo === 'v' ? 0.5 : 3.0, 4 * 1.4826 * median(rs.map(q => Math.abs(q.res))));
+      for (const q of rs) if (Math.abs(q.res) > lim) { (tipo === 'v' ? okV : okP)[q.k] = false; desc++; }
+    }
+    if (desc) { const m2 = buscar(okV, okP); if (m2) m = m2; else desc = 0; }
+    const c = new Float64Array(t.length);
+    for (let i = 0; i < t.length; i++) { let q = 0; for (let j = 1; j <= J; j++) q += m.th[j - 1] * hat(j, t[i]); c[i] = q; }
+    return { c, lag: m.L, nodos: m.th.slice(0, J), b: m.th[J], descartadas: desc, nv: m.nv, np: m.np };
+  }
+
   function estimarLatencia(tG, vG, t, vAcc, t0, tLim, lmax, modelo) {
     let lag = 0, mejor = Infinity;
     const tEnd = Math.min(t[t.length - 1], tLim);
@@ -373,6 +500,8 @@
       const umbral = Math.max(cfg.umbral_mov, 4 * ruido);
       let kPk = -1, pk = -Infinity;
       for (let i = 0; i < tq.length; i++) if (tq[i] >= tQ - 1 && tq[i] <= tRun && dmag[i] > pk) { pk = dmag[i]; kPk = i; }
+      // el primer empujón fuerte: después del primer cambio puede haber un pico más alto (vibración, golpe)
+      if (cfg.primer_pico && kPk >= 0) for (let i = 0; i < kPk; i++) if (tq[i] >= tQ - 1 && dmag[i] >= 0.5 * pk) { kPk = i; break; }
       if (kPk < 0 || pk < umbral) {
         usarAcc = false; avisos.push('No se distinguió el arranque en el acelerómetro; se usó solo GPS.');
       } else {
@@ -395,21 +524,63 @@
     }
 
     // 5) Velocidad
-    let t, v, a, lag, metodo, descartadasGps = 0;
+    let t, v, a, lag, metodo, descartadasGps = 0, fusionUsada = '', posUsadas = 0, desfasePos = NaN;
     if (usarAcc) {
       let i0 = 0; while (tq[i0] < tIni) i0++;
       t = tq.slice(i0); a = aL.slice(i0);
       const vAcc = cumtrapz(t, a);
-      const modelo = cfg.fusion === 'modelo';
-      lag = isFin(cfg.latencia_gps_s) ? cfg.latencia_gps_s
-        : estimarLatencia(tG, vG, t, vAcc, t0, t0 + 20, cfg.latencia_max_s, modelo);
+      let fn = null;
+      if (cfg.fusion === 'nodos') {
+        // posición GPS a lo largo de la pista: metros desde el reposo en stage, sobre la recta del recorrido
+        let pG = null;
+        if (latG.some(isFin)) {
+          let la0 = 0, lo0 = 0, m0 = 0;
+          let iR = iQ;
+          while (iR >= 0 && tG[iR] >= t0 - 6 && vG[iR] > cfg.v_quieto) iR--;      // lecturas que ya traen movimiento
+          for (; iR >= 0 && tG[iR] >= t0 - 6 && vG[iR] <= cfg.v_quieto; iR--)       // reposo en stage (máx. 6 s)
+            if (tG[iR] <= t0 && isFin(latG[iR]) && isFin(lonG[iR])) { la0 += latG[iR]; lo0 += lonG[iR]; m0++; }
+          if (!m0 && isFin(latG[iQ]) && isFin(lonG[iQ])) { la0 = latG[iQ]; lo0 = lonG[iQ]; m0 = 1; }
+          if (m0) {
+            la0 /= m0; lo0 /= m0;
+            const mg = mPorGrado(la0), tFinA = t[t.length - 1];
+            const ex = lonG.map(x => (x - lo0) * mg[1]), ny = latG.map(x => (x - la0) * mg[0]);
+            let sx = 0, sy = 0;
+            for (let i = 0; i < tG.length; i++) if (tG[i] > t0 && tG[i] < tFinA && isFin(ex[i]) && isFin(ny[i])) { sx += ex[i]; sy += ny[i]; }
+            const nn = Math.hypot(sx, sy);
+            if (nn > 20) {
+              let latMax = 0;
+              for (let i = 0; i < tG.length; i++) if (tG[i] > t0 && tG[i] < tFinA && isFin(ex[i]) && isFin(ny[i])) latMax = Math.max(latMax, Math.abs(ny[i] * sx - ex[i] * sy) / nn);
+              if (latMax <= cfg.lateral_max_m) {
+                pG = ex.map((x, i) => (x * sx + ny[i] * sy) / nn);
+                // la posición debe contar la misma historia que la velocidad GPS (±20 %); si no, no se usa
+                let k1 = -1, kL = -1, dV = 0;
+                for (let i = 0; i < tG.length; i++) if (tG[i] > t0 && tG[i] < tFinA && isFin(pG[i])) {
+                  if (k1 < 0) k1 = i; else dV += (vG[i] + vG[kL]) / 2 * (tG[i] - tG[kL]);
+                  kL = i;
+                }
+                if (k1 < 0 || kL === k1 || Math.abs((pG[kL] - pG[k1]) - dV) > 0.2 * Math.max(dV, 30)) pG = null;
+              }
+            }
+          }
+        }
+        fn = fusionNodos(t, vAcc, t0, tG, vG, pG, cfg);
+      }
+      const modelo = cfg.fusion === 'modelo' || (cfg.fusion === 'nodos' && !fn);
       const tc = [t[0]], ec = [0];
-      for (let i = 0; i < tG.length; i++) {
-        const tg = tG[i] - lag;
-        if (tg > t0 + 1e-3 && tg < t[t.length - 1]) { tc.push(tg); ec.push(vG[i] - interp1(t, vAcc, tg)); }
+      if (!fn) {
+        lag = isFin(cfg.latencia_gps_s) ? cfg.latencia_gps_s
+          : estimarLatencia(tG, vG, t, vAcc, t0, t0 + 20, cfg.latencia_max_s, modelo);
+        for (let i = 0; i < tG.length; i++) {
+          const tg = tG[i] - lag;
+          if (tg > t0 + 1e-3 && tg < t[t.length - 1]) { tc.push(tg); ec.push(vG[i] - interp1(t, vAcc, tg)); }
+        }
       }
       let c, tcM;
-      if (modelo && tc.length >= 4) {
+      if (fn) {
+        c = fn.c; lag = fn.lag; descartadasGps = fn.descartadas;
+        fusionUsada = 'nodos'; posUsadas = fn.np; desfasePos = fn.b;
+      } else if (modelo && tc.length >= 4) {
+        fusionUsada = 'modelo';
         // error = deriva lineal + error de escala (inclinación del auto, eje no perfecto)
         let vc = tc.map(x => interp1(t, vAcc, x));
         let x1 = tc.map(x => Math.max(x - t0, 0));
@@ -432,6 +603,7 @@
         c = new Float64Array(t.length);
         for (let i = 0; i < t.length; i++) c[i] = p[0] * Math.max(t[i] - t0, 0) + p[1] * vAcc[i] + r[i];
       } else {
+        fusionUsada = 'puntos';
         c = interpMany(tc, ec, t);
       }
       v = new Float64Array(t.length);
@@ -500,6 +672,9 @@
       ruido_reposo: ruido,
       g_medida: Math.hypot(...gvec),
       latencia_gps_s: lag,
+      fusion: fusionUsada,
+      pos_gps_usadas: posUsadas,
+      desfase_pos_m: desfasePos,
       gps_descartadas: descartadasGps,
       mov_ignorados: prev.n,
       v_max_ignorado_kmh: prev.vmax * 3.6,
@@ -585,11 +760,19 @@
 
   /** Sesión completa: reposo, burnout, salida, alineación, stage y arranque. */
   function simularSesion(opts) {
-    const o = Object.assign({ gps_hz: 1, lag_gps: 0.25, seed: Date.now() & 0xffff, acc_hz: 60, stage_min: 0.8, stage_max: 3.0 }, opts || {});
+    // Opciones "como en la pista" (apagadas por defecto; las prende fuente/pruebas/real.js):
+    //   gps_vel_media_s: la velocidad GPS es el promedio de ese último tramo (S22 Ultra: 1 s)
+    //   pos_ruido_m / pos_deriva_m: ruido de la posición GPS (suelto y que camina)
+    //   incl_salto_deg / incl_yaw_deg: el teléfono se inclina y gira en su soporte al arrancar (con golpe)
+    //   vib_corrida: vibración extra del acelerómetro durante la corrida; cuant: resolución del sensor
+    //   rapido: auto de arrancones (60 ft en ~1.6 s)
+    const o = Object.assign({ gps_hz: 1, lag_gps: 0.25, seed: Date.now() & 0xffff, acc_hz: 60, stage_min: 0.8, stage_max: 3.0,
+      gps_vel_media_s: 0, pos_ruido_m: 1.5, pos_deriva_m: 0, incl_salto_deg: 0, incl_yaw_deg: 0, vib_corrida: 0, cuant: 0, rapido: false }, opts || {});
     const rnd = mulberry32(o.seed);
     const randn = () => { let u = 0, w = 0; while (!u) u = rnd(); w = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * w); };
     const dtS = 0.002, tMax = 90;
-    const aT = 4.5 + 2.5 * rnd(), Pm = 90 + 90 * rnd(), k = 3.5e-4, cr = 0.15;
+    let aT = 4.5 + 2.5 * rnd(), Pm = 90 + 90 * rnd(); const k = 3.5e-4, cr = 0.15;
+    if (o.rapido) { aT = 9 + 4 * (aT - 4.5) / 2.5; Pm = 170 + 130 * (Pm - 90) / 90; }
     const vC = [14, 26, 38, 50].map(x => x * (0.9 + 0.2 * rnd()));
     const tB0 = 3, tB1 = tB0 + 3 + 2 * rnd(), vPull = (10 + 20 * rnd()) / 3.6;
     // En pista: del stage al arranque pasan ~0.8-3 s (encendido del árbol + reacción)
@@ -632,14 +815,18 @@
 
     // GPS
     const gps = { t: [], v: [], hacc: [], lat: [], lon: [] };
-    const rumbo = 2 * Math.PI * rnd(), lat0 = 28.6, lon0 = -106.1;
+    const rumbo = 2 * Math.PI * rnd(), lat0 = 28.6, lon0 = -106.1, mG = mPorGrado(lat0), derP = [0, 0];
     for (let tg = 1 + rnd() / o.gps_hz; tg < T; tg += 1 / o.gps_hz) {
-      const vt = interp1(ts, vs, tg - o.lag_gps);
+      const vt = o.gps_vel_media_s > 0
+        ? (interp1(ts, xs, tg - o.lag_gps) - interp1(ts, xs, tg - o.lag_gps - o.gps_vel_media_s)) / o.gps_vel_media_s
+        : interp1(ts, vs, tg - o.lag_gps);
       let vg = vt < 0.05 ? 0.15 * Math.abs(randn()) : Math.max(vt + 0.12 * randn(), 0);
       const xg = interp1(ts, xs, tg);
       gps.t.push(tg); gps.v.push(vg); gps.hacc.push(4);
-      gps.lat.push(lat0 + (xg * Math.cos(rumbo) + 1.5 * randn()) / 111320);
-      gps.lon.push(lon0 + (xg * Math.sin(rumbo) + 1.5 * randn()) / (111320 * Math.cos(lat0 * Math.PI / 180)));
+      const rP = [o.pos_ruido_m * randn(), o.pos_ruido_m * randn()];
+      if (o.pos_deriva_m > 0) for (let i = 0; i < 2; i++) derP[i] += o.pos_deriva_m * Math.sqrt(1 / o.gps_hz) * randn();
+      gps.lat.push(lat0 + (xg * Math.cos(rumbo) + rP[0] + derP[0]) / mG[0]);
+      gps.lon.push(lon0 + (xg * Math.sin(rumbo) + rP[1] + derP[1]) / mG[1]);
     }
     // Acelerómetro en marco del teléfono (ángulo aleatorio)
     const ang = [(rnd() - 0.5) * 2 * Math.PI, (rnd() - 0.5) * Math.PI / 2, (rnd() - 0.5) * Math.PI / 2];
@@ -653,15 +840,30 @@
     const bw = [0, 0, 0];                             // deriva lenta del sensor
     const vib = [rnd(), rnd(), rnd()], ph = 2 * Math.PI * rnd();
     const acc = { t: [], ax: [], ay: [], az: [] };
+    // El teléfono se mueve en su soporte al arrancar (opcional): cabecea, gira y luego cede en parte
+    let slip = null;
+    if (o.incl_salto_deg > 0 || o.incl_yaw_deg > 0) {
+      slip = { p: (0.3 + 0.7 * rnd()) * o.incl_salto_deg * Math.PI / 180 * (rnd() < 0.8 ? 1 : -1), y: (rnd() - 0.5) * 2 * o.incl_yaw_deg * Math.PI / 180,
+        t1: tPre + 0.1 + 0.2 * rnd(), t2: tPre + 3 + 5 * rnd(), queda: 0.6 * rnd() };
+    }
     for (let ta = 0; ta <= T; ta += 1 / o.acc_hz) {
       const aLv = interp1(ts, as, ta), th = pitch * aLv;
-      const f = [aLv - G0 * Math.sin(th) + (ta >= tPre ? pend : 0), 0.15 * randn(), G0 * Math.cos(th)];
+      let f = [aLv - G0 * Math.sin(th) + (ta >= tPre ? pend : 0), 0.15 * randn(), G0 * Math.cos(th)];
+      if (slip && ta > slip.t1) {
+        const sube = Math.min(1, (ta - slip.t1) / 0.05), cede = ta > slip.t2 ? 1 - (1 - slip.queda) * Math.min(1, (ta - slip.t2) / 1.5) : 1;
+        const fp = slip.p * sube * cede, fy = slip.y * sube;
+        const x1 = f[0] * Math.cos(fy) + f[1] * Math.sin(fy), y1 = -f[0] * Math.sin(fy) + f[1] * Math.cos(fy);
+        f = [x1 * Math.cos(fp) - f[2] * Math.sin(fp), y1, x1 * Math.sin(fp) + f[2] * Math.cos(fp)];
+        if (ta - slip.t1 < 1.5 / o.acc_hz) { f[0] += 15 * randn(); f[1] += 15 * randn(); f[2] += 8 * randn(); }   // el golpe
+      }
       for (let i = 0; i < 3; i++) bw[i] += 0.01 * Math.sqrt(1 / o.acc_hz) * randn();
       let extra = 0.25;
       if (ta >= tB0 && ta <= tB1) extra = 1.5;
       else if (ta >= tStg0 && ta < tPre) extra = 0.6;
       const s = 0.3 * Math.sin(2 * Math.PI * 31 * ta + ph);
+      if (o.vib_corrida > 0 && ta >= tPre) extra = Math.max(extra, o.vib_corrida);
       const out = [0, 1, 2].map(i => Rm[i][0] * f[0] + Rm[i][1] * f[1] + Rm[i][2] * f[2] + bias[i] + bw[i] + 0.25 * randn() + (extra > 0.25 ? extra * randn() : 0) + s * vib[i]);
+      if (o.cuant > 0) for (let i = 0; i < 3; i++) out[i] = Math.round(out[i] / o.cuant) * o.cuant;
       acc.t.push(ta); acc.ax.push(out[0]); acc.ay.push(out[1]); acc.az.push(out[2]);
     }
     return { gps, acc, verdad };

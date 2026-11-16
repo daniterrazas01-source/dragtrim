@@ -22,10 +22,18 @@ Unidades: s, m/s, m, m/s². Lo que el usuario cambia en Ajustes está marcado co
 | `refinar_inicio` | true | Inicio por la recta del frente de subida | false = detección básica (peor) |
 | `reposo_s` | 0.7 | Reposo en stage para medir la gravedad | Si el stage es más corto, usa lo que haya |
 | `pre_integracion_s` | 0.2 | Integra desde un poco antes del inicio | — |
-| `fusion` | 'modelo' | Deriva + escala + 50 % del residuo | 'puntos' pasa por cada lectura (peor con saltos) |
-| `peso_residuo` | 0.5 | Cuánto se cree al residuo de cada lectura GPS | 0 = solo el modelo suave; 1 = cada lectura |
-| `latencia_gps_s` | NaN (estimar) | Retraso del GPS | Un número lo fija (lo usa `calibrar.js`) |
-| `latencia_max_s` | 1.0 | Hasta dónde busca el retraso | La boleta sugiere ~0.9–1.0: está en el borde |
+| `primer_pico` | true | El arranque se busca en el primer empujón fuerte (≥ 50 % del pico), no en el pico mayor | false = como la v2.3: con vibración fuerte puede tomar un pico después del primer cambio |
+| `fusion` | 'nodos' (v2.4) | Corrección lineal a tramos ajustada a la velocidad GPS (con retraso) y a la posición GPS | 'modelo' = v2.3 (deriva + escala + 50 % del residuo; falla si el teléfono se mueve en el soporte); 'puntos' pasa por cada lectura |
+| `nodo_s` | 3.0 | 'nodos': cada cuánto puede cambiar la pendiente de la corrección | Menos = sigue cambios más rápidos pero mete más ruido del GPS (en la corrida real, 1.5–4 mueve el 60 ft ±0.02 s) |
+| `suave_nodos` | 2.0 | 'nodos': qué tanto se castigan los quiebres de la corrección | — |
+| `sigma_v`, `sigma_p` | 0.3 m/s, 1.5 m | 'nodos': error típico de la velocidad y de la posición GPS (pesos) | `sigma_p` enorme = no usar la posición |
+| `sigma_b` | 2.0 m | 'nodos': cuánto puede estar corrida la posición de reposo | — |
+| `t_min_v`, `t_min_p` | 0.3, 0.2 s | 'nodos': desde cuándo cuentan las lecturas después del arranque | — |
+| `latencia_pos_s` | 0 | Retraso de la posición GPS | En el S22 Ultra la posición llega a tiempo; sin probar en iPhone |
+| `lateral_max_m` | 15 | Si el recorrido se sale más de eso de una recta, no se usa la posición | — |
+| `peso_residuo` | 0.5 | Solo 'modelo': cuánto se cree al residuo de cada lectura GPS | 0 = solo el modelo suave; 1 = cada lectura |
+| `latencia_gps_s` | NaN (estimar) | Retraso de la **velocidad** GPS | Un número lo fija (lo usa `calibrar.js`) |
+| `latencia_max_s` | 1.0 | Hasta dónde busca el retraso | En el S22 Ultra sale ~0.6 s (la velocidad es el promedio del último segundo) |
 | `margen_final_m` | 15 | Metros extra tras la meta antes de cortar (en vivo) | — |
 | `t_max_corrida` | 60 | Corte de seguridad (en vivo) | — |
 | `t_inicio_busqueda` | −∞ | La app pone el arranque en vivo − 0.5 s | Evita confundir movimientos anteriores |
@@ -35,7 +43,8 @@ Unidades: s, m/s, m, m/s². Lo que el usuario cambia en Ajustes está marcado co
 `R.ok`, `R.mensaje`, `R.avisos[]`, series `t v d a`, `t0` (inicio del movimiento), `tRo` (cruce del
 rollout), `tFin`, `hitos[{nombre, dist_m, t, v_kmh}]` (t desde el rollout, v instantánea en la línea),
 `trampa_kmh` (solo para la meta elegida), `t_0_100`, `t_0_60mph`, `est`, `calidad` (`metodo`,
-`gps_hz`, `acc_hz`, `hacc_mediana_m`, `ruido_reposo`, `g_medida`, `latencia_gps_s`, `gps_descartadas`,
+`gps_hz`, `acc_hz`, `hacc_mediana_m`, `ruido_reposo`, `g_medida`, `latencia_gps_s`, `fusion` ('nodos' /
+'modelo' / 'puntos'), `pos_gps_usadas`, `desfase_pos_m`, `gps_descartadas`,
 `mov_ignorados`, `dist_pos_m`, `dist_integrada_m`), `gps` (puntos GPS ya corridos por el retraso).
 
 ## Lo que guarda la app de cada corrida (IndexedDB 'dragtrim')

@@ -6,7 +6,11 @@ description: Analiza corridas reales de Drag Tree (zips exportados con drag_raw_
 # Corridas reales contra la boleta
 
 Este es el paso pendiente más importante del proyecto: el algoritmo solo está validado en simulación
-y con **una** boleta. Cada corrida real con boleta vale mucho; trátala con cuidado.
+y con **dos** boletas (11 oct y 15 nov 2026, mismo teléfono y pista; la segunda está en
+`fuente/pruebas/datos/reales/`). Cada corrida real con boleta vale mucho; trátala con cuidado.
+
+Desde la v2.4 (15 nov) la fusión es por nodos y usa también la posición GPS; `analizar.js` dice qué
+fusión se usó. Para ver lo que daba la app antes: `--cfg '{"fusion":"modelo","primer_pico":false}'`.
 
 ## Qué pedirle a Daniel (si falta)
 
@@ -60,7 +64,9 @@ una boleta "verdadera" (rollout real 1 ft); `calibrar.js` debe encontrar ~1.0 ft
 ## Cómo leer los resultados
 
 - **Mismo error en todos los parciales** (ej. +0.10 en todos) → es el **rollout**.
-- **Error que crece con la distancia** (60 ft bien, 1/4 mal) → **retraso o escala del GPS**.
+- **Error que crece con la distancia** (60 ft bien, 1/4 mal) → **retraso del GPS**, o que la **pista no mide
+  lo oficial** (en el Autódromo Francisco Villa las dos boletas cuadran con pies de 30 cm, 1/4 = 396 m:
+  ver `hallazgos-reales.md` de la skill `dragtree-medicion`; hipótesis sin confirmar).
 - **60 ft mal y lo demás bien** → el inicio (gravedad, eje) o un stage distinto.
 - **Distancia integrada lejos de la posición GPS** (>2 %) → algo raro en la fusión; revisa ruido y avisos.
 - **"Este dragcore da distinto que la app"** → el algoritmo cambió desde que se midió; es normal

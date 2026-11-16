@@ -76,7 +76,8 @@ for (const c of corridas) {
     console.log(`Calidad: ${q.metodo}, GPS ${f1(q.gps_hz)} Hz (precisión ${isFin(q.hacc_mediana_m) ? q.hacc_mediana_m.toFixed(0) + ' m' : '—'}), ` +
       `acel. ${isFin(q.acc_hz) ? q.acc_hz.toFixed(0) + ' Hz' : '—'}, ruido en reposo ${isFin(q.ruido_reposo) ? q.ruido_reposo.toFixed(2) + ' m/s²' : '—'}, ` +
       `g ${isFin(q.g_medida) ? q.g_medida.toFixed(2) : '—'}, retraso GPS ${f3(q.latencia_gps_s)} s${isFin(cfg.latencia_gps_s) ? ' (fijo)' : ' (estimado)'}, ` +
-      `GPS descartadas ${q.gps_descartadas}`);
+      `GPS descartadas ${q.gps_descartadas}` +
+      (q.fusion ? `, fusión ${q.fusion}${q.fusion === 'nodos' ? ` (posiciones GPS usadas ${q.pos_gps_usadas}, desfase ${isFin(q.desfase_pos_m) ? q.desfase_pos_m.toFixed(1) + ' m' : '—'})` : ''}` : ''));
     console.log(`Distancia: integrada ${f1(q.dist_integrada_m)} m vs posición GPS ${f1(q.dist_pos_m)} m | pico ${f3(R.est.a_max_g)} g | ` +
       `del primer movimiento al rollout ${f3(R.tRo - R.t0)} s`);
     if (R.avisos.length) console.log('Avisos:', R.avisos.join(' / '));

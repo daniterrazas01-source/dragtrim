@@ -32,9 +32,14 @@ mejor?").
    - **Fusión GPS** modo `modelo`: error = deriva lineal + error de escala (inclinación/squat),
      ajustado por mínimos cuadrados a todo el GPS, + 50% del residuo; descarta saltos del GPS;
      estima solo el retraso del GPS (0–1 s).
+   - **Fusión por nodos (algoritmo v2.4, 15 nov 2026; hecho en la rama, aún sin publicar, ver punto 8):** la
+     velocidad del acelerómetro se corrige con una curva lineal a tramos (nodo cada 3 s) ajustada a la velocidad GPS
+     (con su retraso, que se busca) **y a la posición GPS** a lo largo de la pista (que llega a tiempo). Sustituye al
+     modo `modelo` (deriva + escala), que fallaba cuando el teléfono se mueve en su soporte; `modelo` y `puntos`
+     siguen como opción (`cfg.fusion`). El arranque se busca en el primer empujón fuerte (`primer_pico`).
    - Simulación con condiciones duras (stage 0.8–3 s, two-step, squat, pendiente, deriva):
      inicio del movimiento ~10 ms, cruce 1 ft ~10 ms, 60 ft ~8 ms, 1/4 ~10–13 ms (peor ~40 ms).
-     **Aún no validado con datos reales** — ese es el siguiente paso.
+     Validación con datos reales: dos corridas con boleta (punto 8); faltan más.
 3. Daniel pidió que la app **NO dé la salida** ni parezca un semáforo al medir: la pantalla de
    medición es neutral ("Esperando tu arranque" / "Corrida en curso"), sin luces ni vibración.
 4. GPS del navegador ≈ 1 Hz; es suficiente porque el acelerómetro (~60 Hz) da la resolución fina.
@@ -319,6 +324,36 @@ mejor?").
    1.8 g al arrancar. Siguiente paso propuesto: más corridas con boleta y función "calibrar con boleta"
    (ajustar retraso GPS + rollout por teléfono usando varias corridas).
 
+   **Segunda prueba real** (15 nov 2026, mismo S22 Ultra y misma pista, Autódromo Francisco Villa; zip, foto y
+   `boleta.txt` en `fuente/pruebas/datos/reales/dragtrim_20261115_154941/`, los subió Daniel; rollout en la app 0 ft;
+   el auto patinaba al salir): boleta 60 ft 1.606 / 201 m 7.337 @155.74 / 402 m 11.385 @193.96 km/h / RT 0.769
+   (confirmada por Daniel). App 0.8.3: 1.777 / 7.580 / 11.689 (+0.171/+0.243/+0.304). Daniel: "trata de ajustar que
+   sea lo más preciso que se pueda". Hallazgos (detalle en
+   `.claude/skills/dragtree-medicion/references/hallazgos-reales.md`):
+   - **El teléfono se inclinó ~10° en su soporte al arrancar** (golpe a 0.22 s; el acelerómetro marcó 25 % menos
+     empuje que el GPS). El modelo deriva + escala lo "arreglaba" con escala +0.27 (primera prueba: −0.29) y deformaba
+     la salida: por eso con rollout 0 casi empataba. → **algoritmo v2.4** (fusión por nodos con posición GPS + primer
+     empujón), igual en `dragcore.js` y `drag_procesar.m`. En simulación "como en la pista" (`real.js`) el error baja a
+     la mitad o menos (1/4: 16–45 ms de promedio contra 40–140; peor caso 45–170 contra 130–870) y en la clásica queda
+     igual (11–14 ms).
+   - **GPS del S22 Ultra en Chrome:** la velocidad es el promedio del último segundo (llega ~0.6 s tarde); la posición
+     llega a tiempo.
+   - Con la v2.4 y **rollout 1 ft**: −0.058 / +0.041 / +0.109 (60 ft / 1/8 / 1/4). Lo que sobra crece con la distancia
+     como si la **pista estuviera medida con pies de 30 cm** (1/4 = 396 m, 1/8 = 198 m): con esa escala y rollout
+     0.20–0.25 m queda en ±0.03 s. En la primera prueba el patrón era igual. **Hipótesis, falta confirmarla** (que
+     Daniel pregunte o mida la pista; más boletas). Si se confirma: ajuste de "pista" en la app (no hecho).
+   - La velocidad de 1/4 de la boleta (193.96) otra vez sale ~5 % arriba del GPS (185); la de 1/8 coincide. No
+     ajustar a ella.
+   - `drag_procesar.m` traía un error escondido (variable `res` usada de dos formas, tronaba en la rama `modelo`):
+     corregido y comparado por primera vez con Octave (`fuente/pruebas/octave/igual.sh`, igual a 5e-10 s).
+   - Recomendación a Daniel: rollout en 1.0 (o 0.8) en vez de 0; soporte más firme. **Sin publicar** hasta que diga.
+   - Pruebas al cerrar (15 nov, sin `semaforo`): todo bien salvo dos que ya fallaban antes del cambio y no son de
+     medir: `qr_camara_test.py` (el caso conocido "QR lejos y de lado", punto 14) y `deslizar_test.py` "L. de Calcular
+     bajada a Práctica: empieza arriba, sin brinco (−877 → 0 px)", que falla igual con la 0.8.3 en este contenedor
+     (pendiente de revisar: puede venir de la Práctica acostada de la 0.8.2 o del contenedor).
+   - `calibrar.js` todavía busca rollout × retraso fijo de la velocidad; con la v2.4 (que también usa la posición) el
+     "retraso" ya no es el ajuste natural: lo que toca calibrar es rollout y escala de la pista (pendiente).
+
 9. **Calculadora "Rooster Racing"** (beta 0.5, pestaña **Calcular**): la hoja de Excel de Daniel
    (`archivo/originales/ROOSTER_RACING.xlsx`) para **aproximar** tiempos con peso y caballos (no para
    comprobar boletas). Fórmulas de Hale: ET 1/4 = 5.825·(lb/whp)^⅓, MPH = 234·(whp/lb)^⅓;
@@ -559,7 +594,9 @@ archivo/                       respaldo: originales/ (archivos de Daniel sin toc
 ```
 
 Versionado: `APP_VERSION` en `app.js` (se ve en Ajustes) y `VERSION` en `build.py` (nombre de la
-caché del service worker; cambiarlo fuerza la actualización). Publicada: **0.8.3** (8 nov 2026, Daniel: "Sí, publícala": el fondo
+caché del service worker; cambiarlo fuerza la actualización). **En la rama, sin publicar: 0.8.4** (15 nov 2026:
+algoritmo v2.4, punto 8; al publicarla, correr `fuente/publicar.sh`, que todavía no se corrió: el `index.html` de la
+raíz sigue siendo el de la 0.8.3). Publicada: **0.8.3** (8 nov 2026, Daniel: "Sí, publícala": el fondo
 Gallos con 5 R con flamas y 4 RRG, de pie y acostado, punto 7); antes **0.8.2** (7 nov 2026: los 8
 fondos con su versión para el teléfono acostado, con los stickers del mismo tamaño que de pie; Práctica acostada con el árbol de
 arriba a abajo y los botones 1/3 más chicos; fondo nuevo "Rooster" con 3 R de Rooster Racing, 3 Ford, 3 Chevrolet y las marcas
@@ -579,7 +616,7 @@ por internet con código de 5 letras (o QR por Wi-Fi sin señal), "Listo" de los
 teléfonos, boleta de los dos carriles; trae la 0.6.8: atajos de Medir como semáforo vertical, punto 7); antes **0.6.7** (28 oct 2026: en Android/Samsung la franja de la hora y la cámara toma el color de lo que hay debajo, punto 7); antes **0.6.6** (27 oct 2026: Práctica con "Tocar": pre-stage, stage y salida en tres toques); antes **0.6.5** (26 oct 2026: pantalla de carga: "By" a la izquierda del logo de Rooster Racing; en Calcular se quitó la nota "Para un auto con buena salida…" entre "Tiempo estimado" y "Peso para un tiempo meta", Daniel la pidió quitar; lo mismo sigue explicado en "Cómo calcula"; en Medir, Race 1 vs 1 es un desplegable como "Antes de salir a la pista" (`#race1v1`): cerrado solo dice el nombre y al abrirlo "en desarrollo" y la explicación, para que Medir se vea menos cargada); antes **0.6.4** (26 oct 2026: pantalla de carga de 2 s con el logo y "By Rooster Racing"; "On the mark" en la barra de arriba; sin la etiqueta "beta": la versión se llama "0.6.4" y la caché `v-0.6.4`); antes **beta 0.6.3** (26 oct 2026: el logo nuevo en la barra de arriba y en el ícono, punto 6); antes **beta 0.6.2** (25 oct 2026: el semáforo con
 cámara sale de la app; fondo nuevo "Gallos" con los logos de Rooster Racing; Práctica: botón "Mantén" más chico (19vh, 300 px de ancho en solo), cuadro de la reacción compacto y más abajo, focos que caben sin tocarlo; letra tipo Rooster Racing en títulos, etiquetas, selectores, botones principales y pestañas; Práctica: Modo, Árbol, Cómo sales y Formato en un solo panel con solo la explicación de lo elegido (EXPLICA en practica.js), 892 → 648 px de alto; el contenido también junto al notch del iPhone; deslizar el dedo entre pestañas); **beta 0.6.1** (25 oct 2026: el semáforo con cámara vuelve a "en desarrollo"); 0.6 (25 oct 2026: semáforo real
 con la cámara, punto 13; trae también la 0.5.4: tarjeta Race 1 vs 1 "en desarrollo"). Antes: **beta 0.5.3** (fondo de Práctica que responde a la reacción; 0.5.2: guía para instalar; 0.5.1: nombre nuevo: **Drag Tree**, desde el 13 oct 2026; antes 0.5: calculadora Rooster Racing; antes 0.4: fondos sticker; 0.3.2: animaciones),
-algoritmo v2.3.
+algoritmo v2.3 en lo publicado (v2.4 en la rama).
 
 Los zips exportados desde la app traen `drag_raw_gps_*.csv`, `drag_raw_acc_*.csv`,
 `drag_raw_meta_*.json` (compatibles con `drag_reprocesar.m`), el resultado y un `DRAGPACK_*.txt`.
@@ -592,6 +629,8 @@ cd fuente/pruebas
 node mc.js          # Monte Carlo del algoritmo (detección en vivo + errores por hito)
 node inicio.js '[{}]'   # precisión del punto inicial (acepta variantes de cfg en JSON)
 node spike.js       # robustez ante saltos del GPS
+node real.js        # condiciones "como en la pista" (velocidad GPS promediada, vibración, teléfono que se inclina): nodos (v2.4) contra modelo (v2.3)
+bash octave/igual.sh  # la app contra drag_procesar.m en Octave (si falta: apt-get update && apt-get install -y --no-install-recommends octave)
 python3 uitest.py demo   # app completa en Chromium headless (corrida simulada, historial, exportar, recalcular)
 python3 uitest.py real   # igual, pero con GPS/acelerómetro falsos a través de las APIs del navegador
 python3 pt_test.py       # simulador de semáforo (tiempos, rojas, 1 vs 1)
@@ -612,7 +651,7 @@ python3 carrera_test.py  # Race 1 vs 1: rival simulado, roja, dos teléfonos por
 python3 sala_test.py     # Race 1 vs 1 por la sala en internet (sala_local.mjs): crear, unirse, carrera, errores, sin señal
 python3 sincronia_test.py [rondas] [cortes]   # Race 1 vs 1 con señal mala (red_mala.mjs): qué tan juntas salen las verdes y que nunca baje en uno solo (~11 min)
 python3 enlace_test.py; python3 qr_camara_test.py   # enlace WebRTC entre dos páginas; leer QR con cámara falsa
-python3 mcheck.py ../matlab/*.m   # revisión estructural de MATLAB (aquí no hay MATLAB/Octave)
+python3 mcheck.py ../matlab/*.m   # revisión estructural de MATLAB (para comparar números: octave/igual.sh)
 node semaforo_sim_test.js   # simulador del árbol y la cámara
 node reaccion.js            # semáforo punta a punta: sesión simulada + árbol + análisis (~75 s)
 node semaforo_mc.js rapido --base ../../archivo/ideas/semaforo_real/resultados_mc.txt   # lectura en todas las
@@ -630,6 +669,6 @@ Agregar la copia de la versión a `archivo/versiones/` (ver archivo/LEEME.md).
 Confirmar con WebFetch que la página cambió (el CDN tarda 1–3 min). Si github.io no es accesible desde
 el contenedor, confirmar que el flujo "pages build and deployment" del commit terminó en éxito.
 
-Reglas al cambiar el algoritmo: mantener `dragcore.js` y `drag_procesar.m` equivalentes,
-correr `mc.js`/`inicio.js`/`spike.js` antes y después, y regenerar `Drag_tree_v2_unico.m`
+Reglas al cambiar el algoritmo: mantener `dragcore.js` y `drag_procesar.m` equivalentes (comprobarlo con
+`octave/igual.sh`), correr `mc.js`/`inicio.js`/`spike.js`/`real.js` antes y después, y regenerar `Drag_tree_v2_unico.m`
 (concatenación de `Drag_tree_v2.m` + `drag_config.m` + `drag_procesar.m` + `drag_reporte.m`).

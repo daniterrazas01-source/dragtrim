@@ -14,5 +14,5 @@ for (const opt of [{ stage_min: 0.8, stage_max: 3 }, { stage_min: 3, stage_max: 
     e.push(Math.abs(R.hitos[4].t - s.verdad.t_hitos[4])); ePts.push(Math.abs(Rp.hitos[4].t - s.verdad.t_hitos[4]));
   }
   const f = a => `${(a.reduce((x, y) => x + y) / a.length * 1000).toFixed(0)} / ${(Math.max(...a) * 1000).toFixed(0)} ms`;
-  console.log(JSON.stringify(opt), `vivo ${live}/40 | 1/4 con salto GPS: modelo ${f(e)} (descartadas ${desc}) | puntos ${f(ePts)}`);
+  console.log(JSON.stringify(opt), `vivo ${live}/40 | 1/4 con salto GPS: app (nodos) ${f(e)} (descartadas ${desc}) | puntos ${f(ePts)}`);
 }

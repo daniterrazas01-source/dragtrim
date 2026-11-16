@@ -14,10 +14,13 @@ function R = drag_procesar(gps, accd, cfg)
 %       recta del frente de subida de la aceleración + gravedad medida en el
 %       reposo justo antes (auto en stage).
 %    4. Halla el eje longitudinal (no importa cómo esté montado el teléfono).
-%    5. Fusión: integra la aceleración desde el reposo y la corrige con un
-%       modelo suave ajustado a todo el GPS (deriva + escala), descartando
-%       lecturas GPS atípicas.
-%    6. Distancia = integral de la velocidad (no la posición GPS).
+%    5. Fusión (v2.4, 'nodos'): integra la aceleración desde el reposo y la
+%       corrige con una curva lineal a tramos (un nodo cada cfg.nodo_s) ajustada
+%       a la velocidad GPS (con su retraso) y a la posición GPS a lo largo de la
+%       pista (a tiempo), descartando lecturas GPS atípicas. Aguanta que el
+%       teléfono se mueva en su soporte al arrancar. 'modelo' = el de la v2.3
+%       (deriva + escala).
+%    6. Distancia = integral de la velocidad ya corregida.
 %    7. Interpola el instante exacto de cada hito y aplica el rollout.
 
 if nargin < 3 || isempty(cfg), cfg = drag_config(); end
@@ -54,6 +57,7 @@ t0g = t0_por_gps(tG, vG, iQ, iRun);
 %% 2-4) Acelerómetro: gravedad, arranque y eje longitudinal
 usarAcc = cfg.usar_acc && isstruct(accd) && isfield(accd, 'a') && size(accd.a, 1) >= 20;
 ruido = NaN; gvec = nan(1,3); u = nan(1,3); tA = []; tIni = NaN; descartadas = 0;
+fusionUsada = ''; posUsadas = 0; desfasePos = NaN;
 if usarAcc
     tA = accd.t(:); A = double(accd.a);
     okA = isfinite(tA) & all(isfinite(A), 2);
@@ -100,6 +104,12 @@ if usarAcc
         avisos{end+1} = 'No se distinguió el arranque en el acelerómetro; se usó solo GPS.';
     else
         kPk = zona(iPk);
+        if cfg.primer_pico
+            % el primer empujón fuerte: después del primer cambio puede haber
+            % un pico más alto (vibración, golpe)
+            k1 = find(tq(1:kPk) >= tQ - 1.0 & dmag(1:kPk) >= 0.5*pk, 1, 'first');
+            if ~isempty(k1), kPk = k1; end
+        end
         k0 = find(dmag(1:kPk) < umbral/2, 1, 'last');
         if isempty(k0), k0 = kPk; end
         t0 = tq(k0);
@@ -127,14 +137,26 @@ if usarAcc
     sel = tq >= tIni;
     t = tq(sel); a = aL(sel);
     vAcc = cumtrapz(t, a);
-    modelo = strcmp(cfg.fusion, 'modelo');
-    lag = cfg.latencia_gps_s;
-    if isnan(lag), lag = estimar_latencia(tG, vG, t, vAcc, t0, t0 + 20, cfg.latencia_max_s, modelo); end
-    tGl = tG - lag;                                     % GPS alineado en el tiempo
-    selG = tGl > t0 + 1e-3 & tGl < t(end);
-    tc = [t(1); tGl(selG)];
-    ec = [0; vG(selG) - interp1(t, vAcc, tGl(selG))];  % error en cada punto GPS
-    if modelo && numel(tc) >= 4
+    fn = [];
+    if strcmp(cfg.fusion, 'nodos')
+        pG = pos_pista(tG, vG, latG, lonG, iQ, t0, t(end), cfg);
+        fn = fusion_nodos(t, vAcc, t0, tG, vG, pG, cfg);
+    end
+    modelo = strcmp(cfg.fusion, 'modelo') || (strcmp(cfg.fusion, 'nodos') && isempty(fn));
+    tc = t(1); ec = 0;
+    if isempty(fn)
+        lag = cfg.latencia_gps_s;
+        if isnan(lag), lag = estimar_latencia(tG, vG, t, vAcc, t0, t0 + 20, cfg.latencia_max_s, modelo); end
+        tGl = tG - lag;                                     % GPS alineado en el tiempo
+        selG = tGl > t0 + 1e-3 & tGl < t(end);
+        tc = [t(1); tGl(selG)];
+        ec = [0; vG(selG) - interp1(t, vAcc, tGl(selG))];  % error en cada punto GPS
+    end
+    if ~isempty(fn)
+        c = fn.c; lag = fn.lag; descartadas = fn.descartadas;
+        fusionUsada = 'nodos'; posUsadas = fn.np; desfasePos = fn.b;
+    elseif modelo && numel(tc) >= 4
+        fusionUsada = 'modelo';
         % error = deriva lineal + error de escala (inclinación del auto, eje)
         vc = interp1(t, vAcc, tc);
         x1 = max(tc - t0, 0);
@@ -147,12 +169,13 @@ if usarAcc
             tc = tc(okp); x1 = x1(okp); vc = vc(okp); ec = ec(okp);
             p = mc2(x1, vc, ec);
         end
-        res = (ec - p(1)*x1 - p(2)*vc) * cfg.peso_residuo;
-        res(1) = 0;
-        rr = interp1(tc, res, t, 'linear');
-        rr(t > tc(end)) = res(end);
+        resid = (ec - p(1)*x1 - p(2)*vc) * cfg.peso_residuo;   % (no 'res': así se llama el paquete de resultados)
+        resid(1) = 0;
+        rr = interp1(tc, resid, t, 'linear');
+        rr(t > tc(end)) = resid(end);
         c = p(1)*max(t - t0, 0) + p(2)*vAcc + rr;
     else
+        fusionUsada = 'puntos';
         c = interp1(tc, ec, t, 'linear');
         c(t > tc(end)) = ec(end);
     end
@@ -217,6 +240,9 @@ cal.g_medida       = norm(gvec);
 cal.eje_adelante   = u;
 cal.t0_menos_t0gps = t0 - t0g;
 cal.latencia_gps_s = lag;
+cal.fusion         = fusionUsada;   % 'nodos', 'modelo' o 'puntos' ('' = solo GPS)
+cal.pos_gps_usadas = posUsadas;
+cal.desfase_pos_m  = desfasePos;
 cal.gps_descartadas = descartadas;
 cal.t_inicio_integracion = tIni;
 cal.mov_ignorados  = nIgn;        % movimientos previos descartados (burnout, alineación...)
@@ -351,6 +377,164 @@ for L = 0:0.02:lmax+1e-9
     end
     if r < mejor, mejor = r; lag = round(L*100)/100; end
 end
+end
+
+function mg = m_por_grado(latDeg)
+% Metros por grado de latitud y de longitud (elipsoide WGS84) a la latitud dada
+f = latDeg * pi/180;
+mg = [111132.954 - 559.822*cos(2*f) + 1.175*cos(4*f), ...
+      111412.84*cos(f) - 93.5*cos(3*f) + 0.118*cos(5*f)];
+end
+
+function pG = pos_pista(tG, vG, latG, lonG, iQ, t0, tFinA, cfg)
+% Posición GPS a lo largo de la pista: metros desde el reposo en stage, sobre
+% la recta del recorrido. [] si no hay posición o el recorrido no es recto.
+pG = [];
+if ~any(isfinite(latG)), return; end
+la0 = 0; lo0 = 0; m0 = 0;
+i = iQ;
+while i >= 1 && tG(i) >= t0 - 6 && vG(i) > cfg.v_quieto, i = i - 1; end   % lecturas que ya traen movimiento
+while i >= 1 && tG(i) >= t0 - 6 && vG(i) <= cfg.v_quieto                  % reposo en stage (máx. 6 s)
+    if tG(i) <= t0 && isfinite(latG(i)) && isfinite(lonG(i))
+        la0 = la0 + latG(i); lo0 = lo0 + lonG(i); m0 = m0 + 1;
+    end
+    i = i - 1;
+end
+if m0 == 0 && isfinite(latG(iQ)) && isfinite(lonG(iQ))
+    la0 = latG(iQ); lo0 = lonG(iQ); m0 = 1;
+end
+if m0 == 0, return; end
+la0 = la0/m0; lo0 = lo0/m0;
+mg = m_por_grado(la0);
+ex = (lonG - lo0) * mg(2); ny = (latG - la0) * mg(1);
+s = tG > t0 & tG < tFinA & isfinite(ex) & isfinite(ny);
+sx = sum(ex(s)); sy = sum(ny(s)); nn = hypot(sx, sy);
+if nn <= 20, return; end
+latMax = max(abs(ny(s)*sx - ex(s)*sy)) / nn;
+if latMax <= cfg.lateral_max_m
+    pG = (ex*sx + ny*sy) / nn;
+    % la posición debe contar la misma historia que la velocidad GPS (±20 %); si no, no se usa
+    k = find(tG > t0 & tG < tFinA & isfinite(pG));
+    if numel(k) < 2
+        pG = [];
+    else
+        dV = sum((vG(k(2:end)) + vG(k(1:end-1)))/2 .* diff(tG(k)));
+        if abs((pG(k(end)) - pG(k(1))) - dV) > 0.2*max(dV, 30), pG = []; end
+    end
+end
+end
+
+function h = nodo_hat(j, x, t0, Tn, J)
+% Función "sombrero" del nodo j (1..J); después del último nodo queda en 1
+a = t0 + (j-1)*Tn; b = a + Tn;
+h = zeros(size(x));
+s = x > a & x <= b; h(s) = (x(s) - a) / Tn;
+if j == J
+    h(x > b) = 1;
+else
+    s = x > b & x < b + Tn; h(s) = (b + Tn - x(s)) / Tn;
+end
+end
+
+function h = nodo_ihat(j, x, t0, Tn, J)
+% Integral de nodo_hat desde t0
+a = t0 + (j-1)*Tn; b = a + Tn;
+h = zeros(size(x));
+s = x > a & x <= b; h(s) = (x(s) - a).^2 / (2*Tn);
+if j == J
+    s = x > b; h(s) = Tn/2 + (x(s) - b);
+else
+    s = x > b & x < b + Tn; h(s) = Tn/2 + (x(s) - b) - (x(s) - b).^2 / (2*Tn);
+    h(x >= b + Tn) = Tn;
+end
+end
+
+function m = nodos_ajustar(L, okV, okP, t, vAcc, dAcc, t0, tG, vG, pG, conPos, J, cfg)
+% Mínimos cuadrados de la fusión por nodos para un retraso L de la velocidad GPS
+m = [];
+Tn = cfg.nodo_s; tEnd = t(end); nP = J + 1;       % incógnitas: nodos 1..J y b
+xv = tG - L;
+kv = find(xv > t0 + cfg.t_min_v & xv < tEnd & okV);
+nv = numel(kv);
+if nv < 3, return; end
+Fv = zeros(nv, nP);
+for j = 1:J, Fv(:, j) = nodo_hat(j, xv(kv), t0, Tn, J); end
+yv = vG(kv) - interp1(t, vAcc, xv(kv));
+kp = zeros(0, 1); Fp = zeros(0, nP); yp = zeros(0, 1);
+if conPos
+    xp = tG - cfg.latencia_pos_s;
+    kp = find(isfinite(pG) & xp > t0 + cfg.t_min_p & xp < tEnd & okP);
+    Fp = zeros(numel(kp), nP);
+    for j = 1:J, Fp(:, j) = nodo_ihat(j, xp(kp), t0, Tn, J); end
+    Fp(:, nP) = 1;
+    yp = pG(kp) - interp1(t, dAcc, xp(kp));
+end
+Fb = zeros(1, nP); Fb(nP) = 1;                    % b cerca de 0
+Fs = zeros(J, nP);                                % corrección sin quiebres
+for j = 1:J
+    if j > 1, Fs(j, j-1) = 1; end
+    if j < J, Fs(j, j) = -2; Fs(j, j+1) = 1; else, Fs(j, j) = -1; end
+end
+A = [Fv/cfg.sigma_v; Fp/cfg.sigma_p; Fb/cfg.sigma_b; Fs*cfg.suave_nodos];
+y = [yv/cfg.sigma_v; yp/cfg.sigma_p; 0; zeros(J, 1)];
+N = A.' * A;
+if rcond(N) < 1e-14, return; end
+th = N \ (A.' * y);
+rv = yv - Fv*th; rp = yp - Fp*th;
+m.th = th; m.L = L; m.kv = kv; m.kp = kp; m.rv = rv; m.rp = rp;
+m.nv = nv; m.np = numel(kp);
+m.costo = (sum((rv/cfg.sigma_v).^2) + sum((rp/cfg.sigma_p).^2)) / (nv + numel(kp));
+end
+
+function m = nodos_buscar(okV, okP, t, vAcc, dAcc, t0, tG, vG, pG, conPos, J, cfg)
+% Busca el retraso de la velocidad GPS que mejor ajusta (o usa el fijo)
+if ~isnan(cfg.latencia_gps_s)
+    m = nodos_ajustar(cfg.latencia_gps_s, okV, okP, t, vAcc, dAcc, t0, tG, vG, pG, conPos, J, cfg);
+    return
+end
+m = [];
+for L = 0 : 0.02 : cfg.latencia_max_s + 1e-9
+    r = nodos_ajustar(round(L*100)/100, okV, okP, t, vAcc, dAcc, t0, tG, vG, pG, conPos, J, cfg);
+    if ~isempty(r) && (isempty(m) || r.costo < m.costo), m = r; end
+end
+end
+
+function fn = fusion_nodos(t, vAcc, t0, tG, vG, pG, cfg)
+% Fusión por nodos (v2.4). La velocidad del acelerómetro se corrige con c(t):
+% lineal a tramos, 0 en el arranque y un nodo cada cfg.nodo_s. Los nodos y el
+% desfase b de la posición salen de mínimos cuadrados con
+%   velocidad GPS:  vG_k = vAcc(t_k - L) + c(t_k - L)       (L = retraso, se busca)
+%   posición GPS:   pG_k = b + integral de (vAcc + c) hasta t_k - latencia_pos_s
+% más dos condiciones suaves (b cerca de 0, c sin quiebres). A diferencia de
+% 'modelo' (deriva + escala), sigue un error que cambia a media corrida: p. ej.
+% el teléfono que se inclina en su soporte al arrancar.
+fn = [];
+Tn = cfg.nodo_s; tEnd = t(end);
+dAcc = cumtrapz(t, vAcc);
+tUlt = min(tEnd, tG(end));
+J = max(1, ceil((tUlt - t0)/Tn - 1e-9));
+conPos = ~isempty(pG) && any(isfinite(pG));
+okV = true(size(tG)); okP = true(size(tG));
+m = nodos_buscar(okV, okP, t, vAcc, dAcc, t0, tG, vG, pG, conPos, J, cfg);
+if isempty(m), return; end
+% lecturas atípicas (saltos del GPS): se quitan y se vuelve a ajustar
+desc = 0;
+if numel(m.rv) >= 5
+    mal = abs(m.rv) > max(0.5, 4*1.4826*median(abs(m.rv)));
+    okV(m.kv(mal)) = false; desc = desc + nnz(mal);
+end
+if numel(m.rp) >= 5
+    mal = abs(m.rp) > max(3.0, 4*1.4826*median(abs(m.rp)));
+    okP(m.kp(mal)) = false; desc = desc + nnz(mal);
+end
+if desc > 0
+    m2 = nodos_buscar(okV, okP, t, vAcc, dAcc, t0, tG, vG, pG, conPos, J, cfg);
+    if ~isempty(m2), m = m2; else, desc = 0; end
+end
+c = zeros(size(t));
+for j = 1:J, c = c + m.th(j) * nodo_hat(j, t, t0, Tn, J); end
+fn = struct('c', c, 'lag', m.L, 'nodos', m.th(1:J), 'b', m.th(J+1), ...
+            'descartadas', desc, 'nv', m.nv, 'np', m.np);
 end
 
 function p = mc2(x1, x2, e)

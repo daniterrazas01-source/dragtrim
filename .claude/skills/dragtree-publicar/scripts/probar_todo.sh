@@ -48,6 +48,7 @@ if quiere algoritmo; then
   correr "mc.js"      ''  node mc.js
   correr "inicio.js"  ''  node inicio.js '[{}]'
   correr "spike.js"   ''  node spike.js
+  correr "real.js"    'FALLAS: 0'  node real.js
 fi
 if quiere calc || quiere calc_node; then correr "calc.js" ', 0 mal' node calc.js; fi
 if quiere calc;      then correr "calc_test.py"     'FALLAS: 0'           python3 calc_test.py; fi
