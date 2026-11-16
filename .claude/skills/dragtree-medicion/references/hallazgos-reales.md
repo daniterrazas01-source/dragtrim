@@ -46,7 +46,8 @@ RT 0.769 (carril izquierdo; el derecho dio roja).
 
 **Lo que se encontró (y cómo comprobarlo otra vez)**
 
-1. **El teléfono se movió en su soporte al arrancar.** A 0.22 s del arranque hay un golpe (una muestra
+1. **El teléfono se movió al arrancar** (iba suelto, sin soporte: lo confirmó Daniel el 16 nov; para la
+   siguiente lo pondrá en uno)**.** A 0.22 s del arranque hay un golpe (una muestra
    de 34 m/s²), el giroscopio marca ~12° de giro sobre la vertical y desde ahí el acelerómetro marca
    ~25 % menos empuje que el GPS: integrando solo el acelerómetro el auto llega a 139 km/h, y el GPS
    dice 185. La parte "vertical" sube +1 m/s² mientras el auto acelera: las dos cosas cuadran con el
