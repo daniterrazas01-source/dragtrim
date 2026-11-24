@@ -1,0 +1,29 @@
+{
+  "actualizado": "2026-11-24T02:05:11Z",
+  "agentes": [
+    {
+      "id": "terrazas-a65c5199",
+      "nombre": "DragTree a65c",
+      "persona": "Alberto Terrazas",
+      "area": "terrazas",
+      "actividad": "Esperando instrucciones",
+      "estado": "esperando",
+      "modo": "normal",
+      "dispositivo": "tableta-android",
+      "origen": "tableta-android",
+      "actualizado": "2026-11-24T02:05:09Z",
+      "modelo": "opus",
+      "esfuerzo": "high"
+    }
+  ],
+  "archivos_recientes": [
+    {
+      "nombre": "CLAUDE.md",
+      "origen": "tableta-android",
+      "area": "terrazas",
+      "fecha": "2026-11-16T18:49:29Z",
+      "tipo": "editado",
+      "sesion": "a65c5199"
+    }
+  ]
+}
